@@ -1,0 +1,73 @@
+/* ============================================================
+   Lyfter Badge App — estilos propios
+   Extraídos del boceto `diseño-previo.html` (bloque <style>).
+   Tailwind + DaisyUI + Poppins se cargan por CDN en index.html.
+   ============================================================ */
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: #F8F9FA;
+  color: #1f2937;
+}
+
+/* Tarjeta base con sombra suave */
+.card-soft {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.btn-rounded { border-radius: 8px; }
+
+.frame-card {
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  background: #fff;
+}
+
+/* Marco "device": columna estrecha tipo móvil para vistas de participante */
+.device-frame { max-width: 420px; margin: 0 auto; }
+
+/* ---- Marco visor del escáner QR ---- */
+.scanner-corner { position: absolute; width: 36px; height: 36px; border-color: #fff; }
+.corner-tl { top: 0; left: 0; border-top: 4px solid #fff; border-left: 4px solid #fff; border-top-left-radius: 8px; }
+.corner-tr { top: 0; right: 0; border-top: 4px solid #fff; border-right: 4px solid #fff; border-top-right-radius: 8px; }
+.corner-bl { bottom: 0; left: 0; border-bottom: 4px solid #fff; border-left: 4px solid #fff; border-bottom-left-radius: 8px; }
+.corner-br { bottom: 0; right: 0; border-bottom: 4px solid #fff; border-right: 4px solid #fff; border-bottom-right-radius: 8px; }
+
+/* Línea de escaneo animada (refuerzo visual del visor) */
+@keyframes scan-line {
+  0%   { top: 0; opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+.scan-line {
+  position: absolute;
+  left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #6C63FF, transparent);
+  animation: scan-line 2s ease-in-out infinite;
+}
+
+/* ---- Animación del badge en el modal de celebración ---- */
+@keyframes pulse-badge {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.08); }
+}
+.animate-pulse-badge { animation: pulse-badge 1.4s ease-in-out infinite; }
+
+/* ---- Entrada de modales / toasts ---- */
+@keyframes fade-in   { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pop-in    { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+@keyframes slide-down{ from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+.anim-fade { animation: fade-in 0.2s ease-out; }
+.anim-pop  { animation: pop-in 0.25s ease-out; }
+.anim-slide{ animation: slide-down 0.2s ease-out; }
+
+/* Mensajes de validación de formularios */
+.field-error { color: #ef4444; font-size: 0.78rem; margin-top: 4px; min-height: 1rem; }
+.input-invalid { border-color: #ef4444 !important; }
+
+/* Tabs del panel admin */
+.admin-tab { transition: color .15s, border-color .15s, background .15s; }
