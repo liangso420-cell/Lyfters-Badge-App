@@ -21,7 +21,7 @@
      5) Pon  mode: 'backend'  aquí abajo.
    ============================================================ */
 window.LYFTER_CONFIG = {
-  // Recomendado para uso real: 'backend'. Por defecto 'mock' (cero configuración).
   mode: 'backend',
-  apiBaseUrl: 'http://localhost:5000',
+  // Reemplazá esta URL con la de tu servicio en Render después del deploy
+  apiBaseUrl: 'https://lyfter-badge-api.onrender.com',
 };

@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: lyfter-badge-api
+    runtime: python
+    rootDir: lyfter-badge-app/backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    plan: free
+    envVars:
+      - key: MONGO_URI
+        sync: false          # lo ingresás manualmente en el dashboard
+      - key: JWT_SECRET
+        generateValue: true  # Render genera uno seguro automáticamente
+      - key: CORS_ORIGINS
+        sync: false          # lo completás con la URL de Vercel después
+      - key: APP_BASE_URL
+        sync: false          # la URL de este mismo servicio en Render
+      - key: FLASK_ENV
+        value: production
