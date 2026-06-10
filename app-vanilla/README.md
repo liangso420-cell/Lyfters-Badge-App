@@ -1,14 +1,18 @@
 # Lyfter Badge App — versión Vanilla (HTML + CSS + JS puro)
 
-App funcional construida a partir del boceto `../diseño-previo.html`, **sin frameworks JS**
-y con datos **mockeados en el cliente** (`localStorage`). Es independiente del backend Flask
-y del frontend Vue del repositorio: no los toca ni se conecta a ellos.
+App funcional en HTML + CSS + **JS puro (sin frameworks)**. Tiene dos modos de datos
+(ver `js/config.js`):
 
-## Cómo abrir
+- **`backend` (recomendado)** — consume una API Flask real: datos persistentes en
+  MongoDB, multiusuario y QR reales. Ver "Conectar al backend" más abajo.
+- **`mock`** — datos simulados en el navegador (`localStorage`). Cero configuración;
+  ideal para demo offline o probar la UI. Es el valor por defecto para que la app
+  funcione al abrirla sin pasos previos.
+
+## Cómo abrir (modo mock, sin configuración)
 Abre `index.html` en el navegador (doble clic). No requiere build ni servidor.
 
-> Necesita conexión a internet para cargar Tailwind, DaisyUI y la fuente Poppins por CDN,
-> tal como hace el boceto original.
+> Necesita conexión a internet para cargar Tailwind, DaisyUI y la fuente Poppins por CDN.
 
 ## Cuentas de demo
 | Rol | Email | Contraseña |
@@ -29,10 +33,15 @@ app-vanilla/
 └── assets/            (vacío: el boceto sólo usa emojis y un SVG inline)
 ```
 
-## Conectar al backend Flask (opcional)
-La app está preparada para funcionar contra la API real del repo (`../backend`).
+## Conectar al backend Flask (recomendado)
 Las vistas no saben de dónde vienen los datos: hablan con `window.LyfterAPI`
 (`js/api.js`), que tiene dos implementaciones detrás de la misma interfaz async.
+
+> El código del backend Flask **no está en esta carpeta** (se quitó para dejar la v2
+> mínima), pero sigue en el historial de git. Recupéralo con:
+> ```bash
+> git checkout HEAD -- backend
+> ```
 
 Para activarlo:
 1. **Levanta el backend** (necesita MongoDB):
