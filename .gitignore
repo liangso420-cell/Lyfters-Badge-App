@@ -1,3 +1,15 @@
 # Sistema
 .DS_Store
 Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Secretos
+.env
+!.env.example
+
+# Archivos temporales
+query

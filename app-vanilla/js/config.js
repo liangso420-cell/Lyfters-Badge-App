@@ -22,6 +22,6 @@
    ============================================================ */
 window.LYFTER_CONFIG = {
   // Recomendado para uso real: 'backend'. Por defecto 'mock' (cero configuración).
-  mode: 'mock',
+  mode: 'backend',
   apiBaseUrl: 'http://localhost:5000',
 };
