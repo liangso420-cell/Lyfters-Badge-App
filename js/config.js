@@ -23,5 +23,5 @@
 window.LYFTER_CONFIG = {
   mode: 'backend',
   // Reemplazá esta URL con la de tu servicio en Render después del deploy
-  apiBaseUrl: 'https://lyfter-badge-api.onrender.com',
+  apiBaseUrl: 'https://lyfters-badge-app.onrender.com',
 };
