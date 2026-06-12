@@ -37,8 +37,10 @@
       var API = window.LyfterAPI;
       var U = window.LyfterUtils;
 
+      var nextUrl = new URLSearchParams(window.location.search).get('next') || '';
+
       var user = API.currentUser();
-      if (user) { window.location.replace(user.role === 'admin' ? 'admin-event.html' : 'profile.html'); return; }
+      if (user) { window.location.replace(nextUrl || (user.role === 'admin' ? 'admin-event.html' : 'profile.html')); return; }
 
       var app = document.getElementById('app');
       U.showPendingToast();
@@ -74,8 +76,12 @@
         if (!ok) return;
         try {
           var loggedUser = await API.login(email.value.trim(), pass.value);
-          U.toastNextPage('¡Bienvenido!', 'success');
-          window.location.href = loggedUser.role === 'admin' ? 'admin-event.html' : 'profile.html';
+          if (nextUrl) {
+            window.location.href = nextUrl;
+          } else {
+            U.toastNextPage('¡Bienvenido!', 'success');
+            window.location.href = loggedUser.role === 'admin' ? 'admin-event.html' : 'profile.html';
+          }
         } catch (err) { U.setFieldError(pass, err.message || 'No se pudo iniciar sesión'); }
       });
     })();
