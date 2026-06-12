@@ -44,7 +44,12 @@
       if (_nextRaw && /^\/[^\/]/.test(_nextRaw)) {
         try {
           var _np = new URL(_nextRaw, window.location.origin);
-          if (_np.origin === window.location.origin) nextUrl = _nextRaw;
+          // El path debe pertenecer al mismo origen Y al mismo sub-directorio de la app
+          // En GitHub Pages: /Lyfters-Badge-App/   En localhost: /
+          var _appBase = window.location.pathname.replace(/\/[^\/]+$/, '/');
+          if (_np.origin === window.location.origin && _np.pathname.startsWith(_appBase)) {
+            nextUrl = _nextRaw;
+          }
         } catch (_e) {}
       }
 

@@ -21,6 +21,12 @@
 
   var CFG = window.LYFTER_CONFIG || { mode: 'mock', apiBaseUrl: 'http://localhost:5000' };
 
+  /* Base URL del directorio donde vive la app.
+     En GitHub Pages: 'https://liangso420-cell.github.io/Lyfters-Badge-App/'
+     En localhost:    'http://localhost:5500/'                                  */
+  var APP_BASE = window.location.origin +
+    window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+
   /* ---------------------------------------------------------
      SESIÓN — compartida por ambos modos (localStorage + fallback)
      --------------------------------------------------------- */
@@ -181,7 +187,7 @@
         event: { id: e.id, name: e.name, totalParticipants: e.totalParticipants },
         badges: e.badges.map(function (b) {
           return { id: b.id, emoji: b.emoji, name: b.name, desc: b.desc, token: b.token,
-            redeemUrl: window.location.origin + '/redeem/' + e.id + '/' + b.token, redeemed: b.redemptions || 0,
+            redeemUrl: APP_BASE + 'redeem.html?event=' + e.id + '&token=' + b.token, redeemed: b.redemptions || 0,
             qrImage: null };
         })
       };
@@ -274,7 +280,7 @@
         event: { id: d.evento.id, name: d.evento.nombre, totalParticipants: undefined },
         badges: (d.badges || []).map(function (b) {
           return { id: b.id, emoji: b.icon || '🏅', name: b.nombre, desc: b.descripcion, token: b.token,
-            redeemUrl: b.redeem_url || ('/redeem/' + eventId + '/' + b.token), redeemed: b.canjeados || 0,
+            redeemUrl: b.redeem_url || (APP_BASE + 'redeem.html?event=' + eventId + '&token=' + b.token), redeemed: b.canjeados || 0,
             qrImage: b.qr_image || null };  // data URI PNG generado por el backend
         })
       };
