@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crear cuenta — Lyfter Badge App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Poppins', 'sans-serif'] },
+          colors: { primary: '#6C63FF', 'primary-soft': '#EEEDFF', base: '#F8F9FA' },
+          borderRadius: { card: '16px', btn: '8px' },
+          boxShadow: { soft: '0 4px 20px rgba(0,0,0,0.08)' },
+        },
+      },
+    };
+  </script>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <main id="app"></main>
+  <div id="modal-root"></div>
+  <div id="toast-root" class="fixed top-4 left-1/2 -translate-x-1/2 z-[60] flex flex-col gap-2 items-center pointer-events-none"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      var API = window.LyfterAPI;
+      var U = window.LyfterUtils;
+
+      var user = API.currentUser();
+      if (user) { window.location.replace(user.role === 'admin' ? 'admin-event.html' : 'profile.html'); return; }
+
+      var app = document.getElementById('app');
+
+      app.innerHTML =
+        '<section class="device-frame px-4 pt-12 pb-12">' +
+          '<div class="card-soft p-8 anim-fade">' +
+            '<div class="text-center mb-6">' +
+              '<div class="text-4xl mb-2">🏆</div>' +
+              '<h2 class="text-2xl font-bold">Crear cuenta</h2>' +
+              '<p class="text-gray-400 text-sm mt-1">Únete y empieza a coleccionar badges</p>' +
+            '</div>' +
+            '<form id="register-form" class="space-y-4" novalidate>' +
+              U.inputField({ label: 'Nombre completo', name: 'name', placeholder: 'Ana Pérez' }) +
+              U.inputField({ label: 'Email', type: 'email', name: 'email', placeholder: 'tu@correo.com' }) +
+              U.inputField({ label: 'Contraseña', type: 'password', name: 'password', placeholder: '••••••••' }) +
+              U.inputField({ label: 'Confirmar contraseña', type: 'password', name: 'confirm', placeholder: '••••••••' }) +
+              U.primaryButton('Crear cuenta', 'type="submit"') +
+              '<p class="text-center text-sm text-gray-500">¿Ya tienes cuenta? <a href="login.html" class="text-primary font-medium">Inicia sesión</a></p>' +
+            '</form>' +
+          '</div>' +
+        '</section>';
+
+      var form = document.getElementById('register-form');
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var name = form.elements['name'], email = form.email, pass = form.password, confirm = form.confirm, ok = true;
+        ok = U.setFieldError(name,    name.value.trim() ? '' : 'Ingresa tu nombre') && ok;
+        ok = U.setFieldError(email,   U.EMAIL_RE.test(email.value.trim()) ? '' : 'Email no válido') && ok;
+        ok = U.setFieldError(pass,    pass.value.length >= 6 ? '' : 'Mínimo 6 caracteres') && ok;
+        ok = U.setFieldError(confirm, (confirm.value === pass.value && confirm.value) ? '' : 'Las contraseñas no coinciden') && ok;
+        if (!ok) return;
+        try {
+          var newUser = await API.register({ name: name.value.trim(), email: email.value.trim(), password: pass.value });
+          U.toastNextPage('Cuenta creada 🎉', 'success');
+          window.location.href = newUser.role === 'admin' ? 'admin-event.html' : 'profile.html';
+        } catch (err) { U.setFieldError(email, err.message || 'No se pudo crear la cuenta'); }
+      });
+    })();
+  </script>
+</body>
+</html>

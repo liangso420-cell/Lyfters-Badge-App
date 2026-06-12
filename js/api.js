@@ -181,8 +181,8 @@
         event: { id: e.id, name: e.name, totalParticipants: e.totalParticipants },
         badges: e.badges.map(function (b) {
           return { id: b.id, emoji: b.emoji, name: b.name, desc: b.desc, token: b.token,
-            redeemUrl: '/redeem/' + e.id + '/' + b.token, redeemed: b.redemptions || 0,
-            qrImage: null };  // el mock no genera imagen QR real; se usa el placeholder SVG
+            redeemUrl: window.location.origin + '/redeem/' + e.id + '/' + b.token, redeemed: b.redemptions || 0,
+            qrImage: null };
         })
       };
     },

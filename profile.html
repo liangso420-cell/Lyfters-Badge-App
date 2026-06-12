@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mi perfil — Lyfter Badge App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Poppins', 'sans-serif'] },
+          colors: { primary: '#6C63FF', 'primary-soft': '#EEEDFF', base: '#F8F9FA' },
+          borderRadius: { card: '16px', btn: '8px' },
+          boxShadow: { soft: '0 4px 20px rgba(0,0,0,0.08)' },
+        },
+      },
+    };
+  </script>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <main id="app"></main>
+  <div id="modal-root"></div>
+  <div id="toast-root" class="fixed top-4 left-1/2 -translate-x-1/2 z-[60] flex flex-col gap-2 items-center pointer-events-none"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      var API = window.LyfterAPI;
+      var U = window.LyfterUtils;
+
+      var user = API.currentUser();
+      if (!user) { window.location.replace('login.html'); return; }
+      if (user.role === 'admin') { window.location.replace('admin-event.html'); return; }
+
+      var app = document.getElementById('app');
+      app.innerHTML = U.loadingHtml();
+      U.showPendingToast();
+
+      async function init() {
+        try {
+          var events = await API.listEvents();
+          if (!events.length) {
+            app.innerHTML =
+              '<section class="device-frame px-4 pt-12">' +
+                '<div class="card-soft p-8 text-center text-gray-500">' +
+                  'No hay eventos disponibles todavía.<br>' +
+                  '<button id="profile-logout" class="mt-4 text-sm text-primary">⎋ Salir</button>' +
+                '</div>' +
+              '</section>';
+            document.getElementById('profile-logout').addEventListener('click', U.logout);
+            return;
+          }
+
+          var activeId = U.ensureActive(events);
+          var detail = await API.getEventDetail(activeId);
+          var total = detail.total, doneCount = detail.obtained;
+          var pct = total ? Math.round((doneCount / total) * 100) : 0;
+          var complete = detail.complete;
+
+          var eventOptions = events.map(function (e) {
+            return '<option value="' + e.id + '"' + (e.id === activeId ? ' selected' : '') + '>' + U.esc(e.name) + '</option>';
+          }).join('');
+
+          var grid = detail.badges.map(function (b) {
+            if (b.obtained) {
+              return '<div class="rounded-card p-3 text-center" style="background:#EEEDFF;">' +
+                '<div class="text-3xl">' + b.emoji + '</div>' +
+                '<p class="text-xs font-medium mt-1">' + U.esc(b.name) + '</p>' +
+                '<span class="text-green-500 text-sm">✅</span></div>';
+            }
+            return '<div class="rounded-card p-3 text-center bg-gray-100">' +
+              '<div class="text-3xl opacity-40">' + b.emoji + '</div>' +
+              '<p class="text-xs text-gray-400 mt-1">' + U.esc(b.name) + '</p>' +
+              '<span class="text-gray-400 text-sm">🔒</span></div>';
+          }).join('');
+
+          var prizeBox = complete
+            ? '<div class="mt-6 p-4 rounded-card" style="background:#EEEDFF;">' +
+                '<p class="text-xs uppercase tracking-wide text-primary font-semibold text-center">Premio desbloqueado</p>' +
+                '<p class="text-lg font-bold mt-1 text-center">' + U.esc(detail.prizeRevealed || detail.prize) + '</p></div>'
+            : '<div class="mt-6 p-4 rounded-card border border-dashed border-gray-300 text-center text-sm text-gray-500">' +
+                '🎁 Completa los ' + total + ' badges para revelar el <span class="font-medium text-gray-700">premio sorpresa</span></div>';
+
+          var completedBanner = complete
+            ? '<div class="card-soft p-6 text-center mb-4 anim-pop">' +
+                '<div class="text-5xl mb-2">🎉</div>' +
+                '<h3 class="text-lg font-bold text-primary">¡Felicidades, ' + U.esc(user.name.split(' ')[0]) + '!</h3>' +
+                '<p class="text-sm text-gray-500 mt-1">Completaste los ' + total + ' badges de ' + U.esc(detail.name) + '</p></div>'
+            : '';
+
+          app.innerHTML =
+            '<section class="device-frame px-4 pt-12 pb-28">' +
+              completedBanner +
+              '<div class="card-soft p-6 anim-fade">' +
+                '<div class="flex items-center justify-between mb-5">' +
+                  '<h2 class="text-xl font-bold">Hola, ' + U.esc(user.name.split(' ')[0]) + ' 👋</h2>' +
+                  '<button id="profile-logout" class="text-sm text-gray-400 hover:text-primary flex items-center gap-1">⎋ Salir</button>' +
+                '</div>' +
+                '<label class="text-sm font-medium text-gray-600">Evento activo</label>' +
+                '<select id="profile-event-select" class="w-full mt-1 mb-5 px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none">' + eventOptions + '</select>' +
+                '<div class="mb-1 flex justify-between text-sm">' +
+                  '<span class="font-medium text-gray-700">Tu progreso</span>' +
+                  '<span class="text-primary font-semibold">' + doneCount + ' de ' + total + ' badges</span>' +
+                '</div>' +
+                '<div class="w-full h-3 bg-gray-200 rounded-full mb-6 overflow-hidden">' +
+                  '<div class="h-3 rounded-full transition-all duration-500" style="width:' + pct + '%; background:#6C63FF;"></div>' +
+                '</div>' +
+                '<div class="grid grid-cols-3 gap-3">' + grid + '</div>' +
+                prizeBox +
+              '</div>' +
+            '</section>' +
+            '<div class="fixed bottom-0 left-0 right-0 flex justify-center pb-6 pointer-events-none">' +
+              '<button id="fab-scan" class="pointer-events-auto px-6 py-4 rounded-full text-white font-semibold shadow-soft flex items-center gap-2 active:scale-95 transition" ' +
+                'style="background:#6C63FF; box-shadow:0 4px 20px rgba(108,99,255,0.4);">📷 Escanear QR</button>' +
+            '</div>';
+
+          document.getElementById('profile-logout').addEventListener('click', U.logout);
+          document.getElementById('fab-scan').addEventListener('click', function () { window.location.href = 'scan.html'; });
+          var sel = document.getElementById('profile-event-select');
+          sel.addEventListener('change', function () { U.setActiveId(sel.value); location.reload(); });
+        } catch (err) {
+          app.innerHTML = U.errorHtml(err && err.message ? err.message : 'Error inesperado');
+          var retry = document.getElementById('err-retry');
+          if (retry) retry.addEventListener('click', init);
+        }
+        window.scrollTo(0, 0);
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>

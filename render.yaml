@@ -2,7 +2,7 @@ services:
   - type: web
     name: lyfter-badge-api
     runtime: python
-    rootDir: lyfter-badge-app/backend
+    rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app
     plan: free

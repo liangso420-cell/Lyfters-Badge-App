@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Participación — Lyfter Badge App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Poppins', 'sans-serif'] },
+          colors: { primary: '#6C63FF', 'primary-soft': '#EEEDFF', base: '#F8F9FA' },
+          borderRadius: { card: '16px', btn: '8px' },
+          boxShadow: { soft: '0 4px 20px rgba(0,0,0,0.08)' },
+        },
+      },
+    };
+  </script>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <main id="app"></main>
+  <div id="modal-root"></div>
+  <div id="toast-root" class="fixed top-4 left-1/2 -translate-x-1/2 z-[60] flex flex-col gap-2 items-center pointer-events-none"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      var API = window.LyfterAPI;
+      var U = window.LyfterUtils;
+
+      var user = API.currentUser();
+      if (!user) { window.location.replace('login.html'); return; }
+      if (user.role !== 'admin') { window.location.replace('profile.html'); return; }
+
+      var app = document.getElementById('app');
+      app.innerHTML = U.loadingHtml();
+
+      async function init() {
+        try {
+          var events = await API.listAdminEvents();
+          var activeId = U.ensureActive(events);
+          if (!activeId) {
+            app.innerHTML = U.adminShell('participation', '<div class="card-soft p-8 text-center text-gray-500">Primero crea un evento.</div>', events, activeId);
+            U.mountAdminShell();
+            return;
+          }
+
+          var data = await API.listAdminBadges(activeId);
+          var totalP = data.event.totalParticipants;
+          var rows = data.badges.length
+            ? data.badges.map(function (b) {
+                var t = b.token || '';
+                var tokenShort = t.length > 9 ? (t.slice(0, 4) + '…' + t.slice(-4)) : t;
+                var participantes = (totalP != null) ? (b.redeemed + ' / ' + totalP) : String(b.redeemed);
+                return '<tr>' +
+                  '<td class="py-3 pr-4"><span class="mr-2">' + b.emoji + '</span>' + U.esc(b.name) + '</td>' +
+                  '<td class="py-3 pr-4 text-gray-400 font-mono text-xs">' + U.esc(tokenShort) + '</td>' +
+                  '<td class="py-3 pr-4"><span class="font-semibold text-primary">' + b.redeemed + '</span></td>' +
+                  '<td class="py-3 text-gray-500">' + participantes + '</td></tr>';
+              }).join('')
+            : '<tr><td colspan="4" class="py-6 text-center text-gray-400">Este evento aún no tiene badges.</td></tr>';
+
+          var inner =
+            '<div class="card-soft p-8 anim-fade">' +
+              '<h2 class="text-xl font-bold mb-1">Participación — ' + U.esc(data.event.name) + '</h2>' +
+              '<p class="text-sm text-gray-400 mb-6">Estado de redención por badge</p>' +
+              '<div class="overflow-x-auto"><table class="w-full text-sm">' +
+                '<thead><tr class="text-left text-gray-400 border-b border-gray-200">' +
+                  '<th class="py-3 pr-4 font-medium">Badge</th>' +
+                  '<th class="py-3 pr-4 font-medium">QR token</th>' +
+                  '<th class="py-3 pr-4 font-medium">Canjeados</th>' +
+                  '<th class="py-3 font-medium">Participantes</th>' +
+                '</tr></thead>' +
+                '<tbody class="divide-y divide-gray-100">' + rows + '</tbody>' +
+              '</table></div>' +
+            '</div>';
+
+          app.innerHTML = U.adminShell('participation', inner, events, activeId);
+          U.mountAdminShell();
+        } catch (err) {
+          app.innerHTML = U.errorHtml(err && err.message ? err.message : 'Error inesperado');
+          var retry = document.getElementById('err-retry');
+          if (retry) retry.addEventListener('click', init);
+        }
+        window.scrollTo(0, 0);
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>

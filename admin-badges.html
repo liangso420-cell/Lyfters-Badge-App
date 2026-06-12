@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Badges — Lyfter Badge App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Poppins', 'sans-serif'] },
+          colors: { primary: '#6C63FF', 'primary-soft': '#EEEDFF', base: '#F8F9FA' },
+          borderRadius: { card: '16px', btn: '8px' },
+          boxShadow: { soft: '0 4px 20px rgba(0,0,0,0.08)' },
+        },
+      },
+    };
+  </script>
+  <link rel="stylesheet" href="css/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+</head>
+<body>
+  <main id="app"></main>
+  <div id="modal-root"></div>
+  <div id="toast-root" class="fixed top-4 left-1/2 -translate-x-1/2 z-[60] flex flex-col gap-2 items-center pointer-events-none"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      var API = window.LyfterAPI;
+      var U = window.LyfterUtils;
+
+      var user = API.currentUser();
+      if (!user) { window.location.replace('login.html'); return; }
+      if (user.role !== 'admin') { window.location.replace('profile.html'); return; }
+
+      /* selectedBadgeId sobrevive recargas vía sessionStorage */
+      var SELECTED_KEY = 'lyfter_selected_badge';
+      function getSelectedId() { try { return sessionStorage.getItem(SELECTED_KEY) || null; } catch (e) { return null; } }
+      function setSelectedId(id) { try { sessionStorage.setItem(SELECTED_KEY, id); } catch (e) {} }
+
+      var app = document.getElementById('app');
+      app.innerHTML = U.loadingHtml();
+      U.showPendingToast();
+
+      async function init() {
+        try {
+          var events = await API.listAdminEvents();
+          var activeId = U.ensureActive(events);
+          if (!activeId) {
+            app.innerHTML = U.adminShell('badges', '<div class="card-soft p-8 text-center text-gray-500">Primero crea un evento.</div>', events, activeId);
+            U.mountAdminShell();
+            return;
+          }
+
+          var data = await API.listAdminBadges(activeId);
+          var badges = data.badges;
+          var selectedId = getSelectedId();
+          if (selectedId && !badges.some(function (b) { return b.id === selectedId; })) selectedId = null;
+          var selected = badges.find(function (b) { return b.id === selectedId; }) || badges[0] || null;
+
+          var list = badges.length
+            ? badges.map(function (b) {
+                return '<div class="flex items-center justify-between p-4 rounded-card bg-base">' +
+                  '<div class="flex items-center gap-3"><span class="text-2xl">' + b.emoji + '</span>' +
+                    '<div><p class="font-medium">' + U.esc(b.name) + '</p><p class="text-xs text-gray-400">' + U.esc(b.desc) + '</p></div></div>' +
+                  '<button data-qr="' + b.id + '" class="qr-btn px-4 py-2 rounded-btn text-sm font-medium text-primary border border-primary hover:bg-primary-soft">Ver QR</button>' +
+                '</div>';
+              }).join('')
+            : '<p class="text-sm text-gray-400 text-center py-4">Aún no hay badges. Agrega el primero abajo 👇</p>';
+
+          var qrPanel = selected
+            ? '<div class="p-6 rounded-card text-center" style="background:#EEEDFF;">' +
+                '<p class="text-sm font-semibold text-primary mb-3">QR generado para "' + U.esc(selected.name) + '"</p>' +
+                '<div class="inline-block bg-white p-3 rounded-card shadow-soft">' +
+                  '<canvas id="qr-canvas"></canvas>' +
+                '</div>' +
+                '<p class="text-xs text-gray-400 mt-2 break-all">' + U.esc(selected.redeemUrl) + '</p>' +
+                '<button id="qr-download" class="mt-3 px-5 py-2.5 rounded-btn text-white font-medium text-sm" style="background:#6C63FF;">⬇️ Descargar QR</button>' +
+              '</div>'
+            : '';
+
+          var inner =
+            '<div class="card-soft p-8 anim-fade">' +
+              '<h2 class="text-xl font-bold mb-1">Badges — ' + U.esc(data.event.name) + '</h2>' +
+              '<p class="text-sm text-gray-400 mb-6">Crea badges y genera sus códigos QR</p>' +
+              '<div class="space-y-3 mb-6">' + list + '</div>' +
+              '<div class="p-4 rounded-card border border-dashed border-gray-300 mb-6">' +
+                '<p class="text-sm font-semibold mb-3 text-gray-700">➕ Agregar nuevo badge</p>' +
+                '<form id="add-badge-form" novalidate>' +
+                  '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">' +
+                    '<input type="text" name="name" placeholder="Nombre del badge" class="px-4 py-3 bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" />' +
+                    '<input type="text" name="desc" placeholder="Descripción" class="px-4 py-3 bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" />' +
+                  '</div>' +
+                  '<button type="submit" class="mt-3 px-5 py-2.5 rounded-btn text-white font-medium text-sm" style="background:#6C63FF;">Agregar badge</button>' +
+                '</form>' +
+              '</div>' +
+              qrPanel +
+            '</div>';
+
+          app.innerHTML = U.adminShell('badges', inner, events, activeId);
+          U.mountAdminShell();
+
+          Array.prototype.forEach.call(document.querySelectorAll('.qr-btn'), function (btn) {
+            btn.addEventListener('click', function () { setSelectedId(btn.getAttribute('data-qr')); location.reload(); });
+          });
+          if (selected && selected.redeemUrl) {
+            var qrCanvas = document.getElementById('qr-canvas');
+            if (qrCanvas) {
+              QRCode.toCanvas(qrCanvas, selected.redeemUrl, { width: 140, margin: 2 }, function(err) {
+                if (err) console.error('QR error:', err);
+              });
+            }
+            var dl = document.getElementById('qr-download');
+            if (dl) {
+              dl.addEventListener('click', function () {
+                var c = document.getElementById('qr-canvas');
+                if (!c) return;
+                var link = document.createElement('a');
+                link.download = 'qr-' + selected.name.replace(/\s+/g, '-') + '.png';
+                link.href = c.toDataURL('image/png');
+                link.click();
+                U.toast('QR de "' + selected.name + '" descargado', 'success');
+              });
+            }
+          }
+
+          var form = document.getElementById('add-badge-form');
+          form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            var nameField = form.elements['name'];
+            if (!U.setFieldError(nameField, nameField.value.trim() ? '' : 'Ingresa un nombre')) return;
+            try {
+              var b = await API.addBadge(activeId, { name: nameField.value.trim(), desc: form.desc.value.trim(), emoji: '🏅' });
+              setSelectedId(b.id);
+              U.toast('Badge "' + b.name + '" agregado', 'success');
+              location.reload();
+            } catch (err) { U.toast(err.message || 'No se pudo agregar el badge', 'error'); }
+          });
+        } catch (err) {
+          app.innerHTML = U.errorHtml(err && err.message ? err.message : 'Error inesperado');
+          var retry = document.getElementById('err-retry');
+          if (retry) retry.addEventListener('click', init);
+        }
+        window.scrollTo(0, 0);
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>

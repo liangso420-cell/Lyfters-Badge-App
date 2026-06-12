@@ -47,7 +47,8 @@ body {
   left: 0; right: 0;
   height: 2px;
   background: linear-gradient(90deg, transparent, #6C63FF, transparent);
-  animation: scan-line 2s ease-in-out infinite;
+  transition: top 1.5s linear;
+  animation: scan-line 2s linear infinite;
 }
 
 /* ---- Animación del badge en el modal de celebración ---- */

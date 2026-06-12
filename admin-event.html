@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crear evento — Lyfter Badge App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Poppins', 'sans-serif'] },
+          colors: { primary: '#6C63FF', 'primary-soft': '#EEEDFF', base: '#F8F9FA' },
+          borderRadius: { card: '16px', btn: '8px' },
+          boxShadow: { soft: '0 4px 20px rgba(0,0,0,0.08)' },
+        },
+      },
+    };
+  </script>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <main id="app"></main>
+  <div id="modal-root"></div>
+  <div id="toast-root" class="fixed top-4 left-1/2 -translate-x-1/2 z-[60] flex flex-col gap-2 items-center pointer-events-none"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      var API = window.LyfterAPI;
+      var U = window.LyfterUtils;
+
+      var user = API.currentUser();
+      if (!user) { window.location.replace('login.html'); return; }
+      if (user.role !== 'admin') { window.location.replace('profile.html'); return; }
+
+      var app = document.getElementById('app');
+      app.innerHTML = U.loadingHtml();
+      U.showPendingToast();
+
+      async function init() {
+        try {
+          var events = await API.listAdminEvents();
+          var activeId = U.ensureActive(events);
+
+          var inner =
+            '<div class="card-soft p-8 anim-fade">' +
+              '<h2 class="text-xl font-bold mb-1">Crear evento</h2>' +
+              '<p class="text-sm text-gray-400 mb-6">Configura un nuevo evento de badges</p>' +
+              '<form id="event-form" class="space-y-4" novalidate>' +
+                U.inputField({ label: 'Nombre del evento', name: 'name', placeholder: 'Lyfter Summit 2026' }) +
+                '<div><label class="text-sm font-medium text-gray-600">Descripción</label>' +
+                  '<textarea name="description" rows="3" placeholder="Descripción del evento..." ' +
+                  'class="w-full mt-1 px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none"></textarea></div>' +
+                '<div class="grid grid-cols-2 gap-4">' +
+                  U.inputField({ label: 'Fecha inicio', type: 'date', name: 'start' }) +
+                  U.inputField({ label: 'Fecha fin', type: 'date', name: 'end' }) +
+                '</div>' +
+                U.inputField({ label: 'Premio sorpresa 🎁', name: 'prize', placeholder: 'Entrada VIP al after-party' }) +
+                U.primaryButton('Crear evento', 'type="submit"') +
+              '</form>' +
+            '</div>';
+
+          app.innerHTML = U.adminShell('event', inner, events, activeId);
+          U.mountAdminShell();
+
+          var form = document.getElementById('event-form');
+          form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            var nameField = form.elements['name'];
+            var ok = true;
+            ok = U.setFieldError(nameField, nameField.value.trim() ? '' : 'Ingresa un nombre') && ok;
+            ok = U.setFieldError(form.start, form.start.value ? '' : 'Selecciona la fecha de inicio') && ok;
+            ok = U.setFieldError(form.end,   form.end.value   ? '' : 'Selecciona la fecha de fin') && ok;
+            if (ok && form.start.value && form.end.value && form.end.value < form.start.value)
+              ok = U.setFieldError(form.end, 'La fecha fin no puede ser anterior al inicio') && ok;
+            if (!ok) return;
+            try {
+              var created = await API.createEvent({
+                name: nameField.value.trim(),
+                description: form.description.value.trim(),
+                start: form.start.value,
+                end: form.end.value,
+                prize: form.prize.value.trim()
+              });
+              U.setActiveId(created.id);
+              U.toastNextPage('Evento creado ✅ — agrega sus badges', 'success');
+              window.location.href = 'admin-badges.html';
+            } catch (err) { U.toast(err.message || 'No se pudo crear el evento', 'error'); }
+          });
+        } catch (err) {
+          app.innerHTML = U.errorHtml(err && err.message ? err.message : 'Error inesperado');
+          var retry = document.getElementById('err-retry');
+          if (retry) retry.addEventListener('click', init);
+        }
+        window.scrollTo(0, 0);
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>

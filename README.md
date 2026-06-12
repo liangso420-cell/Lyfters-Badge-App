@@ -1,86 +1,120 @@
-# Lyfter Badge App — versión Vanilla (HTML + CSS + JS puro)
+# Lyfter Badge App
 
-App funcional en HTML + CSS + **JS puro (sin frameworks)**. Tiene dos modos de datos
-(ver `js/config.js`):
+App de gamificación con badges para eventos. Los participantes escanean QRs para coleccionar badges y desbloquear premios sorpresa.
 
-- **`backend` (recomendado)** — consume una API Flask real: datos persistentes en
-  MongoDB, multiusuario y QR reales. Ver "Conectar al backend" más abajo.
-- **`mock`** — datos simulados en el navegador (`localStorage`). Cero configuración;
-  ideal para demo offline o probar la UI. Es el valor por defecto para que la app
-  funcione al abrirla sin pasos previos.
+- **Backend**: Python (Flask) + MongoDB — deployado en [Render](https://render.com)
+- **Frontend**: HTML + CSS + JS puro — deployado en [Vercel](https://vercel.com)
 
-## Cómo abrir (modo mock, sin configuración)
-Abre `index.html` en el navegador (doble clic). No requiere build ni servidor.
+## Estructura del repositorio
 
-> Necesita conexión a internet para cargar Tailwind, DaisyUI y la fuente Poppins por CDN.
+```
+lyfters-badge-app/
+├── backend/
+│   ├── app.py              API Flask (auth, eventos, badges, redención)
+│   ├── db.py               Conexión MongoDB (patrón singleton)
+│   ├── requirements.txt    Dependencias Python
+│   ├── Procfile            Comando de arranque para Render (gunicorn)
+│   └── .env.example        Plantilla de variables de entorno
+├── db/
+│   └── seed.js             Script MongoDB Shell para inicializar la BD
+├── docs/
+│   ├── 01-prd.md
+│   ├── 02-diseno-tecnico.md
+│   └── 03-tareas.md
+├── css/styles.css          Estilos propios del frontend
+├── js/
+│   ├── config.js           Modo de datos y URL del backend
+│   ├── api.js              Capa de datos (mock localStorage + cliente Flask)
+│   └── app.js              Router + vistas + interactividad
+├── assets/                 Recursos estáticos
+├── index.html              SPA principal + CDNs (Tailwind, DaisyUI, Poppins)
+├── vercel.json             Rewrite para SPA en Vercel
+├── render.yaml             Configuración de deploy del backend en Render
+└── .gitignore
+```
 
-## Cuentas de demo
+## Cómo correr localmente
+
+### Backend (Flask)
+
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate      # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+cp .env.example .env           # completar con valores reales
+python app.py                  # API en http://localhost:5000
+```
+
+### Frontend
+
+Sirve la raíz del repositorio por HTTP (no `file://` para que CORS funcione):
+
+```bash
+python -m http.server 5500     # abre http://localhost:5500
+```
+
+O con Live Server de VS Code apuntando a la raíz del repo.
+
+### Modo mock (sin backend)
+
+Cambia `mode` en `js/config.js` a `'mock'`. La app funciona en el navegador con datos simulados en `localStorage`, sin necesidad de servidor.
+
+Cuentas de demo en modo mock:
+
 | Rol | Email | Contraseña |
 |-----|-------|------------|
 | Admin | `admin@lyfter.cc` | `admin123` |
 | Participante | `ana@correo.com` | `ana123` |
 
-También puedes **registrar** una cuenta nueva (queda como participante).
+## Variables de entorno (backend)
 
-## Estructura
+Copia `backend/.env.example` a `backend/.env` y completa los valores:
+
+| Variable | Descripción | Ejemplo local |
+|----------|-------------|---------------|
+| `MONGO_URI` | URI de conexión a MongoDB | `mongodb://localhost:27017` |
+| `JWT_SECRET` | Clave secreta para firmar tokens JWT | cadena aleatoria larga |
+| `PORT` | Puerto del servidor (Render lo inyecta automáticamente) | `5000` |
+| `FLASK_ENV` | `development` activa debug; `production` lo desactiva | `development` |
+| `CORS_ORIGINS` | Orígenes permitidos separados por coma | `http://localhost:5500` |
+| `APP_BASE_URL` | URL base del backend (se usa para generar los QR) | `http://localhost:5000` |
+
+**Nunca comitas el archivo `.env` — solo `.env.example`.**
+
+## URLs de producción
+
+| Servicio | URL |
+|----------|-----|
+| Backend (Render) | `https://lyfters-badge-app.onrender.com` |
+| Frontend (Vercel) | raíz del repositorio (sin subdirectorio) |
+
+## Deploy
+
+### Backend — Render
+
+El archivo `render.yaml` configura el servicio con `rootDir: backend`. Variables como `MONGO_URI` y `CORS_ORIGINS` se ingresan manualmente en el dashboard de Render.
+
+### Frontend — Vercel
+
+Vercel despliega desde la raíz del repositorio. El archivo `vercel.json` incluye el rewrite necesario para la SPA (`/* → /index.html`).
+
+## Inicializar la base de datos (opcional)
+
+El script `db/seed.js` es para MongoDB Shell (`mongosh`) y crea colecciones con validación de esquema, índices y datos de prueba:
+
+```bash
+mongosh "tu-mongo-uri" db/seed.js
 ```
-app-vanilla/
-├── index.html        estructura principal + CDNs y config de Tailwind
-├── css/styles.css     estilos propios extraídos del boceto
-├── js/config.js       flag de modo de datos ('mock' | 'backend')
-├── js/api.js          capa de datos: implementación mock + cliente del backend Flask
-├── js/app.js          router + vistas + interactividad (consume js/api.js)
-└── assets/            (vacío: el boceto sólo usa emojis y un SVG inline)
-```
 
-## Conectar al backend Flask (recomendado)
-Las vistas no saben de dónde vienen los datos: hablan con `window.LyfterAPI`
-(`js/api.js`), que tiene dos implementaciones detrás de la misma interfaz async.
+## Vistas de la app
 
-> El código del backend Flask **no está en esta carpeta** (se quitó para dejar la v2
-> mínima), pero sigue en el historial de git. Recupéralo con:
-> ```bash
-> git checkout HEAD -- backend
-> ```
-
-Para activarlo:
-1. **Levanta el backend** (necesita MongoDB):
-   ```bash
-   cd backend
-   python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
-   pip install -r requirements.txt
-   cp .env.example .env        # completa MONGO_URI, JWT_SECRET, etc.
-   python seed.py              # opcional: crea admin@lyfter.cc / admin123 + evento demo
-   python app.py               # API en http://localhost:5000
-   ```
-2. **Sirve esta app por HTTP** (no `file://`) para tener un origen válido para CORS.
-   Ej.: `cd app-vanilla && python -m http.server 5500` → http://localhost:5500
-3. **Habilita CORS** para ese origen: en `backend/.env` añade tu origen a
-   `CORS_ORIGINS` (por defecto solo permite `http://localhost:5173`):
-   ```
-   CORS_ORIGINS=http://localhost:5173,http://localhost:5500
-   ```
-   y reinicia el backend.
-4. **Cambia el flag** en `js/config.js`:
-   ```js
-   window.LYFTER_CONFIG = { mode: 'backend', apiBaseUrl: 'http://localhost:5000' };
-   ```
-
-Mapeo que hace `js/api.js` (boceto/UI ↔ API): `name↔nombre`, `desc↔descripcion`,
-`prize↔premio`, `emoji↔icon`, `qrImage↔qr_image`, `role:'participant'↔rol:'participante'`.
-El JWT se guarda en `localStorage` y se envía como `Authorization: Bearer <token>`.
-
-En modo `backend`, el panel admin muestra el **QR real** (PNG generado por el backend,
-campo `qr_image`) y "Descargar QR" baja ese `.png`. En modo `mock` se usa un QR placeholder
-SVG (y la descarga es `.svg`), porque el mock no genera imágenes QR reales.
-
-## Reiniciar la demo
-En la consola del navegador: `lyfterReset()` restaura los datos semilla.
-
-## Mapa de vistas (hash routing)
-- `#/login`, `#/register` — autenticación
-- `#/profile` — perfil del participante (progreso, grid de badges, botón flotante escanear)
-- `#/scan` — escáner QR (toca el visor para simular un escaneo)
-- `#/admin/event` — crear evento
-- `#/admin/badges` — gestión de badges + QR
-- `#/admin/participation` — seguimiento de participación
+| Hash | Vista |
+|------|-------|
+| `#/login` | Login |
+| `#/register` | Registro |
+| `#/profile` | Perfil del participante (progreso + badges) |
+| `#/scan` | Escáner QR |
+| `#/admin/event` | Crear evento (admin) |
+| `#/admin/badges` | Gestión de badges + QR (admin) |
+| `#/admin/participation` | Seguimiento de participación (admin) |

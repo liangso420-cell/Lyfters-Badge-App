@@ -11,5 +11,13 @@ __pycache__/
 .env
 !.env.example
 
-# Archivos temporales
+# Entornos virtuales
+.venv/
+venv/
+
+# Dependencias Node
+node_modules/
+
+# Archivos temporales y logs
+*.log
 query

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Iniciar sesión — Lyfter Badge App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Poppins', 'sans-serif'] },
+          colors: { primary: '#6C63FF', 'primary-soft': '#EEEDFF', base: '#F8F9FA' },
+          borderRadius: { card: '16px', btn: '8px' },
+          boxShadow: { soft: '0 4px 20px rgba(0,0,0,0.08)' },
+        },
+      },
+    };
+  </script>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <main id="app"></main>
+  <div id="modal-root"></div>
+  <div id="toast-root" class="fixed top-4 left-1/2 -translate-x-1/2 z-[60] flex flex-col gap-2 items-center pointer-events-none"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      var API = window.LyfterAPI;
+      var U = window.LyfterUtils;
+
+      var user = API.currentUser();
+      if (user) { window.location.replace(user.role === 'admin' ? 'admin-event.html' : 'profile.html'); return; }
+
+      var app = document.getElementById('app');
+      U.showPendingToast();
+
+      var demoHint = API.mode === 'mock'
+        ? '<p class="text-center text-xs text-gray-300 pt-2">Demo · admin@lyfter.cc / admin123 · ana@correo.com / ana123</p>'
+        : '';
+
+      app.innerHTML =
+        '<section class="device-frame px-4 pt-12 pb-12">' +
+          '<div class="card-soft p-8 anim-fade">' +
+            '<div class="text-center mb-6">' +
+              '<div class="text-4xl mb-2">🏆</div>' +
+              '<h2 class="text-2xl font-bold">Lyfter Badge App</h2>' +
+              '<p class="text-gray-400 text-sm mt-1">Escanea, colecciona, gana</p>' +
+            '</div>' +
+            '<form id="login-form" class="space-y-4" novalidate>' +
+              U.inputField({ label: 'Email', type: 'email', name: 'email', placeholder: 'tu@correo.com' }) +
+              U.inputField({ label: 'Contraseña', type: 'password', name: 'password', placeholder: '••••••••' }) +
+              U.primaryButton('Entrar', 'type="submit"') +
+              '<p class="text-center text-sm text-gray-500">¿No tienes cuenta? <a href="register.html" class="text-primary font-medium">Regístrate</a></p>' +
+              demoHint +
+            '</form>' +
+          '</div>' +
+        '</section>';
+
+      var form = document.getElementById('login-form');
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var email = form.email, pass = form.password, ok = true;
+        ok = U.setFieldError(email, U.EMAIL_RE.test(email.value.trim()) ? '' : 'Email no válido') && ok;
+        ok = U.setFieldError(pass, pass.value ? '' : 'Ingresa tu contraseña') && ok;
+        if (!ok) return;
+        try {
+          var loggedUser = await API.login(email.value.trim(), pass.value);
+          U.toastNextPage('¡Bienvenido!', 'success');
+          window.location.href = loggedUser.role === 'admin' ? 'admin-event.html' : 'profile.html';
+        } catch (err) { U.setFieldError(pass, err.message || 'No se pudo iniciar sesión'); }
+      });
+    })();
+  </script>
+</body>
+</html>

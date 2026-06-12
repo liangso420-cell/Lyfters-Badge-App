@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Escanear QR — Lyfter Badge App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Poppins', 'sans-serif'] },
+          colors: { primary: '#6C63FF', 'primary-soft': '#EEEDFF', base: '#F8F9FA' },
+          borderRadius: { card: '16px', btn: '8px' },
+          boxShadow: { soft: '0 4px 20px rgba(0,0,0,0.08)' },
+        },
+      },
+    };
+  </script>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <main id="app"></main>
+  <div id="modal-root"></div>
+  <div id="toast-root" class="fixed top-4 left-1/2 -translate-x-1/2 z-[60] flex flex-col gap-2 items-center pointer-events-none"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      var API = window.LyfterAPI;
+      var U = window.LyfterUtils;
+
+      var user = API.currentUser();
+      if (!user) { window.location.replace('login.html'); return; }
+      if (user.role === 'admin') { window.location.replace('admin-event.html'); return; }
+
+      var app = document.getElementById('app');
+
+      app.innerHTML =
+        '<section class="device-frame px-4 pt-12">' +
+          '<div class="rounded-card overflow-hidden relative" style="background:#111; height:520px;">' +
+            '<button id="scan-close" class="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-white/20 text-white flex items-center justify-center backdrop-blur hover:bg-white/30">✕</button>' +
+            '<video id="scan-video" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover; position:absolute; inset:0;"></video>' +
+            '<canvas id="scan-canvas" style="visibility:hidden; position:absolute; width:1px; height:1px;"></canvas>' +
+            '<div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">' +
+              '<div class="relative" style="width:240px; height:240px;">' +
+                '<span class="scanner-corner corner-tl"></span><span class="scanner-corner corner-tr"></span>' +
+                '<span class="scanner-corner corner-bl"></span><span class="scanner-corner corner-br"></span>' +
+              '</div>' +
+              '<p class="text-gray-300 mt-8 text-sm">Apunta al código QR</p>' +
+            '</div>' +
+            '<div id="manual-fallback" class="absolute bottom-6 left-4 right-4">' +
+              '<input id="scan-token" type="text" placeholder="Pega el token del QR" ' +
+                'class="w-full px-4 py-3 rounded-btn bg-white/90 outline-none text-sm" />' +
+              '<button id="scan-redeem" class="mt-2 w-full py-3 rounded-btn text-white font-semibold" style="background:#6C63FF;">Canjear</button>' +
+            '</div>' +
+          '</div>' +
+        '</section>';
+
+      document.getElementById('scan-close').addEventListener('click', function () {
+        if (window._scanStream) window._scanStream.getTracks().forEach(function(t) { t.stop(); });
+        window.location.href = 'profile.html';
+      });
+
+      document.getElementById('scan-redeem').addEventListener('click', function () {
+        doRedeem(document.getElementById('scan-token').value.trim());
+      });
+
+      async function startCamera() {
+        try {
+          var stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+          window._scanStream = stream;
+          var video = document.getElementById('scan-video');
+          video.srcObject = stream;
+          video.play();
+          scanLoop(stream);
+        } catch (err) {
+          document.getElementById('manual-fallback').style.display = 'block';
+          U.toast('No se pudo acceder a la cámara', 'error');
+        }
+      }
+
+      function scanLoop(stream) {
+        var video = document.getElementById('scan-video');
+        var canvas = document.getElementById('scan-canvas');
+        var ctx = canvas.getContext('2d');
+        function tick() {
+          if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0);
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var code = jsQR(imageData.data, imageData.width, imageData.height);
+            if (code) {
+              stream.getTracks().forEach(function(t) { t.stop(); });
+              doRedeem(code.data);
+              return;
+            }
+          }
+          setTimeout(tick, 150);
+        }
+        setTimeout(tick, 150);
+      }
+
+      async function doRedeem(token) {
+        try {
+          var events = await API.listEvents();
+          var activeId = U.ensureActive(events);
+          var r = await API.redeem(activeId, token);
+          if (r.status === 'none') {
+            U.toastNextPage('Ya completaste todos los badges de este evento', 'info');
+            window.location.href = 'profile.html';
+            return;
+          }
+          if (r.status === 'duplicate') {
+            U.toastNextPage('Ya tenías "' + r.badge.name + '"', 'info');
+            window.location.href = 'profile.html';
+            return;
+          }
+          showCelebration(r);
+        } catch (err) { U.toast(err.message || 'No se pudo canjear', 'error'); }
+      }
+
+      function showCelebration(r) {
+        var modalRoot = document.getElementById('modal-root');
+        var isLast = r.complete;
+        var prizeBlock = (isLast && r.prize)
+          ? '<div class="mt-4 p-4 rounded-card" style="background:#EEEDFF;">' +
+              '<p class="text-xs uppercase tracking-wide text-primary font-semibold">Premio desbloqueado</p>' +
+              '<p class="text-lg font-bold mt-1">' + U.esc(r.prize) + '</p></div>'
+          : '';
+        var title = isLast ? '¡Completaste el evento!' : '¡Badge obtenido!';
+        var subtitle = isLast ? 'Obtuviste todos los badges del evento.' : U.esc(r.badge.desc || '');
+
+        modalRoot.innerHTML =
+          '<div class="fixed inset-0 z-50 flex items-center justify-center p-6 anim-fade" style="background:rgba(17,24,39,0.7);">' +
+            '<div class="card-soft p-8 text-center w-full max-w-sm anim-pop">' +
+              '<div class="text-6xl animate-pulse-badge mb-4">' + r.badge.emoji + '</div>' +
+              '<h3 class="text-2xl font-bold text-primary">' + title + '</h3>' +
+              '<p class="text-lg font-semibold mt-2">' + U.esc(r.badge.name) + '</p>' +
+              '<p class="text-sm text-gray-500 mt-1">' + subtitle + '</p>' +
+              prizeBlock +
+              '<button id="celebrate-ok" class="mt-6 w-full py-3 rounded-btn text-white font-semibold" style="background:#6C63FF;">¡Genial!</button>' +
+            '</div>' +
+          '</div>';
+        document.getElementById('celebrate-ok').addEventListener('click', function () {
+          U.closeModal();
+          window.location.href = 'profile.html';
+        });
+      }
+
+      startCamera();
+    })();
+  </script>
+</body>
+</html>
