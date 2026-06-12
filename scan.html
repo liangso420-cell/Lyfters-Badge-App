@@ -101,7 +101,10 @@
             var code = jsQR(imageData.data, imageData.width, imageData.height);
             if (code) {
               stream.getTracks().forEach(function(t) { t.stop(); });
-              doRedeem(code.data);
+              var qrData = code.data;
+              var tokenMatch = qrData.match(/\/redeem\/[^\/]+\/(.+)$/);
+              var token = tokenMatch ? tokenMatch[1] : qrData;
+              doRedeem(token);
               return;
             }
           }
