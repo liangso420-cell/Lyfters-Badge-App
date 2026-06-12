@@ -272,6 +272,9 @@
         })
       };
     },
+    async deleteBadge(eventId, badgeId) {
+      return await request('DELETE', '/admin/events/' + eventId + '/badges/' + badgeId);
+    },
     resetDemo() { throw new Error('resetDemo no disponible en modo backend'); }
   };
 
@@ -306,6 +309,7 @@
     createEvent: impl.createEvent,
     addBadge: impl.addBadge,
     listAdminBadges: impl.listAdminBadges,
+    deleteBadge: impl.deleteBadge,
     resetDemo: impl.resetDemo
   };
 })();
