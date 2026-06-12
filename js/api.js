@@ -210,7 +210,14 @@
     }
     var data = {};
     try { data = await res.json(); } catch (e) {}
-    if (res.status === 401) { clearSession(); throw new Error(data.error || 'Sesión expirada'); }
+    if (res.status === 401) {
+      clearSession();
+      var _p = window.location.pathname;
+      if (!_p.includes('login.html') && !_p.includes('register.html')) {
+        window.location.replace('login.html?next=' + encodeURIComponent(_p + window.location.search + window.location.hash));
+      }
+      throw new Error(data.error || 'Sesión expirada');
+    }
     if (!res.ok) throw new Error(data.error || ('Error ' + res.status));
     return data;
   }

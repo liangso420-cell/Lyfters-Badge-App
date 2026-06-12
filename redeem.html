@@ -70,7 +70,7 @@
       /* ── 3. Verificar sesión; redirigir a login si no hay ── */
       var user = API.currentUser();
       if (!user) {
-        window.location.replace('login.html?next=' + encodeURIComponent(window.location.href));
+        window.location.replace('login.html?next=' + encodeURIComponent(window.location.pathname + window.location.search + window.location.hash));
         return;
       }
 
@@ -172,7 +172,7 @@
         if (reloginBtn) {
           reloginBtn.addEventListener('click', function () {
             API.logout();
-            window.location.href = 'login.html?next=' + encodeURIComponent(window.location.href);
+            window.location.href = 'login.html?next=' + encodeURIComponent(window.location.pathname + window.location.search + window.location.hash);
           });
         }
 
@@ -188,9 +188,9 @@
           showSuccess(result);
         } catch (err) {
           var msg = (err && err.message) ? err.message : 'Error inesperado';
-          // 401 ya fue manejado por api.js (clearSession + throw), redirigir a login
+          // 401 ya fue manejado por api.js (clearSession + redirect), pero por si acaso:
           if (msg.toLowerCase().includes('sesión') || msg.toLowerCase().includes('expirada')) {
-            window.location.href = 'login.html?next=' + encodeURIComponent(window.location.href);
+            window.location.href = 'login.html?next=' + encodeURIComponent(window.location.pathname + window.location.search + window.location.hash);
             return;
           }
           showError(msg);
