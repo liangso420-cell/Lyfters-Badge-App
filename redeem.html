@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Canjear badge — Lyfter Badge App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Poppins', 'sans-serif'] },
+          colors: { primary: '#6C63FF', 'primary-soft': '#EEEDFF', base: '#F8F9FA' },
+          borderRadius: { card: '16px', btn: '8px' },
+          boxShadow: { soft: '0 4px 20px rgba(0,0,0,0.08)' },
+        },
+      },
+    };
+  </script>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <main id="app"></main>
+  <div id="modal-root"></div>
+  <div id="toast-root" class="fixed top-4 left-1/2 -translate-x-1/2 z-[60] flex flex-col gap-2 items-center pointer-events-none"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      var API = window.LyfterAPI;
+      var U   = window.LyfterUtils;
+      var app = document.getElementById('app');
+
+      /* ── 1. Extraer event_id y token desde el path o query params ── */
+      function parseParams() {
+        // Formato canónico: /redeem/{event_id}/{token}  (Vercel con rewrite)
+        var pathMatch = window.location.pathname.match(/\/redeem\/([^\/]+)\/([^\/\s]+)/);
+        if (pathMatch) return { eventId: pathMatch[1], token: pathMatch[2] };
+
+        // Fallback para dev con Live Server: ?event={event_id}&token={token}
+        var qs = new URLSearchParams(window.location.search);
+        var eventId = qs.get('event');
+        var token   = qs.get('token');
+        if (eventId && token) return { eventId: eventId, token: token };
+
+        return null;
+      }
+
+      var params = parseParams();
+
+      /* ── 2. URL inválida ── */
+      if (!params) {
+        app.innerHTML =
+          '<section class="device-frame px-4 pt-24 text-center">' +
+            '<div class="text-5xl mb-4">🔍</div>' +
+            '<p class="text-base font-semibold text-gray-700">QR no reconocido</p>' +
+            '<p class="text-sm text-gray-400 mt-2">Este enlace no contiene los datos necesarios.</p>' +
+            '<a href="profile.html" class="inline-block mt-6 px-6 py-3 rounded-btn text-white font-semibold text-sm" style="background:#6C63FF;">Ir al inicio</a>' +
+          '</section>';
+        return;
+      }
+
+      /* ── 3. Verificar sesión; redirigir a login si no hay ── */
+      var user = API.currentUser();
+      if (!user) {
+        window.location.replace('login.html?next=' + encodeURIComponent(window.location.href));
+        return;
+      }
+
+      /* ── 4. Estado de carga ── */
+      function showLoading() {
+        app.innerHTML =
+          '<section class="device-frame px-4 pt-24 text-center">' +
+            '<div class="text-5xl animate-pulse-badge mb-4">🏅</div>' +
+            '<p class="text-sm text-gray-500 mt-2">Canjeando badge…</p>' +
+          '</section>';
+      }
+
+      /* ── 5. Estado éxito ── */
+      function showSuccess(r) {
+        var isDup  = r.status === 'duplicate';
+        var isLast = r.complete && !isDup;
+        var badge  = r.badge || {};
+        var icon   = badge.emoji || '🏅';
+
+        var title, subtitle, iconColor;
+        if (isDup) {
+          title     = '¡Ya tenías este badge!';
+          subtitle  = '"' + U.esc(badge.name) + '" ya estaba en tu colección.';
+          iconColor = '#f59e0b';
+        } else if (isLast) {
+          title     = '¡Completaste el evento!';
+          subtitle  = '¡Felicidades! Obtuviste todos los badges.';
+          iconColor = '#6C63FF';
+        } else {
+          title     = '¡Badge obtenido!';
+          subtitle  = U.esc(badge.desc || badge.name || '');
+          iconColor = '#6C63FF';
+        }
+
+        var prizeBlock = (isLast && r.prize)
+          ? '<div class="mt-5 p-4 rounded-card" style="background:#EEEDFF;">' +
+              '<p class="text-xs uppercase tracking-wide font-semibold text-primary">Premio desbloqueado</p>' +
+              '<p class="text-lg font-bold mt-1">' + U.esc(r.prize) + '</p>' +
+            '</div>'
+          : '';
+
+        var progressBlock = (r.progress && !isDup)
+          ? '<p class="text-sm mt-3" style="color:#9ca3af;">' +
+              r.progress.obtained + ' de ' + r.progress.total + ' badges' +
+            '</p>'
+          : '';
+
+        app.innerHTML =
+          '<section class="device-frame px-4 pt-12 pb-12">' +
+            '<div class="card-soft p-8 text-center anim-pop">' +
+              '<div class="text-6xl animate-pulse-badge mb-4">' + icon + '</div>' +
+              '<h2 class="text-2xl font-bold" style="color:' + iconColor + ';">' + title + '</h2>' +
+              '<p class="text-sm text-gray-500 mt-2">' + subtitle + '</p>' +
+              progressBlock +
+              prizeBlock +
+              '<button id="redeem-profile" class="mt-6 w-full py-3 rounded-btn text-white font-semibold" style="background:#6C63FF;">Ver mi perfil</button>' +
+            '</div>' +
+          '</section>';
+
+        document.getElementById('redeem-profile').addEventListener('click', function () {
+          window.location.href = 'profile.html';
+        });
+      }
+
+      /* ── 6. Estado error ── */
+      function showError(msg) {
+        var lower      = (msg || '').toLowerCase();
+        var isExpired  = lower.includes('sesión') || lower.includes('expirada') || lower.includes('expired');
+        var isInvalid  = lower.includes('badge no encontrado') || lower.includes('inválido') || lower.includes('invalid');
+        var isInactive = lower.includes('inactivo') || lower.includes('no encontrado');
+
+        var icon, heading;
+        if (isExpired)       { icon = '🔒'; heading = 'Sesión expirada'; }
+        else if (isInvalid)  { icon = '❌'; heading = 'QR inválido'; }
+        else if (isInactive) { icon = '📭'; heading = 'Evento no disponible'; }
+        else                 { icon = '⚠️'; heading = 'No se pudo canjear'; }
+
+        var primaryBtn = isExpired
+          ? '<button id="redeem-relogin" class="mt-6 w-full py-3 rounded-btn text-white font-semibold" style="background:#6C63FF;">Iniciar sesión de nuevo</button>'
+          : '<button id="redeem-retry" class="mt-6 w-full py-3 rounded-btn text-white font-semibold" style="background:#6C63FF;">Reintentar</button>';
+
+        app.innerHTML =
+          '<section class="device-frame px-4 pt-12 pb-12">' +
+            '<div class="card-soft p-8 text-center anim-fade">' +
+              '<div class="text-5xl mb-4">' + icon + '</div>' +
+              '<h2 class="text-xl font-bold text-gray-800">' + heading + '</h2>' +
+              '<p class="text-sm text-gray-500 mt-2">' + U.esc(msg) + '</p>' +
+              primaryBtn +
+              '<button id="redeem-home" class="mt-3 w-full py-3 rounded-btn font-semibold text-primary" style="background:#EEEDFF;">Ir al inicio</button>' +
+            '</div>' +
+          '</section>';
+
+        var retryBtn = document.getElementById('redeem-retry');
+        if (retryBtn) {
+          retryBtn.addEventListener('click', function () { showLoading(); doRedeem(); });
+        }
+
+        var reloginBtn = document.getElementById('redeem-relogin');
+        if (reloginBtn) {
+          reloginBtn.addEventListener('click', function () {
+            API.logout();
+            window.location.href = 'login.html?next=' + encodeURIComponent(window.location.href);
+          });
+        }
+
+        document.getElementById('redeem-home').addEventListener('click', function () {
+          window.location.href = 'profile.html';
+        });
+      }
+
+      /* ── 7. Lógica principal ── */
+      async function doRedeem() {
+        try {
+          var result = await API.redeem(params.eventId, params.token);
+          showSuccess(result);
+        } catch (err) {
+          var msg = (err && err.message) ? err.message : 'Error inesperado';
+          // 401 ya fue manejado por api.js (clearSession + throw), redirigir a login
+          if (msg.toLowerCase().includes('sesión') || msg.toLowerCase().includes('expirada')) {
+            window.location.href = 'login.html?next=' + encodeURIComponent(window.location.href);
+            return;
+          }
+          showError(msg);
+        }
+      }
+
+      U.showPendingToast();
+      showLoading();
+      doRedeem();
+    })();
+  </script>
+</body>
+</html>
