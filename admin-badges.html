@@ -72,7 +72,10 @@
                 return '<div class="flex items-center justify-between p-4 rounded-card bg-base">' +
                   '<div class="flex items-center gap-3"><span class="text-2xl">' + b.emoji + '</span>' +
                     '<div><p class="font-medium">' + U.esc(b.name) + '</p><p class="text-xs text-gray-400">' + U.esc(b.desc) + '</p></div></div>' +
+                  '<div class="flex gap-2">' +
                   '<button data-qr="' + b.id + '" class="qr-btn px-4 py-2 rounded-btn text-sm font-medium text-primary border border-primary hover:bg-primary-soft">Ver QR</button>' +
+                  '<button data-del="' + b.id + '" class="del-btn px-3 py-2 rounded-btn text-sm font-medium text-red-500 border border-red-300 hover:bg-red-50">🗑</button>' +
+                  '</div>' +
                 '</div>';
               }).join('')
             : '<p class="text-sm text-gray-400 text-center py-4">Aún no hay badges. Agrega el primero abajo 👇</p>';
@@ -111,6 +114,16 @@
 
           Array.prototype.forEach.call(document.querySelectorAll('.qr-btn'), function (btn) {
             btn.addEventListener('click', function () { setSelectedId(btn.getAttribute('data-qr')); location.reload(); });
+          });
+          Array.prototype.forEach.call(document.querySelectorAll('.del-btn'), function (btn) {
+            btn.addEventListener('click', async function () {
+              if (!confirm('¿Eliminar este badge?')) return;
+              try {
+                await API.deleteBadge(activeId, btn.getAttribute('data-del'));
+                U.toast('Badge eliminado', 'success');
+                location.reload();
+              } catch (err) { U.toast(err.message || 'No se pudo eliminar', 'error'); }
+            });
           });
           if (selected && selected.redeemUrl) {
             var qrCanvas = document.getElementById('qr-canvas');

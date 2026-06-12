@@ -34,7 +34,7 @@ cors_origins = os.getenv(
     "CORS_ORIGINS",
     "http://localhost:5500,http://127.0.0.1:5500"
 ).split(",")
-CORS(app, origins=cors_origins, supports_credentials=True)
+CORS(app, origins=cors_origins, supports_credentials=True, methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"])
 
 
 # ──────────────────────────────────────────────
@@ -423,6 +423,19 @@ def create_badge(event_id):
         "token":       new_badge.get("token", ""),
         "qr_image":    new_badge.get("qr_base64", None),
     }), 201
+
+
+@app.route("/admin/events/<event_id>/badges/<badge_id>", methods=["DELETE"])
+@jwt_required()
+def delete_badge(event_id, badge_id):
+    if not require_admin():
+        return jsonify(error="Acceso denegado"), 403
+    oid = valid_oid(badge_id)
+    if not oid:
+        return jsonify(error="ID invalido"), 400
+    badges().delete_one({"_id": oid})
+    scans().delete_many({"badge_id": oid})
+    return jsonify(ok=True), 200
 
 
 # ──────────────────────────────────────────────
