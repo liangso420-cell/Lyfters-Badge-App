@@ -37,7 +37,16 @@
       var API = window.LyfterAPI;
       var U = window.LyfterUtils;
 
-      var nextUrl = new URLSearchParams(window.location.search).get('next') || '';
+      var _nextRaw = new URLSearchParams(window.location.search).get('next') || '';
+      var nextUrl = '';
+      // Solo aceptar rutas relativas que empiezan con '/' y NO con '//'
+      // Rechaza: https://, http://, //evil.com, javascript:, data:, vacío
+      if (_nextRaw && /^\/[^\/]/.test(_nextRaw)) {
+        try {
+          var _np = new URL(_nextRaw, window.location.origin);
+          if (_np.origin === window.location.origin) nextUrl = _nextRaw;
+        } catch (_e) {}
+      }
 
       var user = API.currentUser();
       if (user) { window.location.replace(nextUrl || (user.role === 'admin' ? 'admin-event.html' : 'profile.html')); return; }
@@ -76,12 +85,8 @@
         if (!ok) return;
         try {
           var loggedUser = await API.login(email.value.trim(), pass.value);
-          if (nextUrl) {
-            window.location.href = nextUrl;
-          } else {
-            U.toastNextPage('¡Bienvenido!', 'success');
-            window.location.href = loggedUser.role === 'admin' ? 'admin-event.html' : 'profile.html';
-          }
+          U.toastNextPage('¡Bienvenido!', 'success');
+          window.location.href = nextUrl || (loggedUser.role === 'admin' ? 'admin-event.html' : 'profile.html');
         } catch (err) { U.setFieldError(pass, err.message || 'No se pudo iniciar sesión'); }
       });
     })();
