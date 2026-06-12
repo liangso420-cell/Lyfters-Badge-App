@@ -105,7 +105,7 @@ def fmt_admin_badge(doc, canjeados=0, base_url=""):
         "nombre":      doc.get("name", ""),
         "descripcion": doc.get("description", ""),
         "token":       token,
-        "redeem_url":  f"{base_url}/redeem/{event_id}/{token}",
+        "redeem_url":  f"{base_url}/redeem.html?event={event_id}&token={token}",
         "canjeados":   canjeados,
         "qr_image":    doc.get("qr_base64", None),
     }
@@ -362,7 +362,7 @@ def admin_list_badges(event_id):
     if not event:
         return jsonify(error="Evento no encontrado"), 404
 
-    base_url   = os.getenv("APP_BASE_URL", "http://localhost:5000")
+    base_url   = os.getenv("APP_BASE_URL", "http://localhost:5500")
     badge_docs = list(badges().find({"event_id": oid}))
 
     result_badges = []
@@ -400,8 +400,8 @@ def create_badge(event_id):
         return jsonify(error="nombre es requerido"), 400
 
     token    = str(uuid.uuid4())
-    base_url = os.getenv("APP_BASE_URL", "http://localhost:5000")
-    qr_data  = f"{base_url}/redeem/{event_id}/{token}"
+    base_url = os.getenv("APP_BASE_URL", "http://localhost:5500")
+    qr_data  = f"{base_url}/redeem.html?event={event_id}&token={token}"
     qr_b64   = generate_qr_base64(qr_data)
 
     result = badges().insert_one({

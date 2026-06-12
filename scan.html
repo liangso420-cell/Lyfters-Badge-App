@@ -102,8 +102,16 @@
             if (code) {
               stream.getTracks().forEach(function(t) { t.stop(); });
               var qrData = code.data;
-              var tokenMatch = qrData.match(/\/redeem\/[^\/]+\/(.+)$/);
-              var token = tokenMatch ? tokenMatch[1] : qrData;
+              var token;
+              // Formato nuevo: redeem.html?event=xxx&token=yyy
+              var qsMatch = qrData.match(/[?&]token=([^&\s]+)/);
+              if (qsMatch) {
+                token = qsMatch[1];
+              } else {
+                // Formato legado: /redeem/event_id/token
+                var pathMatch = qrData.match(/\/redeem\/[^\/]+\/([^\/\s?]+)/);
+                token = pathMatch ? pathMatch[1] : qrData;
+              }
               doRedeem(token);
               return;
             }
