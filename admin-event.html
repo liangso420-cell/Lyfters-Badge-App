@@ -76,7 +76,7 @@
                   return '<div class="flex items-center justify-between p-4 rounded-card bg-base">' +
                     '<div>' +
                       '<p class="font-medium">' + U.esc(e.name) + '</p>' +
-                      '' +
+                      '<p class="text-xs text-gray-400">' + U.esc(new Date(e.start).toLocaleDateString('es-ES', {day:'numeric', month:'long', year:'numeric'})) + ' — ' + U.esc(new Date(e.end).toLocaleDateString('es-ES', {day:'numeric', month:'long', year:'numeric'})) + '</p>' +
                     '</div>' +
                     '<button data-del-event="' + e.id + '" class="del-event-btn px-3 py-2 rounded-btn text-sm font-medium text-red-500 border border-red-300 hover:bg-red-50">🗑</button>' +
                   '</div>';
