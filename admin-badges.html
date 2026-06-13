@@ -129,7 +129,7 @@
             var qrCanvas = document.getElementById('qr-canvas');
             if (qrCanvas) {
               QRCode.toCanvas(qrCanvas, selected.redeemUrl, { width: 140, margin: 2 }, function(err) {
-                if (err) console.error('QR error:', err);
+                if (err) U.toast(err.message || 'Error al generar el QR', 'error');
               });
             }
             var dl = document.getElementById('qr-download');
@@ -151,12 +151,20 @@
             e.preventDefault();
             var nameField = form.elements['name'];
             if (!U.setFieldError(nameField, nameField.value.trim() ? '' : 'Ingresa un nombre')) return;
+            var btn = form.querySelector('[type="submit"]');
+            btn.disabled = true;
+            btn.textContent = 'Cargando...';
             try {
               var b = await API.addBadge(activeId, { name: nameField.value.trim(), desc: form.desc.value.trim(), emoji: '🏅' });
               setSelectedId(b.id);
               U.toast('Badge "' + b.name + '" agregado', 'success');
               location.reload();
-            } catch (err) { U.toast(err.message || 'No se pudo agregar el badge', 'error'); }
+            } catch (err) {
+              U.toast(err.message || 'No se pudo agregar el badge', 'error');
+            } finally {
+              btn.disabled = false;
+              btn.textContent = 'Agregar badge';
+            }
           });
         } catch (err) {
           app.innerHTML = U.errorHtml(err && err.message ? err.message : 'Error inesperado');

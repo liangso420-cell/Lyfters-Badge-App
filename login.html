@@ -88,11 +88,19 @@
         ok = U.setFieldError(email, U.EMAIL_RE.test(email.value.trim()) ? '' : 'Email no válido') && ok;
         ok = U.setFieldError(pass, pass.value ? '' : 'Ingresa tu contraseña') && ok;
         if (!ok) return;
+        var btn = form.querySelector('[type="submit"]');
+        btn.disabled = true;
+        btn.textContent = 'Cargando...';
         try {
           var loggedUser = await API.login(email.value.trim(), pass.value);
           U.toastNextPage('¡Bienvenido!', 'success');
           window.location.href = nextUrl || (loggedUser.role === 'admin' ? 'admin-event.html' : 'profile.html');
-        } catch (err) { U.setFieldError(pass, err.message || 'No se pudo iniciar sesión'); }
+        } catch (err) {
+          U.setFieldError(pass, err.message || 'No se pudo iniciar sesión');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Entrar';
+        }
       });
     })();
   </script>

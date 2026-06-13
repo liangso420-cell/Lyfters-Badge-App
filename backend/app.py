@@ -11,6 +11,7 @@ import bcrypt
 import qrcode
 from bson import ObjectId
 from bson.errors import InvalidId
+from pymongo.errors import DuplicateKeyError
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -19,7 +20,7 @@ from flask_jwt_extended import (
     jwt_required, get_jwt_identity
 )
 
-from db import users, events, badges, scans
+from db import users, events, badges, scans, init_indexes
 
 load_dotenv()
 
@@ -28,6 +29,7 @@ app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET", "dev_secret_cambia_esto")
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=8)
 
 jwt = JWTManager(app)
+init_indexes()
 
 # CORS — permite el frontend en puerto 5500
 cors_origins = os.getenv(
@@ -163,7 +165,11 @@ def login():
 @app.route("/events/", methods=["GET"])
 @app.route("/events",  methods=["GET"])
 def list_events():
-    docs = events().find({"active": True})
+    now  = datetime.utcnow()
+    docs = events().find({
+        "active": True,
+        "end_date": {"$gte": now}
+    })
     return jsonify([fmt_event(e) for e in docs]), 200
 
 
@@ -404,15 +410,18 @@ def create_badge(event_id):
     qr_data  = f"{base_url}/redeem.html?event={event_id}&token={token}"
     qr_b64   = generate_qr_base64(qr_data)
 
-    result = badges().insert_one({
-        "event_id":    oid_event,
-        "name":        nombre,
-        "description": descripcion,
-        "icon":        icon,
-        "token":       token,
-        "qr_base64":   qr_b64,
-        "created_at":  datetime.utcnow(),
-    })
+    try:
+        result = badges().insert_one({
+            "event_id":    oid_event,
+            "name":        nombre,
+            "description": descripcion,
+            "icon":        icon,
+            "token":       token,
+            "qr_base64":   qr_b64,
+            "created_at":  datetime.utcnow(),
+        })
+    except DuplicateKeyError:
+        return jsonify(error="Ya existe un badge con ese token"), 409
 
     new_badge = badges().find_one({"_id": result.inserted_id})
     return jsonify({

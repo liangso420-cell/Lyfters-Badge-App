@@ -70,11 +70,19 @@
         ok = U.setFieldError(pass,    pass.value.length >= 6 ? '' : 'Mínimo 6 caracteres') && ok;
         ok = U.setFieldError(confirm, (confirm.value === pass.value && confirm.value) ? '' : 'Las contraseñas no coinciden') && ok;
         if (!ok) return;
+        var btn = form.querySelector('[type="submit"]');
+        btn.disabled = true;
+        btn.textContent = 'Cargando...';
         try {
           var newUser = await API.register({ name: name.value.trim(), email: email.value.trim(), password: pass.value });
           U.toastNextPage('Cuenta creada 🎉', 'success');
           window.location.href = newUser.role === 'admin' ? 'admin-event.html' : 'profile.html';
-        } catch (err) { U.setFieldError(email, err.message || 'No se pudo crear la cuenta'); }
+        } catch (err) {
+          U.setFieldError(email, err.message || 'No se pudo crear la cuenta');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Crear cuenta';
+        }
       });
     })();
   </script>

@@ -70,8 +70,16 @@
         window.location.href = 'profile.html';
       });
 
-      document.getElementById('scan-redeem').addEventListener('click', function () {
-        doRedeem(document.getElementById('scan-token').value.trim());
+      document.getElementById('scan-redeem').addEventListener('click', async function () {
+        var btn = document.getElementById('scan-redeem');
+        btn.disabled = true;
+        btn.textContent = 'Cargando...';
+        try {
+          await doRedeem(document.getElementById('scan-token').value.trim());
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Canjear';
+        }
       });
 
       async function startCamera() {
@@ -102,17 +110,18 @@
             if (code) {
               stream.getTracks().forEach(function(t) { t.stop(); });
               var qrData = code.data;
-              var token;
-              // Formato nuevo: redeem.html?event=xxx&token=yyy
-              var qsMatch = qrData.match(/[?&]token=([^&\s]+)/);
-              if (qsMatch) {
-                token = qsMatch[1];
+              var urlParams = null;
+              try { urlParams = new URL(qrData).searchParams; } catch(e) {}
+              if (urlParams && urlParams.get('event') && urlParams.get('token')) {
+                doRedeem(urlParams.get('token'), urlParams.get('event'));
               } else {
-                // Formato legado: /redeem/event_id/token
-                var pathMatch = qrData.match(/\/redeem\/[^\/]+\/([^\/\s?]+)/);
-                token = pathMatch ? pathMatch[1] : qrData;
+                var match = qrData.match(/\/redeem\/([^\/]+)\/([^\/\?]+)/);
+                if (match) {
+                  doRedeem(match[2], match[1]);
+                } else {
+                  doRedeem(qrData);
+                }
               }
-              doRedeem(token);
               return;
             }
           }
@@ -121,10 +130,10 @@
         setTimeout(tick, 150);
       }
 
-      async function doRedeem(token) {
+      async function doRedeem(token, eventId) {
         try {
           var events = await API.listEvents();
-          var activeId = U.ensureActive(events);
+          var activeId = eventId || U.ensureActive(events);
           var r = await API.redeem(activeId, token);
           if (r.status === 'none') {
             U.toastNextPage('Ya completaste todos los badges de este evento', 'info');

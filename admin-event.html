@@ -82,6 +82,9 @@
             if (ok && form.start.value && form.end.value && form.end.value < form.start.value)
               ok = U.setFieldError(form.end, 'La fecha fin no puede ser anterior al inicio') && ok;
             if (!ok) return;
+            var btn = form.querySelector('[type="submit"]');
+            btn.disabled = true;
+            btn.textContent = 'Cargando...';
             try {
               var created = await API.createEvent({
                 name: nameField.value.trim(),
@@ -93,7 +96,12 @@
               U.setActiveId(created.id);
               U.toastNextPage('Evento creado ✅ — agrega sus badges', 'success');
               window.location.href = 'admin-badges.html';
-            } catch (err) { U.toast(err.message || 'No se pudo crear el evento', 'error'); }
+            } catch (err) {
+              U.toast(err.message || 'No se pudo crear el evento', 'error');
+            } finally {
+              btn.disabled = false;
+              btn.textContent = 'Crear evento';
+            }
           });
         } catch (err) {
           app.innerHTML = U.errorHtml(err && err.message ? err.message : 'Error inesperado');
