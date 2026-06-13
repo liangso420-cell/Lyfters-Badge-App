@@ -316,6 +316,20 @@ def create_event():
     return jsonify(fmt_event(new_event)), 201
 
 
+@app.route("/admin/events/<event_id>", methods=["DELETE"])
+@jwt_required()
+def delete_event(event_id):
+    if not require_admin():
+        return jsonify(error="Acceso denegado"), 403
+    oid = valid_oid(event_id)
+    if not oid:
+        return jsonify(error="ID invalido"), 400
+    events().delete_one({"_id": oid})
+    badges().delete_many({"event_id": oid})
+    scans().delete_many({"event_id": oid})
+    return jsonify(ok=True), 200
+
+
 @app.route("/admin/events/<event_id>", methods=["PATCH"])
 @jwt_required()
 def update_event(event_id):

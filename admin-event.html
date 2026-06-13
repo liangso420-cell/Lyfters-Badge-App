@@ -68,8 +68,42 @@
               '</form>' +
             '</div>';
 
-          app.innerHTML = U.adminShell('event', inner, events, activeId);
+          var eventList = events.length
+            ? '<div class="card-soft p-8 mt-6 anim-fade">' +
+                '<h2 class="text-xl font-bold mb-4">Eventos existentes</h2>' +
+                '<div class="space-y-3">' +
+                events.map(function(e) {
+                  return '<div class="flex items-center justify-between p-4 rounded-card bg-base">' +
+                    '<div>' +
+                      '<p class="font-medium">' + U.esc(e.name) + '</p>' +
+                      '<p class="text-xs text-gray-400">' + U.esc(e.start) + ' → ' + U.esc(e.end) + '</p>' +
+                    '</div>' +
+                    '<button data-del-event="' + e.id + '" class="del-event-btn px-3 py-2 rounded-btn text-sm font-medium text-red-500 border border-red-300 hover:bg-red-50">🗑</button>' +
+                  '</div>';
+                }).join('') +
+                '</div>' +
+              '</div>'
+            : '';
+
+          app.innerHTML = U.adminShell('event', inner + eventList, events, activeId);
           U.mountAdminShell();
+
+          Array.prototype.forEach.call(document.querySelectorAll('.del-event-btn'), function(btn) {
+            btn.addEventListener('click', async function() {
+              if (!confirm('¿Eliminar este evento? Se borrarán todos sus badges y scans.')) return;
+              btn.disabled = true;
+              btn.textContent = '...';
+              try {
+                await API.deleteEvent(btn.getAttribute('data-del-event'));
+                U.toast('Evento eliminado', 'success');
+                location.reload();
+              } catch(err) {
+                U.toast(err.message || 'No se pudo eliminar', 'error');
+                btn.disabled = false;
+                btn.textContent = '🗑';
+              }
+            });
+          });
 
           var form = document.getElementById('event-form');
           form.addEventListener('submit', async function (e) {

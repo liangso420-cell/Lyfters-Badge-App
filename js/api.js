@@ -192,6 +192,11 @@
         })
       };
     },
+    async deleteEvent(eventId) {
+      mockState.events = mockState.events.filter(function(e) { return e.id !== eventId; });
+      persist();
+      return { ok: true };
+    },
     resetDemo() { mockState = seedState(); persist(); }
   };
 
@@ -288,6 +293,9 @@
     async deleteBadge(eventId, badgeId) {
       return await request('DELETE', '/admin/events/' + eventId + '/badges/' + badgeId);
     },
+    async deleteEvent(eventId) {
+      return await request('DELETE', '/admin/events/' + eventId);
+    },
     resetDemo() { throw new Error('resetDemo no disponible en modo backend'); }
   };
 
@@ -323,6 +331,7 @@
     addBadge: impl.addBadge,
     listAdminBadges: impl.listAdminBadges,
     deleteBadge: impl.deleteBadge,
+    deleteEvent: impl.deleteEvent,
     resetDemo: impl.resetDemo
   };
 })();
