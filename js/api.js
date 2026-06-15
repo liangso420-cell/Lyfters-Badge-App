@@ -261,6 +261,17 @@
       if (u) { u.avatar = base64; persist(); }
       return { ok: true };
     },
+    async getLeaderboard() {
+      var result = mockState.users.map(function(u) {
+        var total = 0;
+        if (mockState.progress[u.id]) {
+          Object.values(mockState.progress[u.id]).forEach(function(arr) { total += arr.length; });
+        }
+        return { id: u.id, nombre: u.name, avatar: u.avatar || null, badges: total };
+      });
+      result.sort(function(a, b) { return b.badges - a.badges; });
+      return result;
+    },
     resetDemo() { mockState = seedState(); persist(); }
   };
 
@@ -408,6 +419,9 @@
     async updateAvatar(base64) {
       return await apiRequest('POST', '/auth/profile/avatar', { avatar: base64 });
     },
+    async getLeaderboard() {
+      return await apiRequest('GET', '/leaderboard');
+    },
     resetDemo() { throw new Error('resetDemo no disponible en modo backend'); }
   };
 
@@ -452,6 +466,7 @@
     changePassword:   impl.changePassword.bind(impl),
     getProfile:       impl.getProfile.bind(impl),
     updateAvatar:     impl.updateAvatar.bind(impl),
+    getLeaderboard:   impl.getLeaderboard.bind(impl),
     resetDemo:        impl.resetDemo.bind(impl)
   };
 })();

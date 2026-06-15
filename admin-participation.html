@@ -99,12 +99,25 @@
         '</tr>';
       }
 
+      function buildLbRow(entry, rank) {
+        var medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+        var avatarHtml = entry.avatar
+          ? '<img src="' + entry.avatar + '" class="w-8 h-8 rounded-full object-cover border border-gray-200" />'
+          : '<div class="w-8 h-8 rounded-full bg-primary-soft flex items-center justify-center text-sm">👤</div>';
+        return '<tr class="border-b border-gray-100 hover:bg-gray-50/50">' +
+          '<td class="py-3 pr-4 text-center text-sm w-8">' + medal + '</td>' +
+          '<td class="py-3 pr-4"><div class="flex items-center gap-2">' + avatarHtml + '<span class="text-sm font-medium text-gray-800">' + U.esc(entry.nombre) + '</span></div></td>' +
+          '<td class="py-3 text-sm font-bold text-primary text-right">' + entry.badges + ' 🏅</td>' +
+        '</tr>';
+      }
+
       async function init() {
         try {
-          var [events, dash, usersList] = await Promise.all([
+          var [events, dash, usersList, leaderboard] = await Promise.all([
             API.listAdminEvents(),
             API.getDashboard(),
-            API.getUsers()
+            API.getUsers(),
+            API.getLeaderboard()
           ]);
 
           var activeId = U.ensureActive(events);
@@ -150,18 +163,49 @@
               '</div>';
           }
 
+          var lbHtml = leaderboard.length
+            ? '<table class="w-full text-sm"><thead><tr class="text-left text-xs text-gray-400 border-b border-gray-100">' +
+                '<th class="py-3 pr-4 w-8">#</th><th class="py-3 pr-4">Usuario</th><th class="py-3 text-right">Badges</th>' +
+              '</tr></thead><tbody>' +
+              leaderboard.map(function(e, i) { return buildLbRow(e, i + 1); }).join('') +
+              '</tbody></table>'
+            : '<p class="text-sm text-gray-400 text-center py-6">Sin datos todavía.</p>';
+
           var inner =
             '<div class="anim-fade">' +
               metrics +
               progreso +
               '<div class="bg-white rounded-card p-6 shadow-soft">' +
-                '<h3 class="font-bold text-gray-800 mb-4">Usuarios</h3>' +
-                usersHtml +
+                '<div class="flex gap-2 mb-5">' +
+                  '<button id="admin-tab-users" class="tab-btn flex-1 py-2 rounded-btn text-sm font-medium text-white" style="background:#6C63FF;">Usuarios</button>' +
+                  '<button id="admin-tab-lb" class="tab-btn flex-1 py-2 rounded-btn text-sm font-medium text-gray-500 bg-gray-100">Clasificación</button>' +
+                '</div>' +
+                '<div id="admin-panel-users">' + usersHtml + '</div>' +
+                '<div id="admin-panel-lb" style="display:none;">' + lbHtml + '</div>' +
               '</div>' +
             '</div>';
 
           app.innerHTML = U.adminShell('participation', inner, events, activeId);
           U.mountAdminShell();
+
+          document.getElementById('admin-tab-users').addEventListener('click', function() {
+            document.getElementById('admin-panel-users').style.display = '';
+            document.getElementById('admin-panel-lb').style.display = 'none';
+            document.getElementById('admin-tab-users').style.background = '#6C63FF';
+            document.getElementById('admin-tab-users').style.color = 'white';
+            document.getElementById('admin-tab-lb').style.background = '';
+            document.getElementById('admin-tab-lb').style.color = '';
+            document.getElementById('admin-tab-lb').className = 'tab-btn flex-1 py-2 rounded-btn text-sm font-medium text-gray-500 bg-gray-100';
+          });
+          document.getElementById('admin-tab-lb').addEventListener('click', function() {
+            document.getElementById('admin-panel-users').style.display = 'none';
+            document.getElementById('admin-panel-lb').style.display = '';
+            document.getElementById('admin-tab-lb').style.background = '#6C63FF';
+            document.getElementById('admin-tab-lb').style.color = 'white';
+            document.getElementById('admin-tab-users').style.background = '';
+            document.getElementById('admin-tab-users').style.color = '';
+            document.getElementById('admin-tab-users').className = 'tab-btn flex-1 py-2 rounded-btn text-sm font-medium text-gray-500 bg-gray-100';
+          });
 
           Array.prototype.forEach.call(document.querySelectorAll('.role-btn'), function(btn) {
             btn.addEventListener('click', function() {
