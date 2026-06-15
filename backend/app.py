@@ -32,11 +32,25 @@ app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=8)
 jwt = JWTManager(app)
 init_indexes()
 
-cors_origins = os.getenv(
-    "CORS_ORIGINS",
-    "http://localhost:5500,http://127.0.0.1:5500"
-).split(",")
-CORS(app, origins=cors_origins, supports_credentials=True,
+_env_origins = [
+    o.strip() for o in os.getenv(
+        "CORS_ORIGINS",
+        "http://localhost:5500,http://127.0.0.1:5500"
+    ).split(",") if o.strip()
+]
+# Accept any Vercel preview/production URL plus explicitly listed origins
+import re as _re
+_VERCEL_RE = _re.compile(r"^https://[a-zA-Z0-9\-]+-[a-zA-Z0-9\-]+-[a-zA-Z0-9\-]+\.vercel\.app$")
+_VERCEL_PROD_RE = _re.compile(r"^https://[a-zA-Z0-9\-]+\.vercel\.app$")
+
+def _cors_origin_check(origin):
+    if origin in _env_origins:
+        return True
+    if origin and (_VERCEL_RE.match(origin) or _VERCEL_PROD_RE.match(origin)):
+        return True
+    return False
+
+CORS(app, origins=_cors_origin_check, supports_credentials=True,
      methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"])
 
 # ──────────────────────────────────────────────
