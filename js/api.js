@@ -242,6 +242,14 @@
       }
       throw new Error('Badge no encontrado');
     },
+    async changePassword(currentPw, newPw) {
+      var sess = getSession();
+      var u = mockState.users.find(function(x){ return x.id === sess.user.id; });
+      if (!u || u.password !== currentPw) throw new Error('Contraseña actual incorrecta');
+      if (newPw.length < 6) throw new Error('La nueva contraseña debe tener al menos 6 caracteres');
+      u.password = newPw; persist();
+      return { ok: true };
+    },
     resetDemo() { mockState = seedState(); persist(); }
   };
 
@@ -377,6 +385,12 @@
       return { id: d.id, emoji: d.icon || '🏅', name: d.nombre, desc: d.descripcion,
         token: d.token, redeemUrl: d.redeem_url, redeemed: d.canjeados || 0, qrImage: d.qr_image || null };
     },
+    async changePassword(currentPw, newPw) {
+      return await apiRequest('POST', '/auth/change-password', {
+        current_password: currentPw,
+        new_password: newPw
+      });
+    },
     resetDemo() { throw new Error('resetDemo no disponible en modo backend'); }
   };
 
@@ -418,6 +432,7 @@
     getUsers:         impl.getUsers.bind(impl),
     changeUserRole:   impl.changeUserRole.bind(impl),
     regenerateBadgeQr: impl.regenerateBadgeQr.bind(impl),
+    changePassword:   impl.changePassword.bind(impl),
     resetDemo:        impl.resetDemo.bind(impl)
   };
 })();

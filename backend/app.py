@@ -181,6 +181,23 @@ def register():
     return jsonify(token=token, user=fmt_user(new_user)), 201
 
 
+@app.route("/auth/change-password", methods=["POST"])
+@jwt_required()
+def change_password():
+    uid = get_jwt_identity()
+    data = request.get_json() or {}
+    current = (data.get("current_password") or "").encode()
+    new_pw  = (data.get("new_password") or "")
+    if len(new_pw) < 6:
+        return jsonify(error="La nueva contraseña debe tener al menos 6 caracteres"), 400
+    user = users().find_one({"_id": ObjectId(uid)})
+    if not user or not bcrypt.checkpw(current, user["password_hash"].encode()):
+        return jsonify(error="Contraseña actual incorrecta"), 401
+    new_hash = bcrypt.hashpw(new_pw.encode(), bcrypt.gensalt()).decode()
+    users().update_one({"_id": ObjectId(uid)}, {"$set": {"password_hash": new_hash}})
+    return jsonify(ok=True), 200
+
+
 @app.route("/auth/login", methods=["POST"])
 def login():
     data     = request.get_json() or {}
