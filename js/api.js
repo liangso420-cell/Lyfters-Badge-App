@@ -250,6 +250,17 @@
       u.password = newPw; persist();
       return { ok: true };
     },
+    async getProfile() {
+      var sess = getSession();
+      var u = mockState.users.find(function(x){ return x.id === sess.user.id; });
+      return { id: u.id, nombre: u.name, email: u.email, rol: u.role, avatar: u.avatar || null };
+    },
+    async updateAvatar(base64) {
+      var sess = getSession();
+      var u = mockState.users.find(function(x){ return x.id === sess.user.id; });
+      if (u) { u.avatar = base64; persist(); }
+      return { ok: true };
+    },
     resetDemo() { mockState = seedState(); persist(); }
   };
 
@@ -391,6 +402,12 @@
         new_password: newPw
       });
     },
+    async getProfile() {
+      return await apiRequest('GET', '/auth/profile');
+    },
+    async updateAvatar(base64) {
+      return await apiRequest('POST', '/auth/profile/avatar', { avatar: base64 });
+    },
     resetDemo() { throw new Error('resetDemo no disponible en modo backend'); }
   };
 
@@ -433,6 +450,8 @@
     changeUserRole:   impl.changeUserRole.bind(impl),
     regenerateBadgeQr: impl.regenerateBadgeQr.bind(impl),
     changePassword:   impl.changePassword.bind(impl),
+    getProfile:       impl.getProfile.bind(impl),
+    updateAvatar:     impl.updateAvatar.bind(impl),
     resetDemo:        impl.resetDemo.bind(impl)
   };
 })();
