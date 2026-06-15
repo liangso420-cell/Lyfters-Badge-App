@@ -89,13 +89,60 @@ Copia `backend/.env.example` a `backend/.env` y completa los valores:
 | Backend (Render) | `https://lyfters-badge-app.onrender.com` |
 | Frontend (Vercel) | raíz del repositorio (sin subdirectorio) |
 
-## Deploy
+## Deployment
 
-### Backend — Render
+### 1 — MongoDB Atlas
+
+1. Crear cluster gratuito en [cloud.mongodb.com](https://cloud.mongodb.com).
+2. En **Database Access** crear un usuario con contraseña.
+3. En **Network Access** agregar `0.0.0.0/0` (o el IP de Render).
+4. Copiar el **Connection String** (formato `mongodb+srv://user:pass@cluster.mongodb.net/lyfter_db`).
+
+### 2 — Backend en Render
+
+1. Crear un nuevo **Web Service** apuntando a este repositorio.
+2. Configurar:
+   - **Root Directory**: `backend`
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `gunicorn app:app`
+3. En **Environment Variables** agregar:
+
+   | Variable | Valor |
+   |----------|-------|
+   | `MONGO_URI` | Connection string de Atlas |
+   | `MONGO_DB_NAME` | `lyfter_db` |
+   | `JWT_SECRET` | Cadena aleatoria larga (ej: `openssl rand -hex 32`) |
+   | `CORS_ORIGINS` | URL de Vercel (ej: `https://tu-app.vercel.app`) |
+   | `APP_BASE_URL` | URL de Vercel (misma que CORS_ORIGINS) |
+
+4. Deployar. La URL del servicio queda como `https://tu-backend.onrender.com`.
+
+### 3 — Frontend en Vercel
+
+1. Importar el repositorio en [vercel.com](https://vercel.com).
+2. Dejar la configuración por defecto (directorio raíz `/`).
+3. Vercel detecta automáticamente el `vercel.json`.
+4. En `js/config.js` verificar que `apiBaseUrl` apunte al backend de Render.
+5. Deployar.
+
+### 4 — Verificar en producción
+
+```bash
+# Health check del backend
+curl https://tu-backend.onrender.com/health
+
+# Debería retornar: {"service":"lyfter-badge-api","status":"ok"}
+```
+
+Luego ejecutar el flujo completo: registro → login → escanear QR → ver perfil.
+
+---
+
+### Deploy — Render (archivo render.yaml)
 
 El archivo `render.yaml` configura el servicio con `rootDir: backend`. Variables como `MONGO_URI` y `CORS_ORIGINS` se ingresan manualmente en el dashboard de Render.
 
-### Frontend — Vercel
+### Deploy — Vercel
 
 Vercel despliega desde la raíz del repositorio. El archivo `vercel.json` incluye el rewrite necesario para la SPA (`/* → /index.html`).
 

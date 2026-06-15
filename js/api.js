@@ -1,35 +1,15 @@
 /* ============================================================
    Lyfter Badge App — capa de datos (interfaz única, 2 backends)
-   ------------------------------------------------------------
-   Expone window.LyfterAPI con una interfaz ASÍNCRONA común.
-   Según window.LYFTER_CONFIG.mode usa la implementación 'mock'
-   (localStorage) o 'backend' (fetch a la API Flask del repo).
-
-   Todas las implementaciones devuelven los MISMOS DTOs normalizados,
-   de modo que las vistas (app.js) no saben de dónde vienen los datos:
-
-     Session      { token, user:{ id, name, email, role } }   role: 'admin'|'participant'
-     Event        { id, name, description, start, end, prize }
-     EventDetail  { id, name, prize, badges:[Badge], total, obtained, complete, prizeRevealed }
-     Badge (part) { id, emoji, name, desc, obtained }
-     AdminBadges  { event:{ id, name, totalParticipants? }, badges:[AdminBadge] }
-     AdminBadge   { id, emoji, name, desc, token, redeemUrl, redeemed }
-     Redeem       { status:'ok'|'duplicate'|'none', badge:{ emoji,name,desc }, complete, prize, progress:{ obtained,total } }
    ============================================================ */
 (function () {
   'use strict';
 
   var CFG = window.LYFTER_CONFIG || { mode: 'mock', apiBaseUrl: 'http://localhost:5000' };
 
-  /* Base URL del directorio donde vive la app.
-     En GitHub Pages: 'https://liangso420-cell.github.io/Lyfters-Badge-App/'
-     En localhost:    'http://localhost:5500/'                                  */
   var APP_BASE = window.location.origin +
     window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
 
-  /* ---------------------------------------------------------
-     SESIÓN — compartida por ambos modos (localStorage + fallback)
-     --------------------------------------------------------- */
+  /* ── Sesión ─────────────────────────────── */
   var SESSION_KEY = 'lyfter_session';
   var sessionMem = null;
 
@@ -47,7 +27,7 @@
   }
 
   /* =========================================================
-     IMPLEMENTACIÓN MOCK (localStorage)
+     MOCK (localStorage)
      ========================================================= */
   var STORE_KEY = 'lyfter_badge_state';
   var storeMem = null;
@@ -58,28 +38,31 @@
       { id: 'b2', emoji: '🎤', name: 'Keynote',     desc: 'Charla principal',         token: 'e5f6-g7h8', redemptions: 96 },
       { id: 'b3', emoji: '☕', name: 'Networking',  desc: 'Café y conexiones',        token: 'i9j0-k1l2', redemptions: 74 },
       { id: 'b4', emoji: '💡', name: 'Workshop',    desc: 'Taller práctico',          token: 'm3n4-o5p6', redemptions: 41 },
-      { id: 'b5', emoji: '🏗️', name: 'Demo',        desc: 'Demostración de producto', token: 'q7r8-s9t0', redemptions: 0 },
-      { id: 'b6', emoji: '🍕', name: 'Almuerzo',    desc: 'Pausa para el almuerzo',   token: 'u1v2-w3x4', redemptions: 0 },
-      { id: 'b7', emoji: '🎁', name: 'Stand',       desc: 'Visita a un stand',        token: 'y5z6-a7b8', redemptions: 0 },
-      { id: 'b8', emoji: '🌟', name: 'Cierre',      desc: 'Ceremonia de cierre',      token: 'c9d0-e1f2', redemptions: 0 }
+      { id: 'b5', emoji: '🏗️', name: 'Demo',        desc: 'Demostración de producto', token: 'q7r8-s9t0', redemptions: 20 },
     ];
     var hackathonBadges = [
-      { id: 'h1', emoji: '🚀', name: 'Inicio',   desc: 'Apertura del hackathon', token: 'k1k2-k3k4', redemptions: 0 },
-      { id: 'h2', emoji: '🧠', name: 'Mentoría', desc: 'Sesión con mentores',    token: 'k5k6-k7k8', redemptions: 0 },
-      { id: 'h3', emoji: '🏆', name: 'Pitch',    desc: 'Presentación final',     token: 'k9ka-kbkc', redemptions: 0 }
+      { id: 'h1', emoji: '🚀', name: 'Inicio',   desc: 'Apertura del hackathon', token: 'k1k2-k3k4', redemptions: 15 },
+      { id: 'h2', emoji: '🧠', name: 'Mentoría', desc: 'Sesión con mentores',    token: 'k5k6-k7k8', redemptions: 10 },
+      { id: 'h3', emoji: '🏆', name: 'Pitch',    desc: 'Presentación final',     token: 'k9ka-kbkc', redemptions: 8 }
     ];
     return {
       users: [
-        { id: 'u-admin', name: 'Admin Lyfter', email: 'admin@lyfter.cc', password: 'admin123', role: 'admin' },
-        { id: 'u-ana',   name: 'Ana Pérez',    email: 'ana@correo.com',  password: 'ana123',   role: 'participant' }
+        { id: 'u-admin', name: 'Admin Lyfter',  email: 'admin@lyfter.app',  password: 'admin123',  role: 'admin' },
+        { id: 'u-ana',   name: 'Ana Torres',    email: 'ana@lyfter.app',    password: 'ana123',    role: 'participant' },
+        { id: 'u-carlos',name: 'Carlos Méndez', email: 'carlos@lyfter.app', password: 'carlos123', role: 'participant' },
+        { id: 'u-lucia', name: 'Lucía Herrera', email: 'lucia@lyfter.app',  password: 'lucia123',  role: 'participant' }
       ],
       events: [
         { id: 'evt-summit', name: 'Lyfter Summit 2026', description: 'Evento insignia anual de la comunidad Lyfter.',
-          start: '2026-09-10', end: '2026-09-11', prize: '🎟️ Entrada VIP al after-party', totalParticipants: 150, badges: summitBadges },
+          start: '2026-09-10', end: '2026-09-11', prize: '🎟️ Entrada VIP al after-party', active: true, totalParticipants: 150, badges: summitBadges },
         { id: 'evt-hack', name: 'Hackathon de Verano', description: 'Dos días construyendo en equipo.',
-          start: '2026-07-01', end: '2026-07-02', prize: '🎟️ Mentoría 1:1 con el jurado', totalParticipants: 60, badges: hackathonBadges }
+          start: '2026-07-01', end: '2026-07-02', prize: '🎟️ Mentoría 1:1 con el jurado', active: true, totalParticipants: 60, badges: hackathonBadges }
       ],
-      progress: { 'u-ana': { 'evt-summit': ['b1', 'b2', 'b3'] } },
+      progress: {
+        'u-ana':    { 'evt-summit': ['b1', 'b2', 'b3'] },
+        'u-carlos': { 'evt-summit': ['b1'] },
+        'u-lucia':  { 'evt-summit': ['b1', 'b2', 'b3', 'b4', 'b5'] }
+      },
       _seq: 0
     };
   }
@@ -109,8 +92,8 @@
   function redeemedIds(userId, eventId) {
     return (mockState.progress[userId] && mockState.progress[userId][eventId]) || [];
   }
-  function publicUser(u) { return { id: u.id, name: u.name, email: u.email, role: u.role }; }
-  function eventDto(e) { return { id: e.id, name: e.name, description: e.description, start: e.start, end: e.end, prize: e.prize }; }
+  function publicUser(u) { return { id: u.id, nombre: u.name, email: u.email, rol: u.role, created_at: null }; }
+  function eventDto(e) { return { id: e.id, name: e.name, description: e.description, start: e.start, end: e.end, prize: e.prize, active: e.active !== false }; }
 
   var Mock = {
     async _login(email, password) {
@@ -126,23 +109,24 @@
       mockState.users.push(u); persist();
       return { token: 'mock-' + u.id, user: publicUser(u) };
     },
-    async listEvents() { return mockState.events.map(eventDto); },
+    async listEvents() { return mockState.events.filter(function(e){ return e.active !== false; }).map(eventDto); },
     async listAdminEvents() { return mockState.events.map(eventDto); },
     async getEventDetail(eventId) {
       var e = mockEvent(eventId); if (!e) throw new Error('Evento no encontrado');
-      var done = redeemedIds(getSession().user.id, eventId);
-      var badges = e.badges.map(function (b) {
-        return { id: b.id, emoji: b.emoji, name: b.name, desc: b.desc, obtained: done.indexOf(b.id) !== -1 };
+      var sess = getSession();
+      var done = sess ? redeemedIds(sess.user.id, eventId) : [];
+      var blist = e.badges.map(function (b) {
+        return { id: b.id, emoji: b.emoji, name: b.name, desc: b.desc, obtained: done.indexOf(b.id) !== -1, scannedAt: done.indexOf(b.id) !== -1 ? new Date().toISOString() : null };
       });
-      var complete = badges.length > 0 && done.length >= badges.length;
-      return { id: e.id, name: e.name, prize: e.prize, badges: badges,
-        total: badges.length, obtained: done.length, complete: complete,
+      var complete = blist.length > 0 && done.length >= blist.length;
+      return { id: e.id, name: e.name, prize: e.prize, badges: blist,
+        total: blist.length, obtained: done.length, complete: complete,
         prizeRevealed: complete ? e.prize : null };
     },
-    // token === null → redime el siguiente pendiente (simulación de escaneo)
     async redeem(eventId, token) {
       var e = mockEvent(eventId); if (!e) throw new Error('Evento no encontrado');
-      var userId = getSession().user.id;
+      var sess = getSession(); if (!sess) throw new Error('Sin sesión');
+      var userId = sess.user.id;
       var done = redeemedIds(userId, eventId);
       var badge = token
         ? e.badges.find(function (b) { return b.token === token; })
@@ -170,8 +154,19 @@
     async createEvent(data) {
       var e = { id: uid('evt'), name: data.name.trim(), description: (data.description || '').trim(),
         start: data.start, end: data.end, prize: (data.prize || '').trim() || 'Premio sorpresa',
-        totalParticipants: 0, badges: [] };
+        active: true, totalParticipants: 0, badges: [] };
       mockState.events.push(e); persist();
+      return eventDto(e);
+    },
+    async updateEvent(eventId, data) {
+      var e = mockEvent(eventId); if (!e) throw new Error('Evento no encontrado');
+      if (data.nombre !== undefined)      e.name        = data.nombre.trim();
+      if (data.descripcion !== undefined) e.description = data.descripcion.trim();
+      if (data.premio !== undefined)      e.prize       = data.premio.trim();
+      if (data.fecha_inicio !== undefined) e.start      = data.fecha_inicio;
+      if (data.fecha_fin !== undefined)   e.end         = data.fecha_fin;
+      if (data.activo !== undefined)      e.active      = data.activo;
+      persist();
       return eventDto(e);
     },
     async addBadge(eventId, data) {
@@ -179,7 +174,7 @@
       var b = { id: uid('b'), emoji: data.emoji || '🏅', name: data.name.trim(),
         desc: (data.desc || '').trim() || 'Sin descripción', token: genToken(), redemptions: 0 };
       e.badges.push(b); persist();
-      return { id: b.id, emoji: b.emoji, name: b.name, desc: b.desc, token: b.token, qrImage: null };
+      return { id: b.id, emoji: b.emoji, name: b.name, desc: b.desc, token: b.token, redeemUrl: null, redeemed: 0, qrImage: null };
     },
     async listAdminBadges(eventId) {
       var e = mockEvent(eventId); if (!e) throw new Error('Evento no encontrado');
@@ -187,37 +182,104 @@
         event: { id: e.id, name: e.name, totalParticipants: e.totalParticipants },
         badges: e.badges.map(function (b) {
           return { id: b.id, emoji: b.emoji, name: b.name, desc: b.desc, token: b.token,
-            redeemUrl: APP_BASE + 'redeem.html?event=' + e.id + '&token=' + b.token, redeemed: b.redemptions || 0,
-            qrImage: null };
+            redeemUrl: APP_BASE + 'redeem.html?event=' + e.id + '&token=' + b.token,
+            redeemed: b.redemptions || 0, qrImage: null };
         })
       };
     },
+    async deleteBadge(eventId, badgeId) {
+      var e = mockEvent(eventId); if (!e) throw new Error('Evento no encontrado');
+      e.badges = e.badges.filter(function(b){ return b.id !== badgeId; }); persist();
+      return { ok: true };
+    },
     async deleteEvent(eventId) {
       mockState.events = mockState.events.filter(function(e) { return e.id !== eventId; });
-      persist();
-      return { ok: true };
+      persist(); return { ok: true };
+    },
+    async getDashboard() {
+      var totalP = mockState.users.filter(function(u){ return u.role === 'participant'; }).length;
+      var totalBC = mockState.events.reduce(function(a, e) {
+        return a + e.badges.reduce(function(x, b){ return x + (b.redemptions || 0); }, 0);
+      }, 0);
+      var progreso = mockState.events.map(function(e) {
+        var totalB = e.badges.length;
+        var totalC = e.badges.reduce(function(a, b){ return a + (b.redemptions || 0); }, 0);
+        return { id: e.id, nombre: e.name, total_badges: totalB, total_canjeados: totalC,
+          porcentaje: totalB > 0 ? Math.round(totalC / totalB * 1000) / 10 : 0,
+          participantes_unicos: e.totalParticipants || 0 };
+      });
+      return {
+        total_participantes: totalP,
+        total_eventos: mockState.events.length,
+        total_badges_creados: mockState.events.reduce(function(a,e){ return a + e.badges.length; }, 0),
+        total_badges_canjeados: totalBC,
+        progreso_por_evento: progreso
+      };
+    },
+    async getUsers() {
+      return mockState.users.map(function(u) {
+        return { id: u.id, nombre: u.name, email: u.email, rol: u.role, created_at: null };
+      });
+    },
+    async changeUserRole(userId, rol) {
+      var u = mockState.users.find(function(x){ return x.id === userId; });
+      if (!u) throw new Error('Usuario no encontrado');
+      u.role = rol; persist();
+      return { id: u.id, nombre: u.name, email: u.email, rol: u.role, created_at: null };
+    },
+    async regenerateBadgeQr(badgeId) {
+      for (var i = 0; i < mockState.events.length; i++) {
+        var e = mockState.events[i];
+        for (var j = 0; j < e.badges.length; j++) {
+          if (e.badges[j].id === badgeId) {
+            var b = e.badges[j];
+            b.token = genToken(); persist();
+            return { id: b.id, emoji: b.emoji, name: b.name, desc: b.desc, token: b.token,
+              redeemUrl: APP_BASE + 'redeem.html?event=' + e.id + '&token=' + b.token,
+              redeemed: b.redemptions || 0, qrImage: null };
+          }
+        }
+      }
+      throw new Error('Badge no encontrado');
     },
     resetDemo() { mockState = seedState(); persist(); }
   };
 
   /* =========================================================
-     IMPLEMENTACIÓN BACKEND (fetch → API Flask)
+     BACKEND (fetch → API Flask)
      ========================================================= */
   function roleFromBackend(rol) { return rol === 'admin' ? 'admin' : 'participant'; }
   function mapUser(u) { return { id: u.id, name: u.nombre, email: u.email, role: roleFromBackend(u.rol) }; }
-  function mapEvent(e) { return { id: e.id, name: e.nombre, description: e.descripcion, start: e.fecha_inicio, end: e.fecha_fin, prize: e.premio }; }
+  function mapEvent(e) {
+    return { id: e.id, name: e.nombre, description: e.descripcion,
+      start: e.fecha_inicio, end: e.fecha_fin, prize: e.premio, active: e.activo !== false };
+  }
 
-  async function request(method, path, body) {
+  async function apiRequest(method, path, body) {
+    if (!navigator.onLine) {
+      var offlineErr = new Error('Sin conexión. Verificá tu internet.');
+      offlineErr.offline = true;
+      throw offlineErr;
+    }
+
+    var controller = new AbortController();
+    var tid = setTimeout(function() { controller.abort(); }, 15000);
+
     var headers = { 'Content-Type': 'application/json' };
     var s = getSession();
     if (s && s.token) headers.Authorization = 'Bearer ' + s.token;
     var res;
     try {
       res = await fetch(CFG.apiBaseUrl + path, {
-        method: method, headers: headers, body: body ? JSON.stringify(body) : undefined
+        method: method, headers: headers,
+        body: body ? JSON.stringify(body) : undefined,
+        signal: controller.signal
       });
     } catch (e) {
+      if (e.name === 'AbortError') throw new Error('El servidor tardó demasiado. Intentá de nuevo.');
       throw new Error('No se pudo conectar con el servidor (' + CFG.apiBaseUrl + ')');
+    } finally {
+      clearTimeout(tid);
     }
     var data = {};
     try { data = await res.json(); } catch (e) {}
@@ -235,30 +297,30 @@
 
   var Backend = {
     async _login(email, password) {
-      var d = await request('POST', '/auth/login', { email: email, password: password });
+      var d = await apiRequest('POST', '/auth/login', { email: email, password: password });
       return { token: d.token, user: mapUser(d.user) };
     },
     async _register(data) {
-      var d = await request('POST', '/auth/register', { nombre: data.name, email: data.email, password: data.password });
+      var d = await apiRequest('POST', '/auth/register', { nombre: data.name, email: data.email, password: data.password });
       return { token: d.token, user: mapUser(d.user) };
     },
-    async listEvents() { return (await request('GET', '/events/')).map(mapEvent); },
-    async listAdminEvents() { return (await request('GET', '/admin/events')).map(mapEvent); },
+    async listEvents() { return (await apiRequest('GET', '/events/')).map(mapEvent); },
+    async listAdminEvents() { return (await apiRequest('GET', '/admin/events')).map(mapEvent); },
     async getEventDetail(eventId) {
-      var d = await request('GET', '/events/' + eventId);
+      var d = await apiRequest('GET', '/events/' + eventId);
       return {
         id: d.id, name: d.nombre, prize: d.premio,
         badges: (d.badges || []).map(function (b) {
-          return { id: b.id, emoji: b.icon || '🏅', name: b.nombre, desc: b.descripcion, obtained: !!b.obtenido };
+          return { id: b.id, emoji: b.icon || '🏅', name: b.nombre, desc: b.descripcion,
+            obtained: !!b.obtenido, scannedAt: b.scanned_at || null };
         }),
         total: d.total_badges, obtained: d.obtenidos, complete: !!d.completado,
         prizeRevealed: d.premio_revelado || null
       };
     },
-    // En backend SIEMPRE se requiere token (el QR físico lo contiene).
     async redeem(eventId, token) {
-      if (!token) throw new Error('Ingresa el token del QR (no hay simulación contra el backend)');
-      var d = await request('POST', '/redeem/' + eventId + '/' + token);
+      if (!token) throw new Error('Ingresa el token del QR');
+      var d = await apiRequest('POST', '/redeem/' + eventId + '/' + token);
       return {
         status: d.status === 'duplicado' ? 'duplicate' : 'ok',
         badge: d.badge ? { emoji: d.badge.icon || '🏅', name: d.badge.nombre, desc: d.badge.descripcion } : null,
@@ -267,34 +329,53 @@
       };
     },
     async createEvent(data) {
-      var d = await request('POST', '/admin/event', {
+      var d = await apiRequest('POST', '/admin/event', {
         nombre: data.name, descripcion: data.description,
         fecha_inicio: data.start, fecha_fin: data.end, premio: data.prize
       });
       return mapEvent(d);
     },
+    async updateEvent(eventId, data) {
+      var d = await apiRequest('PATCH', '/admin/events/' + eventId, data);
+      return mapEvent(d);
+    },
     async addBadge(eventId, data) {
-      var d = await request('POST', '/admin/events/' + eventId + '/badge', {
+      var d = await apiRequest('POST', '/admin/events/' + eventId + '/badge', {
         nombre: data.name, descripcion: data.desc, icon: data.emoji || '🏅'
       });
-      return { id: d.id, emoji: d.icon || '🏅', name: d.nombre, desc: d.descripcion, token: d.token, qrImage: d.qr_image || null };
+      return { id: d.id, emoji: d.icon || '🏅', name: d.nombre, desc: d.descripcion,
+        token: d.token, redeemUrl: null, redeemed: 0, qrImage: d.qr_image || null };
     },
     async listAdminBadges(eventId) {
-      var d = await request('GET', '/admin/events/' + eventId + '/badges');
+      var d = await apiRequest('GET', '/admin/events/' + eventId + '/badges');
       return {
         event: { id: d.evento.id, name: d.evento.nombre, totalParticipants: undefined },
         badges: (d.badges || []).map(function (b) {
-          return { id: b.id, emoji: b.icon || '🏅', name: b.nombre, desc: b.descripcion, token: b.token,
-            redeemUrl: b.redeem_url || (APP_BASE + 'redeem.html?event=' + eventId + '&token=' + b.token), redeemed: b.canjeados || 0,
-            qrImage: b.qr_image || null };  // data URI PNG generado por el backend
+          return { id: b.id, emoji: b.icon || '🏅', name: b.nombre, desc: b.descripcion,
+            token: b.token, redeemUrl: b.redeem_url || (APP_BASE + 'redeem.html?event=' + d.evento.id + '&token=' + b.token),
+            redeemed: b.canjeados || 0, qrImage: b.qr_image || null };
         })
       };
     },
     async deleteBadge(eventId, badgeId) {
-      return await request('DELETE', '/admin/events/' + eventId + '/badges/' + badgeId);
+      return await apiRequest('DELETE', '/admin/events/' + eventId + '/badges/' + badgeId);
     },
     async deleteEvent(eventId) {
-      return await request('DELETE', '/admin/events/' + eventId);
+      return await apiRequest('DELETE', '/admin/events/' + eventId);
+    },
+    async getDashboard() {
+      return await apiRequest('GET', '/admin/dashboard');
+    },
+    async getUsers() {
+      return await apiRequest('GET', '/admin/users');
+    },
+    async changeUserRole(userId, rol) {
+      return await apiRequest('PATCH', '/admin/users/' + userId + '/role', { rol: rol });
+    },
+    async regenerateBadgeQr(badgeId) {
+      var d = await apiRequest('POST', '/admin/badges/' + badgeId + '/regenerate-qr');
+      return { id: d.id, emoji: d.icon || '🏅', name: d.nombre, desc: d.descripcion,
+        token: d.token, redeemUrl: d.redeem_url, redeemed: d.canjeados || 0, qrImage: d.qr_image || null };
     },
     resetDemo() { throw new Error('resetDemo no disponible en modo backend'); }
   };
@@ -323,15 +404,20 @@
     login: login,
     register: register,
     logout: logout,
-    listEvents: impl.listEvents,
-    listAdminEvents: impl.listAdminEvents,
-    getEventDetail: impl.getEventDetail,
-    redeem: impl.redeem,
-    createEvent: impl.createEvent,
-    addBadge: impl.addBadge,
-    listAdminBadges: impl.listAdminBadges,
-    deleteBadge: impl.deleteBadge,
-    deleteEvent: impl.deleteEvent,
-    resetDemo: impl.resetDemo
+    listEvents:       impl.listEvents.bind(impl),
+    listAdminEvents:  impl.listAdminEvents.bind(impl),
+    getEventDetail:   impl.getEventDetail.bind(impl),
+    redeem:           impl.redeem.bind(impl),
+    createEvent:      impl.createEvent.bind(impl),
+    updateEvent:      impl.updateEvent.bind(impl),
+    addBadge:         impl.addBadge.bind(impl),
+    listAdminBadges:  impl.listAdminBadges.bind(impl),
+    deleteBadge:      impl.deleteBadge.bind(impl),
+    deleteEvent:      impl.deleteEvent.bind(impl),
+    getDashboard:     impl.getDashboard.bind(impl),
+    getUsers:         impl.getUsers.bind(impl),
+    changeUserRole:   impl.changeUserRole.bind(impl),
+    regenerateBadgeQr: impl.regenerateBadgeQr.bind(impl),
+    resetDemo:        impl.resetDemo.bind(impl)
   };
 })();

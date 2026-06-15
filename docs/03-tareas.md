@@ -2,6 +2,39 @@
 **Versión:** 2.0  
 **Última actualización:** Junio 2026  
 **Equipo:** 5 personas | **Duración:** 3 semanas
+
+---
+
+## ✅ Implementado — Semanas 2 y 3 (actualización 2026-06-15)
+
+Las siguientes funcionalidades fueron implementadas sobre la base vanilla JS + Flask existente:
+
+**Backend (`backend/app.py`):**
+- `GET /admin/dashboard` — métricas globales (participantes, eventos, badges, canjes, progreso por evento)
+- `GET /admin/users` — listado de usuarios con `created_at`
+- `PATCH /admin/users/<id>/role` — cambiar rol; no permite auto-modificación
+- `DELETE /admin/events/<id>` — elimina evento + badges + scans en cascada
+- `DELETE /admin/events/<id>/badges/<id>` — elimina badge + scans
+- `POST /admin/badges/<id>/regenerate-qr` — nuevo token UUID + nuevo QR
+- Rate limiting en `/auth/login` (5 intentos por 5 minutos, retorna 429)
+- Validaciones: `strip()`, longitudes máximas, regex de email, `fecha_fin >= fecha_inicio`
+- `scanned_at` incluido en la respuesta de `GET /events/<id>` por badge obtenido
+
+**Frontend:**
+- `admin-participation.html` → dashboard completo: cards de métricas, barras de progreso por evento, tabla de usuarios con cambio de rol
+- `admin-event.html` → edición inline de eventos, toggle activo/inactivo, confirmación modal (sin `confirm()` nativo)
+- `admin-badges.html` → filtro de búsqueda en tiempo real, QR preview mejorado, Regenerar QR, Descargar todos los QRs
+- `scan.html` → línea de escaneo animada, vibración (éxito y duplicado), fallback manual con mensaje claro al denegar cámara
+- `profile.html` → animación de unlock de badge, barra de progreso con %, confetti en canvas al completar evento, historial ordenado por fecha
+
+**JS compartido:**
+- `js/api.js` → timeout de 15s (AbortController), detección offline, nuevos métodos `getDashboard`, `getUsers`, `changeUserRole`, `regenerateBadgeQr`, `updateEvent`
+- `js/utils.js` → `showConfirm()` modal nativo, tipo `warning` en toasts, `window.toast` global, `skeletonCard()`
+- `db/seed.js` → 1 admin + 3 participantes + 2 eventos + 5 badges c/u + scans distribuidos
+
+**Tareas correspondientes (del plan original):** T26–T52 en su mayoría completadas. T63–T64 (dashboard stats) completadas como P2-A.
+
+---
  
 ---
  

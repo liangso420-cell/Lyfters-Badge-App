@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Escanear QR — Lyfter Badge App</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -22,6 +22,35 @@
       },
     };
   </script>
+  <style>
+    @keyframes scan-sweep {
+      0%   { top: 10%; opacity: 1; }
+      48%  { opacity: 1; }
+      50%  { top: 88%; opacity: 0.7; }
+      52%  { opacity: 1; }
+      100% { top: 10%; opacity: 1; }
+    }
+    .scan-line {
+      position: absolute;
+      left: 5%;
+      right: 5%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #ef4444, #ff6b6b, #ef4444, transparent);
+      border-radius: 2px;
+      animation: scan-sweep 2.4s ease-in-out infinite;
+      pointer-events: none;
+      box-shadow: 0 0 8px rgba(239,68,68,0.7);
+    }
+    @keyframes corner-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .scanner-corner { position: absolute; width: 20px; height: 20px; border-color: #6C63FF; border-style: solid; animation: corner-pulse 2s ease-in-out infinite; }
+    .corner-tl { top: 0; left: 0; border-width: 3px 0 0 3px; }
+    .corner-tr { top: 0; right: 0; border-width: 3px 3px 0 0; }
+    .corner-bl { bottom: 0; left: 0; border-width: 0 0 3px 3px; }
+    .corner-br { bottom: 0; right: 0; border-width: 0 3px 3px 0; }
+  </style>
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
@@ -36,51 +65,95 @@
     (function () {
       'use strict';
       var API = window.LyfterAPI;
-      var U = window.LyfterUtils;
+      var U   = window.LyfterUtils;
 
       var user = API.currentUser();
-      if (!user) { window.location.replace('login.html?next=' + encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)); return; }
+      if (!user) { window.location.replace('login.html?next=' + encodeURIComponent(window.location.pathname + window.location.search)); return; }
       if (user.role === 'admin') { window.location.replace('admin-event.html'); return; }
 
       var app = document.getElementById('app');
+      var scanning = false;
+      var processing = false;
 
       app.innerHTML =
-        '<section class="device-frame px-4 pt-12">' +
-          '<div class="rounded-card overflow-hidden relative" style="background:#111; height:520px;">' +
-            '<button id="scan-close" class="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-white/20 text-white flex items-center justify-center backdrop-blur hover:bg-white/30">✕</button>' +
+        '<section class="device-frame px-4 pt-10">' +
+          '<div class="rounded-card overflow-hidden relative" style="background:#0a0a0a; height:520px;">' +
+            '<button id="scan-close" class="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-white/20 text-white flex items-center justify-center backdrop-blur hover:bg-white/30 transition">✕</button>' +
             '<video id="scan-video" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover; position:absolute; inset:0;"></video>' +
             '<canvas id="scan-canvas" style="visibility:hidden; position:absolute; width:1px; height:1px;"></canvas>' +
             '<div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">' +
               '<div class="relative" style="width:240px; height:240px;">' +
                 '<span class="scanner-corner corner-tl"></span><span class="scanner-corner corner-tr"></span>' +
                 '<span class="scanner-corner corner-bl"></span><span class="scanner-corner corner-br"></span>' +
+                '<div class="scan-line" id="scan-line"></div>' +
               '</div>' +
-              '<p class="text-gray-300 mt-8 text-sm">Apunta al código QR</p>' +
+              '<p id="scan-status" class="text-gray-300 mt-6 text-sm font-medium tracking-wide">Apunta al código QR</p>' +
             '</div>' +
-            '<div id="manual-fallback" class="absolute bottom-6 left-4 right-4">' +
-              '<input id="scan-token" type="text" placeholder="Pega el token del QR" ' +
-                'class="w-full px-4 py-3 rounded-btn bg-white/90 outline-none text-sm" />' +
-              '<button id="scan-redeem" class="mt-2 w-full py-3 rounded-btn text-white font-semibold" style="background:#6C63FF;">Canjear</button>' +
+          '</div>' +
+          '<div id="manual-section" class="mt-4 hidden">' +
+            '<div class="bg-white rounded-card p-4 shadow-soft">' +
+              '<p class="text-sm font-medium text-gray-700 mb-3">📝 Ingresar código manualmente</p>' +
+              '<input id="scan-token" type="text" placeholder="Pega o escribe el token del QR" ' +
+                'class="w-full px-4 py-3 rounded-btn border border-gray-200 bg-base focus:border-primary outline-none text-sm mb-2" />' +
+              '<button id="scan-redeem" class="w-full py-3 rounded-btn text-white font-semibold" style="background:#6C63FF;">Canjear badge</button>' +
             '</div>' +
+          '</div>' +
+          '<div class="mt-3 text-center">' +
+            '<button id="toggle-manual" class="text-sm text-gray-400 hover:text-primary underline">Ingresar código manualmente</button>' +
           '</div>' +
         '</section>';
 
+      function setStatus(msg) {
+        var el = document.getElementById('scan-status');
+        if (el) el.textContent = msg;
+      }
+
+      function vibrate(pattern) {
+        if (navigator.vibrate) navigator.vibrate(pattern);
+      }
+
       document.getElementById('scan-close').addEventListener('click', function () {
-        if (window._scanStream) window._scanStream.getTracks().forEach(function(t) { t.stop(); });
+        stopCamera();
         window.location.href = 'profile.html';
       });
 
+      document.getElementById('toggle-manual').addEventListener('click', function() {
+        var sec = document.getElementById('manual-section');
+        sec.classList.toggle('hidden');
+        this.textContent = sec.classList.contains('hidden') ? 'Ingresar código manualmente' : 'Ocultar';
+      });
+
       document.getElementById('scan-redeem').addEventListener('click', async function () {
-        var btn = document.getElementById('scan-redeem');
-        btn.disabled = true;
-        btn.textContent = 'Cargando...';
+        var btn = this;
+        btn.disabled = true; btn.textContent = 'Canjeando...';
         try {
           await doRedeem(document.getElementById('scan-token').value.trim());
         } finally {
-          btn.disabled = false;
-          btn.textContent = 'Canjear';
+          btn.disabled = false; btn.textContent = 'Canjear badge';
         }
       });
+
+      function stopCamera() {
+        if (window._scanStream) {
+          window._scanStream.getTracks().forEach(function(t) { t.stop(); });
+          window._scanStream = null;
+        }
+        scanning = false;
+        var line = document.getElementById('scan-line');
+        if (line) line.style.animationPlayState = 'paused';
+      }
+
+      function resumeCamera() {
+        if (!window._scanStream) { startCamera(); return; }
+        var video = document.getElementById('scan-video');
+        if (video && video.paused) video.play();
+        scanning = true;
+        var line = document.getElementById('scan-line');
+        if (line) line.style.animationPlayState = 'running';
+        setStatus('Apunta al código QR');
+        var stream = window._scanStream;
+        if (stream) scanLoop(stream);
+      }
 
       async function startCamera() {
         try {
@@ -89,26 +162,40 @@
           var video = document.getElementById('scan-video');
           video.srcObject = stream;
           video.play();
+          scanning = true;
           scanLoop(stream);
         } catch (err) {
-          document.getElementById('manual-fallback').style.display = 'block';
-          U.toast('No se pudo acceder a la cámara', 'error');
+          showCameraFallback(err);
         }
+      }
+
+      function showCameraFallback(err) {
+        var statusEl = document.getElementById('scan-status');
+        if (statusEl) { statusEl.textContent = 'Cámara no disponible'; statusEl.style.color = '#ef4444'; }
+        document.getElementById('manual-section').classList.remove('hidden');
+        var toggleBtn = document.getElementById('toggle-manual');
+        if (toggleBtn) toggleBtn.classList.add('hidden');
+        var line = document.getElementById('scan-line');
+        if (line) line.style.display = 'none';
+        U.toast('Acceso a cámara denegado — ingresá el código manualmente', 'warning');
       }
 
       function scanLoop(stream) {
         var video = document.getElementById('scan-video');
         var canvas = document.getElementById('scan-canvas');
+        if (!canvas || !video) return;
         var ctx = canvas.getContext('2d');
         function tick() {
+          if (!scanning || processing) return;
           if (video.readyState === video.HAVE_ENOUGH_DATA) {
-            canvas.width = video.videoWidth;
+            canvas.width  = video.videoWidth;
             canvas.height = video.videoHeight;
             ctx.drawImage(video, 0, 0);
-            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            var code = jsQR(imageData.data, imageData.width, imageData.height);
+            var imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var code = jsQR(imgData.data, imgData.width, imgData.height);
             if (code) {
-              stream.getTracks().forEach(function(t) { t.stop(); });
+              processing = true;
+              setStatus('Procesando...');
               var qrData = code.data;
               var urlParams = null;
               try { urlParams = new URL(qrData).searchParams; } catch(e) {}
@@ -116,37 +203,57 @@
                 doRedeem(urlParams.get('token'), urlParams.get('event'));
               } else {
                 var match = qrData.match(/\/redeem\/([^\/]+)\/([^\/\?]+)/);
-                if (match) {
-                  doRedeem(match[2], match[1]);
-                } else {
-                  doRedeem(qrData);
-                }
+                if (match) doRedeem(match[2], match[1]);
+                else doRedeem(qrData);
               }
               return;
             }
           }
-          setTimeout(tick, 150);
+          if (scanning) setTimeout(tick, 150);
         }
         setTimeout(tick, 150);
       }
 
       async function doRedeem(token, eventId) {
+        setStatus('Procesando...');
         try {
           var events = await API.listEvents();
           var activeId = eventId || U.ensureActive(events);
           var r = await API.redeem(activeId, token);
+
           if (r.status === 'none') {
-            U.toastNextPage('Ya completaste todos los badges de este evento', 'info');
+            vibrate(200);
+            U.toastNextPage('Ya completaste todos los badges de este evento 🎉', 'info');
+            stopCamera();
             window.location.href = 'profile.html';
             return;
           }
           if (r.status === 'duplicate') {
-            U.toastNextPage('Ya tenías "' + r.badge.name + '"', 'info');
-            window.location.href = 'profile.html';
+            vibrate([100, 50, 100]);
+            stopCamera();
+            setStatus('Badge ya obtenido');
+            setTimeout(function() {
+              U.toastNextPage('Ya tenías "' + (r.badge ? r.badge.name : 'este badge') + '"', 'warning');
+              window.location.href = 'profile.html';
+            }, 1000);
             return;
           }
+
+          vibrate(200);
+          stopCamera();
           showCelebration(r);
-        } catch (err) { U.toast(err.message || 'No se pudo canjear', 'error'); }
+        } catch (err) {
+          processing = false;
+          setStatus('Error — intentá de nuevo');
+          U.toast(err.message || 'No se pudo canjear', 'error');
+          setTimeout(function() {
+            processing = false;
+            scanning = true;
+            setStatus('Apunta al código QR');
+            if (window._scanStream) scanLoop(window._scanStream);
+            else startCamera();
+          }, 2000);
+        }
       }
 
       function showCelebration(r) {
@@ -154,21 +261,26 @@
         var isLast = r.complete;
         var prizeBlock = (isLast && r.prize)
           ? '<div class="mt-4 p-4 rounded-card" style="background:#EEEDFF;">' +
-              '<p class="text-xs uppercase tracking-wide text-primary font-semibold">Premio desbloqueado</p>' +
+              '<p class="text-xs uppercase tracking-wide text-primary font-semibold">🎁 Premio desbloqueado</p>' +
               '<p class="text-lg font-bold mt-1">' + U.esc(r.prize) + '</p></div>'
           : '';
-        var title = isLast ? '¡Completaste el evento!' : '¡Badge obtenido!';
-        var subtitle = isLast ? 'Obtuviste todos los badges del evento.' : U.esc(r.badge.desc || '');
+        var progressBlock = r.progress
+          ? '<div class="mt-3 w-full h-2 bg-gray-100 rounded-full overflow-hidden">' +
+              '<div class="h-2 rounded-full" style="width:' + Math.round((r.progress.obtained / r.progress.total) * 100) + '%; background:#6C63FF;"></div>' +
+            '</div>' +
+            '<p class="text-xs text-gray-400 mt-1">' + r.progress.obtained + ' de ' + r.progress.total + ' badges</p>'
+          : '';
 
         modalRoot.innerHTML =
-          '<div class="fixed inset-0 z-50 flex items-center justify-center p-6 anim-fade" style="background:rgba(17,24,39,0.7);">' +
-            '<div class="card-soft p-8 text-center w-full max-w-sm anim-pop">' +
-              '<div class="text-6xl animate-pulse-badge mb-4">' + r.badge.emoji + '</div>' +
-              '<h3 class="text-2xl font-bold text-primary">' + title + '</h3>' +
-              '<p class="text-lg font-semibold mt-2">' + U.esc(r.badge.name) + '</p>' +
-              '<p class="text-sm text-gray-500 mt-1">' + subtitle + '</p>' +
+          '<div class="fixed inset-0 z-50 flex items-center justify-center p-6 anim-fade" style="background:rgba(17,24,39,0.75);">' +
+            '<div class="bg-white rounded-card p-8 text-center w-full max-w-sm shadow-soft anim-pop">' +
+              '<div class="text-6xl animate-pulse-badge mb-3">' + (r.badge ? r.badge.emoji : '🏅') + '</div>' +
+              '<h3 class="text-xl font-bold text-primary">' + (isLast ? '¡Completaste el evento!' : '¡Badge obtenido!') + '</h3>' +
+              '<p class="text-lg font-semibold mt-1 text-gray-800">' + U.esc(r.badge ? r.badge.name : '') + '</p>' +
+              '<p class="text-sm text-gray-500 mt-1">' + U.esc(r.badge ? (r.badge.desc || '') : '') + '</p>' +
+              progressBlock +
               prizeBlock +
-              '<button id="celebrate-ok" class="mt-6 w-full py-3 rounded-btn text-white font-semibold" style="background:#6C63FF;">¡Genial!</button>' +
+              '<button id="celebrate-ok" class="mt-5 w-full py-3 rounded-btn text-white font-semibold" style="background:#6C63FF;">¡Genial!</button>' +
             '</div>' +
           '</div>';
         document.getElementById('celebrate-ok').addEventListener('click', function () {

@@ -1,11 +1,12 @@
 # backend/app.py — Lyfter Badge App
-# Campos y rutas ajustados al contrato que espera el frontend (api.js modo backend)
 
 import io
 import os
+import re
 import uuid
 import base64
 from datetime import datetime, timedelta
+from collections import defaultdict
 
 import bcrypt
 import qrcode
@@ -31,12 +32,33 @@ app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=8)
 jwt = JWTManager(app)
 init_indexes()
 
-# CORS — permite el frontend en puerto 5500
 cors_origins = os.getenv(
     "CORS_ORIGINS",
     "http://localhost:5500,http://127.0.0.1:5500"
 ).split(",")
-CORS(app, origins=cors_origins, supports_credentials=True, methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"])
+CORS(app, origins=cors_origins, supports_credentials=True,
+     methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"])
+
+# ──────────────────────────────────────────────
+# RATE LIMITING (en memoria)
+# ──────────────────────────────────────────────
+_login_attempts = defaultdict(list)
+EMAIL_RE = re.compile(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
+
+
+def check_rate_limit(email):
+    now = datetime.utcnow()
+    cutoff = now - timedelta(minutes=5)
+    _login_attempts[email] = [t for t in _login_attempts[email] if t > cutoff]
+    return len(_login_attempts[email]) < 5
+
+
+def record_failed_attempt(email):
+    _login_attempts[email].append(datetime.utcnow())
+
+
+def clear_attempts(email):
+    _login_attempts.pop(email, None)
 
 
 # ──────────────────────────────────────────────
@@ -65,14 +87,20 @@ def require_admin():
     return user
 
 
-# ── Serializadores con campos en español ──────
+def sanitize(s, max_len=100):
+    return str(s or "").strip()[:max_len]
+
+
+# ── Serializadores ──────────────────────────
 
 def fmt_user(doc):
+    created = doc.get("created_at")
     return {
-        "id":     str(doc["_id"]),
-        "nombre": doc.get("name", ""),
-        "email":  doc.get("email", ""),
-        "rol":    doc.get("role", "participant"),
+        "id":         str(doc["_id"]),
+        "nombre":     doc.get("name", ""),
+        "email":      doc.get("email", ""),
+        "rol":        doc.get("role", "participant"),
+        "created_at": created.isoformat() if created else None,
     }
 
 
@@ -88,13 +116,14 @@ def fmt_event(doc):
     }
 
 
-def fmt_badge(doc, obtenido=False):
+def fmt_badge(doc, obtenido=False, scanned_at=None):
     return {
         "id":          str(doc["_id"]),
         "icon":        doc.get("icon", "🏅"),
         "nombre":      doc.get("name", ""),
         "descripcion": doc.get("description", ""),
         "obtenido":    obtenido,
+        "scanned_at":  scanned_at.isoformat() if scanned_at else None,
     }
 
 
@@ -120,12 +149,16 @@ def fmt_admin_badge(doc, canjeados=0, base_url=""):
 @app.route("/auth/register", methods=["POST"])
 def register():
     data     = request.get_json() or {}
-    name     = (data.get("nombre") or data.get("name") or "").strip()
-    email    = (data.get("email") or "").strip().lower()
+    name     = sanitize(data.get("nombre") or data.get("name") or "", max_len=100)
+    email    = sanitize(data.get("email") or "", max_len=254).lower()
     password = data.get("password") or ""
 
-    if not name or not email or len(password) < 6:
-        return jsonify(error="nombre, email y password (min 6 chars) son requeridos"), 400
+    if not name:
+        return jsonify(error="El nombre es requerido"), 400
+    if not email or not EMAIL_RE.match(email):
+        return jsonify(error="Formato de email inválido"), 400
+    if len(password) < 6:
+        return jsonify(error="La contraseña debe tener al menos 6 caracteres"), 400
 
     if users().find_one({"email": email}):
         return jsonify(error="Email ya registrado"), 409
@@ -147,13 +180,18 @@ def register():
 @app.route("/auth/login", methods=["POST"])
 def login():
     data     = request.get_json() or {}
-    email    = (data.get("email") or "").strip().lower()
+    email    = sanitize(data.get("email") or "", max_len=254).lower()
     password = (data.get("password") or "").encode()
+
+    if not check_rate_limit(email):
+        return jsonify(error="Demasiados intentos. Esperá 5 minutos."), 429
 
     user = users().find_one({"email": email})
     if not user or not bcrypt.checkpw(password, user["password_hash"].encode()):
-        return jsonify(error="Credenciales invalidas"), 401
+        record_failed_attempt(email)
+        return jsonify(error="Credenciales inválidas"), 401
 
+    clear_attempts(email)
     token = create_access_token(identity=str(user["_id"]))
     return jsonify(token=token, user=fmt_user(user)), 200
 
@@ -166,10 +204,7 @@ def login():
 @app.route("/events",  methods=["GET"])
 def list_events():
     now  = datetime.utcnow()
-    docs = events().find({
-        "active": True,
-        "end_date": {"$gte": now}
-    })
+    docs = events().find({"active": True, "end_date": {"$gte": now}})
     return jsonify([fmt_event(e) for e in docs]), 200
 
 
@@ -178,7 +213,7 @@ def list_events():
 def get_event(event_id):
     oid = valid_oid(event_id)
     if not oid:
-        return jsonify(error="ID invalido"), 400
+        return jsonify(error="ID inválido"), 400
 
     event = events().find_one({"_id": oid})
     if not event:
@@ -190,31 +225,32 @@ def get_event(event_id):
     badge_docs = list(badges().find({"event_id": oid}))
     total      = len(badge_docs)
 
-    scanned_ids = set()
+    scans_data = {}
     if user_oid:
-        scanned_ids = {
-            s["badge_id"]
-            for s in scans().find({"user_id": user_oid, "event_id": oid}, {"badge_id": 1})
-        }
+        for s in scans().find({"user_id": user_oid, "event_id": oid}):
+            scans_data[s["badge_id"]] = s.get("scanned_at")
 
-    badge_list = [fmt_badge(b, obtenido=(b["_id"] in scanned_ids)) for b in badge_docs]
-    obtenidos  = len(scanned_ids)
+    badge_list = [
+        fmt_badge(b, obtenido=(b["_id"] in scans_data), scanned_at=scans_data.get(b["_id"]))
+        for b in badge_docs
+    ]
+    obtenidos  = len(scans_data)
     completado = total > 0 and obtenidos >= total
 
     return jsonify({
-        "id":             str(event["_id"]),
-        "nombre":         event.get("title", ""),
-        "premio":         event.get("prize", ""),
-        "badges":         badge_list,
-        "total_badges":   total,
-        "obtenidos":      obtenidos,
-        "completado":     completado,
+        "id":              str(event["_id"]),
+        "nombre":          event.get("title", ""),
+        "premio":          event.get("prize", ""),
+        "badges":          badge_list,
+        "total_badges":    total,
+        "obtenidos":       obtenidos,
+        "completado":      completado,
         "premio_revelado": event.get("prize") if completado else None,
     }), 200
 
 
 # ──────────────────────────────────────────────
-# REDENCIÓN — POST (el QR genera un POST al escanear)
+# REDENCIÓN
 # ──────────────────────────────────────────────
 
 @app.route("/redeem/<event_id>/<token>", methods=["POST", "GET"])
@@ -223,7 +259,7 @@ def redeem_badge(event_id, token):
     uid       = get_jwt_identity()
     oid_event = valid_oid(event_id)
     if not oid_event:
-        return jsonify(error="Evento invalido"), 400
+        return jsonify(error="Evento inválido"), 400
 
     event = events().find_one({"_id": oid_event, "active": True})
     if not event:
@@ -246,8 +282,8 @@ def redeem_badge(event_id, token):
             "scanned_at": datetime.utcnow(),
         })
 
-    total_b   = badges().count_documents({"event_id": oid_event})
-    user_scns = scans().count_documents({"user_id": user_oid, "event_id": oid_event})
+    total_b    = badges().count_documents({"event_id": oid_event})
+    user_scns  = scans().count_documents({"user_id": user_oid, "event_id": oid_event})
     completado = user_scns >= total_b
 
     return jsonify({
@@ -276,7 +312,6 @@ def admin_list_events():
     return jsonify([fmt_event(e) for e in docs]), 200
 
 
-# El frontend llama POST /admin/event (singular)
 @app.route("/admin/event",  methods=["POST"])
 @app.route("/admin/events", methods=["POST"])
 @jwt_required()
@@ -285,21 +320,28 @@ def create_event():
     if not admin:
         return jsonify(error="Acceso denegado"), 403
 
-    data = request.get_json() or {}
-    nombre      = (data.get("nombre")      or data.get("title")       or "").strip()
-    descripcion = (data.get("descripcion") or data.get("description") or "").strip()
-    premio      = (data.get("premio")      or data.get("prize")       or "").strip()
+    data        = request.get_json() or {}
+    nombre      = sanitize(data.get("nombre")      or data.get("title")       or "", max_len=100)
+    descripcion = sanitize(data.get("descripcion") or data.get("description") or "", max_len=500)
+    premio      = sanitize(data.get("premio")      or data.get("prize")       or "", max_len=200)
     fecha_ini   = data.get("fecha_inicio") or data.get("start_date")
     fecha_fin   = data.get("fecha_fin")    or data.get("end_date")
 
-    if not nombre or not fecha_ini or not fecha_fin:
-        return jsonify(error="nombre, fecha_inicio y fecha_fin son requeridos"), 400
+    if not nombre:
+        return jsonify(error="El nombre del evento es requerido"), 400
+    if not fecha_ini:
+        return jsonify(error="La fecha de inicio es requerida"), 400
+    if not fecha_fin:
+        return jsonify(error="La fecha de fin es requerida"), 400
 
     try:
         start = datetime.fromisoformat(str(fecha_ini))
         end   = datetime.fromisoformat(str(fecha_fin))
     except ValueError:
-        return jsonify(error="fechas deben ser ISO 8601 (ej: 2026-07-01)"), 400
+        return jsonify(error="Las fechas deben estar en formato ISO 8601 (ej: 2026-07-01)"), 400
+
+    if end < start:
+        return jsonify(error="La fecha de fin no puede ser anterior a la de inicio"), 400
 
     result = events().insert_one({
         "title":       nombre,
@@ -307,7 +349,7 @@ def create_event():
         "start_date":  start,
         "end_date":    end,
         "prize":       premio,
-        "active":      data.get("active", True),
+        "active":      bool(data.get("active", True)),
         "created_by":  admin["_id"],
         "created_at":  datetime.utcnow(),
     })
@@ -323,11 +365,17 @@ def delete_event(event_id):
         return jsonify(error="Acceso denegado"), 403
     oid = valid_oid(event_id)
     if not oid:
-        return jsonify(error="ID invalido"), 400
-    events().delete_one({"_id": oid})
-    badges().delete_many({"event_id": oid})
+        return jsonify(error="ID inválido"), 400
+
+    if not events().find_one({"_id": oid}):
+        return jsonify(error="Evento no encontrado"), 404
+
+    badge_oids = [b["_id"] for b in badges().find({"event_id": oid}, {"_id": 1})]
+    scans().delete_many({"badge_id": {"$in": badge_oids}})
     scans().delete_many({"event_id": oid})
-    return jsonify(ok=True), 200
+    badges().delete_many({"event_id": oid})
+    events().delete_one({"_id": oid})
+    return jsonify(mensaje="Evento eliminado"), 200
 
 
 @app.route("/admin/events/<event_id>", methods=["PATCH"])
@@ -338,26 +386,41 @@ def update_event(event_id):
 
     oid = valid_oid(event_id)
     if not oid:
-        return jsonify(error="ID invalido"), 400
+        return jsonify(error="ID inválido"), 400
+
+    existing = events().find_one({"_id": oid})
+    if not existing:
+        return jsonify(error="Evento no encontrado"), 404
 
     data    = request.get_json() or {}
     updates = {}
-    if "nombre"      in data: updates["title"]       = data["nombre"]
-    if "title"       in data: updates["title"]       = data["title"]
-    if "descripcion" in data: updates["description"] = data["descripcion"]
-    if "description" in data: updates["description"] = data["description"]
-    if "premio"      in data: updates["prize"]       = data["premio"]
-    if "prize"       in data: updates["prize"]       = data["prize"]
-    if "active"      in data: updates["active"]      = data["active"]
-    if "activo"      in data: updates["active"]      = data["activo"]
+    if "nombre"      in data: updates["title"]       = sanitize(data["nombre"], max_len=100)
+    if "title"       in data: updates["title"]       = sanitize(data["title"], max_len=100)
+    if "descripcion" in data: updates["description"] = sanitize(data["descripcion"], max_len=500)
+    if "description" in data: updates["description"] = sanitize(data["description"], max_len=500)
+    if "premio"      in data: updates["prize"]       = sanitize(data["premio"], max_len=200)
+    if "prize"       in data: updates["prize"]       = sanitize(data["prize"], max_len=200)
+    if "active"      in data: updates["active"]      = bool(data["active"])
+    if "activo"      in data: updates["active"]      = bool(data["activo"])
 
+    new_start = new_end = None
     for field, key in [("fecha_inicio", "start_date"), ("fecha_fin", "end_date"),
                        ("start_date", "start_date"),   ("end_date",  "end_date")]:
         if field in data:
-            updates[key] = datetime.fromisoformat(str(data[field]))
+            try:
+                updates[key] = datetime.fromisoformat(str(data[field]))
+                if key == "start_date": new_start = updates[key]
+                if key == "end_date":   new_end   = updates[key]
+            except ValueError:
+                return jsonify(error=f"Formato de fecha inválido para {field}"), 400
 
     if not updates:
         return jsonify(error="Nada que actualizar"), 400
+
+    s_check = new_start or existing.get("start_date")
+    e_check = new_end   or existing.get("end_date")
+    if s_check and e_check and e_check < s_check:
+        return jsonify(error="La fecha de fin no puede ser anterior a la de inicio"), 400
 
     events().update_one({"_id": oid}, {"$set": updates})
     return jsonify(fmt_event(events().find_one({"_id": oid}))), 200
@@ -367,7 +430,6 @@ def update_event(event_id):
 # ADMIN — badges
 # ──────────────────────────────────────────────
 
-# GET lista badges del evento + stats de canjes
 @app.route("/admin/events/<event_id>/badges", methods=["GET"])
 @jwt_required()
 def admin_list_badges(event_id):
@@ -376,7 +438,7 @@ def admin_list_badges(event_id):
 
     oid = valid_oid(event_id)
     if not oid:
-        return jsonify(error="ID invalido"), 400
+        return jsonify(error="ID inválido"), 400
 
     event = events().find_one({"_id": oid})
     if not event:
@@ -391,15 +453,11 @@ def admin_list_badges(event_id):
         result_badges.append(fmt_admin_badge(b, canjeados=canjeados, base_url=base_url))
 
     return jsonify({
-        "evento": {
-            "id":     str(event["_id"]),
-            "nombre": event.get("title", ""),
-        },
+        "evento": {"id": str(event["_id"]), "nombre": event.get("title", "")},
         "badges": result_badges,
     }), 200
 
 
-# POST crea badge — el frontend llama /badge (singular)
 @app.route("/admin/events/<event_id>/badge",  methods=["POST"])
 @app.route("/admin/events/<event_id>/badges", methods=["POST"])
 @jwt_required()
@@ -412,12 +470,12 @@ def create_badge(event_id):
         return jsonify(error="Evento no encontrado"), 404
 
     data        = request.get_json() or {}
-    nombre      = (data.get("nombre")      or data.get("name")        or "").strip()
-    descripcion = (data.get("descripcion") or data.get("description") or "").strip()
-    icon        = (data.get("icon")        or "🏅").strip()
+    nombre      = sanitize(data.get("nombre")      or data.get("name")        or "", max_len=100)
+    descripcion = sanitize(data.get("descripcion") or data.get("description") or "", max_len=500)
+    icon        = sanitize(data.get("icon") or "🏅", max_len=10)
 
     if not nombre:
-        return jsonify(error="nombre es requerido"), 400
+        return jsonify(error="El nombre del badge es requerido"), 400
 
     token    = str(uuid.uuid4())
     base_url = os.getenv("APP_BASE_URL", "http://localhost:5500")
@@ -455,10 +513,112 @@ def delete_badge(event_id, badge_id):
         return jsonify(error="Acceso denegado"), 403
     oid = valid_oid(badge_id)
     if not oid:
-        return jsonify(error="ID invalido"), 400
+        return jsonify(error="ID inválido"), 400
     badges().delete_one({"_id": oid})
     scans().delete_many({"badge_id": oid})
-    return jsonify(ok=True), 200
+    return jsonify(mensaje="Badge eliminado"), 200
+
+
+@app.route("/admin/badges/<badge_id>/regenerate-qr", methods=["POST"])
+@jwt_required()
+def regenerate_qr(badge_id):
+    if not require_admin():
+        return jsonify(error="Acceso denegado"), 403
+
+    oid = valid_oid(badge_id)
+    if not oid:
+        return jsonify(error="ID inválido"), 400
+
+    badge = badges().find_one({"_id": oid})
+    if not badge:
+        return jsonify(error="Badge no encontrado"), 404
+
+    new_token = str(uuid.uuid4())
+    event_id  = str(badge.get("event_id", ""))
+    base_url  = os.getenv("APP_BASE_URL", "http://localhost:5500")
+    qr_data   = f"{base_url}/redeem.html?event={event_id}&token={new_token}"
+    qr_b64    = generate_qr_base64(qr_data)
+
+    badges().update_one({"_id": oid}, {"$set": {"token": new_token, "qr_base64": qr_b64}})
+
+    updated   = badges().find_one({"_id": oid})
+    canjeados = scans().count_documents({"badge_id": oid})
+    return jsonify(fmt_admin_badge(updated, canjeados=canjeados, base_url=base_url)), 200
+
+
+# ──────────────────────────────────────────────
+# ADMIN — dashboard y usuarios
+# ──────────────────────────────────────────────
+
+@app.route("/admin/dashboard", methods=["GET"])
+@jwt_required()
+def admin_dashboard():
+    if not require_admin():
+        return jsonify(error="Acceso denegado"), 403
+
+    total_participantes    = users().count_documents({"role": "participant"})
+    total_eventos          = events().count_documents({})
+    total_badges_creados   = badges().count_documents({})
+    total_badges_canjeados = scans().count_documents({})
+
+    progreso = []
+    for e in events().find({}):
+        eid     = e["_id"]
+        total_b = badges().count_documents({"event_id": eid})
+        total_c = scans().count_documents({"event_id": eid})
+        unicos  = len(scans().distinct("user_id", {"event_id": eid}))
+        pct     = round((total_c / total_b) * 100, 1) if total_b > 0 else 0.0
+        progreso.append({
+            "id":                   str(eid),
+            "nombre":               e.get("title", ""),
+            "total_badges":         total_b,
+            "total_canjeados":      total_c,
+            "porcentaje":           pct,
+            "participantes_unicos": unicos,
+        })
+
+    return jsonify({
+        "total_participantes":    total_participantes,
+        "total_eventos":          total_eventos,
+        "total_badges_creados":   total_badges_creados,
+        "total_badges_canjeados": total_badges_canjeados,
+        "progreso_por_evento":    progreso,
+    }), 200
+
+
+@app.route("/admin/users", methods=["GET"])
+@jwt_required()
+def admin_list_users():
+    if not require_admin():
+        return jsonify(error="Acceso denegado"), 403
+    return jsonify([fmt_user(u) for u in users().find({})]), 200
+
+
+@app.route("/admin/users/<user_id>/role", methods=["PATCH"])
+@jwt_required()
+def change_user_role(user_id):
+    admin = require_admin()
+    if not admin:
+        return jsonify(error="Acceso denegado"), 403
+
+    if str(admin["_id"]) == user_id:
+        return jsonify(error="No podés cambiar tu propio rol"), 400
+
+    oid = valid_oid(user_id)
+    if not oid:
+        return jsonify(error="ID inválido"), 400
+
+    data     = request.get_json() or {}
+    new_role = data.get("rol", "")
+    if new_role not in ("admin", "participant"):
+        return jsonify(error="Rol inválido. Usar 'admin' o 'participant'"), 400
+
+    user = users().find_one({"_id": oid})
+    if not user:
+        return jsonify(error="Usuario no encontrado"), 404
+
+    users().update_one({"_id": oid}, {"$set": {"role": new_role}})
+    return jsonify(fmt_user(users().find_one({"_id": oid}))), 200
 
 
 # ──────────────────────────────────────────────

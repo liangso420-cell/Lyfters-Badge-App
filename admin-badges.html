@@ -5,10 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Badges — Lyfter Badge App</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -22,7 +23,6 @@
     };
   </script>
   <link rel="stylesheet" href="css/styles.css" />
-  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 </head>
 <body>
   <main id="app"></main>
@@ -36,13 +36,12 @@
     (function () {
       'use strict';
       var API = window.LyfterAPI;
-      var U = window.LyfterUtils;
+      var U   = window.LyfterUtils;
 
       var user = API.currentUser();
-      if (!user) { window.location.replace('login.html?next=' + encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)); return; }
+      if (!user) { window.location.replace('login.html?next=' + encodeURIComponent(window.location.pathname + window.location.search)); return; }
       if (user.role !== 'admin') { window.location.replace('profile.html'); return; }
 
-      /* selectedBadgeId sobrevive recargas vía sessionStorage */
       var SELECTED_KEY = 'lyfter_selected_badge';
       function getSelectedId() { try { return sessionStorage.getItem(SELECTED_KEY) || null; } catch (e) { return null; } }
       function setSelectedId(id) { try { sessionStorage.setItem(SELECTED_KEY, id); } catch (e) {} }
@@ -51,121 +50,226 @@
       app.innerHTML = U.loadingHtml();
       U.showPendingToast();
 
+      var allBadges = [];
+
+      function renderQrPanel(selected, eventId) {
+        if (!selected) return '';
+        var qrSrc = selected.qrImage
+          ? '<img id="qr-img" src="' + selected.qrImage + '" class="w-48 h-48 object-contain" alt="QR" />'
+          : '<canvas id="qr-canvas" class="w-48 h-48"></canvas>';
+        return '<div class="mt-6 p-6 rounded-card text-center" style="background:#EEEDFF;">' +
+          '<p class="text-sm font-semibold text-primary mb-3">QR — ' + U.esc(selected.name) + '</p>' +
+          '<div class="inline-block bg-white p-3 rounded-card shadow-soft mb-2">' + qrSrc + '</div>' +
+          '<p class="text-2xl mb-1">' + (selected.emoji || '🏅') + '</p>' +
+          '<p class="font-semibold text-gray-700 text-sm">' + U.esc(selected.name) + '</p>' +
+          '<p class="text-xs text-gray-400 mt-1 mb-3 break-all">' + U.esc(selected.redeemUrl || '') + '</p>' +
+          '<div class="flex gap-2 justify-center flex-wrap">' +
+            '<button id="qr-download" class="px-4 py-2 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">⬇️ Descargar</button>' +
+            '<button id="qr-regen" data-bid="' + selected.id + '" data-eid="' + eventId + '" class="px-4 py-2 rounded-btn text-sm font-medium text-orange-600 border border-orange-300 hover:bg-orange-50">🔄 Regenerar QR</button>' +
+          '</div>' +
+        '</div>';
+      }
+
       async function init() {
         try {
           var events = await API.listAdminEvents();
           var activeId = U.ensureActive(events);
           if (!activeId) {
-            app.innerHTML = U.adminShell('badges', '<div class="card-soft p-8 text-center text-gray-500">Primero crea un evento.</div>', events, activeId);
+            app.innerHTML = U.adminShell('badges', '<div class="bg-white rounded-card p-8 text-center text-gray-500 shadow-soft">Primero crea un evento.</div>', events, activeId);
             U.mountAdminShell();
             return;
           }
 
           var data = await API.listAdminBadges(activeId);
-          var badges = data.badges;
+          allBadges = data.badges;
+
           var selectedId = getSelectedId();
-          if (selectedId && !badges.some(function (b) { return b.id === selectedId; })) selectedId = null;
-          var selected = badges.find(function (b) { return b.id === selectedId; }) || badges[0] || null;
+          if (selectedId && !allBadges.some(function(b){ return b.id === selectedId; })) selectedId = null;
+          var selected = allBadges.find(function(b){ return b.id === selectedId; }) || allBadges[0] || null;
 
-          var list = badges.length
-            ? badges.map(function (b) {
-                return '<div class="flex items-center justify-between p-4 rounded-card bg-base">' +
-                  '<div class="flex items-center gap-3"><span class="text-2xl">' + b.emoji + '</span>' +
-                    '<div><p class="font-medium">' + U.esc(b.name) + '</p><p class="text-xs text-gray-400">' + U.esc(b.desc) + '</p></div></div>' +
-                  '<div class="flex gap-2">' +
-                  '<button data-qr="' + b.id + '" class="qr-btn px-4 py-2 rounded-btn text-sm font-medium text-primary border border-primary hover:bg-primary-soft">Ver QR</button>' +
-                  '<button data-del="' + b.id + '" class="del-btn px-3 py-2 rounded-btn text-sm font-medium text-red-500 border border-red-300 hover:bg-red-50">🗑</button>' +
+          function buildList(blist) {
+            if (!blist.length) return '<p class="text-sm text-gray-400 text-center py-8">Sin resultados.</p>';
+            return blist.map(function(b) {
+              var isSelected = selected && b.id === selected.id;
+              return '<div class="flex items-center justify-between p-4 rounded-card mb-2 ' + (isSelected ? 'border-2 border-primary' : 'bg-base') + '">' +
+                '<div class="flex items-center gap-3 flex-1 min-w-0">' +
+                  '<span class="text-2xl">' + (b.emoji || '🏅') + '</span>' +
+                  '<div class="min-w-0">' +
+                    '<p class="font-medium text-gray-800 truncate">' + U.esc(b.name) + '</p>' +
+                    '<p class="text-xs text-gray-400 truncate">' + U.esc(b.desc) + '</p>' +
+                    '<p class="text-xs text-primary font-medium mt-0.5">' + (b.redeemed || 0) + ' canjes</p>' +
                   '</div>' +
-                '</div>';
-              }).join('')
-            : '<p class="text-sm text-gray-400 text-center py-4">Aún no hay badges. Agrega el primero abajo 👇</p>';
-
-          var qrPanel = selected
-            ? '<div class="p-6 rounded-card text-center" style="background:#EEEDFF;">' +
-                '<p class="text-sm font-semibold text-primary mb-3">QR generado para "' + U.esc(selected.name) + '"</p>' +
-                '<div class="inline-block bg-white p-3 rounded-card shadow-soft">' +
-                  '<canvas id="qr-canvas"></canvas>' +
                 '</div>' +
-                '<p class="text-xs text-gray-400 mt-2 break-all">' + U.esc(selected.redeemUrl) + '</p>' +
-                '<button id="qr-download" class="mt-3 px-5 py-2.5 rounded-btn text-white font-medium text-sm" style="background:#6C63FF;">⬇️ Descargar QR</button>' +
-              '</div>'
-            : '';
+                '<div class="flex gap-1.5 flex-shrink-0 ml-2">' +
+                  '<button data-qr="' + b.id + '" class="qr-btn px-3 py-1.5 rounded-btn text-xs font-medium text-primary border border-primary hover:bg-primary-soft">QR</button>' +
+                  '<button data-del="' + b.id + '" data-eid="' + activeId + '" data-name="' + U.esc(b.name) + '" class="del-btn px-2.5 py-1.5 rounded-btn text-xs font-medium text-red-500 border border-red-300 hover:bg-red-50">🗑</button>' +
+                '</div>' +
+              '</div>';
+            }).join('');
+          }
 
           var inner =
-            '<div class="card-soft p-8 anim-fade">' +
-              '<h2 class="text-xl font-bold mb-1">Badges — ' + U.esc(data.event.name) + '</h2>' +
-              '<p class="text-sm text-gray-400 mb-6">Crea badges y genera sus códigos QR</p>' +
-              '<div class="space-y-3 mb-6">' + list + '</div>' +
-              '<div class="p-4 rounded-card border border-dashed border-gray-300 mb-6">' +
-                '<p class="text-sm font-semibold mb-3 text-gray-700">➕ Agregar nuevo badge</p>' +
-                '<form id="add-badge-form" novalidate>' +
-                  '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">' +
-                    '<input type="text" name="name" placeholder="Nombre del badge" class="px-4 py-3 bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" />' +
-                    '<input type="text" name="desc" placeholder="Descripción" class="px-4 py-3 bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" />' +
-                  '</div>' +
-                  '<button type="submit" class="mt-3 px-5 py-2.5 rounded-btn text-white font-medium text-sm" style="background:#6C63FF;">Agregar badge</button>' +
-                '</form>' +
+            '<div class="bg-white rounded-card p-6 shadow-soft mb-6 anim-fade">' +
+              '<div class="flex items-center justify-between mb-4 flex-wrap gap-3">' +
+                '<div>' +
+                  '<h2 class="text-lg font-bold text-gray-800">Badges — ' + U.esc(data.event.name) + '</h2>' +
+                  '<p class="text-sm text-gray-400">' + allBadges.length + ' badges</p>' +
+                '</div>' +
+                (allBadges.length > 0 ? '<button id="download-all" class="px-4 py-2 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">⬇️ Descargar todos</button>' : '') +
               '</div>' +
-              qrPanel +
+              (allBadges.length > 0
+                ? '<input id="badge-search" type="text" placeholder="🔍 Buscar badge..." class="w-full mb-4 px-4 py-2.5 rounded-btn border border-gray-200 bg-base focus:border-primary outline-none text-sm" />'
+                : '') +
+              '<div id="badge-list">' + buildList(allBadges) + '</div>' +
+              renderQrPanel(selected, activeId) +
+            '</div>' +
+            '<div class="bg-white rounded-card p-6 shadow-soft anim-fade">' +
+              '<p class="text-sm font-semibold mb-3 text-gray-700">➕ Agregar badge</p>' +
+              '<form id="add-badge-form" novalidate>' +
+                '<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">' +
+                  '<input type="text" name="emoji" placeholder="Emoji (ej: 🏅)" maxlength="4" class="px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
+                  '<input type="text" name="name" placeholder="Nombre del badge *" class="px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
+                  '<input type="text" name="desc" placeholder="Descripción" class="px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
+                '</div>' +
+                '<button type="submit" class="mt-3 px-5 py-2.5 rounded-btn text-white font-medium text-sm" style="background:#6C63FF;">Agregar badge</button>' +
+              '</form>' +
             '</div>';
 
           app.innerHTML = U.adminShell('badges', inner, events, activeId);
           U.mountAdminShell();
 
-          Array.prototype.forEach.call(document.querySelectorAll('.qr-btn'), function (btn) {
-            btn.addEventListener('click', function () { setSelectedId(btn.getAttribute('data-qr')); location.reload(); });
-          });
-          Array.prototype.forEach.call(document.querySelectorAll('.del-btn'), function (btn) {
-            btn.addEventListener('click', async function () {
-              if (!confirm('¿Eliminar este badge?')) return;
-              try {
-                await API.deleteBadge(activeId, btn.getAttribute('data-del'));
-                U.toast('Badge eliminado', 'success');
-                location.reload();
-              } catch (err) { U.toast(err.message || 'No se pudo eliminar', 'error'); }
-            });
-          });
-          if (selected && selected.redeemUrl) {
-            var qrCanvas = document.getElementById('qr-canvas');
-            if (qrCanvas) {
-              QRCode.toCanvas(qrCanvas, selected.redeemUrl, { width: 140, margin: 2 }, function(err) {
-                if (err) U.toast(err.message || 'Error al generar el QR', 'error');
+          /* Render QR image/canvas */
+          if (selected) {
+            var canvas = document.getElementById('qr-canvas');
+            if (canvas && selected.redeemUrl) {
+              QRCode.toCanvas(canvas, selected.redeemUrl, { width: 192, margin: 1 }, function(err) {
+                if (err) console.error(err);
               });
             }
-            var dl = document.getElementById('qr-download');
-            if (dl) {
-              dl.addEventListener('click', function () {
-                var c = document.getElementById('qr-canvas');
-                if (!c) return;
-                var link = document.createElement('a');
-                link.download = 'qr-' + selected.name.replace(/\s+/g, '-') + '.png';
-                link.href = c.toDataURL('image/png');
-                link.click();
+            var dlBtn = document.getElementById('qr-download');
+            if (dlBtn) {
+              dlBtn.addEventListener('click', function() {
+                var img = document.getElementById('qr-img');
+                var cnv = document.getElementById('qr-canvas');
+                var a = document.createElement('a');
+                if (img) { a.href = img.src; a.download = 'badge-' + selected.name.replace(/\s+/g, '-') + '.png'; }
+                else if (cnv) { a.href = cnv.toDataURL('image/png'); a.download = 'badge-' + selected.name.replace(/\s+/g, '-') + '.png'; }
+                else return;
+                a.click();
                 U.toast('QR de "' + selected.name + '" descargado', 'success');
               });
             }
           }
 
-          var form = document.getElementById('add-badge-form');
-          form.addEventListener('submit', async function (e) {
+          /* Regenerate QR */
+          var regenBtn = document.getElementById('qr-regen');
+          if (regenBtn) {
+            regenBtn.addEventListener('click', async function() {
+              var bid = regenBtn.getAttribute('data-bid');
+              regenBtn.disabled = true; regenBtn.textContent = '⏳';
+              try {
+                var updated = await API.regenerateBadgeQr(bid);
+                U.toast('QR regenerado ✅', 'success');
+                setSelectedId(bid);
+                init();
+              } catch(err) {
+                U.toast(err.message || 'No se pudo regenerar', 'error');
+                regenBtn.disabled = false; regenBtn.textContent = '🔄 Regenerar QR';
+              }
+            });
+          }
+
+          /* Select badge for QR preview */
+          Array.prototype.forEach.call(document.querySelectorAll('.qr-btn'), function(btn) {
+            btn.addEventListener('click', function() { setSelectedId(btn.getAttribute('data-qr')); init(); });
+          });
+
+          /* Delete badge */
+          Array.prototype.forEach.call(document.querySelectorAll('.del-btn'), function(btn) {
+            btn.addEventListener('click', function() {
+              var bid = btn.getAttribute('data-del');
+              var eid = btn.getAttribute('data-eid');
+              var bname = btn.getAttribute('data-name');
+              U.showConfirm('¿Eliminar el badge "' + bname + '"?', async function() {
+                btn.disabled = true;
+                try {
+                  await API.deleteBadge(eid, bid);
+                  U.toast('Badge eliminado', 'success');
+                  if (selectedId === bid) { sessionStorage.removeItem(SELECTED_KEY); }
+                  init();
+                } catch(err) {
+                  U.toast(err.message || 'No se pudo eliminar', 'error');
+                  btn.disabled = false;
+                }
+              });
+            });
+          });
+
+          /* Search filter */
+          var searchInput = document.getElementById('badge-search');
+          if (searchInput) {
+            searchInput.addEventListener('input', function() {
+              var q = searchInput.value.toLowerCase().trim();
+              var filtered = q ? allBadges.filter(function(b) { return b.name.toLowerCase().includes(q); }) : allBadges;
+              document.getElementById('badge-list').innerHTML = buildList(filtered);
+              Array.prototype.forEach.call(document.querySelectorAll('.qr-btn'), function(b) {
+                b.addEventListener('click', function() { setSelectedId(b.getAttribute('data-qr')); init(); });
+              });
+              Array.prototype.forEach.call(document.querySelectorAll('.del-btn'), function(b) {
+                b.addEventListener('click', function() {
+                  U.showConfirm('¿Eliminar este badge?', async function() {
+                    b.disabled = true;
+                    try { await API.deleteBadge(activeId, b.getAttribute('data-del')); U.toast('Badge eliminado', 'success'); init(); }
+                    catch(err) { U.toast(err.message || 'Error', 'error'); b.disabled = false; }
+                  });
+                });
+              });
+            });
+          }
+
+          /* Download all QRs */
+          var dlAll = document.getElementById('download-all');
+          if (dlAll) {
+            dlAll.addEventListener('click', async function() {
+              dlAll.disabled = true; dlAll.textContent = '⏳ Descargando...';
+              var badgesWithQr = allBadges.filter(function(b){ return b.qrImage; });
+              if (!badgesWithQr.length) { U.toast('No hay QRs generados aún', 'warning'); dlAll.disabled = false; dlAll.textContent = '⬇️ Descargar todos'; return; }
+              for (var i = 0; i < badgesWithQr.length; i++) {
+                var b = badgesWithQr[i];
+                var a = document.createElement('a');
+                a.href = b.qrImage;
+                a.download = 'badge-' + b.name.replace(/\s+/g, '-') + '.png';
+                document.body.appendChild(a); a.click(); a.remove();
+                await new Promise(function(r){ setTimeout(r, 200); });
+              }
+              U.toast(badgesWithQr.length + ' QRs descargados', 'success');
+              dlAll.disabled = false; dlAll.textContent = '⬇️ Descargar todos';
+            });
+          }
+
+          /* Add badge form */
+          var addForm = document.getElementById('add-badge-form');
+          addForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            var nameField = form.elements['name'];
+            var nameField = addForm.elements['name'];
             if (!U.setFieldError(nameField, nameField.value.trim() ? '' : 'Ingresa un nombre')) return;
-            var btn = form.querySelector('[type="submit"]');
-            btn.disabled = true;
-            btn.textContent = 'Cargando...';
+            var submitBtn = addForm.querySelector('[type="submit"]');
+            submitBtn.disabled = true; submitBtn.textContent = 'Agregando...';
             try {
-              var b = await API.addBadge(activeId, { name: nameField.value.trim(), desc: form.desc.value.trim(), emoji: '🏅' });
+              var b = await API.addBadge(activeId, {
+                name: nameField.value.trim(),
+                desc: addForm.elements['desc'].value.trim(),
+                emoji: addForm.elements['emoji'].value.trim() || '🏅'
+              });
               setSelectedId(b.id);
-              U.toast('Badge "' + b.name + '" agregado', 'success');
-              location.reload();
+              U.toast('Badge "' + b.name + '" agregado ✅', 'success');
+              init();
             } catch (err) {
-              U.toast(err.message || 'No se pudo agregar el badge', 'error');
-            } finally {
-              btn.disabled = false;
-              btn.textContent = 'Agregar badge';
+              U.toast(err.message || 'No se pudo agregar', 'error');
+              submitBtn.disabled = false; submitBtn.textContent = 'Agregar badge';
             }
           });
+
         } catch (err) {
           app.innerHTML = U.errorHtml(err && err.message ? err.message : 'Error inesperado');
           var retry = document.getElementById('err-retry');

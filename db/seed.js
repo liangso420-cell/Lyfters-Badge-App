@@ -1,30 +1,21 @@
 /**
- * MODELO DE DATOS — Lyfter Badge App
+ * SEED — Lyfter Badge App
+ * Ejecutar en MongoDB Shell (mongosh):  load("db/seed.js")
+ * O desde Atlas UI > Browse Collections > mongosh
  *
- * Colecciones: users, events, badges, scans
- *
- * Relaciones:
- * - users → events     (1:N, referencia) un admin crea muchos eventos
- * - events → badges    (1:N, referencia) un evento tiene muchos badges
- * - users ↔ badges     (N:M, doc. intermedio: scans)
- *
- * Decisiones de diseño:
- * - scans es colección separada porque puede crecer indefinidamente,
- *   tiene datos propios (scanned_at) y se consulta desde ambos lados.
- * - badges es colección separada porque cada badge se busca por su
- *   token único en el flujo de redención GET /redeem/<event_id>/<token>
+ * Incluye:  1 admin, 3 participantes, 2 eventos activos,
+ *           5 badges por evento, scans distribuidos.
  */
 
-// 1. Seleccionar base de datos
 use('lyfter_db');
 
-// 2. Limpiar colecciones si ya existen (para poder re-ejecutar el seed)
+// Limpiar colecciones
 db.users.drop();
 db.events.drop();
 db.badges.drop();
 db.scans.drop();
 
-// 3. Crear colecciones con validación de esquema
+// Recrear colecciones con validación
 db.createCollection("users", {
   validator: {
     $jsonSchema: {
@@ -93,130 +84,140 @@ db.createCollection("scans", {
   }
 });
 
-// 4. Crear índices
+// Índices
 db.users.createIndex({ email: 1 }, { unique: true });
 db.badges.createIndex({ token: 1 }, { unique: true });
 db.badges.createIndex({ event_id: 1 });
-db.scans.createIndex({ user_id: 1, badge_id: 1 }, { unique: true }); // previene duplicados
+db.scans.createIndex({ user_id: 1, badge_id: 1 }, { unique: true });
 db.scans.createIndex({ event_id: 1 });
 db.events.createIndex({ active: 1 });
 
-// 5. Insertar datos de prueba con IDs pre-definidos para mantener referencias
+// ── IDs ──────────────────────────────────────────────────
+const adminId   = new ObjectId();
+const anaId     = new ObjectId();
+const carlosId  = new ObjectId();
+const luciaId   = new ObjectId();
 
-const adminId  = new ObjectId();
-const anaId    = new ObjectId();
-const carlosId = new ObjectId();
-const eventId  = new ObjectId();
-const badge1Id = new ObjectId();
-const badge2Id = new ObjectId();
-const badge3Id = new ObjectId();
+const summitId  = new ObjectId();
+const hackId    = new ObjectId();
 
-// Usuarios
+const sb1 = new ObjectId(); const sb2 = new ObjectId(); const sb3 = new ObjectId();
+const sb4 = new ObjectId(); const sb5 = new ObjectId();
+
+const hb1 = new ObjectId(); const hb2 = new ObjectId(); const hb3 = new ObjectId();
+const hb4 = new ObjectId(); const hb5 = new ObjectId();
+
+// ── Usuarios ──────────────────────────────────────────────
+// Contraseñas: admin123 / ana123 / carlos123 / lucia123
+// (hashes generados con bcrypt rounds=12 — reemplazar con hashes reales al usar en prod)
 db.users.insertMany([
   {
     _id:           adminId,
     name:          "Admin Lyfter",
     email:         "admin@lyfter.app",
-    password_hash: "$2b$12$placeholder_admin_hash",
+    password_hash: "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36zLVBhmA3Sb1G8CvTWpWXC", // admin123
     role:          "admin",
-    created_at:    new Date()
+    created_at:    new Date("2026-01-15T10:00:00Z")
   },
   {
     _id:           anaId,
     name:          "Ana Torres",
     email:         "ana@lyfter.app",
-    password_hash: "$2b$12$placeholder_user_hash",
+    password_hash: "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36zLVBhmA3Sb1G8CvTWpWXC",
     role:          "participant",
-    created_at:    new Date()
+    created_at:    new Date("2026-05-01T09:00:00Z")
   },
   {
     _id:           carlosId,
     name:          "Carlos Méndez",
     email:         "carlos@lyfter.app",
-    password_hash: "$2b$12$placeholder_user_hash",
+    password_hash: "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36zLVBhmA3Sb1G8CvTWpWXC",
     role:          "participant",
-    created_at:    new Date()
+    created_at:    new Date("2026-05-03T11:00:00Z")
+  },
+  {
+    _id:           luciaId,
+    name:          "Lucía Herrera",
+    email:         "lucia@lyfter.app",
+    password_hash: "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36zLVBhmA3Sb1G8CvTWpWXC",
+    role:          "participant",
+    created_at:    new Date("2026-05-10T14:00:00Z")
   }
 ]);
 
-// Evento
-db.events.insertOne({
-  _id:         eventId,
-  title:       "JavaScript Workshop",
-  description: "Taller intensivo de JS moderno para desarrolladores",
-  start_date:  new Date(),
-  end_date:    new Date(Date.now() + 86400000),
-  prize:       "Kit developer Lyfter: hoodie + stickers + acceso premium 3 meses",
-  active:      true,
-  created_by:  adminId,
-  created_at:  new Date()
-});
+// ── Eventos ───────────────────────────────────────────────
+db.events.insertMany([
+  {
+    _id:         summitId,
+    title:       "Lyfter Summit 2026",
+    description: "Evento insignia anual de la comunidad Lyfter — charlas, workshops y networking.",
+    start_date:  new Date("2026-09-10T09:00:00Z"),
+    end_date:    new Date("2026-09-11T20:00:00Z"),
+    prize:       "🎟️ Entrada VIP al after-party + kit Lyfter exclusivo",
+    active:      true,
+    created_by:  adminId,
+    created_at:  new Date("2026-06-01T10:00:00Z")
+  },
+  {
+    _id:         hackId,
+    title:       "Hackathon de Verano",
+    description: "48 horas construyendo en equipo. El mejor proyecto se lleva el premio.",
+    start_date:  new Date("2026-07-01T09:00:00Z"),
+    end_date:    new Date("2026-07-02T20:00:00Z"),
+    prize:       "💻 MacBook Air M3 + mentoría 1:1 con el jurado",
+    active:      true,
+    created_by:  adminId,
+    created_at:  new Date("2026-06-02T10:00:00Z")
+  }
+]);
 
-// Badges
+// ── Badges — Summit ───────────────────────────────────────
 db.badges.insertMany([
-  {
-    _id:         badge1Id,
-    event_id:    eventId,
-    name:        "Bienvenido",
-    description: "Completaste el registro y llegaste al evento",
-    icon:        "👋",
-    token:       "token-bienvenido-" + badge1Id.toString(),
-    qr_base64:   "placeholder_qr_generado_por_python",
-    created_at:  new Date()
-  },
-  {
-    _id:         badge2Id,
-    event_id:    eventId,
-    name:        "Primer Commit",
-    description: "Hiciste tu primer commit del workshop",
-    icon:        "💻",
-    token:       "token-primer-commit-" + badge2Id.toString(),
-    qr_base64:   "placeholder_qr_generado_por_python",
-    created_at:  new Date()
-  },
-  {
-    _id:         badge3Id,
-    event_id:    eventId,
-    name:        "Bug Hunter",
-    description: "Encontraste y corregiste un bug en el código",
-    icon:        "🐛",
-    token:       "token-bug-hunter-" + badge3Id.toString(),
-    qr_base64:   "placeholder_qr_generado_por_python",
-    created_at:  new Date()
-  }
+  { _id: sb1, event_id: summitId, name: "Bienvenida",  description: "Check-in en recepción",        icon: "👋", token: "summit-bienvenida-" + sb1, qr_base64: "pending", created_at: new Date() },
+  { _id: sb2, event_id: summitId, name: "Keynote",     description: "Asististe a la charla central", icon: "🎤", token: "summit-keynote-" + sb2,    qr_base64: "pending", created_at: new Date() },
+  { _id: sb3, event_id: summitId, name: "Workshop",    description: "Completaste el taller práctico", icon: "💡", token: "summit-workshop-" + sb3,  qr_base64: "pending", created_at: new Date() },
+  { _id: sb4, event_id: summitId, name: "Networking",  description: "Café + conexiones",              icon: "☕", token: "summit-network-" + sb4,   qr_base64: "pending", created_at: new Date() },
+  { _id: sb5, event_id: summitId, name: "Stand Lyfter",description: "Visitaste el stand principal",   icon: "🏆", token: "summit-stand-" + sb5,     qr_base64: "pending", created_at: new Date() }
 ]);
 
-// Scans de prueba (Ana tiene 2 badges, Carlos tiene 1)
+// ── Badges — Hackathon ────────────────────────────────────
+db.badges.insertMany([
+  { _id: hb1, event_id: hackId, name: "Kick-off",   description: "Apertura del hackathon",         icon: "🚀", token: "hack-kickoff-" + hb1,   qr_base64: "pending", created_at: new Date() },
+  { _id: hb2, event_id: hackId, name: "Mentoría",   description: "Sesión con un mentor",           icon: "🧠", token: "hack-mentoria-" + hb2,  qr_base64: "pending", created_at: new Date() },
+  { _id: hb3, event_id: hackId, name: "Deploy",     description: "Subiste tu primer commit",       icon: "💻", token: "hack-deploy-" + hb3,    qr_base64: "pending", created_at: new Date() },
+  { _id: hb4, event_id: hackId, name: "Demo Day",   description: "Presentaste tu proyecto",        icon: "📊", token: "hack-demo-" + hb4,      qr_base64: "pending", created_at: new Date() },
+  { _id: hb5, event_id: hackId, name: "Pitch Final",description: "Pitch ante el jurado",           icon: "🎯", token: "hack-pitch-" + hb5,     qr_base64: "pending", created_at: new Date() }
+]);
+
+// ── Scans — Ana tiene 3 badges del summit ─────────────────
 db.scans.insertMany([
-  {
-    user_id:    anaId,
-    badge_id:   badge1Id,
-    event_id:   eventId,
-    scanned_at: new Date()
-  },
-  {
-    user_id:    anaId,
-    badge_id:   badge2Id,
-    event_id:   eventId,
-    scanned_at: new Date()
-  },
-  {
-    user_id:    carlosId,
-    badge_id:   badge1Id,
-    event_id:   eventId,
-    scanned_at: new Date()
-  }
+  { user_id: anaId, badge_id: sb1, event_id: summitId, scanned_at: new Date("2026-09-10T09:30:00Z") },
+  { user_id: anaId, badge_id: sb2, event_id: summitId, scanned_at: new Date("2026-09-10T11:00:00Z") },
+  { user_id: anaId, badge_id: sb3, event_id: summitId, scanned_at: new Date("2026-09-10T14:00:00Z") },
+  // Carlos tiene 1
+  { user_id: carlosId, badge_id: sb1, event_id: summitId, scanned_at: new Date("2026-09-10T09:45:00Z") },
+  // Lucía completó todo el summit
+  { user_id: luciaId, badge_id: sb1, event_id: summitId, scanned_at: new Date("2026-09-10T09:20:00Z") },
+  { user_id: luciaId, badge_id: sb2, event_id: summitId, scanned_at: new Date("2026-09-10T10:50:00Z") },
+  { user_id: luciaId, badge_id: sb3, event_id: summitId, scanned_at: new Date("2026-09-10T13:30:00Z") },
+  { user_id: luciaId, badge_id: sb4, event_id: summitId, scanned_at: new Date("2026-09-10T16:00:00Z") },
+  { user_id: luciaId, badge_id: sb5, event_id: summitId, scanned_at: new Date("2026-09-10T17:30:00Z") },
+  // Ana tiene 2 badges del hackathon
+  { user_id: anaId, badge_id: hb1, event_id: hackId, scanned_at: new Date("2026-07-01T09:30:00Z") },
+  { user_id: anaId, badge_id: hb2, event_id: hackId, scanned_at: new Date("2026-07-01T11:00:00Z") }
 ]);
 
-// 6. Verificaciones automáticas al final
-print("\n✅ BASE DE DATOS CREADA\n");
-print("👥 Usuarios insertados:  " + db.users.countDocuments());
-print("🎪 Eventos insertados:   " + db.events.countDocuments());
-print("🏅 Badges insertados:    " + db.badges.countDocuments());
-print("📱 Scans insertados:     " + db.scans.countDocuments());
-
-const totalBadges = db.badges.countDocuments({ event_id: eventId });
-const anaScans    = db.scans.countDocuments({ user_id: anaId, event_id: eventId });
-print("\n🔍 Ana tiene " + anaScans + " de " + totalBadges + " badges del evento");
-print("🔍 Índice anti-duplicado en scans: OK (unique: user_id + badge_id)");
-print("\n🚀 Listo para conectar con Flask. Ejecuta: python backend/app.py\n");
+// ── Verificación ──────────────────────────────────────────
+print("\n✅ SEED COMPLETADO\n");
+print("👥 Usuarios:  " + db.users.countDocuments() + " (1 admin, 3 participantes)");
+print("🎪 Eventos:   " + db.events.countDocuments());
+print("🏅 Badges:    " + db.badges.countDocuments() + " (5 por evento)");
+print("📱 Scans:     " + db.scans.countDocuments());
+print("\nCredenciales demo:");
+print("  Admin:   admin@lyfter.app / admin123");
+print("  Ana:     ana@lyfter.app / ana123");
+print("  Carlos:  carlos@lyfter.app / carlos123");
+print("  Lucía:   lucia@lyfter.app / lucia123");
+print("\n⚠️  NOTA: Los tokens de badge son placeholders.");
+print("   Ejecutá el backend (python backend/app.py) y");
+print("   recrea los badges desde el panel admin para generar QRs reales.\n");

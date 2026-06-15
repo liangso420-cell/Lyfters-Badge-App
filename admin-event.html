@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Crear evento — Lyfter Badge App</title>
+  <title>Eventos — Lyfter Badge App</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -35,108 +35,225 @@
     (function () {
       'use strict';
       var API = window.LyfterAPI;
-      var U = window.LyfterUtils;
+      var U   = window.LyfterUtils;
 
       var user = API.currentUser();
-      if (!user) { window.location.replace('login.html?next=' + encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)); return; }
+      if (!user) { window.location.replace('login.html?next=' + encodeURIComponent(window.location.pathname + window.location.search)); return; }
       if (user.role !== 'admin') { window.location.replace('profile.html'); return; }
 
       var app = document.getElementById('app');
       app.innerHTML = U.loadingHtml();
       U.showPendingToast();
 
+      function fmtDate(iso) {
+        if (!iso) return '—';
+        try { return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }); }
+        catch(e) { return iso; }
+      }
+
+      function isoDate(s) {
+        if (!s) return '';
+        return s.split('T')[0];
+      }
+
       async function init() {
         try {
           var events = await API.listAdminEvents();
           var activeId = U.ensureActive(events);
 
-          var inner =
-            '<div class="card-soft p-8 anim-fade">' +
-              '<h2 class="text-xl font-bold mb-1">Crear evento</h2>' +
-              '<p class="text-sm text-gray-400 mb-6">Configura un nuevo evento de badges</p>' +
+          var createForm =
+            '<div class="bg-white rounded-card p-6 shadow-soft mb-6 anim-fade">' +
+              '<h2 class="text-lg font-bold mb-1 text-gray-800">Crear evento</h2>' +
+              '<p class="text-sm text-gray-400 mb-5">Configura un nuevo evento de badges</p>' +
               '<form id="event-form" class="space-y-4" novalidate>' +
                 U.inputField({ label: 'Nombre del evento', name: 'name', placeholder: 'Lyfter Summit 2026' }) +
                 '<div><label class="text-sm font-medium text-gray-600">Descripción</label>' +
-                  '<textarea name="description" rows="3" placeholder="Descripción del evento..." ' +
-                  'class="w-full mt-1 px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none"></textarea></div>' +
-                '<div class="grid grid-cols-2 gap-4">' +
+                  '<textarea name="description" rows="2" placeholder="Descripción del evento..." ' +
+                  'class="w-full mt-1 px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm resize-none"></textarea></div>' +
+                '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">' +
                   U.inputField({ label: 'Fecha inicio', type: 'date', name: 'start' }) +
                   U.inputField({ label: 'Fecha fin', type: 'date', name: 'end' }) +
                 '</div>' +
                 U.inputField({ label: 'Premio sorpresa 🎁', name: 'prize', placeholder: 'Entrada VIP al after-party' }) +
-                U.primaryButton('Crear evento', 'type="submit"') +
+                U.primaryButton('Crear evento', 'type="submit" id="create-btn"') +
               '</form>' +
             '</div>';
 
-          var eventList = events.length
-            ? '<div class="card-soft p-8 mt-6 anim-fade">' +
-                '<h2 class="text-xl font-bold mb-4">Eventos existentes</h2>' +
-                '<div class="space-y-3">' +
-                events.map(function(e) {
-                  return '<div class="flex items-center justify-between p-4 rounded-card bg-base">' +
-                    '<div>' +
-                      '<p class="font-medium">' + U.esc(e.name) + '</p>' +
-                      '<p class="text-xs text-gray-400">' + U.esc(new Date(e.start).toLocaleDateString('es-ES', {day:'numeric', month:'long', year:'numeric'})) + ' — ' + U.esc(new Date(e.end).toLocaleDateString('es-ES', {day:'numeric', month:'long', year:'numeric'})) + '</p>' +
+          var eventListHtml = '';
+          if (events.length) {
+            var items = events.map(function(e) {
+              var activeDot = e.active !== false
+                ? '<span class="w-2 h-2 rounded-full bg-green-400 inline-block mr-1"></span>'
+                : '<span class="w-2 h-2 rounded-full bg-gray-300 inline-block mr-1"></span>';
+              return '<div class="rounded-card bg-base p-4 mb-3" id="evt-row-' + e.id + '">' +
+                '<div class="flex items-start justify-between gap-2">' +
+                  '<div class="flex-1 min-w-0">' +
+                    '<div class="flex items-center gap-2 mb-0.5">' + activeDot +
+                      '<p class="font-semibold text-gray-800 truncate">' + U.esc(e.name) + '</p>' +
                     '</div>' +
-                    '<button data-del-event="' + e.id + '" class="del-event-btn px-3 py-2 rounded-btn text-sm font-medium text-red-500 border border-red-300 hover:bg-red-50">🗑</button>' +
-                  '</div>';
-                }).join('') +
+                    '<p class="text-xs text-gray-400">' + fmtDate(e.start) + ' — ' + fmtDate(e.end) + '</p>' +
+                    (e.prize ? '<p class="text-xs text-gray-500 mt-0.5">🎁 ' + U.esc(e.prize) + '</p>' : '') +
+                  '</div>' +
+                  '<div class="flex gap-1.5 flex-shrink-0">' +
+                    '<button data-toggle="' + e.id + '" data-active="' + (e.active !== false ? '1' : '0') + '" ' +
+                      'class="toggle-btn px-2.5 py-1.5 rounded-btn text-xs font-medium border ' +
+                      (e.active !== false ? 'text-green-600 border-green-300 hover:bg-green-50' : 'text-gray-400 border-gray-200 hover:bg-gray-50') + '">' +
+                      (e.active !== false ? '✅ Activo' : '⏸ Pausado') +
+                    '</button>' +
+                    '<button data-edit="' + e.id + '" class="edit-btn px-2.5 py-1.5 rounded-btn text-xs font-medium text-primary border border-primary hover:bg-primary-soft">✏️</button>' +
+                    '<button data-del="' + e.id + '" data-name="' + U.esc(e.name) + '" class="del-btn px-2.5 py-1.5 rounded-btn text-xs font-medium text-red-500 border border-red-300 hover:bg-red-50">🗑</button>' +
+                  '</div>' +
                 '</div>' +
-              '</div>'
-            : '';
+                '<div id="edit-form-' + e.id + '" class="hidden mt-4 pt-4 border-t border-gray-100">' +
+                  '<form class="space-y-3 inline-edit-form" data-eid="' + e.id + '" novalidate>' +
+                    '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">' +
+                      '<div><label class="text-xs font-medium text-gray-500">Nombre</label>' +
+                        '<input type="text" name="nombre" value="' + U.esc(e.name) + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
+                      '<div><label class="text-xs font-medium text-gray-500">Premio</label>' +
+                        '<input type="text" name="premio" value="' + U.esc(e.prize || '') + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
+                    '</div>' +
+                    '<div><label class="text-xs font-medium text-gray-500">Descripción</label>' +
+                      '<input type="text" name="descripcion" value="' + U.esc(e.description || '') + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
+                    '<div class="grid grid-cols-2 gap-3">' +
+                      '<div><label class="text-xs font-medium text-gray-500">Inicio</label>' +
+                        '<input type="date" name="fecha_inicio" value="' + isoDate(e.start) + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
+                      '<div><label class="text-xs font-medium text-gray-500">Fin</label>' +
+                        '<input type="date" name="fecha_fin" value="' + isoDate(e.end) + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
+                    '</div>' +
+                    '<div class="flex gap-2">' +
+                      '<button type="submit" class="px-4 py-2 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">Guardar cambios</button>' +
+                      '<button type="button" class="cancel-edit px-4 py-2 rounded-btn text-sm font-medium border border-gray-200 text-gray-600 hover:bg-gray-50">Cancelar</button>' +
+                    '</div>' +
+                  '</form>' +
+                '</div>' +
+              '</div>';
+            }).join('');
 
-          app.innerHTML = U.adminShell('event', inner + eventList, events, activeId);
+            eventListHtml =
+              '<div class="bg-white rounded-card p-6 shadow-soft anim-fade">' +
+                '<h2 class="text-lg font-bold mb-4 text-gray-800">Eventos (' + events.length + ')</h2>' +
+                items +
+              '</div>';
+          }
+
+          app.innerHTML = U.adminShell('event', createForm + eventListHtml, events, activeId);
           U.mountAdminShell();
 
-          Array.prototype.forEach.call(document.querySelectorAll('.del-event-btn'), function(btn) {
+          /* Delete event */
+          Array.prototype.forEach.call(document.querySelectorAll('.del-btn'), function(btn) {
+            btn.addEventListener('click', function() {
+              var eid = btn.getAttribute('data-del');
+              var ename = btn.getAttribute('data-name');
+              U.showConfirm(
+                '¿Eliminar "' + ename + '"? Se eliminarán todos sus badges y canjes.',
+                async function() {
+                  btn.disabled = true;
+                  try {
+                    await API.deleteEvent(eid);
+                    U.toast('Evento eliminado', 'success');
+                    init();
+                  } catch(err) {
+                    U.toast(err.message || 'No se pudo eliminar', 'error');
+                    btn.disabled = false;
+                  }
+                }
+              );
+            });
+          });
+
+          /* Toggle active */
+          Array.prototype.forEach.call(document.querySelectorAll('.toggle-btn'), function(btn) {
             btn.addEventListener('click', async function() {
-              if (!confirm('¿Eliminar este evento? Se borrarán todos sus badges y scans.')) return;
+              var eid    = btn.getAttribute('data-toggle');
+              var active = btn.getAttribute('data-active') === '1';
               btn.disabled = true;
-              btn.textContent = '...';
               try {
-                await API.deleteEvent(btn.getAttribute('data-del-event'));
-                U.toast('Evento eliminado', 'success');
-                location.reload();
+                await API.updateEvent(eid, { activo: !active });
+                U.toast('Estado actualizado', 'success');
+                init();
               } catch(err) {
-                U.toast(err.message || 'No se pudo eliminar', 'error');
+                U.toast(err.message || 'No se pudo actualizar', 'error');
                 btn.disabled = false;
-                btn.textContent = '🗑';
               }
             });
           });
 
-          var form = document.getElementById('event-form');
-          form.addEventListener('submit', async function (e) {
+          /* Show/hide edit form */
+          Array.prototype.forEach.call(document.querySelectorAll('.edit-btn'), function(btn) {
+            btn.addEventListener('click', function() {
+              var eid = btn.getAttribute('data-edit');
+              var form = document.getElementById('edit-form-' + eid);
+              if (form) form.classList.toggle('hidden');
+            });
+          });
+          Array.prototype.forEach.call(document.querySelectorAll('.cancel-edit'), function(btn) {
+            btn.addEventListener('click', function() {
+              var form = btn.closest('[id^="edit-form-"]');
+              if (form) form.classList.add('hidden');
+            });
+          });
+
+          /* Submit inline edit form */
+          Array.prototype.forEach.call(document.querySelectorAll('.inline-edit-form'), function(form) {
+            form.addEventListener('submit', async function(e) {
+              e.preventDefault();
+              var eid = form.getAttribute('data-eid');
+              var startVal = form.elements['fecha_inicio'].value;
+              var endVal   = form.elements['fecha_fin'].value;
+              if (startVal && endVal && endVal < startVal) {
+                U.toast('La fecha de fin no puede ser anterior al inicio', 'error');
+                return;
+              }
+              var saveBtn = form.querySelector('[type="submit"]');
+              saveBtn.disabled = true; saveBtn.textContent = 'Guardando...';
+              try {
+                await API.updateEvent(eid, {
+                  nombre:       form.elements['nombre'].value.trim(),
+                  descripcion:  form.elements['descripcion'].value.trim(),
+                  premio:       form.elements['premio'].value.trim(),
+                  fecha_inicio: startVal,
+                  fecha_fin:    endVal,
+                });
+                U.toast('Evento actualizado ✅', 'success');
+                init();
+              } catch(err) {
+                U.toast(err.message || 'No se pudo guardar', 'error');
+                saveBtn.disabled = false; saveBtn.textContent = 'Guardar cambios';
+              }
+            });
+          });
+
+          /* Create event form */
+          var createFormEl = document.getElementById('event-form');
+          createFormEl.addEventListener('submit', async function (e) {
             e.preventDefault();
-            var nameField = form.elements['name'];
+            var nameField = createFormEl.elements['name'];
             var ok = true;
             ok = U.setFieldError(nameField, nameField.value.trim() ? '' : 'Ingresa un nombre') && ok;
-            ok = U.setFieldError(form.start, form.start.value ? '' : 'Selecciona la fecha de inicio') && ok;
-            ok = U.setFieldError(form.end,   form.end.value   ? '' : 'Selecciona la fecha de fin') && ok;
-            if (ok && form.start.value && form.end.value && form.end.value < form.start.value)
-              ok = U.setFieldError(form.end, 'La fecha fin no puede ser anterior al inicio') && ok;
+            ok = U.setFieldError(createFormEl.start, createFormEl.start.value ? '' : 'Selecciona la fecha de inicio') && ok;
+            ok = U.setFieldError(createFormEl.end,   createFormEl.end.value   ? '' : 'Selecciona la fecha de fin') && ok;
+            if (ok && createFormEl.start.value && createFormEl.end.value && createFormEl.end.value < createFormEl.start.value)
+              ok = U.setFieldError(createFormEl.end, 'La fecha fin no puede ser anterior al inicio') && ok;
             if (!ok) return;
-            var btn = form.querySelector('[type="submit"]');
-            btn.disabled = true;
-            btn.textContent = 'Cargando...';
+            var btn = document.getElementById('create-btn');
+            btn.disabled = true; btn.textContent = 'Creando...';
             try {
               var created = await API.createEvent({
                 name: nameField.value.trim(),
-                description: form.description.value.trim(),
-                start: form.start.value,
-                end: form.end.value,
-                prize: form.prize.value.trim()
+                description: createFormEl.description.value.trim(),
+                start: createFormEl.start.value,
+                end: createFormEl.end.value,
+                prize: createFormEl.prize.value.trim()
               });
               U.setActiveId(created.id);
               U.toastNextPage('Evento creado ✅ — agrega sus badges', 'success');
               window.location.href = 'admin-badges.html';
             } catch (err) {
               U.toast(err.message || 'No se pudo crear el evento', 'error');
-            } finally {
-              btn.disabled = false;
-              btn.textContent = 'Crear evento';
+              btn.disabled = false; btn.textContent = 'Crear evento';
             }
           });
+
         } catch (err) {
           app.innerHTML = U.errorHtml(err && err.message ? err.message : 'Error inesperado');
           var retry = document.getElementById('err-retry');

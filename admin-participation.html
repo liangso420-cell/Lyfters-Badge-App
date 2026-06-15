@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Participación — Lyfter Badge App</title>
+  <title>Dashboard — Lyfter Badge App</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -35,57 +35,155 @@
     (function () {
       'use strict';
       var API = window.LyfterAPI;
-      var U = window.LyfterUtils;
+      var U   = window.LyfterUtils;
 
       var user = API.currentUser();
-      if (!user) { window.location.replace('login.html?next=' + encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)); return; }
+      if (!user) { window.location.replace('login.html?next=' + encodeURIComponent(window.location.pathname + window.location.search)); return; }
       if (user.role !== 'admin') { window.location.replace('profile.html'); return; }
 
       var app = document.getElementById('app');
       app.innerHTML = U.loadingHtml();
 
+      function metricCard(icon, value, label, color) {
+        return '<div class="bg-white rounded-card p-5 shadow-soft flex items-center gap-4">' +
+          '<div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl flex-shrink-0" style="background:' + color + '20;">' + icon + '</div>' +
+          '<div><p class="text-2xl font-bold text-gray-800">' + value + '</p><p class="text-xs text-gray-500 mt-0.5">' + label + '</p></div>' +
+          '</div>';
+      }
+
+      function progressBar(item) {
+        var pct = Math.min(100, item.porcentaje || 0);
+        return '<div class="mb-4">' +
+          '<div class="flex justify-between items-center mb-1">' +
+            '<span class="text-sm font-medium text-gray-700 truncate max-w-[60%]">' + U.esc(item.nombre) + '</span>' +
+            '<span class="text-xs text-primary font-semibold ml-2">' + pct + '%</span>' +
+          '</div>' +
+          '<div class="w-full h-3 bg-gray-100 rounded-full overflow-hidden">' +
+            '<div class="h-3 rounded-full transition-all duration-700" style="width:' + pct + '%; background:#6C63FF;"></div>' +
+          '</div>' +
+          '<div class="flex justify-between text-xs text-gray-400 mt-1">' +
+            '<span>' + item.total_canjeados + ' canjes / ' + item.total_badges + ' badges</span>' +
+            '<span>' + item.participantes_unicos + ' participantes</span>' +
+          '</div>' +
+        '</div>';
+      }
+
+      function rolBadge(rol) {
+        if (rol === 'admin') return '<span class="px-2 py-0.5 rounded-full text-xs font-medium text-white" style="background:#6C63FF;">Admin</span>';
+        return '<span class="px-2 py-0.5 rounded-full text-xs font-medium text-gray-600 bg-gray-100">Participante</span>';
+      }
+
+      function fmtDate(iso) {
+        if (!iso) return '—';
+        try { return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }); }
+        catch(e) { return iso; }
+      }
+
+      function buildUserRow(u, currentUserId) {
+        var isSelf = u.id === currentUserId;
+        var nextRol = u.rol === 'admin' ? 'participant' : 'admin';
+        var btnLabel = u.rol === 'admin' ? '→ Participante' : '→ Admin';
+        var disabledAttr = isSelf ? ' disabled' : '';
+        var disabledClass = isSelf ? ' opacity-40 cursor-not-allowed' : ' hover:bg-gray-50';
+        return '<tr class="border-b border-gray-100 hover:bg-gray-50/50">' +
+          '<td class="py-3 pr-4 font-medium text-gray-800">' + U.esc(u.nombre) + (isSelf ? ' <span class="text-xs text-gray-400">(tú)</span>' : '') + '</td>' +
+          '<td class="py-3 pr-4 text-sm text-gray-500 hidden sm:table-cell">' + U.esc(u.email) + '</td>' +
+          '<td class="py-3 pr-4">' + rolBadge(u.rol) + '</td>' +
+          '<td class="py-3 pr-4 text-xs text-gray-400 hidden md:table-cell">' + fmtDate(u.created_at) + '</td>' +
+          '<td class="py-3">' +
+            '<button data-uid="' + u.id + '" data-rol="' + nextRol + '" data-nombre="' + U.esc(u.nombre) + '" data-btnlabel="' + U.esc(btnLabel) + '"' + disabledAttr +
+              ' class="role-btn px-3 py-1.5 rounded-btn text-xs font-medium border border-gray-200 text-gray-600' + disabledClass + '">' +
+              btnLabel +
+            '</button>' +
+          '</td>' +
+        '</tr>';
+      }
+
       async function init() {
         try {
-          var events = await API.listAdminEvents();
+          var [events, dash, usersList] = await Promise.all([
+            API.listAdminEvents(),
+            API.getDashboard(),
+            API.getUsers()
+          ]);
+
           var activeId = U.ensureActive(events);
-          if (!activeId) {
-            app.innerHTML = U.adminShell('participation', '<div class="card-soft p-8 text-center text-gray-500">Primero crea un evento.</div>', events, activeId);
-            U.mountAdminShell();
-            return;
+
+          var metrics =
+            '<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">' +
+              metricCard('👥', dash.total_participantes,    'Participantes',     '#6C63FF') +
+              metricCard('🎪', dash.total_eventos,          'Eventos',           '#43D9AD') +
+              metricCard('🏅', dash.total_badges_creados,   'Badges creados',    '#FF8C42') +
+              metricCard('✅', dash.total_badges_canjeados, 'Badges canjeados',  '#16a34a') +
+            '</div>';
+
+          var progreso = dash.progreso_por_evento && dash.progreso_por_evento.length
+            ? '<div class="bg-white rounded-card p-6 shadow-soft mb-6">' +
+                '<h3 class="font-bold text-gray-800 mb-4">Progreso por evento</h3>' +
+                dash.progreso_por_evento.map(progressBar).join('') +
+              '</div>'
+            : '';
+
+          var usersHtml;
+          if (!usersList || !usersList.length) {
+            usersHtml = '<p class="text-sm text-gray-400 text-center py-6">Sin usuarios registrados.</p>';
+          } else {
+            var rows = usersList.map(function(u) { return buildUserRow(u, user.id); }).join('');
+            usersHtml =
+              '<div class="overflow-x-auto">' +
+                '<table class="w-full text-sm">' +
+                  '<thead><tr class="text-left text-xs text-gray-400 border-b border-gray-100">' +
+                    '<th class="py-3 pr-4 font-medium">Nombre</th>' +
+                    '<th class="py-3 pr-4 font-medium hidden sm:table-cell">Email</th>' +
+                    '<th class="py-3 pr-4 font-medium">Rol</th>' +
+                    '<th class="py-3 pr-4 font-medium hidden md:table-cell">Registro</th>' +
+                    '<th class="py-3 font-medium">Cambiar rol</th>' +
+                  '</tr></thead>' +
+                  '<tbody>' + rows + '</tbody>' +
+                '</table>' +
+              '</div>';
           }
 
-          var data = await API.listAdminBadges(activeId);
-          var totalP = data.event.totalParticipants;
-          var rows = data.badges.length
-            ? data.badges.map(function (b) {
-                var t = b.token || '';
-                var tokenShort = t.length > 9 ? (t.slice(0, 4) + '…' + t.slice(-4)) : t;
-                var participantes = (totalP != null) ? (b.redeemed + ' / ' + totalP) : String(b.redeemed);
-                return '<tr>' +
-                  '<td class="py-3 pr-4"><span class="mr-2">' + b.emoji + '</span>' + U.esc(b.name) + '</td>' +
-                  '<td class="py-3 pr-4 text-gray-400 font-mono text-xs">' + U.esc(tokenShort) + '</td>' +
-                  '<td class="py-3 pr-4"><span class="font-semibold text-primary">' + b.redeemed + '</span></td>' +
-                  '<td class="py-3 text-gray-500">' + participantes + '</td></tr>';
-              }).join('')
-            : '<tr><td colspan="4" class="py-6 text-center text-gray-400">Este evento aún no tiene badges.</td></tr>';
-
           var inner =
-            '<div class="card-soft p-8 anim-fade">' +
-              '<h2 class="text-xl font-bold mb-1">Participación — ' + U.esc(data.event.name) + '</h2>' +
-              '<p class="text-sm text-gray-400 mb-6">Estado de redención por badge</p>' +
-              '<div class="overflow-x-auto"><table class="w-full text-sm">' +
-                '<thead><tr class="text-left text-gray-400 border-b border-gray-200">' +
-                  '<th class="py-3 pr-4 font-medium">Badge</th>' +
-                  '<th class="py-3 pr-4 font-medium">QR token</th>' +
-                  '<th class="py-3 pr-4 font-medium">Canjeados</th>' +
-                  '<th class="py-3 font-medium">Participantes</th>' +
-                '</tr></thead>' +
-                '<tbody class="divide-y divide-gray-100">' + rows + '</tbody>' +
-              '</table></div>' +
+            '<div class="anim-fade">' +
+              metrics +
+              progreso +
+              '<div class="bg-white rounded-card p-6 shadow-soft">' +
+                '<h3 class="font-bold text-gray-800 mb-4">Usuarios</h3>' +
+                usersHtml +
+              '</div>' +
             '</div>';
 
           app.innerHTML = U.adminShell('participation', inner, events, activeId);
           U.mountAdminShell();
+
+          Array.prototype.forEach.call(document.querySelectorAll('.role-btn'), function(btn) {
+            btn.addEventListener('click', function() {
+              var uid = btn.getAttribute('data-uid');
+              var rol = btn.getAttribute('data-rol');
+              var nombre = btn.getAttribute('data-nombre');
+              var rolLabel = rol === 'admin' ? 'Admin' : 'Participante';
+              U.showConfirm(
+                '¿Cambiar el rol de ' + nombre + ' a ' + rolLabel + '?',
+                async function() {
+                  btn.disabled = true;
+                  btn.textContent = '...';
+                  try {
+                    await API.changeUserRole(uid, rol);
+                    U.toast('Rol de ' + nombre + ' actualizado a ' + rolLabel, 'success');
+                    init();
+                  } catch(err) {
+                    U.toast(err.message || 'No se pudo cambiar el rol', 'error');
+                    btn.disabled = false;
+                    btn.textContent = btn.getAttribute('data-btnlabel');
+                  }
+                },
+                null,
+                { confirmLabel: 'Cambiar', danger: false }
+              );
+            });
+          });
+
         } catch (err) {
           app.innerHTML = U.errorHtml(err && err.message ? err.message : 'Error inesperado');
           var retry = document.getElementById('err-retry');

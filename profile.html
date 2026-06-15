@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mi perfil — Lyfter Badge App</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -21,6 +21,10 @@
       },
     };
   </script>
+  <style>
+    @keyframes badge-unlock { 0% { transform: scale(0.5); opacity: 0; } 70% { transform: scale(1.15); } 100% { transform: scale(1); opacity: 1; } }
+    .badge-obtained { animation: badge-unlock 0.4s ease-out forwards; }
+  </style>
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
@@ -35,15 +39,71 @@
     (function () {
       'use strict';
       var API = window.LyfterAPI;
-      var U = window.LyfterUtils;
+      var U   = window.LyfterUtils;
 
       var user = API.currentUser();
-      if (!user) { window.location.replace('login.html?next=' + encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)); return; }
+      if (!user) { window.location.replace('login.html?next=' + encodeURIComponent(window.location.pathname + window.location.search)); return; }
       if (user.role === 'admin') { window.location.replace('admin-event.html'); return; }
 
       var app = document.getElementById('app');
       app.innerHTML = U.loadingHtml();
       U.showPendingToast();
+
+      function launchConfetti() {
+        var canvas = document.createElement('canvas');
+        canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;';
+        document.body.appendChild(canvas);
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        var ctx = canvas.getContext('2d');
+        var colors = ['#6C63FF','#FF6584','#FFD700','#43D9AD','#FF8C42','#4FC3F7','#ef4444'];
+        var pieces = [];
+        for (var i = 0; i < 90; i++) {
+          pieces.push({
+            x: Math.random() * canvas.width,
+            y: (Math.random() * canvas.height * 0.5) - canvas.height * 0.3,
+            w: Math.random() * 10 + 5,
+            h: Math.random() * 5 + 3,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            rot: Math.random() * 360,
+            vx: (Math.random() - 0.5) * 2.5,
+            vy: Math.random() * 4 + 1.5,
+            vr: (Math.random() - 0.5) * 6
+          });
+        }
+        var frame = 0;
+        function draw() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          pieces.forEach(function(p) {
+            p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+            if (p.y > canvas.height + 20) { p.y = -10; p.x = Math.random() * canvas.width; }
+            ctx.save();
+            ctx.translate(p.x + p.w / 2, p.y + p.h / 2);
+            ctx.rotate(p.rot * Math.PI / 180);
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = Math.max(0, 1 - frame / 160);
+            ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+            ctx.restore();
+          });
+          frame++;
+          if (frame < 180) requestAnimationFrame(draw);
+          else canvas.remove();
+        }
+        draw();
+      }
+
+      function fmtDate(iso) {
+        if (!iso) return '';
+        try { return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }); }
+        catch(e) { return ''; }
+      }
+
+      var emptySvg =
+        '<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" class="w-24 h-24 mx-auto mb-4 opacity-30">' +
+          '<circle cx="60" cy="60" r="50" fill="#EEEDFF" stroke="#6C63FF" stroke-width="3"/>' +
+          '<circle cx="60" cy="60" r="30" fill="none" stroke="#6C63FF" stroke-width="2" stroke-dasharray="6 3"/>' +
+          '<text x="60" y="68" text-anchor="middle" font-size="28" fill="#6C63FF">🏅</text>' +
+        '</svg>';
 
       async function init() {
         try {
@@ -51,8 +111,9 @@
           if (!events.length) {
             app.innerHTML =
               '<section class="device-frame px-4 pt-12">' +
-                '<div class="card-soft p-8 text-center text-gray-500">' +
-                  'No hay eventos disponibles todavía.<br>' +
+                '<div class="bg-white rounded-card p-8 shadow-soft text-center text-gray-500">' +
+                  emptySvg +
+                  '<p class="text-sm">No hay eventos disponibles todavía.</p>' +
                   '<button id="profile-logout" class="mt-4 text-sm text-primary">⎋ Salir</button>' +
                 '</div>' +
               '</section>';
@@ -66,67 +127,105 @@
           var pct = total ? Math.round((doneCount / total) * 100) : 0;
           var complete = detail.complete;
 
-          var eventOptions = events.map(function (e) {
+          var eventOptions = events.map(function(e) {
             return '<option value="' + e.id + '"' + (e.id === activeId ? ' selected' : '') + '>' + U.esc(e.name) + '</option>';
           }).join('');
 
-          var grid = detail.badges.map(function (b) {
-            if (b.obtained) {
-              return '<div class="rounded-card p-3 text-center" style="background:#EEEDFF;">' +
-                '<div class="text-3xl">' + b.emoji + '</div>' +
-                '<p class="text-xs font-medium mt-1">' + U.esc(b.name) + '</p>' +
-                '<span class="text-green-500 text-sm">✅</span></div>';
-            }
-            return '<div class="rounded-card p-3 text-center bg-gray-100">' +
-              '<div class="text-3xl opacity-40">' + b.emoji + '</div>' +
-              '<p class="text-xs text-gray-400 mt-1">' + U.esc(b.name) + '</p>' +
-              '<span class="text-gray-400 text-sm">🔒</span></div>';
-          }).join('');
+          /* Badge grid */
+          var grid = '';
+          if (!detail.badges.length) {
+            grid = '<div class="col-span-3 text-center py-6">' + emptySvg +
+              '<p class="text-sm text-gray-400">¡Escanea tu primer QR para empezar!</p></div>';
+          } else {
+            grid = detail.badges.map(function(b) {
+              if (b.obtained) {
+                return '<div class="badge-obtained rounded-card p-3 text-center" style="background:#EEEDFF;">' +
+                  '<div class="text-3xl">' + (b.emoji || '🏅') + '</div>' +
+                  '<p class="text-xs font-semibold mt-1 text-gray-700">' + U.esc(b.name) + '</p>' +
+                  '<span class="text-green-500 text-sm">✅</span>' +
+                '</div>';
+              }
+              return '<div class="rounded-card p-3 text-center bg-gray-100">' +
+                '<div class="text-3xl opacity-30">' + (b.emoji || '🏅') + '</div>' +
+                '<p class="text-xs text-gray-400 mt-1">' + U.esc(b.name) + '</p>' +
+                '<span class="text-gray-300 text-sm">🔒</span>' +
+              '</div>';
+            }).join('');
+          }
 
+          /* History section */
+          var obtained = detail.badges.filter(function(b){ return b.obtained; });
+          obtained.sort(function(a, b) {
+            var ta = a.scannedAt ? new Date(a.scannedAt).getTime() : 0;
+            var tb = b.scannedAt ? new Date(b.scannedAt).getTime() : 0;
+            return tb - ta;
+          });
+          var historyHtml = '';
+          if (obtained.length) {
+            var histRows = obtained.map(function(b) {
+              return '<div class="flex items-center gap-3 py-2.5 border-b border-gray-100 last:border-0">' +
+                '<span class="text-xl">' + (b.emoji || '🏅') + '</span>' +
+                '<span class="flex-1 text-sm font-medium text-gray-700">' + U.esc(b.name) + '</span>' +
+                (b.scannedAt ? '<span class="text-xs text-gray-400">' + fmtDate(b.scannedAt) + '</span>' : '') +
+              '</div>';
+            }).join('');
+            historyHtml =
+              '<div class="bg-white rounded-card p-5 shadow-soft mt-4">' +
+                '<h3 class="text-sm font-bold text-gray-700 mb-2">Mis badges obtenidos</h3>' +
+                histRows +
+              '</div>';
+          }
+
+          /* Prize box */
           var prizeBox = complete
-            ? '<div class="mt-6 p-4 rounded-card" style="background:#EEEDFF;">' +
-                '<p class="text-xs uppercase tracking-wide text-primary font-semibold text-center">Premio desbloqueado</p>' +
+            ? '<div class="mt-4 p-4 rounded-card" style="background:#EEEDFF;">' +
+                '<p class="text-xs uppercase tracking-wide text-primary font-semibold text-center">🎁 Premio desbloqueado</p>' +
                 '<p class="text-lg font-bold mt-1 text-center">' + U.esc(detail.prizeRevealed || detail.prize) + '</p></div>'
-            : '<div class="mt-6 p-4 rounded-card border border-dashed border-gray-300 text-center text-sm text-gray-500">' +
+            : '<div class="mt-4 p-4 rounded-card border border-dashed border-gray-200 text-center text-sm text-gray-500">' +
                 '🎁 Completa los ' + total + ' badges para revelar el <span class="font-medium text-gray-700">premio sorpresa</span></div>';
 
           var completedBanner = complete
-            ? '<div class="card-soft p-6 text-center mb-4 anim-pop">' +
+            ? '<div class="bg-white rounded-card p-6 text-center mb-4 shadow-soft anim-pop">' +
                 '<div class="text-5xl mb-2">🎉</div>' +
                 '<h3 class="text-lg font-bold text-primary">¡Felicidades, ' + U.esc(user.name.split(' ')[0]) + '!</h3>' +
-                '<p class="text-sm text-gray-500 mt-1">Completaste los ' + total + ' badges de ' + U.esc(detail.name) + '</p></div>'
+                '<p class="text-sm text-gray-500 mt-1">Completaste todos los badges de ' + U.esc(detail.name) + '</p></div>'
             : '';
 
           app.innerHTML =
-            '<section class="device-frame px-4 pt-12 pb-28">' +
+            '<section class="device-frame px-4 pt-10 pb-28">' +
               completedBanner +
-              '<div class="card-soft p-6 anim-fade">' +
-                '<div class="flex items-center justify-between mb-5">' +
-                  '<h2 class="text-xl font-bold">Hola, ' + U.esc(user.name.split(' ')[0]) + ' 👋</h2>' +
-                  '<button id="profile-logout" class="text-sm text-gray-400 hover:text-primary flex items-center gap-1">⎋ Salir</button>' +
+              '<div class="bg-white rounded-card p-5 shadow-soft anim-fade mb-4">' +
+                '<div class="flex items-center justify-between mb-4">' +
+                  '<h2 class="text-lg font-bold text-gray-800">Hola, ' + U.esc(user.name.split(' ')[0]) + ' 👋</h2>' +
+                  '<button id="profile-logout" class="text-sm text-gray-400 hover:text-primary">⎋ Salir</button>' +
                 '</div>' +
-                '<label class="text-sm font-medium text-gray-600">Evento activo</label>' +
-                '<select id="profile-event-select" class="w-full mt-1 mb-5 px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none">' + eventOptions + '</select>' +
-                '<div class="mb-1 flex justify-between text-sm">' +
-                  '<span class="font-medium text-gray-700">Tu progreso</span>' +
-                  '<span class="text-primary font-semibold">' + doneCount + ' de ' + total + ' badges</span>' +
+                '<label class="text-xs font-medium text-gray-500">Evento activo</label>' +
+                '<select id="profile-event-select" class="w-full mt-1 mb-4 px-4 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm">' + eventOptions + '</select>' +
+                '<div class="flex justify-between items-center mb-1">' +
+                  '<span class="text-sm font-medium text-gray-700">Tu progreso</span>' +
+                  '<span class="text-sm font-bold text-primary">' + pct + '%</span>' +
                 '</div>' +
-                '<div class="w-full h-3 bg-gray-200 rounded-full mb-6 overflow-hidden">' +
-                  '<div class="h-3 rounded-full transition-all duration-500" style="width:' + pct + '%; background:#6C63FF;"></div>' +
+                '<div class="w-full h-3 bg-gray-100 rounded-full mb-1 overflow-hidden">' +
+                  '<div class="h-3 rounded-full transition-all duration-700" style="width:' + pct + '%; background:#6C63FF;"></div>' +
                 '</div>' +
-                '<div class="grid grid-cols-3 gap-3">' + grid + '</div>' +
+                '<p class="text-xs text-gray-400 mb-5">' + doneCount + ' de ' + total + ' badges obtenidos</p>' +
+                '<div class="grid grid-cols-3 gap-2.5">' + grid + '</div>' +
                 prizeBox +
               '</div>' +
+              historyHtml +
             '</section>' +
-            '<div class="fixed bottom-0 left-0 right-0 flex justify-center pb-6 pointer-events-none">' +
-              '<button id="fab-scan" class="pointer-events-auto px-6 py-4 rounded-full text-white font-semibold shadow-soft flex items-center gap-2 active:scale-95 transition" ' +
-                'style="background:#6C63FF; box-shadow:0 4px 20px rgba(108,99,255,0.4);">📷 Escanear QR</button>' +
+            '<div class="fixed bottom-0 left-0 right-0 flex justify-center pb-6 pointer-events-none z-30">' +
+              '<button id="fab-scan" class="pointer-events-auto px-7 py-4 rounded-full text-white font-semibold shadow-soft flex items-center gap-2 active:scale-95 transition" ' +
+                'style="background:#6C63FF; box-shadow:0 4px 24px rgba(108,99,255,0.5);">📷 Escanear QR</button>' +
             '</div>';
 
           document.getElementById('profile-logout').addEventListener('click', U.logout);
-          document.getElementById('fab-scan').addEventListener('click', function () { window.location.href = 'scan.html'; });
+          document.getElementById('fab-scan').addEventListener('click', function() { window.location.href = 'scan.html'; });
           var sel = document.getElementById('profile-event-select');
-          sel.addEventListener('change', function () { U.setActiveId(sel.value); location.reload(); });
+          sel.addEventListener('change', function() { U.setActiveId(sel.value); location.reload(); });
+
+          if (complete) launchConfetti();
+
         } catch (err) {
           app.innerHTML = U.errorHtml(err && err.message ? err.message : 'Error inesperado');
           var retry = document.getElementById('err-retry');
