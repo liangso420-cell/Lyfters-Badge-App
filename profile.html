@@ -153,6 +153,20 @@
             }).join('');
           }
 
+          function buildLeaderboardRow(entry, rank, currentUserId) {
+            var medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '<span class="text-gray-400 font-bold">' + rank + '</span>';
+            var isSelf = entry.id === currentUserId;
+            var avatarHtml = entry.avatar
+              ? '<img src="' + entry.avatar + '" class="w-8 h-8 rounded-full object-cover border-2 ' + (isSelf ? 'border-primary' : 'border-gray-200') + '" />'
+              : '<div class="w-8 h-8 rounded-full bg-primary-soft flex items-center justify-center text-sm">👤</div>';
+            return '<div class="flex items-center gap-3 py-2.5 border-b border-gray-100 last:border-0' + (isSelf ? ' bg-primary-soft/30 -mx-4 px-4 rounded-card' : '') + '">' +
+              '<span class="w-6 text-center text-sm">' + medal + '</span>' +
+              avatarHtml +
+              '<span class="flex-1 text-sm font-medium text-gray-700">' + U.esc(entry.nombre) + (isSelf ? ' <span class="text-xs text-primary">(tú)</span>' : '') + '</span>' +
+              '<span class="text-sm font-bold text-primary">' + entry.badges + ' 🏅</span>' +
+            '</div>';
+          }
+
           /* History section */
           var obtained = detail.badges.filter(function(b){ return b.obtained; });
           obtained.sort(function(a, b) {
@@ -211,9 +225,13 @@
                 '<div class="w-full h-3 bg-gray-100 rounded-full mb-1 overflow-hidden">' +
                   '<div class="h-3 rounded-full transition-all duration-700" style="width:' + pct + '%; background:#6C63FF;"></div>' +
                 '</div>' +
-                '<p class="text-xs text-gray-400 mb-5">' + doneCount + ' de ' + total + ' badges obtenidos</p>' +
-                '<div class="grid grid-cols-3 gap-2.5">' + grid + '</div>' +
-                prizeBox +
+                '<p class="text-xs text-gray-400 mb-4">' + doneCount + ' de ' + total + ' badges obtenidos</p>' +
+                '<div class="flex gap-2 mb-4">' +
+                  '<button id="tab-badges" class="tab-btn flex-1 py-2 rounded-btn text-sm font-medium text-white" style="background:#6C63FF;">Mis badges</button>' +
+                  '<button id="tab-ranking" class="tab-btn flex-1 py-2 rounded-btn text-sm font-medium text-gray-500 bg-gray-100">Clasificación</button>' +
+                '</div>' +
+                '<div id="panel-badges"><div class="grid grid-cols-3 gap-2.5">' + grid + '</div>' + prizeBox + '</div>' +
+                '<div id="panel-ranking" style="display:none;"><div class="text-center text-gray-400 text-sm py-4">Cargando...</div></div>' +
               '</div>' +
               historyHtml +
             '</section>' +
@@ -223,6 +241,37 @@
             '</div>';
 
           document.getElementById('profile-logout').addEventListener('click', U.logout);
+          document.getElementById('tab-badges').addEventListener('click', function() {
+            document.getElementById('panel-badges').style.display = '';
+            document.getElementById('panel-ranking').style.display = 'none';
+            document.getElementById('tab-badges').style.background = '#6C63FF';
+            document.getElementById('tab-badges').style.color = 'white';
+            document.getElementById('tab-ranking').style.background = '';
+            document.getElementById('tab-ranking').className = 'tab-btn flex-1 py-2 rounded-btn text-sm font-medium text-gray-500 bg-gray-100';
+          });
+
+          document.getElementById('tab-ranking').addEventListener('click', async function() {
+            document.getElementById('panel-badges').style.display = 'none';
+            document.getElementById('panel-ranking').style.display = '';
+            document.getElementById('tab-ranking').style.background = '#6C63FF';
+            document.getElementById('tab-ranking').style.color = 'white';
+            document.getElementById('tab-badges').style.background = '';
+            document.getElementById('tab-badges').className = 'tab-btn flex-1 py-2 rounded-btn text-sm font-medium text-gray-500 bg-gray-100';
+            try {
+              var lb = await API.getLeaderboard();
+              var panel = document.getElementById('panel-ranking');
+              if (!lb.length) {
+                panel.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">Sin datos todavía.</p>';
+              } else {
+                panel.innerHTML = lb.map(function(entry, i) {
+                  return buildLeaderboardRow(entry, i + 1, user.id);
+                }).join('');
+              }
+            } catch(e) {
+              document.getElementById('panel-ranking').innerHTML = '<p class="text-sm text-red-400 text-center py-4">No se pudo cargar.</p>';
+            }
+          });
+
           document.getElementById('profile-menu-btn').addEventListener('click', async function() {
             try {
               var p = await API.getProfile();

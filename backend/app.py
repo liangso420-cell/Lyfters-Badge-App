@@ -686,6 +686,28 @@ def change_user_role(user_id):
 
 
 # ──────────────────────────────────────────────
+# LEADERBOARD
+# ──────────────────────────────────────────────
+
+@app.route("/leaderboard", methods=["GET"])
+@jwt_required()
+def leaderboard():
+    user_list = list(users().find({}, {"password_hash": 0}))
+    result = []
+    for u in user_list:
+        uid = u["_id"]
+        total_badges = scans().count_documents({"user_id": uid})
+        result.append({
+            "id":     str(uid),
+            "nombre": u.get("name", ""),
+            "avatar": u.get("avatar", None),
+            "badges": total_badges
+        })
+    result.sort(key=lambda x: x["badges"], reverse=True)
+    return jsonify(result), 200
+
+
+# ──────────────────────────────────────────────
 # HEALTHCHECK
 # ──────────────────────────────────────────────
 
