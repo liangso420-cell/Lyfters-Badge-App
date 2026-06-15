@@ -612,7 +612,20 @@ def admin_dashboard():
 def admin_list_users():
     if not require_admin():
         return jsonify(error="Acceso denegado"), 403
-    return jsonify([fmt_user(u) for u in users().find({})]), 200
+    docs = list(users().find({}, {"password_hash": 0}))
+    result = []
+    for u in docs:
+        try:
+            result.append({
+                "id":         str(u["_id"]),
+                "nombre":     u.get("name", ""),
+                "email":      u.get("email", ""),
+                "rol":        u.get("role", "participant"),
+                "created_at": u.get("created_at", "").isoformat() if u.get("created_at") else None
+            })
+        except Exception:
+            continue
+    return jsonify(result), 200
 
 
 @app.route("/admin/users/<user_id>/role", methods=["PATCH"])
