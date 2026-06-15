@@ -38,19 +38,9 @@ _env_origins = [
         "http://localhost:5500,http://127.0.0.1:5500"
     ).split(",") if o.strip()
 ]
-# Accept any Vercel preview/production URL plus explicitly listed origins
-import re as _re
-_VERCEL_RE = _re.compile(r"^https://[a-zA-Z0-9\-]+-[a-zA-Z0-9\-]+-[a-zA-Z0-9\-]+\.vercel\.app$")
-_VERCEL_PROD_RE = _re.compile(r"^https://[a-zA-Z0-9\-]+\.vercel\.app$")
-
-def _cors_origin_check(origin):
-    if origin in _env_origins:
-        return True
-    if origin and (_VERCEL_RE.match(origin) or _VERCEL_PROD_RE.match(origin)):
-        return True
-    return False
-
-CORS(app, origins=_cors_origin_check, supports_credentials=True,
+# Also accept any *.vercel.app URL (preview and production deployments)
+_cors_origins = _env_origins + [re.compile(r"^https://[a-zA-Z0-9][a-zA-Z0-9\-]*\.vercel\.app$")]
+CORS(app, origins=_cors_origins, supports_credentials=True,
      methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"])
 
 # ──────────────────────────────────────────────
