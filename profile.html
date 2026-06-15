@@ -197,9 +197,9 @@
               '<div class="bg-white rounded-card p-5 shadow-soft anim-fade mb-4">' +
                 '<div class="flex items-center justify-between mb-4">' +
                   '<h2 class="text-lg font-bold text-gray-800">Hola, ' + U.esc(user.name.split(' ')[0]) + ' 👋</h2>' +
-                  '<div class="flex flex-col items-end gap-1">' +
+                  '<div class="flex items-center gap-2">' +
+                    '<button id="profile-menu-btn" class="w-9 h-9 rounded-full bg-gray-100 hover:bg-primary-soft flex items-center justify-center text-lg transition" title="Mi perfil">☰</button>' +
                     '<button id="profile-logout" class="text-sm text-gray-400 hover:text-primary">⎋ Salir</button>' +
-                    '<button id="change-pw-btn" class="text-sm text-gray-400 hover:text-primary">🔑 Cambiar contraseña</button>' +
                   '</div>' +
                 '</div>' +
                 '<label class="text-xs font-medium text-gray-500">Evento activo</label>' +
@@ -223,38 +223,18 @@
             '</div>';
 
           document.getElementById('profile-logout').addEventListener('click', U.logout);
-          document.getElementById('change-pw-btn').addEventListener('click', function() {
-            var root = document.getElementById('modal-root');
-            root.innerHTML =
-              '<div class="fixed inset-0 z-50 flex items-center justify-center p-6 anim-fade" style="background:rgba(17,24,39,0.75);">' +
-                '<div class="bg-white rounded-card p-6 w-full max-w-sm shadow-soft anim-pop">' +
-                  '<h3 class="font-bold text-gray-800 mb-4">Cambiar contraseña</h3>' +
-                  '<div class="space-y-3">' +
-                    '<input id="pw-current" type="password" placeholder="Contraseña actual" class="w-full px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
-                    '<input id="pw-new" type="password" placeholder="Nueva contraseña (mín. 6 caracteres)" class="w-full px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
-                  '</div>' +
-                  '<div class="flex gap-3 mt-5">' +
-                    '<button id="pw-cancel" class="flex-1 py-2.5 rounded-btn border border-gray-200 text-sm font-medium text-gray-600">Cancelar</button>' +
-                    '<button id="pw-save" class="flex-1 py-2.5 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">Guardar</button>' +
-                  '</div>' +
-                '</div>' +
-              '</div>';
-            document.getElementById('pw-cancel').addEventListener('click', function() { U.closeModal(); });
-            document.getElementById('pw-save').addEventListener('click', async function() {
-              var btn = document.getElementById('pw-save');
-              var current = document.getElementById('pw-current').value;
-              var newPw = document.getElementById('pw-new').value;
-              if (!current || !newPw) { U.toast('Completa ambos campos', 'error'); return; }
-              btn.disabled = true; btn.textContent = 'Guardando...';
-              try {
-                await API.changePassword(current, newPw);
-                U.closeModal();
-                U.toast('Contraseña actualizada', 'success');
-              } catch(err) {
-                U.toast(err.message || 'No se pudo cambiar la contraseña', 'error');
-                btn.disabled = false; btn.textContent = 'Guardar';
-              }
-            });
+          document.getElementById('profile-menu-btn').addEventListener('click', async function() {
+            try {
+              var p = await API.getProfile();
+              U.showProfileMenu(p.avatar, function(newAvatar) {
+                if (newAvatar) {
+                  var btn = document.getElementById('profile-menu-btn');
+                  if (btn) btn.style.cssText += ';background-image:url(' + newAvatar + ');background-size:cover;';
+                }
+              });
+            } catch(e) {
+              U.showProfileMenu(null, null);
+            }
           });
           document.getElementById('fab-scan').addEventListener('click', function() { window.location.href = 'scan.html'; });
           var sel = document.getElementById('profile-event-select');

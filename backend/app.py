@@ -181,6 +181,36 @@ def register():
     return jsonify(token=token, user=fmt_user(new_user)), 201
 
 
+@app.route("/auth/profile", methods=["GET"])
+@jwt_required()
+def get_profile():
+    uid = get_jwt_identity()
+    u = users().find_one({"_id": ObjectId(uid)}, {"password_hash": 0})
+    if not u:
+        return jsonify(error="Usuario no encontrado"), 404
+    return jsonify({
+        "id": str(u["_id"]),
+        "nombre": u.get("name", ""),
+        "email": u.get("email", ""),
+        "rol": u.get("role", "participant"),
+        "avatar": u.get("avatar", None)
+    }), 200
+
+
+@app.route("/auth/profile/avatar", methods=["POST"])
+@jwt_required()
+def update_avatar():
+    uid = get_jwt_identity()
+    data = request.get_json() or {}
+    avatar = data.get("avatar", "")
+    if not avatar or not avatar.startswith("data:image/"):
+        return jsonify(error="Imagen inválida"), 400
+    if len(avatar) > 2 * 1024 * 1024:
+        return jsonify(error="La imagen no puede superar 2MB"), 400
+    users().update_one({"_id": ObjectId(uid)}, {"$set": {"avatar": avatar}})
+    return jsonify(ok=True), 200
+
+
 @app.route("/auth/change-password", methods=["POST"])
 @jwt_required()
 def change_password():
