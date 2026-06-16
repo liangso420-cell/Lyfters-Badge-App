@@ -41,10 +41,11 @@ def get_db():
         raise
 
 # Accesos directos a cada colección
-def users():  return get_db()["users"]
-def events(): return get_db()["events"]
-def badges(): return get_db()["badges"]
-def scans():  return get_db()["scans"]
+def users():       return get_db()["users"]
+def events():      return get_db()["events"]
+def badges():      return get_db()["badges"]
+def scans():       return get_db()["scans"]
+def event_joins(): return get_db()["event_joins"]
 
 
 def init_indexes():
