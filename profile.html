@@ -110,14 +110,20 @@
           var events = await API.listEvents();
           if (!events.length) {
             app.innerHTML =
-              '<section class="device-frame px-4 pt-12">' +
-                '<div class="bg-white rounded-card p-8 shadow-soft text-center text-gray-500">' +
+              '<section class="device-frame px-4 pt-12 pb-28">' +
+                '<div class="bg-white rounded-card p-8 shadow-soft text-center text-gray-500 mb-4">' +
                   emptySvg +
-                  '<p class="text-sm">No hay eventos disponibles todavía.</p>' +
-                  '<button id="profile-logout" class="mt-4 text-sm text-primary">⎋ Salir</button>' +
+                  '<p class="text-sm font-medium text-gray-700 mb-1">No hay eventos disponibles todavía.</p>' +
+                  '<p class="text-xs text-gray-400 mb-4">Escanea el QR de un evento para unirte.</p>' +
+                  '<button id="profile-logout" class="text-sm text-primary">⎋ Salir</button>' +
                 '</div>' +
-              '</section>';
+              '</section>' +
+              '<div class="fixed bottom-0 left-0 right-0 flex justify-center pb-6 pointer-events-none z-30">' +
+                '<button id="fab-scan-empty" class="pointer-events-auto px-7 py-4 rounded-full text-white font-semibold shadow-soft flex items-center gap-2 active:scale-95 transition" ' +
+                  'style="background:#6C63FF; box-shadow:0 4px 24px rgba(108,99,255,0.5);">📷 Escanear QR</button>' +
+              '</div>';
             document.getElementById('profile-logout').addEventListener('click', U.logout);
+            document.getElementById('fab-scan-empty').addEventListener('click', function() { window.location.href = 'scan.html'; });
             return;
           }
 
