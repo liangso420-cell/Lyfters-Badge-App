@@ -155,7 +155,7 @@
   }
 
   /* ----- Drawer lateral ----- */
-  function showDrawer(avatarUrl, userName, onAvatarSave) {
+  function showDrawer(avatarUrl, userName, onAvatarSave, isAdmin) {
     var root = document.getElementById('modal-root');
     var avatarHtml = avatarUrl
       ? '<img src="' + avatarUrl + '" class="w-16 h-16 rounded-full object-cover border-2 border-primary" />'
@@ -175,6 +175,12 @@
             '<p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-5 mb-2">Cuenta</p>' +
             '<button id="drawer-avatar-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">📷 <span>Cambiar foto de perfil</span></button>' +
             '<button id="drawer-pw-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">🔑 <span>Cambiar contraseña</span></button>' +
+            (isAdmin
+              ? '<div class="mt-2 border-t border-gray-100 pt-2">' +
+                  '<p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-5 mb-2 mt-2">Administración</p>' +
+                  '<button id="drawer-users-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">👥 <span>Gestionar usuarios</span></button>' +
+                '</div>'
+              : '') +
           '</nav>' +
           '<div class="p-5 border-t border-gray-100">' +
             '<button id="drawer-close" class="w-full py-2.5 rounded-btn border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50">Cerrar</button>' +
@@ -240,8 +246,8 @@
       document.getElementById('drawer-pw-back').addEventListener('click', function() {
         closeModal();
         window.LyfterAPI.getProfile().then(function(p) {
-          showDrawer(p.avatar, p.nombre, onAvatarSave);
-        }).catch(function() { showDrawer(null, null, onAvatarSave); });
+          showDrawer(p.avatar, p.nombre, onAvatarSave, isAdmin);
+        }).catch(function() { showDrawer(null, null, onAvatarSave, isAdmin); });
       });
       document.getElementById('drawer-pw-save').addEventListener('click', async function() {
         var btn = this;
@@ -259,6 +265,77 @@
         }
       });
     });
+
+    var usersBtn = document.getElementById('drawer-users-btn');
+    if (usersBtn) {
+      usersBtn.addEventListener('click', function() {
+        var panel = document.getElementById('drawer-panel');
+        var nav = panel.querySelector('nav');
+        nav.innerHTML = '<div class="px-5 py-4">' +
+          '<button id="drawer-users-back" class="text-xs text-primary mb-4 flex items-center gap-1">← Volver</button>' +
+          '<p class="text-sm font-semibold text-gray-700 mb-3">Gestionar usuarios</p>' +
+          '<div id="drawer-users-list" class="text-center text-gray-400 text-sm py-4">Cargando...</div>' +
+        '</div>';
+
+        document.getElementById('drawer-users-back').addEventListener('click', function() {
+          closeModal();
+          window.LyfterAPI.getProfile().then(function(p) {
+            showDrawer(p.avatar, p.nombre, onAvatarSave, true);
+          }).catch(function() { showDrawer(null, null, onAvatarSave, true); });
+        });
+
+        window.LyfterAPI.getUsers().then(function(usersList) {
+          var listEl = document.getElementById('drawer-users-list');
+          if (!listEl) return;
+          if (!usersList || !usersList.length) {
+            listEl.innerHTML = '<p class="text-sm text-gray-400">Sin usuarios.</p>';
+            return;
+          }
+          var currentUser = window.LyfterAPI.currentUser();
+          listEl.innerHTML = usersList.map(function(u) {
+            var isSelf = currentUser && u.id === currentUser.id;
+            var isAdminUser = u.rol === 'admin';
+            var btnLabel = isAdminUser ? '→ Participante' : '→ Admin';
+            var nextRol = isAdminUser ? 'participant' : 'admin';
+            return '<div class="flex items-center justify-between py-2.5 border-b border-gray-100 last:border-0">' +
+              '<div class="flex-1 min-w-0 mr-2">' +
+                '<p class="text-sm font-medium text-gray-800 truncate">' + esc(u.nombre) + (isSelf ? ' <span class="text-xs text-gray-400">(tú)</span>' : '') + '</p>' +
+                '<p class="text-xs text-gray-400 truncate">' + esc(u.email) + '</p>' +
+              '</div>' +
+              '<button data-uid="' + u.id + '" data-rol="' + nextRol + '" data-nombre="' + esc(u.nombre) + '"' +
+                (isSelf ? ' disabled' : '') +
+                ' class="role-drawer-btn flex-shrink-0 px-2 py-1 rounded-btn text-xs font-medium border ' +
+                (isAdminUser ? 'text-purple-600 border-purple-300' : 'text-gray-500 border-gray-200') +
+                (isSelf ? ' opacity-40 cursor-not-allowed' : ' hover:bg-gray-50') + '">' +
+                btnLabel +
+              '</button>' +
+            '</div>';
+          }).join('');
+
+          Array.prototype.forEach.call(listEl.querySelectorAll('.role-drawer-btn'), function(btn) {
+            btn.addEventListener('click', async function() {
+              var uid = btn.getAttribute('data-uid');
+              var rol = btn.getAttribute('data-rol');
+              var nombre = btn.getAttribute('data-nombre');
+              var rolLabel = rol === 'admin' ? 'Admin' : 'Participante';
+              btn.disabled = true; btn.textContent = '...';
+              try {
+                await window.LyfterAPI.changeUserRole(uid, rol);
+                toast('Rol de ' + nombre + ' cambiado a ' + rolLabel, 'success');
+                usersBtn.click();
+              } catch(err) {
+                toast(err.message || 'No se pudo cambiar el rol', 'error');
+                btn.disabled = false;
+                btn.textContent = rol === 'admin' ? '→ Participante' : '→ Admin';
+              }
+            });
+          });
+        }).catch(function(err) {
+          var listEl = document.getElementById('drawer-users-list');
+          if (listEl) listEl.innerHTML = '<p class="text-sm text-red-400">Error: ' + esc(err.message) + '</p>';
+        });
+      });
+    }
   }
 
   /* ----- Shell admin ----- */
@@ -305,9 +382,9 @@
               profileBtn.style.backgroundImage = 'url(' + newAvatar + ')';
               profileBtn.style.backgroundSize = 'cover';
             }
-          });
+          }, true);
         } catch(e) {
-          showDrawer(null, null, null);
+          showDrawer(null, null, null, true);
         }
       });
     }
