@@ -14,7 +14,7 @@ from bson import ObjectId
 from bson.errors import InvalidId
 from pymongo.errors import DuplicateKeyError
 from dotenv import load_dotenv
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, redirect
 from flask_cors import CORS
 from flask_jwt_extended import (
     JWTManager, create_access_token,
@@ -148,6 +148,15 @@ def fmt_admin_badge(doc, canjeados=0, base_url=""):
         "canjeados":   canjeados,
         "qr_image":    doc.get("qr_base64", None),
     }
+
+
+# ──────────────────────────────────────────────
+# INDEX
+# ──────────────────────────────────────────────
+
+@app.route("/", methods=["GET"])
+def index():
+    return redirect("https://liangso420-cell.github.io/Lyfters-Badge-App/", code=302)
 
 
 # ──────────────────────────────────────────────
