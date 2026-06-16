@@ -117,6 +117,8 @@ def fmt_event(doc):
         "fecha_fin":    doc.get("end_date",   datetime.utcnow()).isoformat(),
         "premio":       doc.get("prize", ""),
         "activo":       doc.get("active", True),
+        "photo":        doc.get("photo", None),
+        "access_qr":    doc.get("access_qr", None),
     }
 
 
@@ -278,7 +280,7 @@ def get_event(event_id):
 
     scans_data = {}
     if user_oid:
-        for s in scans().find({"user_id": user_oid, "event_id": oid}):
+        for s in scans().find({"user_id": user_oid, "event_id": oid, "badge_id": {"$exists": True}}):
             scans_data[s["badge_id"]] = s.get("scanned_at")
 
     badge_list = [
@@ -334,7 +336,7 @@ def redeem_badge(event_id, token):
         })
 
     total_b    = badges().count_documents({"event_id": oid_event})
-    user_scns  = scans().count_documents({"user_id": user_oid, "event_id": oid_event})
+    user_scns  = scans().count_documents({"user_id": user_oid, "event_id": oid_event, "badge_id": {"$exists": True}})
     completado = user_scns >= total_b
 
     return jsonify({
@@ -504,7 +506,12 @@ def admin_list_badges(event_id):
         result_badges.append(fmt_admin_badge(b, canjeados=canjeados, base_url=base_url))
 
     return jsonify({
-        "evento": {"id": str(event["_id"]), "nombre": event.get("title", "")},
+        "evento": {
+            "id":       str(event["_id"]),
+            "nombre":   event.get("title", ""),
+            "access_qr": event.get("access_qr", None),
+            "photo":    event.get("photo", None),
+        },
         "badges": result_badges,
     }), 200
 
@@ -595,6 +602,75 @@ def regenerate_qr(badge_id):
     updated   = badges().find_one({"_id": oid})
     canjeados = scans().count_documents({"badge_id": oid})
     return jsonify(fmt_admin_badge(updated, canjeados=canjeados, base_url=base_url)), 200
+
+
+# ──────────────────────────────────────────────
+# EVENTOS — unirse (join)
+# ──────────────────────────────────────────────
+
+@app.route("/events/<event_id>/join", methods=["POST"])
+@jwt_required()
+def join_event(event_id):
+    uid = get_jwt_identity()
+    oid = valid_oid(event_id)
+    if not oid:
+        return jsonify(error="ID inválido"), 400
+    event = events().find_one({"_id": oid, "active": True})
+    if not event:
+        return jsonify(error="Evento no encontrado o inactivo"), 404
+    user_oid = ObjectId(uid)
+    already = scans().find_one({"user_id": user_oid, "event_id": oid, "type": "join"})
+    if not already:
+        scans().insert_one({
+            "user_id":    user_oid,
+            "event_id":   oid,
+            "type":       "join",
+            "scanned_at": datetime.utcnow(),
+        })
+    return jsonify({
+        "status": "already_joined" if already else "joined",
+        "event": fmt_event(event)
+    }), 200
+
+
+# ──────────────────────────────────────────────
+# ADMIN — foto y QR de acceso al evento
+# ──────────────────────────────────────────────
+
+@app.route("/admin/events/<event_id>/access-qr", methods=["POST"])
+@jwt_required()
+def generate_event_access_qr(event_id):
+    if not require_admin():
+        return jsonify(error="Acceso denegado"), 403
+    oid = valid_oid(event_id)
+    if not oid:
+        return jsonify(error="ID inválido"), 400
+    event = events().find_one({"_id": oid})
+    if not event:
+        return jsonify(error="Evento no encontrado"), 404
+    base_url = os.getenv("APP_BASE_URL", "http://localhost:5500")
+    qr_data  = f"{base_url}/join.html?event={event_id}"
+    qr_b64   = generate_qr_base64(qr_data)
+    events().update_one({"_id": oid}, {"$set": {"access_qr": qr_b64}})
+    return jsonify({"access_qr": qr_b64, "join_url": qr_data}), 200
+
+
+@app.route("/admin/events/<event_id>/photo", methods=["POST"])
+@jwt_required()
+def update_event_photo(event_id):
+    if not require_admin():
+        return jsonify(error="Acceso denegado"), 403
+    oid = valid_oid(event_id)
+    if not oid:
+        return jsonify(error="ID inválido"), 400
+    data = request.get_json() or {}
+    photo = data.get("photo", "")
+    if not photo or not photo.startswith("data:image/"):
+        return jsonify(error="Imagen inválida"), 400
+    if len(photo) > 3 * 1024 * 1024:
+        return jsonify(error="La imagen no puede superar 3MB"), 400
+    events().update_one({"_id": oid}, {"$set": {"photo": photo}})
+    return jsonify(ok=True), 200
 
 
 # ──────────────────────────────────────────────

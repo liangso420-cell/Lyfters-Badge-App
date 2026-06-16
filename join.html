@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Unirse al evento — Lyfter Badge App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+  <script>tailwind.config = { theme: { extend: { fontFamily: { sans: ['Poppins','sans-serif'] }, colors: { primary: '#6C63FF' }, borderRadius: { card: '16px', btn: '8px' } } } };</script>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+  <div id="app" class="bg-white rounded-card shadow-lg p-8 w-full max-w-sm text-center">
+    <div class="text-4xl mb-4">🎪</div>
+    <p class="text-gray-400 text-sm">Cargando...</p>
+  </div>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    (function() {
+      var API = window.LyfterAPI;
+      var app = document.getElementById('app');
+      var params = new URLSearchParams(window.location.search);
+      var eventId = params.get('event');
+
+      if (!eventId) {
+        app.innerHTML = '<div class="text-4xl mb-4">❌</div><p class="text-gray-600">QR inválido.</p>';
+        return;
+      }
+
+      var user = API.currentUser();
+      if (!user) {
+        window.location.replace('login.html?next=' + encodeURIComponent(window.location.pathname + window.location.search));
+        return;
+      }
+
+      API.joinEvent(eventId).then(function(r) {
+        var msg = r.status === 'already_joined' ? 'Ya estás registrado en este evento.' : '¡Te uniste al evento!';
+        app.innerHTML =
+          '<div class="text-5xl mb-4">🎉</div>' +
+          '<h2 class="text-xl font-bold mb-2" style="color:#6C63FF;">' + msg + '</h2>' +
+          '<p class="text-gray-500 text-sm mb-6">' + (r.event ? (r.event.name || r.event.nombre || '') : '') + '</p>' +
+          '<button id="go-profile" class="w-full py-3 rounded-btn text-white font-semibold" style="background:#6C63FF;">Ver mis badges</button>';
+        document.getElementById('go-profile').addEventListener('click', function() {
+          window.LyfterUtils.setActiveId(eventId);
+          window.location.href = 'profile.html';
+        });
+      }).catch(function(err) {
+        app.innerHTML =
+          '<div class="text-4xl mb-4">⚠️</div>' +
+          '<p class="text-gray-600 mb-4">' + (err.message || 'No se pudo unir al evento') + '</p>' +
+          '<a href="profile.html" class="text-sm" style="color:#6C63FF;">← Volver al perfil</a>';
+      });
+    })();
+  </script>
+</body>
+</html>

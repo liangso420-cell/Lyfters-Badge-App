@@ -201,10 +201,22 @@
               try { urlParams = new URL(qrData).searchParams; } catch(e) {}
               if (urlParams && urlParams.get('event') && urlParams.get('token')) {
                 doRedeem(urlParams.get('token'), urlParams.get('event'));
+              } else if (urlParams && urlParams.get('event') && !urlParams.get('token')) {
+                stream.getTracks().forEach(function(t) { t.stop(); });
+                var eid = urlParams.get('event');
+                API.joinEvent(eid).then(function(r) {
+                  U.setActiveId(eid);
+                  U.toastNextPage(r.status === 'already_joined' ? 'Ya estás en este evento' : '¡Te uniste al evento! 🎉', 'success');
+                  window.location.href = 'profile.html';
+                }).catch(function(err) {
+                  U.toast(err.message || 'No se pudo unir al evento', 'error');
+                  processing = false;
+                  startCamera();
+                });
               } else {
                 var match = qrData.match(/\/redeem\/([^\/]+)\/([^\/\?]+)/);
-                if (match) doRedeem(match[2], match[1]);
-                else doRedeem(qrData);
+                if (match) { doRedeem(match[2], match[1]); }
+                else { doRedeem(qrData); }
               }
               return;
             }

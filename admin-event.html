@@ -38,7 +38,7 @@
       var U   = window.LyfterUtils;
 
       var user = API.currentUser();
-      if (!user) { window.location.replace('login.html?next=' + encodeURIComponent(window.location.pathname + window.location.search)); return; }
+      if (!user) { window.location.replace('login.html'); return; }
       if (user.role !== 'admin') { window.location.replace('profile.html'); return; }
 
       var app = document.getElementById('app');
@@ -50,11 +50,9 @@
         try { return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }); }
         catch(e) { return iso; }
       }
+      function isoDate(s) { return s ? s.split('T')[0] : ''; }
 
-      function isoDate(s) {
-        if (!s) return '';
-        return s.split('T')[0];
-      }
+      var expandedId = null;
 
       async function init() {
         try {
@@ -79,27 +77,26 @@
               '</form>' +
             '</div>';
 
-          var eventListHtml = '';
-          if (events.length) {
-            var items = events.map(function(e) {
-              var activeDot = e.active !== false
-                ? '<span class="w-2 h-2 rounded-full bg-green-400 inline-block mr-1"></span>'
-                : '<span class="w-2 h-2 rounded-full bg-gray-300 inline-block mr-1"></span>';
-              return '<div class="rounded-card bg-base p-4 mb-3" id="evt-row-' + e.id + '">' +
+          var eventCards = events.length ? events.map(function(e) {
+            var isExpanded = expandedId === e.id;
+            var photoHtml = e.photo
+              ? '<img src="' + e.photo + '" class="w-full h-32 object-cover rounded-card mb-3" />'
+              : '<div class="w-full h-24 rounded-card mb-3 flex items-center justify-center bg-gray-100 text-gray-300 text-sm cursor-pointer hover:bg-gray-200" id="photo-placeholder-' + e.id + '">📷 Agregar foto</div>';
+
+            return '<div class="bg-white rounded-card shadow-soft mb-4 overflow-hidden anim-fade">' +
+              '<div class="p-5">' +
+                '<div id="photo-area-' + e.id + '" class="cursor-pointer">' + photoHtml + '</div>' +
                 '<div class="flex items-start justify-between gap-2">' +
-                  '<div class="flex-1 min-w-0">' +
-                    '<div class="flex items-center gap-2 mb-0.5">' + activeDot +
-                      '<p class="font-semibold text-gray-800 truncate">' + U.esc(e.name) + '</p>' +
+                  '<div class="flex-1 min-w-0 cursor-pointer" data-expand="' + e.id + '">' +
+                    '<div class="flex items-center gap-2 mb-0.5">' +
+                      (e.active !== false ? '<span class="w-2 h-2 rounded-full bg-green-400 inline-block"></span>' : '<span class="w-2 h-2 rounded-full bg-gray-300 inline-block"></span>') +
+                      '<p class="font-semibold text-gray-800">' + U.esc(e.name) + '</p>' +
                     '</div>' +
                     '<p class="text-xs text-gray-400">' + fmtDate(e.start) + ' — ' + fmtDate(e.end) + '</p>' +
                     (e.prize ? '<p class="text-xs text-gray-500 mt-0.5">🎁 ' + U.esc(e.prize) + '</p>' : '') +
                   '</div>' +
                   '<div class="flex gap-1.5 flex-shrink-0">' +
-                    '<button data-toggle="' + e.id + '" data-active="' + (e.active !== false ? '1' : '0') + '" ' +
-                      'class="toggle-btn px-2.5 py-1.5 rounded-btn text-xs font-medium border ' +
-                      (e.active !== false ? 'text-green-600 border-green-300 hover:bg-green-50' : 'text-gray-400 border-gray-200 hover:bg-gray-50') + '">' +
-                      (e.active !== false ? '✅ Activo' : '⏸ Pausado') +
-                    '</button>' +
+                    '<button data-toggle="' + e.id + '" data-active="' + (e.active !== false ? '1' : '0') + '" class="toggle-btn px-2.5 py-1.5 rounded-btn text-xs font-medium border ' + (e.active !== false ? 'text-green-600 border-green-300' : 'text-gray-400 border-gray-200') + '">' + (e.active !== false ? '✅ Activo' : '⏸ Pausado') + '</button>' +
                     '<button data-edit="' + e.id + '" class="edit-btn px-2.5 py-1.5 rounded-btn text-xs font-medium text-primary border border-primary hover:bg-primary-soft">✏️</button>' +
                     '<button data-del="' + e.id + '" data-name="' + U.esc(e.name) + '" class="del-btn px-2.5 py-1.5 rounded-btn text-xs font-medium text-red-500 border border-red-300 hover:bg-red-50">🗑</button>' +
                   '</div>' +
@@ -107,82 +104,93 @@
                 '<div id="edit-form-' + e.id + '" class="hidden mt-4 pt-4 border-t border-gray-100">' +
                   '<form class="space-y-3 inline-edit-form" data-eid="' + e.id + '" novalidate>' +
                     '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">' +
-                      '<div><label class="text-xs font-medium text-gray-500">Nombre</label>' +
-                        '<input type="text" name="nombre" value="' + U.esc(e.name) + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
-                      '<div><label class="text-xs font-medium text-gray-500">Premio</label>' +
-                        '<input type="text" name="premio" value="' + U.esc(e.prize || '') + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
+                      '<div><label class="text-xs font-medium text-gray-500">Nombre</label><input type="text" name="nombre" value="' + U.esc(e.name) + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
+                      '<div><label class="text-xs font-medium text-gray-500">Premio</label><input type="text" name="premio" value="' + U.esc(e.prize || '') + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
                     '</div>' +
-                    '<div><label class="text-xs font-medium text-gray-500">Descripción</label>' +
-                      '<input type="text" name="descripcion" value="' + U.esc(e.description || '') + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
+                    '<div><label class="text-xs font-medium text-gray-500">Descripción</label><input type="text" name="descripcion" value="' + U.esc(e.description || '') + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
                     '<div class="grid grid-cols-2 gap-3">' +
-                      '<div><label class="text-xs font-medium text-gray-500">Inicio</label>' +
-                        '<input type="date" name="fecha_inicio" value="' + isoDate(e.start) + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
-                      '<div><label class="text-xs font-medium text-gray-500">Fin</label>' +
-                        '<input type="date" name="fecha_fin" value="' + isoDate(e.end) + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
+                      '<div><label class="text-xs font-medium text-gray-500">Inicio</label><input type="date" name="fecha_inicio" value="' + isoDate(e.start) + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
+                      '<div><label class="text-xs font-medium text-gray-500">Fin</label><input type="date" name="fecha_fin" value="' + isoDate(e.end) + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
                     '</div>' +
-                    '<div class="flex gap-2">' +
-                      '<button type="submit" class="px-4 py-2 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">Guardar cambios</button>' +
-                      '<button type="button" class="cancel-edit px-4 py-2 rounded-btn text-sm font-medium border border-gray-200 text-gray-600 hover:bg-gray-50">Cancelar</button>' +
-                    '</div>' +
+                    '<div class="flex gap-2"><button type="submit" class="px-4 py-2 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">Guardar</button><button type="button" class="cancel-edit px-4 py-2 rounded-btn text-sm font-medium border border-gray-200 text-gray-600">Cancelar</button></div>' +
                   '</form>' +
                 '</div>' +
-              '</div>';
-            }).join('');
+              '</div>' +
+              '<div id="expanded-' + e.id + '" class="' + (isExpanded ? '' : 'hidden') + ' border-t border-gray-100 bg-gray-50 p-5">' +
+                '<div id="expanded-content-' + e.id + '"><div class="text-center text-gray-400 text-sm py-4">Cargando...</div></div>' +
+              '</div>' +
+            '</div>';
+          }).join('') : '<p class="text-sm text-gray-400 text-center py-6">No hay eventos. Crea el primero arriba.</p>';
 
-            eventListHtml =
-              '<div class="bg-white rounded-card p-6 shadow-soft anim-fade">' +
-                '<h2 class="text-lg font-bold mb-4 text-gray-800">Eventos (' + events.length + ')</h2>' +
-                items +
-              '</div>';
-          }
+          var inner = createForm +
+            '<div class="bg-white rounded-card p-6 shadow-soft anim-fade mb-4">' +
+              '<h2 class="text-lg font-bold text-gray-800">Eventos (' + events.length + ')</h2>' +
+            '</div>' +
+            eventCards;
 
-          app.innerHTML = U.adminShell('event', createForm + eventListHtml, events, activeId);
+          app.innerHTML = U.adminShell('event', inner, events, activeId);
           U.mountAdminShell();
 
-          /* Delete event */
-          Array.prototype.forEach.call(document.querySelectorAll('.del-btn'), function(btn) {
-            btn.addEventListener('click', function() {
-              var eid = btn.getAttribute('data-del');
-              var ename = btn.getAttribute('data-name');
-              U.showConfirm(
-                '¿Eliminar "' + ename + '"? Se eliminarán todos sus badges y canjes.',
-                async function() {
-                  btn.disabled = true;
+          // Foto del evento
+          Array.prototype.forEach.call(document.querySelectorAll('[id^="photo-area-"]'), function(area) {
+            area.addEventListener('click', function() {
+              var eid = area.id.replace('photo-area-', '');
+              var input = document.createElement('input');
+              input.type = 'file'; input.accept = 'image/*';
+              input.onchange = function() {
+                var file = input.files[0];
+                if (!file) return;
+                if (file.size > 3 * 1024 * 1024) { U.toast('La imagen no puede superar 3MB', 'error'); return; }
+                var reader = new FileReader();
+                reader.onload = async function(ev) {
                   try {
-                    await API.deleteEvent(eid);
-                    U.toast('Evento eliminado', 'success');
+                    await API.updateEventPhoto(eid, ev.target.result);
+                    U.toast('Foto actualizada', 'success');
                     init();
-                  } catch(err) {
-                    U.toast(err.message || 'No se pudo eliminar', 'error');
-                    btn.disabled = false;
-                  }
-                }
-              );
+                  } catch(err) { U.toast(err.message || 'Error al guardar foto', 'error'); }
+                };
+                reader.readAsDataURL(file);
+              };
+              input.click();
             });
           });
 
-          /* Toggle active */
+          // Expandir evento
+          Array.prototype.forEach.call(document.querySelectorAll('[data-expand]'), function(el) {
+            el.addEventListener('click', async function() {
+              var eid = el.getAttribute('data-expand');
+              var panel = document.getElementById('expanded-' + eid);
+              if (!panel) return;
+              if (expandedId === eid) {
+                expandedId = null;
+                panel.classList.add('hidden');
+                return;
+              }
+              if (expandedId) {
+                var prev = document.getElementById('expanded-' + expandedId);
+                if (prev) prev.classList.add('hidden');
+              }
+              expandedId = eid;
+              panel.classList.remove('hidden');
+              await loadEventDetail(eid);
+            });
+          });
+
+          // Toggle activo
           Array.prototype.forEach.call(document.querySelectorAll('.toggle-btn'), function(btn) {
             btn.addEventListener('click', async function() {
-              var eid    = btn.getAttribute('data-toggle');
+              var eid = btn.getAttribute('data-toggle');
               var active = btn.getAttribute('data-active') === '1';
               btn.disabled = true;
-              try {
-                await API.updateEvent(eid, { activo: !active });
-                U.toast('Estado actualizado', 'success');
-                init();
-              } catch(err) {
-                U.toast(err.message || 'No se pudo actualizar', 'error');
-                btn.disabled = false;
-              }
+              try { await API.updateEvent(eid, { activo: !active }); U.toast('Estado actualizado', 'success'); init(); }
+              catch(err) { U.toast(err.message || 'Error', 'error'); btn.disabled = false; }
             });
           });
 
-          /* Show/hide edit form */
+          // Editar
           Array.prototype.forEach.call(document.querySelectorAll('.edit-btn'), function(btn) {
             btn.addEventListener('click', function() {
-              var eid = btn.getAttribute('data-edit');
-              var form = document.getElementById('edit-form-' + eid);
+              var form = document.getElementById('edit-form-' + btn.getAttribute('data-edit'));
               if (form) form.classList.toggle('hidden');
             });
           });
@@ -192,48 +200,47 @@
               if (form) form.classList.add('hidden');
             });
           });
-
-          /* Submit inline edit form */
           Array.prototype.forEach.call(document.querySelectorAll('.inline-edit-form'), function(form) {
             form.addEventListener('submit', async function(e) {
               e.preventDefault();
               var eid = form.getAttribute('data-eid');
-              var startVal = form.elements['fecha_inicio'].value;
-              var endVal   = form.elements['fecha_fin'].value;
-              if (startVal && endVal && endVal < startVal) {
-                U.toast('La fecha de fin no puede ser anterior al inicio', 'error');
-                return;
-              }
               var saveBtn = form.querySelector('[type="submit"]');
               saveBtn.disabled = true; saveBtn.textContent = 'Guardando...';
               try {
                 await API.updateEvent(eid, {
-                  nombre:       form.elements['nombre'].value.trim(),
-                  descripcion:  form.elements['descripcion'].value.trim(),
-                  premio:       form.elements['premio'].value.trim(),
-                  fecha_inicio: startVal,
-                  fecha_fin:    endVal,
+                  nombre: form.elements['nombre'].value.trim(),
+                  descripcion: form.elements['descripcion'].value.trim(),
+                  premio: form.elements['premio'].value.trim(),
+                  fecha_inicio: form.elements['fecha_inicio'].value,
+                  fecha_fin: form.elements['fecha_fin'].value,
                 });
-                U.toast('Evento actualizado ✅', 'success');
-                init();
-              } catch(err) {
-                U.toast(err.message || 'No se pudo guardar', 'error');
-                saveBtn.disabled = false; saveBtn.textContent = 'Guardar cambios';
-              }
+                U.toast('Evento actualizado ✅', 'success'); init();
+              } catch(err) { U.toast(err.message || 'Error', 'error'); saveBtn.disabled = false; saveBtn.textContent = 'Guardar'; }
             });
           });
 
-          /* Create event form */
+          // Eliminar
+          Array.prototype.forEach.call(document.querySelectorAll('.del-btn'), function(btn) {
+            btn.addEventListener('click', function() {
+              var eid = btn.getAttribute('data-del');
+              var ename = btn.getAttribute('data-name');
+              U.showConfirm('¿Eliminar "' + ename + '"? Se eliminarán todos sus badges y canjes.', async function() {
+                btn.disabled = true;
+                try { await API.deleteEvent(eid); U.toast('Evento eliminado', 'success'); init(); }
+                catch(err) { U.toast(err.message || 'Error', 'error'); btn.disabled = false; }
+              });
+            });
+          });
+
+          // Crear evento
           var createFormEl = document.getElementById('event-form');
-          createFormEl.addEventListener('submit', async function (e) {
+          createFormEl.addEventListener('submit', async function(e) {
             e.preventDefault();
             var nameField = createFormEl.elements['name'];
             var ok = true;
             ok = U.setFieldError(nameField, nameField.value.trim() ? '' : 'Ingresa un nombre') && ok;
-            ok = U.setFieldError(createFormEl.start, createFormEl.start.value ? '' : 'Selecciona la fecha de inicio') && ok;
-            ok = U.setFieldError(createFormEl.end,   createFormEl.end.value   ? '' : 'Selecciona la fecha de fin') && ok;
-            if (ok && createFormEl.start.value && createFormEl.end.value && createFormEl.end.value < createFormEl.start.value)
-              ok = U.setFieldError(createFormEl.end, 'La fecha fin no puede ser anterior al inicio') && ok;
+            ok = U.setFieldError(createFormEl.start, createFormEl.start.value ? '' : 'Selecciona fecha de inicio') && ok;
+            ok = U.setFieldError(createFormEl.end, createFormEl.end.value ? '' : 'Selecciona fecha de fin') && ok;
             if (!ok) return;
             var btn = document.getElementById('create-btn');
             btn.disabled = true; btn.textContent = 'Creando...';
@@ -246,20 +253,162 @@
                 prize: createFormEl.prize.value.trim()
               });
               U.setActiveId(created.id);
-              U.toastNextPage('Evento creado ✅ — agrega sus badges', 'success');
-              window.location.href = 'admin-badges.html';
-            } catch (err) {
-              U.toast(err.message || 'No se pudo crear el evento', 'error');
-              btn.disabled = false; btn.textContent = 'Crear evento';
-            }
+              U.toast('Evento creado ✅', 'success');
+              expandedId = created.id;
+              init();
+            } catch(err) { U.toast(err.message || 'Error', 'error'); btn.disabled = false; btn.textContent = 'Crear evento'; }
           });
 
-        } catch (err) {
+          // Re-expandir si había uno expandido
+          if (expandedId) {
+            var panel = document.getElementById('expanded-' + expandedId);
+            if (panel) { panel.classList.remove('hidden'); await loadEventDetail(expandedId); }
+          }
+
+        } catch(err) {
           app.innerHTML = U.errorHtml(err && err.message ? err.message : 'Error inesperado');
           var retry = document.getElementById('err-retry');
           if (retry) retry.addEventListener('click', init);
         }
         window.scrollTo(0, 0);
+      }
+
+      async function loadEventDetail(eid) {
+        var contentEl = document.getElementById('expanded-content-' + eid);
+        if (!contentEl) return;
+        try {
+          var data = await API.listAdminBadges(eid);
+          var blist = data.badges;
+
+          var accessQrHtml = '<div class="mb-5 p-4 rounded-card bg-white shadow-soft">' +
+            '<p class="text-sm font-semibold text-gray-700 mb-2">🔑 QR de acceso al evento</p>' +
+            '<p class="text-xs text-gray-400 mb-3">Los usuarios escanean este QR para unirse al evento</p>' +
+            '<div id="access-qr-area-' + eid + '" class="text-center">' +
+              (data.event.access_qr
+                ? '<img src="' + data.event.access_qr + '" class="w-32 h-32 mx-auto mb-2" />' +
+                  '<button id="dl-access-qr-' + eid + '" class="px-4 py-2 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">⬇️ Descargar</button>'
+                : '<button id="gen-access-qr-' + eid + '" class="px-4 py-2 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">Generar QR de acceso</button>') +
+            '</div>' +
+          '</div>';
+
+          var badgeItems = blist.length
+            ? blist.map(function(b) {
+                return '<div class="flex items-center justify-between p-3 rounded-card bg-white mb-2 shadow-soft">' +
+                  '<div class="flex items-center gap-3 flex-1 min-w-0">' +
+                    '<span class="text-2xl">' + (b.emoji || b.icon || '🏅') + '</span>' +
+                    '<div><p class="font-medium text-sm text-gray-800 truncate">' + U.esc(b.name || b.nombre) + '</p>' +
+                    '<p class="text-xs text-gray-400">' + (b.redeemed || 0) + ' canjes</p></div>' +
+                  '</div>' +
+                  '<div class="flex gap-1.5">' +
+                    '<button data-qr-b="' + b.id + '" data-qr-url="' + U.esc(b.redeemUrl || b.redeem_url || '') + '" data-qr-img="' + U.esc(b.qrImage || b.qr_image || '') + '" data-qr-name="' + U.esc(b.name || b.nombre) + '" class="badge-qr-btn px-3 py-1.5 rounded-btn text-xs font-medium text-primary border border-primary hover:bg-primary-soft">QR</button>' +
+                    '<button data-del-b="' + b.id + '" data-del-eid="' + eid + '" data-del-bname="' + U.esc(b.name || b.nombre) + '" class="badge-del-btn px-2.5 py-1.5 rounded-btn text-xs text-red-500 border border-red-300 hover:bg-red-50">🗑</button>' +
+                  '</div>' +
+                '</div>';
+              }).join('')
+            : '<p class="text-sm text-gray-400 text-center py-4">Sin badges. Agrega el primero abajo.</p>';
+
+          contentEl.innerHTML =
+            accessQrHtml +
+            '<div class="mb-4">' +
+              '<p class="text-sm font-semibold text-gray-700 mb-3">🏅 Badges (' + blist.length + ')</p>' +
+              badgeItems +
+              '<div id="badge-qr-preview-' + eid + '"></div>' +
+            '</div>' +
+            '<div class="p-4 rounded-card bg-white shadow-soft">' +
+              '<p class="text-sm font-semibold text-gray-700 mb-3">➕ Agregar badge</p>' +
+              '<form id="add-badge-form-' + eid + '" novalidate>' +
+                '<div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">' +
+                  '<input type="text" name="emoji" placeholder="Emoji (ej: 🏅)" maxlength="4" class="px-3 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
+                  '<input type="text" name="name" placeholder="Nombre del badge *" class="px-3 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
+                  '<input type="text" name="desc" placeholder="Descripción" class="px-3 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
+                '</div>' +
+                '<button type="submit" class="px-5 py-2.5 rounded-btn text-white font-medium text-sm" style="background:#6C63FF;">Agregar badge</button>' +
+              '</form>' +
+            '</div>';
+
+          // Generar QR de acceso
+          var genBtn = document.getElementById('gen-access-qr-' + eid);
+          if (genBtn) {
+            genBtn.addEventListener('click', async function() {
+              genBtn.disabled = true; genBtn.textContent = 'Generando...';
+              try {
+                var r = await API.generateEventAccessQr(eid);
+                var area = document.getElementById('access-qr-area-' + eid);
+                area.innerHTML = '<img src="' + r.access_qr + '" class="w-32 h-32 mx-auto mb-2" />' +
+                  '<button id="dl-access-qr-' + eid + '" class="px-4 py-2 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">⬇️ Descargar</button>';
+                document.getElementById('dl-access-qr-' + eid).addEventListener('click', function() {
+                  var a = document.createElement('a');
+                  a.href = r.access_qr; a.download = 'acceso-evento.png'; a.click();
+                });
+              } catch(err) { U.toast(err.message || 'Error', 'error'); genBtn.disabled = false; genBtn.textContent = 'Generar QR de acceso'; }
+            });
+          }
+
+          // Descargar QR de acceso existente
+          var dlBtn = document.getElementById('dl-access-qr-' + eid);
+          if (dlBtn) {
+            dlBtn.addEventListener('click', function() {
+              var img = dlBtn.previousElementSibling;
+              if (img) { var a = document.createElement('a'); a.href = img.src; a.download = 'acceso-evento.png'; a.click(); }
+            });
+          }
+
+          // Ver QR de badge
+          Array.prototype.forEach.call(contentEl.querySelectorAll('.badge-qr-btn'), function(btn) {
+            btn.addEventListener('click', function() {
+              var preview = document.getElementById('badge-qr-preview-' + eid);
+              var qrImg = btn.getAttribute('data-qr-img');
+              var qrUrl = btn.getAttribute('data-qr-url');
+              var name  = btn.getAttribute('data-qr-name');
+              if (qrImg) {
+                preview.innerHTML = '<div class="mt-3 p-4 rounded-card text-center" style="background:#EEEDFF;">' +
+                  '<p class="text-xs font-semibold text-primary mb-2">QR — ' + U.esc(name) + '</p>' +
+                  '<img src="' + qrImg + '" class="w-32 h-32 mx-auto mb-2" />' +
+                  '<button id="dl-badge-qr" class="px-4 py-2 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">⬇️ Descargar</button>' +
+                '</div>';
+                document.getElementById('dl-badge-qr').addEventListener('click', function() {
+                  var a = document.createElement('a'); a.href = qrImg; a.download = 'badge-' + name + '.png'; a.click();
+                });
+              }
+            });
+          });
+
+          // Eliminar badge
+          Array.prototype.forEach.call(contentEl.querySelectorAll('.badge-del-btn'), function(btn) {
+            btn.addEventListener('click', function() {
+              U.showConfirm('¿Eliminar el badge "' + btn.getAttribute('data-del-bname') + '"?', async function() {
+                btn.disabled = true;
+                try {
+                  await API.deleteBadge(btn.getAttribute('data-del-eid'), btn.getAttribute('data-del-b'));
+                  U.toast('Badge eliminado', 'success');
+                  await loadEventDetail(eid);
+                } catch(err) { U.toast(err.message || 'Error', 'error'); btn.disabled = false; }
+              });
+            });
+          });
+
+          // Agregar badge
+          var addForm = document.getElementById('add-badge-form-' + eid);
+          addForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            var nameField = addForm.elements['name'];
+            if (!nameField.value.trim()) { U.toast('Ingresa un nombre para el badge', 'error'); return; }
+            var submitBtn = addForm.querySelector('[type="submit"]');
+            submitBtn.disabled = true; submitBtn.textContent = 'Agregando...';
+            try {
+              var b = await API.addBadge(eid, {
+                name: nameField.value.trim(),
+                desc: addForm.elements['desc'].value.trim(),
+                emoji: addForm.elements['emoji'].value.trim() || '🏅'
+              });
+              U.toast('Badge "' + b.name + '" agregado ✅', 'success');
+              await loadEventDetail(eid);
+            } catch(err) { U.toast(err.message || 'Error', 'error'); submitBtn.disabled = false; submitBtn.textContent = 'Agregar badge'; }
+          });
+
+        } catch(err) {
+          if (contentEl) contentEl.innerHTML = '<p class="text-sm text-red-400 text-center py-4">Error al cargar: ' + U.esc(err.message) + '</p>';
+        }
       }
 
       init();

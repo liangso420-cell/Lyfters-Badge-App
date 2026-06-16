@@ -93,7 +93,7 @@
     return (mockState.progress[userId] && mockState.progress[userId][eventId]) || [];
   }
   function publicUser(u) { return { id: u.id, nombre: u.name, email: u.email, rol: u.role, created_at: null }; }
-  function eventDto(e) { return { id: e.id, name: e.name, description: e.description, start: e.start, end: e.end, prize: e.prize, active: e.active !== false }; }
+  function eventDto(e) { return { id: e.id, name: e.name, description: e.description, start: e.start, end: e.end, prize: e.prize, active: e.active !== false, photo: e.photo || null, access_qr: e.access_qr || null }; }
 
   var Mock = {
     async _login(email, password) {
@@ -179,13 +179,27 @@
     async listAdminBadges(eventId) {
       var e = mockEvent(eventId); if (!e) throw new Error('Evento no encontrado');
       return {
-        event: { id: e.id, name: e.name, totalParticipants: e.totalParticipants },
+        event: { id: e.id, name: e.name, totalParticipants: e.totalParticipants, access_qr: e.access_qr || null, photo: e.photo || null },
         badges: e.badges.map(function (b) {
           return { id: b.id, emoji: b.emoji, name: b.name, desc: b.desc, token: b.token,
             redeemUrl: APP_BASE + 'redeem.html?event=' + e.id + '&token=' + b.token,
             redeemed: b.redemptions || 0, qrImage: null };
         })
       };
+    },
+    async generateEventAccessQr(eventId) {
+      var e = mockEvent(eventId); if (!e) throw new Error('Evento no encontrado');
+      var url = APP_BASE + 'join.html?event=' + eventId;
+      e.access_qr = 'mock-qr'; e.join_url = url; persist();
+      return { access_qr: 'mock-qr', join_url: url };
+    },
+    async updateEventPhoto(eventId, base64) {
+      var e = mockEvent(eventId); if (!e) throw new Error('Evento no encontrado');
+      e.photo = base64; persist(); return { ok: true };
+    },
+    async joinEvent(eventId) {
+      var e = mockEvent(eventId); if (!e) throw new Error('Evento no encontrado');
+      return { status: 'joined', event: eventDto(e) };
     },
     async deleteBadge(eventId, badgeId) {
       var e = mockEvent(eventId); if (!e) throw new Error('Evento no encontrado');
@@ -379,13 +393,22 @@
     async listAdminBadges(eventId) {
       var d = await apiRequest('GET', '/admin/events/' + eventId + '/badges');
       return {
-        event: { id: d.evento.id, name: d.evento.nombre, totalParticipants: undefined },
+        event: { id: d.evento.id, name: d.evento.nombre, totalParticipants: undefined, access_qr: d.evento.access_qr || null, photo: d.evento.photo || null },
         badges: (d.badges || []).map(function (b) {
           return { id: b.id, emoji: b.icon || '🏅', name: b.nombre, desc: b.descripcion,
             token: b.token, redeemUrl: b.redeem_url || (APP_BASE + 'redeem.html?event=' + d.evento.id + '&token=' + b.token),
             redeemed: b.canjeados || 0, qrImage: b.qr_image || null };
         })
       };
+    },
+    async generateEventAccessQr(eventId) {
+      return await apiRequest('POST', '/admin/events/' + eventId + '/access-qr');
+    },
+    async updateEventPhoto(eventId, base64) {
+      return await apiRequest('POST', '/admin/events/' + eventId + '/photo', { photo: base64 });
+    },
+    async joinEvent(eventId) {
+      return await apiRequest('POST', '/events/' + eventId + '/join');
     },
     async deleteBadge(eventId, badgeId) {
       return await apiRequest('DELETE', '/admin/events/' + eventId + '/badges/' + badgeId);
@@ -466,7 +489,10 @@
     changePassword:   impl.changePassword.bind(impl),
     getProfile:       impl.getProfile.bind(impl),
     updateAvatar:     impl.updateAvatar.bind(impl),
-    getLeaderboard:   impl.getLeaderboard.bind(impl),
-    resetDemo:        impl.resetDemo.bind(impl)
+    getLeaderboard:         impl.getLeaderboard.bind(impl),
+    generateEventAccessQr:  impl.generateEventAccessQr.bind(impl),
+    updateEventPhoto:       impl.updateEventPhoto.bind(impl),
+    joinEvent:              impl.joinEvent.bind(impl),
+    resetDemo:              impl.resetDemo.bind(impl)
   };
 })();

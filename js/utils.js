@@ -267,9 +267,8 @@
       return '<option value="' + e.id + '"' + (e.id === activeId ? ' selected' : '') + '>' + esc(e.name) + '</option>';
     }).join('');
     var tabs = [
-      { id: 'event',         label: 'Eventos',       href: 'admin-event.html' },
-      { id: 'badges',        label: 'Badges',         href: 'admin-badges.html' },
-      { id: 'participation', label: 'Dashboard',      href: 'admin-participation.html' }
+      { id: 'event',         label: 'Eventos',    href: 'admin-event.html' },
+      { id: 'participation', label: 'Dashboard',  href: 'admin-participation.html' }
     ].map(function (t) {
       var on = t.id === activeTab;
       return '<a href="' + t.href + '" class="admin-tab px-4 py-2 text-sm font-medium border-b-2 ' +
