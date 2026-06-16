@@ -126,6 +126,113 @@
     return '<button ' + (attrs || '') + ' class="w-full py-3 rounded-btn text-white font-semibold" style="background:#6C63FF;">' + esc(label) + '</button>';
   }
 
+  /* ----- Drawer lateral ----- */
+  function showDrawer(avatarUrl, userName, onAvatarSave) {
+    var root = document.getElementById('modal-root');
+    var avatarHtml = avatarUrl
+      ? '<img src="' + avatarUrl + '" class="w-16 h-16 rounded-full object-cover border-2 border-primary" />'
+      : '<div class="w-16 h-16 rounded-full bg-primary-soft flex items-center justify-center text-3xl">👤</div>';
+
+    root.innerHTML =
+      '<div id="drawer-overlay" class="fixed inset-0 z-50 flex justify-end" style="background:rgba(17,24,39,0.5);">' +
+        '<div id="drawer-panel" class="bg-white h-full w-72 shadow-soft flex flex-col" style="transform:translateX(100%); transition:transform 0.25s ease;">' +
+          '<div class="p-5 border-b border-gray-100 flex items-center gap-3">' +
+            avatarHtml +
+            '<div>' +
+              '<p class="font-semibold text-gray-800">' + esc(userName || 'Usuario') + '</p>' +
+              '<p class="text-xs text-gray-400">Mi cuenta</p>' +
+            '</div>' +
+          '</div>' +
+          '<nav class="flex-1 overflow-y-auto py-4">' +
+            '<p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-5 mb-2">Cuenta</p>' +
+            '<button id="drawer-avatar-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">📷 <span>Cambiar foto de perfil</span></button>' +
+            '<button id="drawer-pw-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">🔑 <span>Cambiar contraseña</span></button>' +
+          '</nav>' +
+          '<div class="p-5 border-t border-gray-100">' +
+            '<button id="drawer-close" class="w-full py-2.5 rounded-btn border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50">Cerrar</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+
+    requestAnimationFrame(function() {
+      document.getElementById('drawer-panel').style.transform = 'translateX(0)';
+    });
+
+    function closeDrawer() {
+      var panel = document.getElementById('drawer-panel');
+      if (panel) panel.style.transform = 'translateX(100%)';
+      setTimeout(closeModal, 250);
+    }
+
+    document.getElementById('drawer-close').addEventListener('click', closeDrawer);
+    document.getElementById('drawer-overlay').addEventListener('click', function(e) {
+      if (e.target === this) closeDrawer();
+    });
+
+    document.getElementById('drawer-avatar-btn').addEventListener('click', function() {
+      var input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = function() {
+        var file = input.files[0];
+        if (!file) return;
+        if (file.size > 2 * 1024 * 1024) { toast('La imagen no puede superar 2MB', 'error'); return; }
+        var reader = new FileReader();
+        reader.onload = async function(e) {
+          try {
+            await window.LyfterAPI.updateAvatar(e.target.result);
+            toast('Foto actualizada', 'success');
+            if (onAvatarSave) onAvatarSave(e.target.result);
+            var img = document.querySelector('#drawer-panel img, #drawer-panel div.w-16');
+            if (img) {
+              var newImg = document.createElement('img');
+              newImg.src = e.target.result;
+              newImg.className = 'w-16 h-16 rounded-full object-cover border-2 border-primary';
+              img.replaceWith(newImg);
+            }
+          } catch(err) { toast(err.message || 'No se pudo guardar la foto', 'error'); }
+        };
+        reader.readAsDataURL(file);
+      };
+      input.click();
+    });
+
+    document.getElementById('drawer-pw-btn').addEventListener('click', function() {
+      var panel = document.getElementById('drawer-panel');
+      panel.querySelector('nav').innerHTML =
+        '<div class="px-5 py-4">' +
+          '<button id="drawer-pw-back" class="text-xs text-primary mb-4 flex items-center gap-1">← Volver</button>' +
+          '<p class="text-sm font-semibold text-gray-700 mb-3">Cambiar contraseña</p>' +
+          '<div class="space-y-3">' +
+            '<input id="drawer-pw-current" type="password" placeholder="Contraseña actual" class="w-full px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
+            '<input id="drawer-pw-new" type="password" placeholder="Nueva contraseña (mín. 6)" class="w-full px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
+            '<button id="drawer-pw-save" class="w-full py-2.5 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">Guardar</button>' +
+          '</div>' +
+        '</div>';
+      document.getElementById('drawer-pw-back').addEventListener('click', function() {
+        closeModal();
+        window.LyfterAPI.getProfile().then(function(p) {
+          showDrawer(p.avatar, p.nombre, onAvatarSave);
+        }).catch(function() { showDrawer(null, null, onAvatarSave); });
+      });
+      document.getElementById('drawer-pw-save').addEventListener('click', async function() {
+        var btn = this;
+        var current = document.getElementById('drawer-pw-current').value;
+        var newPw = document.getElementById('drawer-pw-new').value;
+        if (!current || !newPw) { toast('Completa ambos campos', 'error'); return; }
+        btn.disabled = true; btn.textContent = 'Guardando...';
+        try {
+          await window.LyfterAPI.changePassword(current, newPw);
+          toast('Contraseña actualizada', 'success');
+          closeDrawer();
+        } catch(err) {
+          toast(err.message || 'No se pudo cambiar', 'error');
+          btn.disabled = false; btn.textContent = 'Guardar';
+        }
+      });
+    });
+  }
+
   /* ----- Shell admin ----- */
   function adminShell(activeTab, innerHtml, events, activeId) {
     var eventOptions = events.map(function (e) {
@@ -147,6 +254,7 @@
           '<div class="flex items-center gap-2"><span class="text-xl">🏆</span><span class="font-bold">Panel Admin</span></div>' +
           '<div class="flex items-center gap-3">' +
             (events.length ? '<select id="admin-event-select" class="px-3 py-2 bg-base rounded-btn border border-gray-200 text-sm focus:border-primary outline-none">' + eventOptions + '</select>' : '') +
+            '<button id="admin-profile-menu" class="w-9 h-9 rounded-full bg-primary-soft flex items-center justify-center text-sm font-medium text-primary" style="background-size:cover;background-position:center;">☰</button>' +
             '<button id="admin-logout" class="text-sm text-gray-400 hover:text-primary flex items-center gap-1">⎋ Salir</button>' +
           '</div>' +
         '</div>' +
@@ -160,6 +268,22 @@
     if (sel) sel.addEventListener('change', function () { setActiveId(sel.value); location.reload(); });
     var out = document.getElementById('admin-logout');
     if (out) out.addEventListener('click', logout);
+    var profileBtn = document.getElementById('admin-profile-menu');
+    if (profileBtn) {
+      profileBtn.addEventListener('click', async function() {
+        try {
+          var p = await window.LyfterAPI.getProfile();
+          showDrawer(p.avatar, p.nombre, function(newAvatar) {
+            if (newAvatar) {
+              profileBtn.style.backgroundImage = 'url(' + newAvatar + ')';
+              profileBtn.style.backgroundSize = 'cover';
+            }
+          });
+        } catch(e) {
+          showDrawer(null, null, null);
+        }
+      });
+    }
   }
 
   /* ----- Sesión ----- */
@@ -183,6 +307,7 @@
     downloadQr: downloadQr,
     inputField: inputField,
     primaryButton: primaryButton,
+    showDrawer: showDrawer,
     adminShell: adminShell,
     mountAdminShell: mountAdminShell,
     logout: logout,
