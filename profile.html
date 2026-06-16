@@ -128,6 +128,7 @@
           }
 
           var activeId = U.ensureActive(events);
+          var activeEvent = events.find(function(e) { return e.id === activeId; }) || events[0];
           var detail = await API.getEventDetail(activeId);
           var total = detail.total, doneCount = detail.obtained;
           var pct = total ? Math.round((doneCount / total) * 100) : 0;
@@ -211,8 +212,18 @@
                 '<p class="text-sm text-gray-500 mt-1">Completaste todos los badges de ' + U.esc(detail.name) + '</p></div>'
             : '';
 
+          var eventPhotoHtml = activeEvent && activeEvent.photo
+            ? '<div class="relative w-full mb-4 rounded-card overflow-hidden shadow-soft" style="height:180px;">' +
+                '<img src="' + activeEvent.photo + '" style="width:100%;height:100%;object-fit:cover;" />' +
+                '<div class="absolute inset-0 flex items-end p-4" style="background:linear-gradient(transparent,rgba(0,0,0,0.5));">' +
+                  '<p class="text-white font-bold text-lg">' + U.esc(activeEvent.name) + '</p>' +
+                '</div>' +
+              '</div>'
+            : '';
+
           app.innerHTML =
             '<section class="device-frame px-4 pt-10 pb-28">' +
+              eventPhotoHtml +
               completedBanner +
               '<div class="bg-white rounded-card p-5 shadow-soft anim-fade mb-4">' +
                 '<div class="flex items-center justify-between mb-4">' +
@@ -281,12 +292,21 @@
           document.getElementById('profile-menu-btn').addEventListener('click', async function() {
             try {
               var p = await API.getProfile();
+              var menuBtn = document.getElementById('profile-menu-btn');
               U.showDrawer(p.avatar, p.nombre, function(newAvatar) {
-                if (newAvatar) {
-                  var btn = document.getElementById('profile-menu-btn');
-                  if (btn) { btn.style.backgroundImage = 'url(' + newAvatar + ')'; btn.style.backgroundSize = 'cover'; }
+                if (newAvatar && menuBtn) {
+                  menuBtn.textContent = '';
+                  menuBtn.style.backgroundImage = 'url(' + newAvatar + ')';
+                  menuBtn.style.backgroundSize = 'cover';
+                  menuBtn.style.backgroundPosition = 'center';
                 }
               });
+              if (p.avatar && menuBtn) {
+                menuBtn.textContent = '';
+                menuBtn.style.backgroundImage = 'url(' + p.avatar + ')';
+                menuBtn.style.backgroundSize = 'cover';
+                menuBtn.style.backgroundPosition = 'center';
+              }
             } catch(e) {
               U.showDrawer(null, null, null);
             }
