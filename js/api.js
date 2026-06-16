@@ -109,6 +109,18 @@
       mockState.users.push(u); persist();
       return { token: 'mock-' + u.id, user: publicUser(u) };
     },
+    async _loginWithGoogle(googleUser) {
+      // En modo mock, simular login con Google buscando por email.
+      // Si no existe, crear usuario nuevo automáticamente (igual que el backend).
+      var email = String(googleUser.email).toLowerCase();
+      var u = mockState.users.find(function (x) { return x.email.toLowerCase() === email; });
+      if (!u) {
+        u = { id: uid('u'), name: googleUser.name || email.split('@')[0], email: email,
+              password: null, role: 'participant', provider: 'google', avatar: googleUser.photo || '' };
+        mockState.users.push(u); persist();
+      }
+      return { token: 'mock-google-' + u.id, user: publicUser(u) };
+    },
     async listEvents() { return mockState.events.filter(function(e){ return e.active !== false; }).map(eventDto); },
     async listAdminEvents() { return mockState.events.map(eventDto); },
     async getEventDetail(eventId) {
@@ -334,6 +346,11 @@
       var d = await apiRequest('POST', '/auth/register', { nombre: data.name, email: data.email, password: data.password });
       return { token: d.token, user: mapUser(d.user) };
     },
+    async _loginWithGoogle(googleUser) {
+      // googleUser = { idToken, email, name, photo }
+      var d = await apiRequest('POST', '/auth/google', { idToken: googleUser.idToken });
+      return { token: d.token, user: mapUser(d.user) };
+    },
     async listEvents() { return (await apiRequest('GET', '/events/')).map(mapEvent); },
     async listAdminEvents() { return (await apiRequest('GET', '/admin/events')).map(mapEvent); },
     async getEventDetail(eventId) {
@@ -440,6 +457,11 @@
     saveSession(r);
     return r.user;
   }
+  async function loginWithGoogle(googleUser) {
+    var r = await impl._loginWithGoogle(googleUser);
+    saveSession(r);
+    return r.user;
+  }
   function logout() { clearSession(); }
 
   window.LyfterAPI = {
@@ -448,6 +470,7 @@
     currentUser: function () { var s = getSession(); return s ? s.user : null; },
     login: login,
     register: register,
+    loginWithGoogle: loginWithGoogle,
     logout: logout,
     listEvents:       impl.listEvents.bind(impl),
     listAdminEvents:  impl.listAdminEvents.bind(impl),
