@@ -68,37 +68,6 @@
         '</div>';
       }
 
-      function rolBadge(rol) {
-        if (rol === 'admin') return '<span class="px-2 py-0.5 rounded-full text-xs font-medium text-white" style="background:#6C63FF;">Admin</span>';
-        return '<span class="px-2 py-0.5 rounded-full text-xs font-medium text-gray-600 bg-gray-100">Participante</span>';
-      }
-
-      function fmtDate(iso) {
-        if (!iso) return '—';
-        try { return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }); }
-        catch(e) { return iso; }
-      }
-
-      function buildUserRow(u, currentUserId) {
-        var isSelf = u.id === currentUserId;
-        var nextRol = u.rol === 'admin' ? 'participant' : 'admin';
-        var btnLabel = u.rol === 'admin' ? '→ Participante' : '→ Admin';
-        var disabledAttr = isSelf ? ' disabled' : '';
-        var disabledClass = isSelf ? ' opacity-40 cursor-not-allowed' : ' hover:bg-gray-50';
-        return '<tr class="border-b border-gray-100 hover:bg-gray-50/50">' +
-          '<td class="py-3 pr-4 font-medium text-gray-800">' + U.esc(u.nombre) + (isSelf ? ' <span class="text-xs text-gray-400">(tú)</span>' : '') + '</td>' +
-          '<td class="py-3 pr-4 text-sm text-gray-500 hidden sm:table-cell">' + U.esc(u.email) + '</td>' +
-          '<td class="py-3 pr-4">' + rolBadge(u.rol) + '</td>' +
-          '<td class="py-3 pr-4 text-xs text-gray-400 hidden md:table-cell">' + fmtDate(u.created_at) + '</td>' +
-          '<td class="py-3">' +
-            '<button data-uid="' + u.id + '" data-rol="' + nextRol + '" data-nombre="' + U.esc(u.nombre) + '" data-btnlabel="' + U.esc(btnLabel) + '"' + disabledAttr +
-              ' class="role-btn px-3 py-1.5 rounded-btn text-xs font-medium border border-gray-200 text-gray-600' + disabledClass + '">' +
-              btnLabel +
-            '</button>' +
-          '</td>' +
-        '</tr>';
-      }
-
       function buildLbRow(entry, rank) {
         var medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
         var avatarHtml = entry.avatar
@@ -113,10 +82,9 @@
 
       async function init() {
         try {
-          var [events, dash, usersList, leaderboard] = await Promise.all([
+          var [events, dash, leaderboard] = await Promise.all([
             API.listAdminEvents(),
             API.getDashboard(),
-            API.getUsers(),
             API.getLeaderboard()
           ]);
 
@@ -137,31 +105,10 @@
               '</div>'
             : '';
 
-          var allUsers = usersList || [];
-
-          var usersHtml;
-          if (!allUsers.length) {
-            usersHtml = '<p class="text-sm text-gray-400 text-center py-6">Sin usuarios registrados.</p>';
-          } else {
-            var rows = allUsers.map(function(u) { return buildUserRow(u, user.id); }).join('');
-            usersHtml =
-              '<div class="mb-3">' +
-                '<input id="user-search" type="text" placeholder="Buscar por nombre o email..." ' +
-                  'class="w-full px-4 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
-              '</div>' +
-              '<div class="overflow-x-auto">' +
-                '<table class="w-full text-sm">' +
-                  '<thead><tr class="text-left text-xs text-gray-400 border-b border-gray-100">' +
-                    '<th class="py-3 pr-4 font-medium">Nombre</th>' +
-                    '<th class="py-3 pr-4 font-medium hidden sm:table-cell">Email</th>' +
-                    '<th class="py-3 pr-4 font-medium">Rol</th>' +
-                    '<th class="py-3 pr-4 font-medium hidden md:table-cell">Registro</th>' +
-                    '<th class="py-3 font-medium">Cambiar rol</th>' +
-                  '</tr></thead>' +
-                  '<tbody id="users-tbody">' + rows + '</tbody>' +
-                '</table>' +
-              '</div>';
-          }
+          var usersHtml = '<div class="text-center py-8 text-gray-400">' +
+            '<p class="text-3xl mb-3">☰</p>' +
+            '<p class="text-sm">Gestiona los usuarios desde el menú de perfil (botón ☰ arriba a la derecha)</p>' +
+          '</div>';
 
           var lbHtml = leaderboard.length
             ? '<table class="w-full text-sm"><thead><tr class="text-left text-xs text-gray-400 border-b border-gray-100">' +
@@ -206,76 +153,6 @@
             document.getElementById('admin-tab-users').style.color = '';
             document.getElementById('admin-tab-users').className = 'tab-btn flex-1 py-2 rounded-btn text-sm font-medium text-gray-500 bg-gray-100';
           });
-
-          Array.prototype.forEach.call(document.querySelectorAll('.role-btn'), function(btn) {
-            btn.addEventListener('click', function() {
-              var uid = btn.getAttribute('data-uid');
-              var rol = btn.getAttribute('data-rol');
-              var nombre = btn.getAttribute('data-nombre');
-              var rolLabel = rol === 'admin' ? 'Admin' : 'Participante';
-              U.showConfirm(
-                '¿Cambiar el rol de ' + nombre + ' a ' + rolLabel + '?',
-                async function() {
-                  btn.disabled = true;
-                  btn.textContent = '...';
-                  try {
-                    await API.changeUserRole(uid, rol);
-                    U.toast('Rol de ' + nombre + ' actualizado a ' + rolLabel, 'success');
-                    init();
-                  } catch(err) {
-                    U.toast(err.message || 'No se pudo cambiar el rol', 'error');
-                    btn.disabled = false;
-                    btn.textContent = btn.getAttribute('data-btnlabel');
-                  }
-                },
-                null,
-                { confirmLabel: 'Cambiar', danger: false }
-              );
-            });
-          });
-
-          var searchInput = document.getElementById('user-search');
-          if (searchInput) {
-            searchInput.addEventListener('input', function() {
-              var q = searchInput.value.trim().toLowerCase();
-              var filtered = q
-                ? allUsers.filter(function(u) {
-                    return u.nombre.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
-                  })
-                : allUsers;
-              var tbody = document.getElementById('users-tbody');
-              if (tbody) {
-                tbody.innerHTML = filtered.length
-                  ? filtered.map(function(u) { return buildUserRow(u, user.id); }).join('')
-                  : '<tr><td colspan="5" class="py-6 text-center text-sm text-gray-400">Sin resultados para "' + U.esc(q) + '"</td></tr>';
-                Array.prototype.forEach.call(tbody.querySelectorAll('.role-btn'), function(btn) {
-                  btn.addEventListener('click', function() {
-                    var uid = btn.getAttribute('data-uid');
-                    var rol = btn.getAttribute('data-rol');
-                    var nombre = btn.getAttribute('data-nombre');
-                    var rolLabel = rol === 'admin' ? 'Admin' : 'Participante';
-                    U.showConfirm(
-                      '¿Cambiar el rol de ' + nombre + ' a ' + rolLabel + '?',
-                      async function() {
-                        btn.disabled = true; btn.textContent = '...';
-                        try {
-                          await API.changeUserRole(uid, rol);
-                          U.toast('Rol de ' + nombre + ' actualizado a ' + rolLabel, 'success');
-                          init();
-                        } catch(err) {
-                          U.toast(err.message || 'No se pudo cambiar el rol', 'error');
-                          btn.disabled = false;
-                          btn.textContent = btn.getAttribute('data-btnlabel');
-                        }
-                      },
-                      null,
-                      { confirmLabel: 'Cambiar', danger: false }
-                    );
-                  });
-                });
-              }
-            });
-          }
 
         } catch (err) {
           app.innerHTML = U.errorHtml(err && err.message ? err.message : 'Error inesperado');
