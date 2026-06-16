@@ -295,8 +295,17 @@
   function roleFromBackend(rol) { return rol === 'admin' ? 'admin' : 'participant'; }
   function mapUser(u) { return { id: u.id, name: u.nombre, email: u.email, role: roleFromBackend(u.rol) }; }
   function mapEvent(e) {
-    return { id: e.id, name: e.nombre, description: e.descripcion,
-      start: e.fecha_inicio, end: e.fecha_fin, prize: e.premio, active: e.activo !== false };
+    return {
+      id: e.id,
+      name: e.nombre,
+      description: e.descripcion,
+      start: e.fecha_inicio,
+      end: e.fecha_fin,
+      prize: e.premio,
+      active: e.activo !== false,
+      photo: e.photo || null,
+      access_qr: e.access_qr || null
+    };
   }
 
   async function apiRequest(method, path, body) {
