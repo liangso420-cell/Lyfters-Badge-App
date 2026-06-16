@@ -103,7 +103,10 @@
               '<div class="card-soft p-6 anim-fade">' +
                 '<div class="flex items-center justify-between mb-5">' +
                   '<h2 class="text-xl font-bold">Hola, ' + U.esc(user.name.split(' ')[0]) + ' 👋</h2>' +
-                  '<button id="profile-logout" class="text-sm text-gray-400 hover:text-primary flex items-center gap-1">⎋ Salir</button>' +
+                  '<div class="flex items-center gap-2">' +
+                    '<button id="profile-menu-btn" class="w-9 h-9 rounded-full bg-primary-soft flex items-center justify-center text-sm font-medium text-primary" style="background-size:cover;background-position:center;">☰</button>' +
+                    '<button id="profile-logout" class="text-sm text-gray-400 hover:text-primary flex items-center gap-1">⎋ Salir</button>' +
+                  '</div>' +
                 '</div>' +
                 '<label class="text-sm font-medium text-gray-600">Evento activo</label>' +
                 '<select id="profile-event-select" class="w-full mt-1 mb-5 px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none">' + eventOptions + '</select>' +
@@ -124,6 +127,22 @@
             '</div>';
 
           document.getElementById('profile-logout').addEventListener('click', U.logout);
+          document.getElementById('profile-menu-btn').addEventListener('click', async function() {
+            try {
+              var p = await API.getProfile();
+              U.showDrawer(p.avatar, p.nombre, function(newAvatar) {
+                if (newAvatar) {
+                  var btn = document.getElementById('profile-menu-btn');
+                  if (btn) {
+                    btn.style.backgroundImage = 'url(' + newAvatar + ')';
+                    btn.style.backgroundSize = 'cover';
+                  }
+                }
+              });
+            } catch(e) {
+              U.showDrawer(null, null, null);
+            }
+          });
           document.getElementById('fab-scan').addEventListener('click', function () { window.location.href = 'scan.html'; });
           var sel = document.getElementById('profile-event-select');
           sel.addEventListener('change', function () { U.setActiveId(sel.value); location.reload(); });
