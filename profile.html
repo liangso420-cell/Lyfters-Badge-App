@@ -275,14 +275,14 @@
           document.getElementById('profile-menu-btn').addEventListener('click', async function() {
             try {
               var p = await API.getProfile();
-              U.showProfileMenu(p.avatar, function(newAvatar) {
+              U.showDrawer(p.avatar, p.nombre, function(newAvatar) {
                 if (newAvatar) {
                   var btn = document.getElementById('profile-menu-btn');
-                  if (btn) btn.style.cssText += ';background-image:url(' + newAvatar + ');background-size:cover;';
+                  if (btn) { btn.style.backgroundImage = 'url(' + newAvatar + ')'; btn.style.backgroundSize = 'cover'; }
                 }
               });
             } catch(e) {
-              U.showProfileMenu(null, null);
+              U.showDrawer(null, null, null);
             }
           });
           document.getElementById('fab-scan').addEventListener('click', function() { window.location.href = 'scan.html'; });
