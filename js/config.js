@@ -20,8 +20,19 @@
      4) Añade tu origen a CORS_ORIGINS en backend/.env (ej. http://localhost:5500).
      5) Pon  mode: 'backend'  aquí abajo.
    ============================================================ */
+
 window.LYFTER_CONFIG = {
   mode: 'backend',
-  // Reemplazá esta URL con la de tu servicio en Render después del deploy
-  apiBaseUrl: 'https://lyfters-badge-app.onrender.com',
+  apiBaseUrl: 'http://localhost:5000',
+};
+
+// Configuración Firebase para Google Auth
+// Reemplazar con los valores reales del proyecto Firebase
+window.FIREBASE_CONFIG = {
+apiKey: "AIzaSyBedpuxJ7I4kVoi-0tni1rFjpFHgZUDd1A",
+authDomain: "lyfter-badge-app.firebaseapp.com",
+projectId: "lyfter-badge-app",
+storageBucket: "lyfter-badge-app.firebasestorage.app",
+messagingSenderId: "538632921235",
+appId: "1:538632921235:web:78187a34fc7800e25cad66"
 };

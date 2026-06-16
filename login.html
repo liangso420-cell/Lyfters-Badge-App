@@ -22,6 +22,9 @@
     };
   </script>
   <link rel="stylesheet" href="css/styles.css" />
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 </head>
 <body>
   <main id="app"></main>
@@ -75,6 +78,12 @@
               U.inputField({ label: 'Email', type: 'email', name: 'email', placeholder: 'tu@correo.com' }) +
               U.inputField({ label: 'Contraseña', type: 'password', name: 'password', placeholder: '••••••••' }) +
               U.primaryButton('Entrar', 'type="submit"') +
+              '<div class="divider text-gray-400 text-xs my-2">o continúa con</div>' +
+              '<button type="button" id="btn-google" ' +
+                'class="btn w-full border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-medium gap-2 normal-case">' +
+                '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5" alt="Google" />' +
+                'Continuar con Google' +
+              '</button>' +
               '<p class="text-center text-sm text-gray-500">¿No tienes cuenta? <a href="register.html" class="text-primary font-medium">Regístrate</a></p>' +
               demoHint +
             '</form>' +
@@ -100,6 +109,42 @@
         } finally {
           btn.disabled = false;
           btn.textContent = 'Entrar';
+        }
+      });
+
+      // ── Login con Google (Firebase) ──────────────
+      if (!firebase.apps.length) {
+        firebase.initializeApp(window.FIREBASE_CONFIG);
+      }
+      var firebaseAuth = firebase.auth();
+
+      document.getElementById('btn-google').addEventListener('click', async function () {
+        var btn = this;
+        btn.disabled = true;
+        btn.textContent = 'Conectando...';
+        try {
+          var provider = new firebase.auth.GoogleAuthProvider();
+          provider.setCustomParameters({ prompt: 'select_account' });
+          var result = await firebaseAuth.signInWithPopup(provider);
+          var idToken = await result.user.getIdToken();
+          var loggedUser = await API.loginWithGoogle({
+            idToken: idToken,
+            email:   result.user.email,
+            name:    result.user.displayName,
+            photo:   result.user.photoURL
+          });
+          U.toastNextPage('¡Bienvenido con Google! 🎉', 'success');
+          window.location.href = nextUrl || (loggedUser.role === 'admin' ? 'admin-event.html' : 'profile.html');
+        } catch (err) {
+          var mensajes = {
+            'auth/popup-closed-by-user':    'Cerraste la ventana antes de completar el inicio.',
+            'auth/cancelled-popup-request': 'Solo puede haber una ventana activa.',
+            'auth/network-request-failed':  'Error de red. Revisa tu conexión.'
+          };
+          U.toast(mensajes[err.code] || err.message || 'No se pudo iniciar con Google', 'error');
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5" alt="Google" /> Continuar con Google';
         }
       });
     })();
