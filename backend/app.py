@@ -299,7 +299,7 @@ def google_login():
         result = users().insert_one({
             "name":          name,
             "email":         email,
-            "password_hash": None,
+            "password_hash": "",
             "role":          "participant",
             "provider":      "google",
             "avatar":        photo,
