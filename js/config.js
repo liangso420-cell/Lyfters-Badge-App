@@ -23,7 +23,7 @@
 
 window.LYFTER_CONFIG = {
   mode: 'backend',
-  apiBaseUrl: 'http://localhost:5000',
+  apiBaseUrl: 'https://lyfters-badge-app.onrender.com',
 };
 
 // Configuración Firebase para Google Auth
