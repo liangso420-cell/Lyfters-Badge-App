@@ -21,7 +21,7 @@ from flask_jwt_extended import (
     jwt_required, get_jwt_identity
 )
 
-from db import users, events, badges, scans, init_indexes
+from db import users, events, badges, scans, init_indexes, event_joins
 
 load_dotenv()
 
@@ -619,13 +619,12 @@ def join_event(event_id):
     if not event:
         return jsonify(error="Evento no encontrado o inactivo"), 404
     user_oid = ObjectId(uid)
-    already = scans().find_one({"user_id": user_oid, "event_id": oid, "type": "join"})
+    already = event_joins().find_one({"user_id": user_oid, "event_id": oid})
     if not already:
-        scans().insert_one({
+        event_joins().insert_one({
             "user_id":    user_oid,
             "event_id":   oid,
-            "type":       "join",
-            "scanned_at": datetime.utcnow(),
+            "joined_at":  datetime.utcnow(),
         })
     return jsonify({
         "status": "already_joined" if already else "joined",
