@@ -273,7 +273,8 @@
         var nav = panel.querySelector('nav');
         nav.innerHTML = '<div class="px-5 py-4">' +
           '<button id="drawer-users-back" class="text-xs text-primary mb-4 flex items-center gap-1">← Volver</button>' +
-          '<p class="text-sm font-semibold text-gray-700 mb-3">Gestionar usuarios</p>' +
+          '<p class="text-sm font-semibold text-gray-700 mb-2">Gestionar usuarios</p>' +
+          '<input id="drawer-users-search" type="text" placeholder="Buscar por nombre o email..." class="w-full px-3 py-2 mb-3 text-sm bg-gray-50 rounded-btn border border-gray-200 focus:border-primary outline-none" />' +
           '<div id="drawer-users-list" class="text-center text-gray-400 text-sm py-4">Cargando...</div>' +
         '</div>';
 
@@ -330,6 +331,62 @@
               }
             });
           });
+
+          var searchInput = document.getElementById('drawer-users-search');
+          if (searchInput) {
+            searchInput.addEventListener('input', function() {
+              var q = searchInput.value.trim().toLowerCase();
+              var filtered = q
+                ? usersList.filter(function(u) {
+                    return u.nombre.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
+                  })
+                : usersList;
+              var listEl = document.getElementById('drawer-users-list');
+              if (!listEl) return;
+              var currentUser = window.LyfterAPI.currentUser();
+              if (!filtered.length) {
+                listEl.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">Sin resultados.</p>';
+                return;
+              }
+              listEl.innerHTML = filtered.map(function(u) {
+                var isSelf = currentUser && u.id === currentUser.id;
+                var isAdminUser = u.rol === 'admin';
+                var btnLabel = isAdminUser ? '→ Participante' : '→ Admin';
+                var nextRol = isAdminUser ? 'participant' : 'admin';
+                return '<div class="flex items-center justify-between py-2.5 border-b border-gray-100 last:border-0">' +
+                  '<div class="flex-1 min-w-0 mr-2">' +
+                    '<p class="text-sm font-medium text-gray-800 truncate">' + esc(u.nombre) + (isSelf ? ' <span class="text-xs text-gray-400">(tú)</span>' : '') + '</p>' +
+                    '<p class="text-xs text-gray-400 truncate">' + esc(u.email) + '</p>' +
+                  '</div>' +
+                  '<button data-uid="' + u.id + '" data-rol="' + nextRol + '" data-nombre="' + esc(u.nombre) + '"' +
+                    (isSelf ? ' disabled' : '') +
+                    ' class="role-drawer-btn flex-shrink-0 px-2 py-1 rounded-btn text-xs font-medium border ' +
+                    (isAdminUser ? 'text-purple-600 border-purple-300' : 'text-gray-500 border-gray-200') +
+                    (isSelf ? ' opacity-40 cursor-not-allowed' : ' hover:bg-gray-50') + '">' +
+                    btnLabel +
+                  '</button>' +
+                '</div>';
+              }).join('');
+              Array.prototype.forEach.call(listEl.querySelectorAll('.role-drawer-btn'), function(btn) {
+                btn.addEventListener('click', async function() {
+                  var uid = btn.getAttribute('data-uid');
+                  var rol = btn.getAttribute('data-rol');
+                  var nombre = btn.getAttribute('data-nombre');
+                  var rolLabel = rol === 'admin' ? 'Admin' : 'Participante';
+                  btn.disabled = true; btn.textContent = '...';
+                  try {
+                    await window.LyfterAPI.changeUserRole(uid, rol);
+                    toast('Rol de ' + nombre + ' cambiado a ' + rolLabel, 'success');
+                    usersBtn.click();
+                  } catch(err) {
+                    toast(err.message || 'No se pudo cambiar el rol', 'error');
+                    btn.disabled = false;
+                    btn.textContent = rol === 'admin' ? '→ Participante' : '→ Admin';
+                  }
+                });
+              });
+            });
+          }
         }).catch(function(err) {
           var listEl = document.getElementById('drawer-users-list');
           if (listEl) listEl.innerHTML = '<p class="text-sm text-red-400">Error: ' + esc(err.message) + '</p>';

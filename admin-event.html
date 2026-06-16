@@ -122,14 +122,34 @@
             '</div>';
           }).join('') : '<p class="text-sm text-gray-400 text-center py-6">No hay eventos. Crea el primero arriba.</p>';
 
-          var inner = createForm +
+          var eventListHtml =
             '<div class="bg-white rounded-card p-6 shadow-soft anim-fade mb-4">' +
-              '<h2 class="text-lg font-bold text-gray-800">Eventos (' + events.length + ')</h2>' +
+              '<div class="flex items-center justify-between mb-4">' +
+                '<h2 class="text-lg font-bold text-gray-800">Eventos (' + events.length + ')</h2>' +
+              '</div>' +
+              '<input id="event-search" type="text" placeholder="🔍 Buscar evento..." class="w-full px-4 py-2.5 rounded-btn border border-gray-200 bg-base focus:border-primary outline-none text-sm" />' +
             '</div>' +
-            eventCards;
+            '<div id="events-list">' + eventCards + '</div>';
+
+          var inner = createForm + eventListHtml;
 
           app.innerHTML = U.adminShell('event', inner, events, activeId);
           U.mountAdminShell();
+
+          var eventSearch = document.getElementById('event-search');
+          if (eventSearch) {
+            eventSearch.addEventListener('input', function() {
+              var q = eventSearch.value.trim().toLowerCase();
+              var list = document.getElementById('events-list');
+              if (!list) return;
+              Array.prototype.forEach.call(list.children, function(card) {
+                var name = card.querySelector('.font-semibold');
+                if (!name) return;
+                var match = !q || name.textContent.toLowerCase().includes(q);
+                card.style.display = match ? '' : 'none';
+              });
+            });
+          }
 
           // Foto del evento
           Array.prototype.forEach.call(document.querySelectorAll('[id^="photo-area-"]'), function(area) {
