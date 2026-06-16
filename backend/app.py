@@ -20,6 +20,8 @@ from flask_jwt_extended import (
     JWTManager, create_access_token,
     jwt_required, get_jwt_identity
 )
+from google.oauth2 import id_token
+from google.auth.transport import requests as grequests
 
 from db import users, events, badges, scans, init_indexes
 
@@ -243,6 +245,64 @@ def login():
         return jsonify(error="Credenciales inválidas"), 401
 
     clear_attempts(email)
+    token = create_access_token(identity=str(user["_id"]))
+    return jsonify(token=token, user=fmt_user(user)), 200
+
+
+@app.route("/auth/google", methods=["POST"])
+def google_login():
+    """
+    Recibe un idToken de Firebase/Google desde el frontend.
+    Verifica el token con Google, busca o crea el usuario en MongoDB,
+    y devuelve un JWT propio igual que /auth/login.
+    """
+    data = request.get_json() or {}
+    firebase_token = (data.get("idToken") or "").strip()
+
+    if not firebase_token:
+        return jsonify(error="Token requerido"), 400
+
+    # Verificar el token de Google (Firebase lo emite como idToken).
+    # Sin audience: Firebase emite tokens con múltiples audiencias y
+    # verify_firebase_token los acepta correctamente.
+    try:
+        info = id_token.verify_firebase_token(firebase_token, grequests.Request())
+    except Exception:
+        return jsonify(error="Token inválido o expirado"), 401
+
+    if not info:
+        return jsonify(error="Token inválido o expirado"), 401
+
+    email = (info.get("email") or "").lower()
+    name  = info.get("name") or (email.split("@")[0] if email else "")
+    photo = info.get("picture", "")
+
+    if not email:
+        return jsonify(error="No se pudo obtener el email de Google"), 400
+
+    # Buscar usuario existente o crear uno nuevo (upsert)
+    user = users().find_one({"email": email})
+
+    if user is None:
+        # Registro automático — sin password_hash porque usa Google
+        result = users().insert_one({
+            "name":          name,
+            "email":         email,
+            "password_hash": None,
+            "role":          "participant",
+            "provider":      "google",
+            "avatar":        photo,
+            "created_at":    datetime.utcnow(),
+        })
+        user = users().find_one({"_id": result.inserted_id})
+    else:
+        # Marcar provider y refrescar avatar si Google trae foto
+        updates = {"provider": "google"}
+        if photo:
+            updates["avatar"] = photo
+        users().update_one({"_id": user["_id"]}, {"$set": updates})
+        user = users().find_one({"_id": user["_id"]})
+
     token = create_access_token(identity=str(user["_id"]))
     return jsonify(token=token, user=fmt_user(user)), 200
 
