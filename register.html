@@ -70,6 +70,60 @@
           '</div>' +
         '</section>';
 
+      var TAGS = ['Desarrollo Web','Mobile','Inteligencia Artificial','Data Science','Ciberseguridad',
+        'DevOps','Cloud','Blockchain','UX/UI','Product Management','Emprendimiento','Marketing Digital',
+        'Diseño','Videojuegos','Robótica','Fintech','Educación Tech','Open Source','Backend','Frontend'];
+
+      function showInterestsStep() {
+        var selected = [];
+        app.innerHTML =
+          '<section class="device-frame px-4 pt-12 pb-12">' +
+            '<div class="card-soft p-8 anim-fade">' +
+              '<div class="text-center mb-6">' +
+                '<div class="text-4xl mb-2">🎯</div>' +
+                '<h2 class="text-xl font-bold">¿Cuáles son tus intereses?</h2>' +
+                '<p class="text-gray-400 text-sm mt-1">Selecciona los temas que te interesan para recibir recomendaciones personalizadas</p>' +
+              '</div>' +
+              '<div id="tags-container" class="flex flex-wrap gap-2 mb-6">' +
+                TAGS.map(function(tag) {
+                  return '<button type="button" data-tag="' + U.esc(tag) + '" class="tag-btn px-3 py-1.5 rounded-full text-sm border border-gray-200 text-gray-600 hover:border-primary hover:text-primary transition">' + U.esc(tag) + '</button>';
+                }).join('') +
+              '</div>' +
+              '<button id="save-interests" class="w-full py-3 rounded-btn text-white font-semibold mb-3" style="background:#6C63FF;">Guardar y continuar</button>' +
+              '<button id="skip-interests" class="w-full py-2 text-sm text-gray-400 hover:text-primary">Omitir por ahora</button>' +
+            '</div>' +
+          '</section>';
+
+        Array.prototype.forEach.call(document.querySelectorAll('.tag-btn'), function(btn) {
+          btn.addEventListener('click', function() {
+            var tag = btn.getAttribute('data-tag');
+            var idx = selected.indexOf(tag);
+            if (idx === -1) {
+              selected.push(tag);
+              btn.style.background = '#6C63FF';
+              btn.style.color = 'white';
+              btn.style.borderColor = '#6C63FF';
+            } else {
+              selected.splice(idx, 1);
+              btn.style.background = '';
+              btn.style.color = '';
+              btn.style.borderColor = '';
+            }
+          });
+        });
+
+        async function saveAndContinue() {
+          try {
+            if (selected.length) await API.updateInterests(selected);
+          } catch(e) {}
+          U.toastNextPage('¡Cuenta creada! 🎉', 'success');
+          window.location.href = 'profile.html';
+        }
+
+        document.getElementById('save-interests').addEventListener('click', saveAndContinue);
+        document.getElementById('skip-interests').addEventListener('click', saveAndContinue);
+      }
+
       var form = document.getElementById('register-form');
       form.addEventListener('submit', async function (e) {
         e.preventDefault();
@@ -84,8 +138,11 @@
         btn.textContent = 'Cargando...';
         try {
           var newUser = await API.register({ name: name.value.trim(), email: email.value.trim(), password: pass.value });
-          U.toastNextPage('Cuenta creada 🎉', 'success');
-          window.location.href = newUser.role === 'admin' ? 'admin-event.html' : 'profile.html';
+          if (newUser.role !== 'admin') {
+            showInterestsStep();
+          } else {
+            window.location.href = 'admin-event.html';
+          }
         } catch (err) {
           U.setFieldError(email, err.message || 'No se pudo crear la cuenta');
         } finally {
@@ -117,8 +174,11 @@
             name:    result.user.displayName,
             photo:   result.user.photoURL
           });
-          U.toastNextPage('¡Bienvenido con Google! 🎉', 'success');
-          window.location.href = loggedUser.role === 'admin' ? 'admin-event.html' : 'profile.html';
+          if (loggedUser.role !== 'admin') {
+            showInterestsStep();
+          } else {
+            window.location.href = 'admin-event.html';
+          }
         } catch (err) {
           var mensajes = {
             'auth/popup-closed-by-user':    'Cerraste la ventana antes de completar el inicio.',

@@ -121,6 +121,7 @@ def fmt_event(doc):
         "activo":       doc.get("active", True),
         "photo":        doc.get("photo", None),
         "access_qr":    doc.get("access_qr", None),
+        "tags":         doc.get("tags", []),
     }
 
 
@@ -241,6 +242,19 @@ def change_password():
     return jsonify(ok=True), 200
 
 
+@app.route("/auth/interests", methods=["POST"])
+@jwt_required()
+def update_interests():
+    uid = get_jwt_identity()
+    data = request.get_json() or {}
+    interests = data.get("interests", [])
+    if not isinstance(interests, list):
+        return jsonify(error="interests debe ser una lista"), 400
+    interests = [sanitize(t, max_len=50) for t in interests if t][:20]
+    users().update_one({"_id": ObjectId(uid)}, {"$set": {"interests": interests}})
+    return jsonify(ok=True), 200
+
+
 @app.route("/auth/login", methods=["POST"])
 def login():
     data     = request.get_json() or {}
@@ -328,6 +342,27 @@ def list_events():
     now  = datetime.utcnow()
     docs = events().find({"active": True, "end_date": {"$gte": now}})
     return jsonify([fmt_event(e) for e in docs]), 200
+
+
+@app.route("/events/recommended", methods=["GET"])
+@jwt_required()
+def recommended_events():
+    uid = get_jwt_identity()
+    user = users().find_one({"_id": ObjectId(uid)})
+    user_interests = user.get("interests", []) if user else []
+    now = datetime.utcnow()
+    all_events = list(events().find({"active": True, "end_date": {"$gte": now}}))
+    if not user_interests:
+        return jsonify([fmt_event(e) for e in all_events[:5]]), 200
+    scored = []
+    for e in all_events:
+        event_tags = e.get("tags", [])
+        score = len(set(user_interests) & set(event_tags))
+        if score > 0:
+            scored.append((score, e))
+    scored.sort(key=lambda x: x[0], reverse=True)
+    result = [fmt_event(e) for _, e in scored[:5]]
+    return jsonify(result), 200
 
 
 @app.route("/events/<event_id>", methods=["GET"])
@@ -738,6 +773,23 @@ def update_event_photo(event_id):
     if len(photo) > 3 * 1024 * 1024:
         return jsonify(error="La imagen no puede superar 3MB"), 400
     events().update_one({"_id": oid}, {"$set": {"photo": photo}})
+    return jsonify(ok=True), 200
+
+
+@app.route("/admin/events/<event_id>/tags", methods=["POST"])
+@jwt_required()
+def update_event_tags(event_id):
+    if not require_admin():
+        return jsonify(error="Acceso denegado"), 403
+    oid = valid_oid(event_id)
+    if not oid:
+        return jsonify(error="ID inválido"), 400
+    data = request.get_json() or {}
+    tags = data.get("tags", [])
+    if not isinstance(tags, list):
+        return jsonify(error="tags debe ser una lista"), 400
+    tags = [sanitize(t, max_len=50) for t in tags if t][:20]
+    events().update_one({"_id": oid}, {"$set": {"tags": tags}})
     return jsonify(ok=True), 200
 
 

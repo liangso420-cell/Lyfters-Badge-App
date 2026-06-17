@@ -213,6 +213,25 @@
       var e = mockEvent(eventId); if (!e) throw new Error('Evento no encontrado');
       return { status: 'joined', event: eventDto(e) };
     },
+    async updateInterests(interests) {
+      var sess = getSession();
+      var u = mockState.users.find(function(x){ return x.id === sess.user.id; });
+      if (u) { u.interests = interests; persist(); }
+      return { ok: true };
+    },
+    async getRecommended() {
+      var sess = getSession();
+      var u = mockState.users.find(function(x){ return x.id === sess.user.id; });
+      var interests = u ? (u.interests || []) : [];
+      return mockState.events.filter(function(e){ return e.active !== false; }).filter(function(e) {
+        var tags = e.tags || [];
+        return interests.some(function(i){ return tags.indexOf(i) !== -1; });
+      }).slice(0, 5).map(eventDto);
+    },
+    async updateEventTags(eventId, tags) {
+      var e = mockEvent(eventId); if (!e) throw new Error('Evento no encontrado');
+      e.tags = tags; persist(); return { ok: true };
+    },
     async deleteBadge(eventId, badgeId) {
       var e = mockEvent(eventId); if (!e) throw new Error('Evento no encontrado');
       e.badges = e.badges.filter(function(b){ return b.id !== badgeId; }); persist();
@@ -436,6 +455,15 @@
     async joinEvent(eventId) {
       return await apiRequest('POST', '/events/' + eventId + '/join');
     },
+    async updateInterests(interests) {
+      return await apiRequest('POST', '/auth/interests', { interests: interests });
+    },
+    async getRecommended() {
+      return (await apiRequest('GET', '/events/recommended')).map(mapEvent);
+    },
+    async updateEventTags(eventId, tags) {
+      return await apiRequest('POST', '/admin/events/' + eventId + '/tags', { tags: tags });
+    },
     async deleteBadge(eventId, badgeId) {
       return await apiRequest('DELETE', '/admin/events/' + eventId + '/badges/' + badgeId);
     },
@@ -525,6 +553,9 @@
     generateEventAccessQr:  impl.generateEventAccessQr.bind(impl),
     updateEventPhoto:       impl.updateEventPhoto.bind(impl),
     joinEvent:              impl.joinEvent.bind(impl),
+    updateInterests:  impl.updateInterests.bind(impl),
+    getRecommended:   impl.getRecommended.bind(impl),
+    updateEventTags:  impl.updateEventTags.bind(impl),
     resetDemo:              impl.resetDemo.bind(impl)
   };
 })();
