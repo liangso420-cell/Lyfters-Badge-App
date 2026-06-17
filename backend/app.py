@@ -110,6 +110,23 @@ def fmt_user(doc):
     }
 
 
+def compute_event_status(doc):
+    manual_status = doc.get("status", None)
+    if manual_status in ("draft", "pending", "cancelled", "postponed", "archived", "paused"):
+        return manual_status
+    now = datetime.utcnow()
+    start = doc.get("start_date")
+    end = doc.get("end_date")
+    if start and end:
+        if now < start:
+            return "upcoming"
+        elif start <= now <= end:
+            return "ongoing"
+        elif now > end:
+            return "finished"
+    return manual_status or "draft"
+
+
 def fmt_event(doc):
     return {
         "id":           str(doc["_id"]),
@@ -119,6 +136,7 @@ def fmt_event(doc):
         "fecha_fin":    doc.get("end_date",   datetime.utcnow()).isoformat(),
         "premio":       doc.get("prize", ""),
         "activo":       doc.get("active", True),
+        "status":       compute_event_status(doc),
         "photo":        doc.get("photo", None),
         "access_qr":    doc.get("access_qr", None),
         "tags":         doc.get("tags", []),
@@ -340,9 +358,15 @@ def google_login():
 @app.route("/events/", methods=["GET"])
 @app.route("/events",  methods=["GET"])
 def list_events():
-    now  = datetime.utcnow()
-    docs = events().find({"active": True, "end_date": {"$gte": now}})
-    return jsonify([fmt_event(e) for e in docs]), 200
+    now = datetime.utcnow()
+    docs = list(events().find({"active": True, "end_date": {"$gte": now}}))
+    visible_statuses = ("ongoing", "open", "upcoming", "postponed")
+    result = []
+    for e in docs:
+        status = compute_event_status(e)
+        if status not in ("draft", "pending", "cancelled", "archived", "finished"):
+            result.append(fmt_event(e))
+    return jsonify(result), 200
 
 
 @app.route("/events/recommended", methods=["GET"])
@@ -560,6 +584,7 @@ def update_event(event_id):
     if "prize"       in data: updates["prize"]       = sanitize(data["prize"], max_len=200)
     if "active"      in data: updates["active"]      = bool(data["active"])
     if "activo"      in data: updates["active"]      = bool(data["activo"])
+    if "status"      in data: updates["status"]      = data["status"]
 
     new_start = new_end = None
     for field, key in [("fecha_inicio", "start_date"), ("fecha_fin", "end_date"),

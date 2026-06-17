@@ -93,7 +93,24 @@
     return (mockState.progress[userId] && mockState.progress[userId][eventId]) || [];
   }
   function publicUser(u) { return { id: u.id, nombre: u.name, email: u.email, rol: u.role, created_at: null }; }
-  function eventDto(e) { return { id: e.id, name: e.name, description: e.description, start: e.start, end: e.end, prize: e.prize, active: e.active !== false, photo: e.photo || null, access_qr: e.access_qr || null }; }
+  function computeMockStatus(e) {
+    var manual = e.status;
+    if (['draft','pending','cancelled','postponed','archived','paused'].indexOf(manual) !== -1) return manual;
+    var now = new Date();
+    var start = e.start ? new Date(e.start) : null;
+    var end = e.end ? new Date(e.end) : null;
+    if (start && end) {
+      if (now < start) return 'upcoming';
+      if (now >= start && now <= end) return 'ongoing';
+      if (now > end) return 'finished';
+    }
+    return manual || 'draft';
+  }
+  function eventDto(e) {
+    return { id: e.id, name: e.name, description: e.description, start: e.start, end: e.end,
+      prize: e.prize, active: e.active !== false, status: computeMockStatus(e),
+      photo: e.photo || null, access_qr: e.access_qr || null, tags: e.tags || [] };
+  }
 
   var Mock = {
     async _login(email, password) {
@@ -178,6 +195,7 @@
       if (data.fecha_inicio !== undefined) e.start      = data.fecha_inicio;
       if (data.fecha_fin !== undefined)   e.end         = data.fecha_fin;
       if (data.activo !== undefined)      e.active      = data.activo;
+      if (data.status !== undefined)      e.status      = data.status;
       persist();
       return eventDto(e);
     },
@@ -334,8 +352,10 @@
       end: e.fecha_fin,
       prize: e.premio,
       active: e.activo !== false,
+      status: e.status || 'draft',
       photo: e.photo || null,
-      access_qr: e.access_qr || null
+      access_qr: e.access_qr || null,
+      tags: e.tags || [],
     };
   }
 

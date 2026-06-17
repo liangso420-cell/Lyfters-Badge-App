@@ -48,6 +48,14 @@
         catch(e) { return ''; }
       }
 
+      var STATUS_LABELS = {
+        upcoming:  { label: 'Próximo',           color: '#3b82f6' },
+        open:      { label: 'Abierto',           color: '#16a34a' },
+        ongoing:   { label: 'En curso',          color: '#6C63FF' },
+        closed:    { label: 'Registro cerrado',  color: '#d97706' },
+        postponed: { label: 'Pospuesto',         color: '#9333ea' },
+      };
+
       function eventCard(e, isRecommended) {
         var photoHtml = e.photo
           ? '<img src="' + U.esc(e.photo) + '" class="w-full h-40 object-cover" />'
@@ -58,6 +66,10 @@
         var badge = isRecommended
           ? '<span class="absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-semibold text-white" style="background:#6C63FF;">✨ Recomendado</span>'
           : '';
+        var statusInfo = STATUS_LABELS[e.status];
+        var statusBadge = statusInfo
+          ? '<span class="absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-semibold text-white" style="background:' + statusInfo.color + ';">' + statusInfo.label + '</span>'
+          : '';
         return '<div class="bg-white rounded-card overflow-hidden shadow-soft cursor-pointer hover:shadow-md transition" data-eid="' + e.id + '">' +
           '<div class="relative">' +
             photoHtml +
@@ -66,6 +78,7 @@
               '<div class="flex gap-1 flex-wrap mt-1">' + tags + '</div>' +
             '</div>' +
             badge +
+            statusBadge +
           '</div>' +
           '<div class="p-4">' +
             '<p class="text-xs text-gray-400 mb-1">📅 ' + fmtDate(e.start) + ' — ' + fmtDate(e.end) + '</p>' +

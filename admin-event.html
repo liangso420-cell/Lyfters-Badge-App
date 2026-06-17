@@ -35,6 +35,19 @@
     (function () {
       'use strict';
       var TAGS_LIST = ['Desarrollo Web','Mobile','Inteligencia Artificial','Data Science','Ciberseguridad','DevOps','Cloud','Blockchain','UX/UI','Product Management','Emprendimiento','Marketing Digital','Diseño','Videojuegos','Robótica','Fintech','Educación Tech','Open Source','Backend','Frontend'];
+      var STATUS_MAP = {
+        draft:     { label: 'Borrador',             color: 'text-gray-500 border-gray-300',    bg: 'bg-gray-50' },
+        pending:   { label: 'Pendiente aprobación', color: 'text-yellow-600 border-yellow-300', bg: 'bg-yellow-50' },
+        upcoming:  { label: 'Próximo',              color: 'text-blue-600 border-blue-300',    bg: 'bg-blue-50' },
+        open:      { label: 'Abierto registro',     color: 'text-green-600 border-green-300',  bg: 'bg-green-50' },
+        closed:    { label: 'Registro cerrado',     color: 'text-orange-600 border-orange-300', bg: 'bg-orange-50' },
+        ongoing:   { label: 'En curso',             color: 'text-primary border-primary',      bg: 'bg-primary-soft' },
+        paused:    { label: 'Pausado',              color: 'text-gray-500 border-gray-300',    bg: 'bg-gray-50' },
+        finished:  { label: 'Finalizado',           color: 'text-gray-600 border-gray-300',    bg: 'bg-gray-100' },
+        cancelled: { label: 'Cancelado',            color: 'text-red-500 border-red-300',      bg: 'bg-red-50' },
+        postponed: { label: 'Pospuesto',            color: 'text-purple-600 border-purple-300', bg: 'bg-purple-50' },
+        archived:  { label: 'Archivado',            color: 'text-gray-400 border-gray-200',    bg: 'bg-gray-50' },
+      };
       var API = window.LyfterAPI;
       var U   = window.LyfterUtils;
 
@@ -171,14 +184,18 @@
                 '<div class="flex items-start justify-between gap-2">' +
                   '<div class="flex-1 min-w-0 cursor-pointer" data-expand="' + e.id + '">' +
                     '<div class="flex items-center gap-2 mb-0.5">' +
-                      (e.active !== false ? '<span class="w-2 h-2 rounded-full bg-green-400 inline-block"></span>' : '<span class="w-2 h-2 rounded-full bg-gray-300 inline-block"></span>') +
+                      '<span class="px-2 py-0.5 rounded-full text-xs font-medium border ' + (STATUS_MAP[e.status] ? STATUS_MAP[e.status].color + ' ' + STATUS_MAP[e.status].bg : 'text-gray-500 border-gray-300 bg-gray-50') + '">' + (STATUS_MAP[e.status] ? STATUS_MAP[e.status].label : (e.status || 'draft')) + '</span>' +
                       '<p class="font-semibold text-gray-800">' + U.esc(e.name) + '</p>' +
                     '</div>' +
                     '<p class="text-xs text-gray-400">' + fmtDate(e.start) + ' — ' + fmtDate(e.end) + '</p>' +
                     (e.prize ? '<p class="text-xs text-gray-500 mt-0.5">🎁 ' + U.esc(e.prize) + '</p>' : '') +
                   '</div>' +
                   '<div class="flex gap-1.5 flex-shrink-0">' +
-                    '<button data-toggle="' + e.id + '" data-active="' + (e.active !== false ? '1' : '0') + '" class="toggle-btn px-2.5 py-1.5 rounded-btn text-xs font-medium border ' + (e.active !== false ? 'text-green-600 border-green-300' : 'text-gray-400 border-gray-200') + '">' + (e.active !== false ? '✅ Activo' : '⏸ Pausado') + '</button>' +
+                    '<select data-status-sel="' + e.id + '" class="status-sel px-2 py-1.5 rounded-btn text-xs font-medium border ' + (STATUS_MAP[e.status] ? STATUS_MAP[e.status].color : 'text-gray-500 border-gray-300') + ' outline-none cursor-pointer">' +
+                      Object.keys(STATUS_MAP).map(function(k) {
+                        return '<option value="' + k + '"' + (e.status === k ? ' selected' : '') + '>' + STATUS_MAP[k].label + '</option>';
+                      }).join('') +
+                    '</select>' +
                     '<button data-edit="' + e.id + '" class="edit-btn px-2.5 py-1.5 rounded-btn text-xs font-medium text-primary border border-primary hover:bg-primary-soft">✏️</button>' +
                     '<button data-del="' + e.id + '" data-name="' + U.esc(e.name) + '" class="del-btn px-2.5 py-1.5 rounded-btn text-xs font-medium text-red-500 border border-red-300 hover:bg-red-50">🗑</button>' +
                   '</div>' +
@@ -344,14 +361,21 @@
             });
           });
 
-          // Toggle activo
-          Array.prototype.forEach.call(document.querySelectorAll('.toggle-btn'), function(btn) {
-            btn.addEventListener('click', async function() {
-              var eid = btn.getAttribute('data-toggle');
-              var active = btn.getAttribute('data-active') === '1';
-              btn.disabled = true;
-              try { await API.updateEvent(eid, { activo: !active }); U.toast('Estado actualizado', 'success'); init(); }
-              catch(err) { U.toast(err.message || 'Error', 'error'); btn.disabled = false; }
+          // Estado del evento
+          Array.prototype.forEach.call(document.querySelectorAll('.status-sel'), function(sel) {
+            sel.addEventListener('change', async function() {
+              var eid = sel.getAttribute('data-status-sel');
+              var newStatus = sel.value;
+              var active = ['upcoming','open','ongoing','closed'].indexOf(newStatus) !== -1;
+              sel.disabled = true;
+              try {
+                await API.updateEvent(eid, { status: newStatus, activo: active });
+                U.toast('Estado actualizado a "' + STATUS_MAP[newStatus].label + '"', 'success');
+                init();
+              } catch(err) {
+                U.toast(err.message || 'Error', 'error');
+                sel.disabled = false;
+              }
             });
           });
 

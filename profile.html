@@ -99,6 +99,14 @@
         catch(e) { return ''; }
       }
 
+      var STATUS_LABELS = {
+        upcoming:  { label: 'Próximo',           color: '#3b82f6' },
+        open:      { label: 'Abierto',           color: '#16a34a' },
+        ongoing:   { label: 'En curso',          color: '#6C63FF' },
+        closed:    { label: 'Registro cerrado',  color: '#d97706' },
+        postponed: { label: 'Pospuesto',         color: '#9333ea' },
+      };
+
       var emptySvg =
         '<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" class="w-24 h-24 mx-auto mb-4 opacity-30">' +
           '<circle cx="60" cy="60" r="50" fill="#EEEDFF" stroke="#6C63FF" stroke-width="3"/>' +
@@ -215,12 +223,14 @@
                 '<p class="text-sm text-gray-500 mt-1">Completaste todos los badges de ' + U.esc(detail.name) + '</p></div>'
             : '';
 
+          var eventStatusInfo = activeEvent && STATUS_LABELS[activeEvent.status];
           var eventPhotoHtml = activeEvent && activeEvent.photo
             ? '<div class="relative w-full mb-4 rounded-card overflow-hidden shadow-soft" style="height:180px;">' +
                 '<img src="' + activeEvent.photo + '" style="width:100%;height:100%;object-fit:cover;" />' +
                 '<div class="absolute inset-0 flex items-end p-4" style="background:linear-gradient(transparent,rgba(0,0,0,0.5));">' +
                   '<p class="text-white font-bold text-lg">' + U.esc(activeEvent.name) + '</p>' +
                 '</div>' +
+                (eventStatusInfo ? '<span class="absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-semibold text-white" style="background:' + eventStatusInfo.color + ';">' + eventStatusInfo.label + '</span>' : '') +
               '</div>'
             : '';
 
