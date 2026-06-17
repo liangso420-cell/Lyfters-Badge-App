@@ -8,6 +8,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from db import events, badges, scans
 from utils import valid_oid
+from security.limiter import redeem_limit
 
 redeem_bp = Blueprint("redeem", __name__)
 
@@ -18,6 +19,7 @@ redeem_bp = Blueprint("redeem", __name__)
 
 @redeem_bp.route("/<event_id>/<token>", methods=["POST", "GET"])
 @jwt_required()
+@redeem_limit
 def redeem_badge(event_id, token):
     uid       = get_jwt_identity()
     oid_event = valid_oid(event_id)
