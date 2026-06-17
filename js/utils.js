@@ -579,6 +579,7 @@
             var lang = btn.getAttribute('data-lang');
             try { localStorage.setItem('lyfter_lang', lang); } catch(e) {}
             closeModal();
+
             if (lang === 'es') {
               Array.prototype.forEach.call(document.querySelectorAll('[data-original]'), function(el) {
                 var orig = el.getAttribute('data-original');
@@ -587,18 +588,28 @@
               toast('Idioma: Español', 'success');
               return;
             }
+
             toast('Cargando ' + LANGUAGES[lang] + '...', 'info');
             try {
-              var res = await fetch('locales/' + lang + '.json');
+              var res = await fetch('locales/' + lang + '.json?v=' + Date.now());
               if (!res.ok) { toast('Idioma no disponible', 'error'); return; }
               var translations = await res.json();
+
               Array.prototype.forEach.call(document.querySelectorAll('[data-i18n]'), function(el) {
                 var key = el.getAttribute('data-i18n');
                 if (translations[key]) {
-                  if (!el.getAttribute('data-original')) el.setAttribute('data-original', el.textContent);
+                  if (!el.getAttribute('data-original')) {
+                    el.setAttribute('data-original', el.textContent.trim());
+                  }
                   el.textContent = translations[key];
                 }
               });
+
+              Array.prototype.forEach.call(document.querySelectorAll('[data-i18n-placeholder]'), function(el) {
+                var key = el.getAttribute('data-i18n-placeholder');
+                if (translations[key]) el.placeholder = translations[key];
+              });
+
               toast('Idioma: ' + LANGUAGES[lang], 'success');
             } catch(e) {
               toast('No se pudo cargar el idioma', 'error');
@@ -822,6 +833,28 @@
     window.location.href = 'login.html';
   }
 
+  async function applyStoredLang() {
+    var lang = 'es';
+    try { lang = localStorage.getItem('lyfter_lang') || 'es'; } catch(e) {}
+    if (lang === 'es') return;
+    try {
+      var res = await fetch('locales/' + lang + '.json');
+      if (!res.ok) return;
+      var translations = await res.json();
+      Array.prototype.forEach.call(document.querySelectorAll('[data-i18n]'), function(el) {
+        var key = el.getAttribute('data-i18n');
+        if (translations[key]) {
+          if (!el.getAttribute('data-original')) el.setAttribute('data-original', el.textContent.trim());
+          el.textContent = translations[key];
+        }
+      });
+      Array.prototype.forEach.call(document.querySelectorAll('[data-i18n-placeholder]'), function(el) {
+        var key = el.getAttribute('data-i18n-placeholder');
+        if (translations[key]) el.placeholder = translations[key];
+      });
+    } catch(e) {}
+  }
+
   /* ── API pública ── */
   window.LyfterUtils = {
     EMAIL_RE: EMAIL_RE,
@@ -849,7 +882,8 @@
     translatePage: translatePage,
     getCurrentLang: getCurrentLang,
     setCurrentLang: setCurrentLang,
-    translateText: translateText
+    translateText: translateText,
+    applyStoredLang: applyStoredLang
   };
 
   window.lyfterReset = function () {

@@ -102,10 +102,10 @@
             '<button id="toggle-manual" class="text-sm text-gray-400 hover:text-primary underline">Ingresar código manualmente</button>' +
           '</div>' +
         '</section>';
-      Array.prototype.forEach.call(document.querySelectorAll('p, h1, h2, h3, h4, button, label, span:not(.text-primary):not(.text-white)'), function(el) {
-        if (el.children.length === 0 && el.textContent.trim()) { el.setAttribute('data-i18n', ''); }
+      Array.prototype.forEach.call(document.querySelectorAll('p, h1, h2, h3, h4, button, label, span'), function(el) {
+        if (el.children.length === 0 && el.textContent.trim()) { el.setAttribute('data-i18n', el.textContent.trim()); }
       });
-      if (U.getCurrentLang() !== 'es') U.translatePage();
+      U.applyStoredLang();
 
       function setStatus(msg) {
         var el = document.getElementById('scan-status');

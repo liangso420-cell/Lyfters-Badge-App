@@ -187,10 +187,10 @@
               '<button id="fab-scan" class="pointer-events-auto px-7 py-4 rounded-full text-white font-semibold shadow-soft flex items-center gap-2 active:scale-95 transition" ' +
                 'style="background:#6C63FF; box-shadow:0 4px 24px rgba(108,99,255,0.5);">📷 Escanear QR</button>' +
             '</div>';
-          Array.prototype.forEach.call(document.querySelectorAll('p, h1, h2, h3, h4, button, label, span:not(.text-primary):not(.text-white)'), function(el) {
-            if (el.children.length === 0 && el.textContent.trim()) { el.setAttribute('data-i18n', ''); }
+          Array.prototype.forEach.call(document.querySelectorAll('p, h1, h2, h3, h4, button, label, span'), function(el) {
+            if (el.children.length === 0 && el.textContent.trim()) { el.setAttribute('data-i18n', el.textContent.trim()); }
           });
-          if (U.getCurrentLang() !== 'es') U.translatePage();
+          U.applyStoredLang();
 
           document.getElementById('back-btn').addEventListener('click', function() { window.location.href = 'profile.html'; });
           document.getElementById('fab-scan').addEventListener('click', function() { window.location.href = 'scan.html'; });
