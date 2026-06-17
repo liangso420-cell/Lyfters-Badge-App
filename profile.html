@@ -118,12 +118,14 @@
                   '<button id="profile-logout" class="text-sm text-primary">⎋ Salir</button>' +
                 '</div>' +
               '</section>' +
-              '<div class="fixed bottom-0 left-0 right-0 flex justify-center pb-6 pointer-events-none z-30">' +
+              '<div class="fixed bottom-0 left-0 right-0 flex justify-center gap-3 pb-6 pointer-events-none z-30">' +
+                '<button id="fab-events-empty" class="pointer-events-auto px-5 py-4 rounded-full text-primary font-semibold shadow-soft flex items-center gap-2 active:scale-95 transition bg-white border border-primary">🎪 Eventos</button>' +
                 '<button id="fab-scan-empty" class="pointer-events-auto px-7 py-4 rounded-full text-white font-semibold shadow-soft flex items-center gap-2 active:scale-95 transition" ' +
                   'style="background:#6C63FF; box-shadow:0 4px 24px rgba(108,99,255,0.5);">📷 Escanear QR</button>' +
               '</div>';
             document.getElementById('profile-logout').addEventListener('click', U.logout);
             document.getElementById('fab-scan-empty').addEventListener('click', function() { window.location.href = 'scan.html'; });
+            document.getElementById('fab-events-empty').addEventListener('click', function() { window.location.href = 'events.html'; });
             return;
           }
 
@@ -221,28 +223,6 @@
               '</div>'
             : '';
 
-          var recommendedHtml = '';
-          try {
-            var recommended = await API.getRecommended();
-            if (recommended && recommended.length) {
-              recommendedHtml = '<div class="bg-white rounded-card p-5 shadow-soft mt-4">' +
-                '<h3 class="text-sm font-bold text-gray-700 mb-3">✨ Recomendados para ti</h3>' +
-                recommended.map(function(e) {
-                  var photoEl = e.photo
-                    ? '<img src="' + e.photo + '" class="w-10 h-10 rounded-card object-cover flex-shrink-0" />'
-                    : '<div class="w-10 h-10 rounded-card bg-primary-soft flex items-center justify-center text-lg flex-shrink-0">🎪</div>';
-                  return '<div class="flex items-center gap-3 py-2.5 border-b border-gray-100 last:border-0">' +
-                    photoEl +
-                    '<div class="flex-1 min-w-0">' +
-                      '<p class="text-sm font-medium text-gray-800 truncate">' + U.esc(e.name) + '</p>' +
-                      '<p class="text-xs text-gray-400">' + (e.tags && e.tags.length ? e.tags.slice(0,2).join(', ') : '') + '</p>' +
-                    '</div>' +
-                  '</div>';
-                }).join('') +
-              '</div>';
-            }
-          } catch(e) {}
-
           app.innerHTML =
             '<section class="device-frame px-4 pt-10 pb-28">' +
               eventPhotoHtml +
@@ -272,10 +252,10 @@
                 '<div id="panel-badges"><div class="grid grid-cols-3 gap-2.5">' + grid + '</div>' + prizeBox + '</div>' +
                 '<div id="panel-ranking" style="display:none;"><div class="text-center text-gray-400 text-sm py-4">Cargando...</div></div>' +
               '</div>' +
-              recommendedHtml +
               historyHtml +
             '</section>' +
-            '<div class="fixed bottom-0 left-0 right-0 flex justify-center pb-6 pointer-events-none z-30">' +
+            '<div class="fixed bottom-0 left-0 right-0 flex justify-center gap-3 pb-6 pointer-events-none z-30">' +
+              '<button id="fab-events" class="pointer-events-auto px-5 py-4 rounded-full text-primary font-semibold shadow-soft flex items-center gap-2 active:scale-95 transition bg-white border border-primary">🎪 Eventos</button>' +
               '<button id="fab-scan" class="pointer-events-auto px-7 py-4 rounded-full text-white font-semibold shadow-soft flex items-center gap-2 active:scale-95 transition" ' +
                 'style="background:#6C63FF; box-shadow:0 4px 24px rgba(108,99,255,0.5);">📷 Escanear QR</button>' +
             '</div>';
@@ -335,6 +315,7 @@
             }
           });
           document.getElementById('fab-scan').addEventListener('click', function() { window.location.href = 'scan.html'; });
+          document.getElementById('fab-events').addEventListener('click', function() { window.location.href = 'events.html'; });
           var sel = document.getElementById('profile-event-select');
           sel.addEventListener('change', function() { U.setActiveId(sel.value); location.reload(); });
 

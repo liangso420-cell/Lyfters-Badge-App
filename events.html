@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Explorar eventos — Lyfter Badge App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Poppins', 'sans-serif'] },
+          colors: { primary: '#6C63FF', 'primary-soft': '#EEEDFF', base: '#F8F9FA' },
+          borderRadius: { card: '16px', btn: '8px' },
+          boxShadow: { soft: '0 4px 20px rgba(0,0,0,0.08)' },
+        },
+      },
+    };
+  </script>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <main id="app"></main>
+  <div id="toast-root" class="fixed top-4 left-1/2 -translate-x-1/2 z-[60] flex flex-col gap-2 items-center pointer-events-none"></div>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    (function() {
+      'use strict';
+      var API = window.LyfterAPI;
+      var U = window.LyfterUtils;
+
+      var user = API.currentUser();
+      if (!user) { window.location.replace('login.html'); return; }
+      if (user.role === 'admin') { window.location.replace('admin-event.html'); return; }
+
+      var app = document.getElementById('app');
+      app.innerHTML = U.loadingHtml();
+
+      function fmtDate(iso) {
+        if (!iso) return '';
+        try { return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }); }
+        catch(e) { return ''; }
+      }
+
+      function eventCard(e, isRecommended) {
+        var photoHtml = e.photo
+          ? '<img src="' + U.esc(e.photo) + '" class="w-full h-40 object-cover" />'
+          : '<div class="w-full h-40 bg-primary-soft flex items-center justify-center text-5xl">🎪</div>';
+        var tags = (e.tags || []).slice(0, 3).map(function(t) {
+          return '<span class="px-2 py-0.5 rounded-full text-xs bg-white/20 text-white">' + U.esc(t) + '</span>';
+        }).join('');
+        var badge = isRecommended
+          ? '<span class="absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-semibold text-white" style="background:#6C63FF;">✨ Recomendado</span>'
+          : '';
+        return '<div class="bg-white rounded-card overflow-hidden shadow-soft cursor-pointer hover:shadow-md transition" data-eid="' + e.id + '">' +
+          '<div class="relative">' +
+            photoHtml +
+            '<div class="absolute inset-0 flex flex-col justify-end p-3" style="background:linear-gradient(transparent,rgba(0,0,0,0.6));">' +
+              '<p class="text-white font-bold text-sm truncate">' + U.esc(e.name) + '</p>' +
+              '<div class="flex gap-1 flex-wrap mt-1">' + tags + '</div>' +
+            '</div>' +
+            badge +
+          '</div>' +
+          '<div class="p-4">' +
+            '<p class="text-xs text-gray-400 mb-1">📅 ' + fmtDate(e.start) + ' — ' + fmtDate(e.end) + '</p>' +
+            (e.prize ? '<p class="text-xs text-gray-500">🎁 ' + U.esc(e.prize) + '</p>' : '') +
+          '</div>' +
+        '</div>';
+      }
+
+      async function init() {
+        try {
+          var allEvents, recommended;
+          var results = await Promise.all([
+            API.listEvents(),
+            API.getRecommended().catch(function() { return []; })
+          ]);
+          allEvents = results[0];
+          recommended = results[1];
+
+          var recommendedIds = recommended.map(function(e) { return e.id; });
+          var otherEvents = allEvents.filter(function(e) { return recommendedIds.indexOf(e.id) === -1; });
+
+          var recommendedSection = recommended.length
+            ? '<div class="mb-8">' +
+                '<h2 class="text-lg font-bold text-gray-800 mb-4">✨ Recomendados para ti</h2>' +
+                '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">' +
+                  recommended.map(function(e) { return eventCard(e, true); }).join('') +
+                '</div>' +
+              '</div>'
+            : '';
+
+          var allSection = otherEvents.length
+            ? '<div>' +
+                '<h2 class="text-lg font-bold text-gray-800 mb-4">🎪 Todos los eventos</h2>' +
+                '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">' +
+                  otherEvents.map(function(e) { return eventCard(e, false); }).join('') +
+                '</div>' +
+              '</div>'
+            : '';
+
+          var emptyHtml = (!recommended.length && !otherEvents.length)
+            ? '<div class="text-center py-16 text-gray-400">' +
+                '<div class="text-5xl mb-4">🎪</div>' +
+                '<p class="text-sm">No hay eventos disponibles por ahora.</p>' +
+              '</div>'
+            : '';
+
+          app.innerHTML =
+            '<div class="max-w-2xl mx-auto px-4 py-6 pb-28">' +
+              '<div class="flex items-center gap-3 mb-6">' +
+                '<button id="back-btn" class="w-9 h-9 rounded-full bg-white shadow-soft flex items-center justify-center text-gray-600 hover:bg-gray-50">←</button>' +
+                '<h1 class="text-xl font-bold text-gray-800">Explorar eventos</h1>' +
+              '</div>' +
+              recommendedSection +
+              allSection +
+              emptyHtml +
+            '</div>' +
+            '<div class="fixed bottom-0 left-0 right-0 flex justify-center pb-6 pointer-events-none z-30">' +
+              '<button id="fab-scan" class="pointer-events-auto px-7 py-4 rounded-full text-white font-semibold shadow-soft flex items-center gap-2 active:scale-95 transition" ' +
+                'style="background:#6C63FF; box-shadow:0 4px 24px rgba(108,99,255,0.5);">📷 Escanear QR</button>' +
+            '</div>';
+
+          document.getElementById('back-btn').addEventListener('click', function() { window.location.href = 'profile.html'; });
+          document.getElementById('fab-scan').addEventListener('click', function() { window.location.href = 'scan.html'; });
+
+          Array.prototype.forEach.call(document.querySelectorAll('[data-eid]'), function(card) {
+            card.addEventListener('click', function() {
+              U.setActiveId(card.getAttribute('data-eid'));
+              window.location.href = 'profile.html';
+            });
+          });
+
+        } catch(err) {
+          app.innerHTML = U.errorHtml(err && err.message ? err.message : 'Error inesperado');
+          var retry = document.getElementById('err-retry');
+          if (retry) retry.addEventListener('click', init);
+        }
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>
