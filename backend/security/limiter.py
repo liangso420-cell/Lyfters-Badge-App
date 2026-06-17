@@ -109,7 +109,14 @@ else:
 
     def init_limiter(app):
         """Conecta el limiter a la app usando Redis (REDIS_URL del .env)."""
-        redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+        redis_url = os.getenv("REDIS_URL") or (
+            "rediss://default:{token}@{host}:6379".format(
+                token=os.getenv("UPSTASH_REDIS_REST_TOKEN", ""),
+                host=os.getenv("UPSTASH_REDIS_REST_URL", "").replace("https://", ""),
+            )
+            if os.getenv("UPSTASH_REDIS_REST_URL")
+            else "redis://localhost:6379/0"
+        )
         app.config["RATELIMIT_STORAGE_URI"] = redis_url
         app.config.setdefault("RATELIMIT_HEADERS_ENABLED", True)
         app.config.setdefault("RATELIMIT_STRATEGY", "moving-window")
