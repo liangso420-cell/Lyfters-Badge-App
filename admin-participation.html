@@ -113,10 +113,21 @@
               '</tbody></table>'
             : '<p class="text-sm text-gray-400 text-center py-6">Sin datos todavía.</p>';
 
+          var statsSection =
+            '<div class="bg-white rounded-card p-6 shadow-soft mb-6">' +
+              '<h3 class="font-bold text-gray-800 mb-4">📊 Estadísticas por evento</h3>' +
+              '<select id="stats-event-select" class="w-full px-4 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm mb-4">' +
+                '<option value="">Selecciona un evento...</option>' +
+                events.map(function(e) { return '<option value="' + e.id + '">' + U.esc(e.name) + '</option>'; }).join('') +
+              '</select>' +
+              '<div id="event-stats-content"></div>' +
+            '</div>';
+
           var inner =
             '<div class="anim-fade">' +
               metrics +
               progreso +
+              statsSection +
               '<div class="bg-white rounded-card p-6 shadow-soft">' +
                 '<h3 class="font-bold text-gray-800 mb-4">Clasificación</h3>' +
                 lbHtml +
@@ -125,6 +136,114 @@
 
           app.innerHTML = U.adminShell('participation', inner, events, activeId);
           U.mountAdminShell();
+
+          var statsSelect = document.getElementById('stats-event-select');
+          if (statsSelect) {
+            statsSelect.addEventListener('change', async function() {
+              var eid = statsSelect.value;
+              var content = document.getElementById('event-stats-content');
+              if (!eid) { content.innerHTML = ''; return; }
+              content.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">Cargando estadísticas...</div>';
+              try {
+                var s = await API.getEventStats(eid);
+
+                var distTotal = Object.values(s.progreso_distribucion).reduce(function(a,b){ return a+b; }, 0) || 1;
+                var distBars = ['0-25','26-50','51-75','76-100'].map(function(k) {
+                  var val = s.progreso_distribucion[k] || 0;
+                  var pct = Math.round(val / distTotal * 100);
+                  return '<div class="flex items-center gap-2 mb-2">' +
+                    '<span class="text-xs text-gray-500 w-16">' + k + '%</span>' +
+                    '<div class="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden">' +
+                      '<div class="h-4 rounded-full" style="width:' + pct + '%; background:#6C63FF;"></div>' +
+                    '</div>' +
+                    '<span class="text-xs text-gray-500 w-8 text-right">' + val + '</span>' +
+                  '</div>';
+                }).join('');
+
+                var medals = ['🥇','🥈','🥉'];
+                var badgeRankHtml = s.badge_ranking.slice(0,5).map(function(b, i) {
+                  return '<div class="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">' +
+                    '<span class="text-lg w-6">' + (medals[i] || (i+1)) + '</span>' +
+                    '<span class="text-xl">' + (b.icon||'🏅') + '</span>' +
+                    '<span class="flex-1 text-sm text-gray-700">' + U.esc(b.nombre) + '</span>' +
+                    '<span class="text-sm font-bold text-primary">' + b.count + '</span>' +
+                  '</div>';
+                }).join('') || '<p class="text-xs text-gray-400 text-center py-2">Sin datos</p>';
+
+                var topUsersHtml = s.top_usuarios.slice(0,5).map(function(u, i) {
+                  var avatarEl = u.avatar
+                    ? '<img src="' + u.avatar + '" class="w-7 h-7 rounded-full object-cover" />'
+                    : '<div class="w-7 h-7 rounded-full bg-primary-soft flex items-center justify-center text-xs">👤</div>';
+                  return '<div class="flex items-center gap-2 py-2 border-b border-gray-100 last:border-0">' +
+                    '<span class="text-xs text-gray-400 w-4">' + (i+1) + '</span>' +
+                    avatarEl +
+                    '<span class="flex-1 text-sm text-gray-700">' + U.esc(u.nombre) + '</span>' +
+                    '<span class="text-sm font-bold text-primary">' + u.badges + ' 🏅</span>' +
+                  '</div>';
+                }).join('') || '<p class="text-xs text-gray-400 text-center py-2">Sin datos</p>';
+
+                var actividadHtml = s.actividad_por_hora.length
+                  ? (function() {
+                      var maxCount = s.actividad_por_hora.reduce(function(m,a){ return Math.max(m, a.count); }, 1);
+                      return s.actividad_por_hora.map(function(a) {
+                        var barH = Math.max(8, Math.round(a.count / maxCount * 60));
+                        return '<div class="flex flex-col items-center gap-1">' +
+                          '<span class="text-xs text-gray-500">' + a.count + '</span>' +
+                          '<div class="w-6 rounded-t" style="height:' + barH + 'px; background:#6C63FF; opacity:0.8;"></div>' +
+                          '<span class="text-xs text-gray-400">' + a.hora + 'h</span>' +
+                        '</div>';
+                      }).join('');
+                    })()
+                  : '<p class="text-xs text-gray-400 text-center py-2">Sin datos de actividad</p>';
+
+                content.innerHTML =
+                  '<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">' +
+                    '<div class="bg-base rounded-card p-4 text-center"><p class="text-2xl font-bold text-primary">' + s.participantes_activos + '</p><p class="text-xs text-gray-500 mt-1">Participantes activos</p></div>' +
+                    '<div class="bg-base rounded-card p-4 text-center"><p class="text-2xl font-bold text-green-600">' + s.completaron + '</p><p class="text-xs text-gray-500 mt-1">Completaron evento</p></div>' +
+                    '<div class="bg-base rounded-card p-4 text-center"><p class="text-2xl font-bold text-orange-500">' + s.total_canjeados + '</p><p class="text-xs text-gray-500 mt-1">Badges canjeados</p></div>' +
+                    '<div class="bg-base rounded-card p-4 text-center"><p class="text-2xl font-bold text-purple-600">' + s.pct_completaron + '%</p><p class="text-xs text-gray-500 mt-1">Tasa completación</p></div>' +
+                  '</div>' +
+                  '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">' +
+                    '<div class="bg-base rounded-card p-4">' +
+                      '<p class="text-sm font-semibold text-gray-700 mb-3">📈 Distribución de progreso</p>' +
+                      distBars +
+                    '</div>' +
+                    '<div class="bg-base rounded-card p-4">' +
+                      '<p class="text-sm font-semibold text-gray-700 mb-3">✅ Finalización</p>' +
+                      '<div class="flex items-center gap-3 mb-2">' +
+                        '<div class="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden">' +
+                          '<div class="h-4 rounded-full bg-green-500" style="width:' + s.pct_completaron + '%;"></div>' +
+                        '</div>' +
+                        '<span class="text-xs text-green-600 font-bold">' + s.pct_completaron + '%</span>' +
+                      '</div>' +
+                      '<div class="flex justify-between text-xs text-gray-500">' +
+                        '<span>✅ ' + s.completaron + ' completaron</span>' +
+                        '<span>❌ ' + s.no_completaron + ' no completaron</span>' +
+                      '</div>' +
+                    '</div>' +
+                  '</div>' +
+                  '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">' +
+                    '<div class="bg-base rounded-card p-4">' +
+                      '<p class="text-sm font-semibold text-gray-700 mb-3">🏆 Badges más obtenidos</p>' +
+                      badgeRankHtml +
+                    '</div>' +
+                    '<div class="bg-base rounded-card p-4">' +
+                      '<p class="text-sm font-semibold text-gray-700 mb-3">👥 Top participantes</p>' +
+                      topUsersHtml +
+                    '</div>' +
+                  '</div>' +
+                  (s.actividad_por_hora.length
+                    ? '<div class="bg-base rounded-card p-4">' +
+                        '<p class="text-sm font-semibold text-gray-700 mb-3">⏰ Actividad por hora</p>' +
+                        '<div class="flex items-end gap-1 h-20">' + actividadHtml + '</div>' +
+                      '</div>'
+                    : '');
+
+              } catch(err) {
+                content.innerHTML = '<p class="text-sm text-red-400 text-center py-4">Error: ' + U.esc(err.message) + '</p>';
+              }
+            });
+          }
 
         } catch (err) {
           app.innerHTML = U.errorHtml(err && err.message ? err.message : 'Error inesperado');

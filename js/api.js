@@ -341,6 +341,22 @@
       if (u) { u.avatar = base64; persist(); }
       return { ok: true };
     },
+    async getEventStats(eventId) {
+      var e = mockEvent(eventId); if (!e) throw new Error('Evento no encontrado');
+      var total = e.badges.length;
+      var canjeados = e.badges.reduce(function(a,b){ return a + (b.redemptions||0); }, 0);
+      return {
+        evento: { id: e.id, nombre: e.name },
+        participantes_activos: e.totalParticipants || 0,
+        completaron: 0, no_completaron: e.totalParticipants || 0, pct_completaron: 0,
+        total_badges: total, total_canjeados: canjeados,
+        pct_canjeados: total > 0 ? Math.round(canjeados/total*100) : 0,
+        progreso_distribucion: {"0-25": 5, "26-50": 10, "51-75": 8, "76-100": 3},
+        badge_ranking: e.badges.map(function(b){ return {nombre:b.name, icon:b.emoji||'🏅', count:b.redemptions||0}; }).sort(function(a,b){return b.count-a.count;}),
+        top_usuarios: [],
+        actividad_por_hora: []
+      };
+    },
     async getLeaderboard() {
       var result = mockState.users.map(function(u) {
         var total = 0;
@@ -545,6 +561,9 @@
     async updateAvatar(base64) {
       return await apiRequest('POST', '/auth/profile/avatar', { avatar: base64 });
     },
+    async getEventStats(eventId) {
+      return await apiRequest('GET', '/admin/events/' + eventId + '/stats');
+    },
     async getLeaderboard() {
       return await apiRequest('GET', '/leaderboard');
     },
@@ -602,6 +621,7 @@
     updatePrivacy:    impl.updatePrivacy.bind(impl),
     deleteAccount:    impl.deleteAccount.bind(impl),
     updateAvatar:     impl.updateAvatar.bind(impl),
+    getEventStats:          impl.getEventStats.bind(impl),
     getLeaderboard:         impl.getLeaderboard.bind(impl),
     generateEventAccessQr:  impl.generateEventAccessQr.bind(impl),
     updateEventPhoto:       impl.updateEventPhoto.bind(impl),

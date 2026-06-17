@@ -545,6 +545,82 @@ def admin_list_events():
     return jsonify([fmt_event(e) for e in docs]), 200
 
 
+@app.route("/admin/events/<event_id>/stats", methods=["GET"])
+@jwt_required()
+def event_stats(event_id):
+    if not require_admin():
+        return jsonify(error="Acceso denegado"), 403
+    oid = valid_oid(event_id)
+    if not oid:
+        return jsonify(error="ID inválido"), 400
+    event = events().find_one({"_id": oid})
+    if not event:
+        return jsonify(error="Evento no encontrado"), 404
+
+    badge_docs = list(badges().find({"event_id": oid}))
+    total_badges = len(badge_docs)
+
+    participantes_activos = len(scans().distinct("user_id", {"event_id": oid}))
+
+    completaron = 0
+    progreso_dist = {"0-25": 0, "26-50": 0, "51-75": 0, "76-100": 0}
+    if total_badges > 0:
+        pipeline = [
+            {"$match": {"event_id": oid}},
+            {"$group": {"_id": "$user_id", "count": {"$sum": 1}}}
+        ]
+        for row in scans().aggregate(pipeline):
+            pct = (row["count"] / total_badges) * 100
+            if pct >= 100: completaron += 1
+            if pct <= 25: progreso_dist["0-25"] += 1
+            elif pct <= 50: progreso_dist["26-50"] += 1
+            elif pct <= 75: progreso_dist["51-75"] += 1
+            else: progreso_dist["76-100"] += 1
+
+    total_canjeados = scans().count_documents({"event_id": oid})
+    pct_canjeados = round((total_canjeados / (total_badges * max(participantes_activos, 1))) * 100, 1) if total_badges > 0 else 0
+
+    badge_ranking = []
+    for b in badge_docs:
+        count = scans().count_documents({"badge_id": b["_id"]})
+        badge_ranking.append({"id": str(b["_id"]), "nombre": b.get("name", ""), "icon": b.get("icon", "🏅"), "count": count})
+    badge_ranking.sort(key=lambda x: x["count"], reverse=True)
+
+    top_users = []
+    pipeline2 = [
+        {"$match": {"event_id": oid}},
+        {"$group": {"_id": "$user_id", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+        {"$limit": 10}
+    ]
+    for row in scans().aggregate(pipeline2):
+        u = users().find_one({"_id": row["_id"]}, {"name": 1, "avatar": 1})
+        if u:
+            top_users.append({"nombre": u.get("name", ""), "avatar": u.get("avatar", None), "badges": row["count"]})
+
+    pipeline3 = [
+        {"$match": {"event_id": oid, "scanned_at": {"$exists": True}}},
+        {"$group": {"_id": {"$hour": "$scanned_at"}, "count": {"$sum": 1}}},
+        {"$sort": {"_id": 1}}
+    ]
+    actividad_hora = [{"hora": row["_id"], "count": row["count"]} for row in scans().aggregate(pipeline3)]
+
+    return jsonify({
+        "evento": {"id": str(event["_id"]), "nombre": event.get("title", "")},
+        "participantes_activos": participantes_activos,
+        "completaron": completaron,
+        "no_completaron": max(0, participantes_activos - completaron),
+        "pct_completaron": round((completaron / max(participantes_activos, 1)) * 100, 1),
+        "total_badges": total_badges,
+        "total_canjeados": total_canjeados,
+        "pct_canjeados": pct_canjeados,
+        "progreso_distribucion": progreso_dist,
+        "badge_ranking": badge_ranking[:10],
+        "top_usuarios": top_users,
+        "actividad_por_hora": actividad_hora,
+    }), 200
+
+
 @app.route("/admin/event",  methods=["POST"])
 @app.route("/admin/events", methods=["POST"])
 @jwt_required()
