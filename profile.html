@@ -231,6 +231,7 @@
                 '<div class="flex items-center justify-between mb-4">' +
                   '<h2 class="text-lg font-bold text-gray-800">Hola, ' + U.esc(user.name.split(' ')[0]) + ' 👋</h2>' +
                   '<div class="flex items-center gap-2">' +
+                    '<button id="fab-events" class="px-3 py-1.5 rounded-btn text-xs font-medium text-primary border border-primary hover:bg-primary-soft">🎪 Eventos</button>' +
                     '<button id="profile-menu-btn" class="w-9 h-9 rounded-full bg-gray-100 hover:bg-primary-soft flex items-center justify-center text-lg transition" title="Mi perfil">☰</button>' +
                     '<button id="profile-logout" class="text-sm text-gray-400 hover:text-primary">⎋ Salir</button>' +
                   '</div>' +
@@ -254,8 +255,7 @@
               '</div>' +
               historyHtml +
             '</section>' +
-            '<div class="fixed bottom-0 left-0 right-0 flex justify-center gap-3 pb-6 pointer-events-none z-30">' +
-              '<button id="fab-events" class="pointer-events-auto px-5 py-4 rounded-full text-primary font-semibold shadow-soft flex items-center gap-2 active:scale-95 transition bg-white border border-primary">🎪 Eventos</button>' +
+            '<div class="fixed bottom-0 left-0 right-0 flex justify-center pb-6 pointer-events-none z-30">' +
               '<button id="fab-scan" class="pointer-events-auto px-7 py-4 rounded-full text-white font-semibold shadow-soft flex items-center gap-2 active:scale-95 transition" ' +
                 'style="background:#6C63FF; box-shadow:0 4px 24px rgba(108,99,255,0.5);">📷 Escanear QR</button>' +
             '</div>';
@@ -316,6 +316,7 @@
           });
           document.getElementById('fab-scan').addEventListener('click', function() { window.location.href = 'scan.html'; });
           document.getElementById('fab-events').addEventListener('click', function() { window.location.href = 'events.html'; });
+
           var sel = document.getElementById('profile-event-select');
           sel.addEventListener('change', function() { U.setActiveId(sel.value); location.reload(); });
 

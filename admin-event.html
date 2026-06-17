@@ -74,6 +74,15 @@
                   U.inputField({ label: 'Fecha fin', type: 'date', name: 'end' }) +
                 '</div>' +
                 U.inputField({ label: 'Premio sorpresa 🎁', name: 'prize', placeholder: 'Entrada VIP al after-party' }) +
+                '<div class="pt-2">' +
+                  '<p class="text-sm font-semibold text-gray-700 mb-2">🏷️ Tags del evento</p>' +
+                  '<p class="text-xs text-gray-400 mb-3">Ayudan a recomendar este evento a usuarios interesados</p>' +
+                  '<div id="create-tags-container" class="flex flex-wrap gap-2 mb-3">' +
+                    TAGS_LIST.map(function(tag) {
+                      return '<button type="button" data-ctag="' + U.esc(tag) + '" class="ctag-btn px-3 py-1.5 rounded-full text-xs border border-gray-200 text-gray-600 hover:border-primary hover:text-primary transition">' + U.esc(tag) + '</button>';
+                    }).join('') +
+                  '</div>' +
+                '</div>' +
                 U.primaryButton('Crear evento', 'type="submit" id="create-btn"') +
               '</form>' +
             '</div>';
@@ -136,6 +145,25 @@
 
           app.innerHTML = U.adminShell('event', inner, events, activeId);
           U.mountAdminShell();
+
+          var createSelectedTags = [];
+          Array.prototype.forEach.call(document.querySelectorAll('.ctag-btn'), function(btn) {
+            btn.addEventListener('click', function() {
+              var tag = btn.getAttribute('data-ctag');
+              var idx = createSelectedTags.indexOf(tag);
+              if (idx === -1) {
+                createSelectedTags.push(tag);
+                btn.style.background = '#6C63FF';
+                btn.style.color = 'white';
+                btn.style.borderColor = '#6C63FF';
+              } else {
+                createSelectedTags.splice(idx, 1);
+                btn.style.background = '';
+                btn.style.color = '';
+                btn.style.borderColor = '';
+              }
+            });
+          });
 
           var eventSearch = document.getElementById('event-search');
           if (eventSearch) {
@@ -273,6 +301,9 @@
                 end: createFormEl.end.value,
                 prize: createFormEl.prize.value.trim()
               });
+              if (createSelectedTags.length) {
+                await API.updateEventTags(created.id, createSelectedTags);
+              }
               U.setActiveId(created.id);
               U.toast('Evento creado ✅', 'success');
               expandedId = created.id;
