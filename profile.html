@@ -119,14 +119,23 @@
           var events = await API.getJoinedEvents();
           if (!events.length) {
             app.innerHTML =
-              '<section class="device-frame px-4 pt-12 pb-28">' +
+              '<section class="device-frame px-4 pt-10 pb-28">' +
+                '<div class="bg-white rounded-card p-5 shadow-soft anim-fade mb-4">' +
+                  '<div class="flex items-center justify-between mb-4">' +
+                    '<h2 class="text-lg font-bold text-gray-800">Hola, ' + U.esc(user.name.split(' ')[0]) + ' 👋</h2>' +
+                    '<div class="flex items-center gap-2">' +
+                      '<button id="fab-events-empty" class="px-3 py-1.5 rounded-btn text-xs font-medium text-primary border border-primary hover:bg-primary-soft">🎪 Eventos</button>' +
+                      '<button id="profile-menu-btn-empty" class="w-9 h-9 rounded-full bg-gray-100 hover:bg-primary-soft flex items-center justify-center text-lg transition" title="Mi perfil">☰</button>' +
+                      '<button id="profile-logout" class="text-sm text-gray-400 hover:text-primary">⎋ Salir</button>' +
+                    '</div>' +
+                  '</div>' +
+                '</div>' +
                 '<div class="bg-white rounded-card p-8 shadow-soft text-center mb-4">' +
                   '<div class="text-5xl mb-4">🎫</div>' +
                   '<h3 class="font-bold text-gray-800 mb-2">Aún no estás en ningún evento</h3>' +
                   '<p class="text-sm text-gray-400 mb-2">Escanea el QR de un evento para unirte y empezar a coleccionar badges.</p>' +
                   '<p class="text-xs text-gray-300 mb-5">O explora los eventos disponibles para encontrar uno que te interese.</p>' +
-                  '<button id="btn-explore" class="w-full py-3 rounded-btn text-white font-semibold mb-3" style="background:#6C63FF;">🎪 Explorar eventos</button>' +
-                  '<button id="profile-logout" class="text-sm text-gray-400">⎋ Salir</button>' +
+                  '<button id="btn-explore" class="w-full py-3 rounded-btn text-white font-semibold" style="background:#6C63FF;">🎪 Explorar eventos</button>' +
                 '</div>' +
               '</section>' +
               '<div class="fixed bottom-0 left-0 right-0 flex justify-center pb-6 pointer-events-none z-30">' +
@@ -136,6 +145,23 @@
             document.getElementById('profile-logout').addEventListener('click', U.logout);
             document.getElementById('btn-explore').addEventListener('click', function() { window.location.href = 'events.html'; });
             document.getElementById('fab-scan-empty').addEventListener('click', function() { window.location.href = 'scan.html'; });
+            document.getElementById('fab-events-empty').addEventListener('click', function() { window.location.href = 'events.html'; });
+            document.getElementById('profile-menu-btn-empty').addEventListener('click', async function() {
+              try {
+                var p = await API.getProfile();
+                U.showDrawer(p.avatar, p.nombre, function(newAvatar) {
+                  var btn = document.getElementById('profile-menu-btn-empty');
+                  if (btn && newAvatar) {
+                    btn.textContent = '';
+                    btn.style.backgroundImage = 'url(' + newAvatar + ')';
+                    btn.style.backgroundSize = 'cover';
+                    btn.style.backgroundPosition = 'center';
+                  }
+                });
+              } catch(e) {
+                U.showDrawer(null, null, null);
+              }
+            });
             return;
           }
 
