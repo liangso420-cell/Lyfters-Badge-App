@@ -41,6 +41,10 @@
           '<h2 class="text-xl font-bold mb-2" style="color:#6C63FF;">' + msg + '</h2>' +
           '<p class="text-gray-500 text-sm mb-6">' + (r.event ? (r.event.name || r.event.nombre || '') : '') + '</p>' +
           '<button id="go-profile" class="w-full py-3 rounded-btn text-white font-semibold" style="background:#6C63FF;">Ver mis badges</button>';
+        Array.prototype.forEach.call(document.querySelectorAll('p, h1, h2, h3, h4, button, label, span:not(.text-primary):not(.text-white)'), function(el) {
+          if (el.children.length === 0 && el.textContent.trim()) { el.setAttribute('data-i18n', ''); }
+        });
+        if (window.LyfterUtils && window.LyfterUtils.getCurrentLang() !== 'es') window.LyfterUtils.translatePage();
         document.getElementById('go-profile').addEventListener('click', function() {
           window.LyfterUtils.setActiveId(eventId);
           window.location.href = 'profile.html';
@@ -50,6 +54,10 @@
           '<div class="text-4xl mb-4">⚠️</div>' +
           '<p class="text-gray-600 mb-4">' + (err.message || 'No se pudo unir al evento') + '</p>' +
           '<a href="profile.html" class="text-sm" style="color:#6C63FF;">← Volver al perfil</a>';
+        Array.prototype.forEach.call(document.querySelectorAll('p, h1, h2, h3, h4, button, label, span:not(.text-primary):not(.text-white)'), function(el) {
+          if (el.children.length === 0 && el.textContent.trim()) { el.setAttribute('data-i18n', ''); }
+        });
+        if (window.LyfterUtils && window.LyfterUtils.getCurrentLang() !== 'es') window.LyfterUtils.translatePage();
       });
     })();
   </script>

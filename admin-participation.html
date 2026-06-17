@@ -136,6 +136,10 @@
 
           app.innerHTML = U.adminShell('participation', inner, events, activeId);
           U.mountAdminShell();
+          Array.prototype.forEach.call(document.querySelectorAll('p, h1, h2, h3, h4, button, label, span:not(.text-primary):not(.text-white)'), function(el) {
+            if (el.children.length === 0 && el.textContent.trim()) { el.setAttribute('data-i18n', ''); }
+          });
+          if (U.getCurrentLang() !== 'es') U.translatePage();
 
           var statsSelect = document.getElementById('stats-event-select');
           if (statsSelect) {

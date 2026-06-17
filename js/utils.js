@@ -4,6 +4,57 @@
 (function () {
   'use strict';
 
+  var LANGUAGES = {
+    'es': 'Español',
+    'en': 'English',
+    'pt': 'Português',
+    'fr': 'Français',
+    'de': 'Deutsch',
+    'hi': 'हिन्दी',
+    'zh': '中文',
+    'ar': 'العربية',
+    'ja': '日本語',
+    'ru': 'Русский'
+  };
+
+  var _currentLang = 'es';
+  try { _currentLang = localStorage.getItem('lyfter_lang') || 'es'; } catch(e) {}
+
+  async function translateText(text, targetLang) {
+    if (!text || !text.trim() || targetLang === 'es') return text;
+    try {
+      var res = await fetch('https://libretranslate.com/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ q: text, source: 'es', target: targetLang, format: 'text' })
+      });
+      if (!res.ok) return text;
+      var data = await res.json();
+      return data.translatedText || text;
+    } catch(e) {
+      return text;
+    }
+  }
+
+  async function translatePage() {
+    var lang = _currentLang;
+    if (lang === 'es') return;
+    var elements = document.querySelectorAll('[data-i18n]');
+    for (var i = 0; i < elements.length; i++) {
+      var el = elements[i];
+      var original = el.getAttribute('data-i18n-original') || el.textContent;
+      el.setAttribute('data-i18n-original', original);
+      var translated = await translateText(original, lang);
+      el.textContent = translated;
+    }
+  }
+
+  function getCurrentLang() { return _currentLang; }
+  function setCurrentLang(lang) {
+    _currentLang = lang;
+    try { localStorage.setItem('lyfter_lang', lang); } catch(e) {}
+  }
+
   var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   var ACTIVE_KEY = 'lyfter_active_event';
   var activeMem = null;
@@ -191,6 +242,7 @@
             '<div class="mt-2 border-t border-gray-100 pt-2">' +
               '<p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-5 mb-2 mt-2">Apariencia</p>' +
               '<button id="drawer-theme-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">🌙 <span>Tema oscuro/claro</span></button>' +
+              '<button id="drawer-lang-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">🌐 <span>Idioma — ' + (LANGUAGES[_currentLang] || 'Español') + '</span></button>' +
             '</div>' +
             '<div class="mt-2 border-t border-gray-100 pt-2">' +
               '<p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-5 mb-2 mt-2">Información</p>' +
@@ -496,6 +548,44 @@
       });
     }
 
+    var langBtn = document.getElementById('drawer-lang-btn');
+    if (langBtn) {
+      langBtn.addEventListener('click', function() {
+        var nav = document.getElementById('drawer-panel').querySelector('nav');
+        nav.innerHTML =
+          '<div class="px-5 py-4">' +
+            '<button id="drawer-lang-back" class="text-xs text-primary mb-4 flex items-center gap-1">← Volver</button>' +
+            '<p class="text-sm font-semibold text-gray-700 mb-3">🌐 Idioma</p>' +
+            '<div class="space-y-1">' +
+              Object.keys(LANGUAGES).map(function(code) {
+                var isSelected = _currentLang === code;
+                return '<button data-lang="' + code + '" class="lang-option w-full flex items-center justify-between px-4 py-3 rounded-btn text-sm hover:bg-gray-50 ' + (isSelected ? 'text-primary font-semibold bg-primary-soft' : 'text-gray-700') + '">' +
+                  '<span>' + LANGUAGES[code] + '</span>' +
+                  (isSelected ? '<span class="text-primary">✓</span>' : '') +
+                '</button>';
+              }).join('') +
+            '</div>' +
+            '<p class="text-xs text-gray-400 mt-3 px-1">La traducción puede tardar unos segundos.</p>' +
+          '</div>';
+
+        document.getElementById('drawer-lang-back').addEventListener('click', function() {
+          closeModal();
+          window.LyfterAPI.getProfile().then(function(p) { showDrawer(p.avatar, p.nombre, onAvatarSave, isAdmin); }).catch(function() { showDrawer(null, null, onAvatarSave, isAdmin); });
+        });
+
+        Array.prototype.forEach.call(document.querySelectorAll('.lang-option'), function(btn) {
+          btn.addEventListener('click', async function() {
+            var lang = btn.getAttribute('data-lang');
+            setCurrentLang(lang);
+            closeModal();
+            toast('Traduciendo a ' + LANGUAGES[lang] + '...', 'info');
+            await translatePage();
+            toast('Idioma cambiado a ' + LANGUAGES[lang], 'success');
+          });
+        });
+      });
+    }
+
     // Acerca de
     var aboutBtn = document.getElementById('drawer-about-btn');
     if (aboutBtn) {
@@ -733,7 +823,11 @@
     logout: logout,
     getActiveId: getActiveId,
     setActiveId: setActiveId,
-    ensureActive: ensureActive
+    ensureActive: ensureActive,
+    translatePage: translatePage,
+    getCurrentLang: getCurrentLang,
+    setCurrentLang: setCurrentLang,
+    translateText: translateText
   };
 
   window.lyfterReset = function () {

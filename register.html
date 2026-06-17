@@ -69,6 +69,10 @@
             '</form>' +
           '</div>' +
         '</section>';
+      Array.prototype.forEach.call(document.querySelectorAll('p, h1, h2, h3, h4, button, label, span:not(.text-primary):not(.text-white)'), function(el) {
+        if (el.children.length === 0 && el.textContent.trim()) { el.setAttribute('data-i18n', ''); }
+      });
+      if (U.getCurrentLang() !== 'es') U.translatePage();
 
       var TAGS = ['Desarrollo Web','Mobile','Inteligencia Artificial','Data Science','Ciberseguridad',
         'DevOps','Cloud','Blockchain','UX/UI','Product Management','Emprendimiento','Marketing Digital',
@@ -93,6 +97,10 @@
               '<button id="skip-interests" class="w-full py-2 text-sm text-gray-400 hover:text-primary">Omitir por ahora</button>' +
             '</div>' +
           '</section>';
+        Array.prototype.forEach.call(document.querySelectorAll('p, h1, h2, h3, h4, button, label, span:not(.text-primary):not(.text-white)'), function(el) {
+          if (el.children.length === 0 && el.textContent.trim()) { el.setAttribute('data-i18n', ''); }
+        });
+        if (U.getCurrentLang() !== 'es') U.translatePage();
 
         Array.prototype.forEach.call(document.querySelectorAll('.tag-btn'), function(btn) {
           btn.addEventListener('click', function() {
