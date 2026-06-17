@@ -591,25 +591,33 @@
             closeModal();
             toast('Traduciendo...', 'info');
             var elements = document.querySelectorAll('p, h1, h2, h3, h4, button, label, a, span, td, th, li');
-            for (var i = 0; i < elements.length; i++) {
-              var el = elements[i];
-              if (el.children.length === 0 && el.textContent.trim() && lang !== 'es') {
+            var elementsToTranslate = [];
+            Array.prototype.forEach.call(elements, function(el) {
+              if (el.children.length === 0 && el.textContent.trim()) {
+                elementsToTranslate.push(el);
+              }
+            });
+
+            if (lang === 'es') {
+              elementsToTranslate.forEach(function(el) {
+                var orig = el.getAttribute('data-original');
+                if (orig) el.textContent = orig;
+              });
+            } else {
+              for (var i = 0; i < elementsToTranslate.length; i++) {
+                var el = elementsToTranslate[i];
                 try {
                   var original = el.getAttribute('data-original') || el.textContent.trim();
                   el.setAttribute('data-original', original);
-                  var res = await fetch('https://libretranslate.com/translate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ q: original, source: 'es', target: lang, format: 'text' })
-                  });
+                  var res = await fetch('https://api.mymemory.translated.net/get?q=' + encodeURIComponent(original) + '&langpair=es|' + lang);
                   if (res.ok) {
                     var data = await res.json();
-                    if (data.translatedText) el.textContent = data.translatedText;
+                    if (data.responseStatus === 200 && data.responseData && data.responseData.translatedText) {
+                      el.textContent = data.responseData.translatedText;
+                    }
                   }
+                  await new Promise(function(r) { setTimeout(r, 50); });
                 } catch(e) {}
-              } else if (lang === 'es') {
-                var orig = el.getAttribute('data-original');
-                if (orig) el.textContent = orig;
               }
             }
             toast('Idioma cambiado ✅', 'success');
