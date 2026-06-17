@@ -109,7 +109,7 @@
   function eventDto(e) {
     return { id: e.id, name: e.name, description: e.description, start: e.start, end: e.end,
       prize: e.prize, active: e.active !== false, status: computeMockStatus(e),
-      photo: e.photo || null, access_qr: e.access_qr || null, tags: e.tags || [] };
+      photo: e.photo || null, access_qr: e.access_qr || null, tags: e.tags || [], location: e.location || '' };
   }
 
   var Mock = {
@@ -230,6 +230,17 @@
     async joinEvent(eventId) {
       var e = mockEvent(eventId); if (!e) throw new Error('Evento no encontrado');
       return { status: 'joined', event: eventDto(e) };
+    },
+    async getJoinedEvents() {
+      var sess = getSession();
+      if (!sess) return [];
+      var userId = sess.user.id;
+      var joined = mockState.progress[userId] ? Object.keys(mockState.progress[userId]) : [];
+      return mockState.events.filter(function(e) { return joined.indexOf(e.id) !== -1; }).map(eventDto);
+    },
+    async updateEventLocation(eventId, location) {
+      var e = mockEvent(eventId); if (!e) throw new Error('Evento no encontrado');
+      e.location = location; persist(); return { ok: true };
     },
     async updateInterests(interests) {
       var sess = getSession();
@@ -389,6 +400,7 @@
       photo: e.photo || null,
       access_qr: e.access_qr || null,
       tags: e.tags || [],
+      location: e.location || '',
     };
   }
 
@@ -508,6 +520,12 @@
     async joinEvent(eventId) {
       return await apiRequest('POST', '/events/' + eventId + '/join');
     },
+    async getJoinedEvents() {
+      return (await apiRequest('GET', '/events/joined')).map(mapEvent);
+    },
+    async updateEventLocation(eventId, location) {
+      return await apiRequest('POST', '/admin/events/' + eventId + '/location', { location: location });
+    },
     async updateInterests(interests) {
       return await apiRequest('POST', '/auth/interests', { interests: interests });
     },
@@ -626,6 +644,8 @@
     generateEventAccessQr:  impl.generateEventAccessQr.bind(impl),
     updateEventPhoto:       impl.updateEventPhoto.bind(impl),
     joinEvent:              impl.joinEvent.bind(impl),
+    getJoinedEvents:      impl.getJoinedEvents.bind(impl),
+    updateEventLocation:  impl.updateEventLocation.bind(impl),
     updateInterests:  impl.updateInterests.bind(impl),
     getRecommended:   impl.getRecommended.bind(impl),
     updateEventTags:  impl.updateEventTags.bind(impl),
