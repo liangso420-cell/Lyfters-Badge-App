@@ -156,6 +156,10 @@
 
   /* ----- Drawer lateral ----- */
   function showDrawer(avatarUrl, userName, onAvatarSave, isAdmin) {
+    try {
+      var savedTheme = localStorage.getItem('lyfter_theme');
+      if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
+    } catch(e) {}
     var root = document.getElementById('modal-root');
     var avatarHtml = avatarUrl
       ? '<img src="' + avatarUrl + '" class="w-16 h-16 rounded-full object-cover border-2 border-primary" />'
@@ -174,8 +178,25 @@
           '<nav class="flex-1 overflow-y-auto py-4">' +
             '<p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-5 mb-2">Cuenta</p>' +
             '<button id="drawer-avatar-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">📷 <span>Cambiar foto de perfil</span></button>' +
+            '<button id="drawer-name-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">✏️ <span>Cambiar nombre</span></button>' +
+            '<button id="drawer-email-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">📧 <span>Cambiar email</span></button>' +
             '<button id="drawer-pw-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">🔑 <span>Cambiar contraseña</span></button>' +
             '<button id="drawer-interests-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">🎯 <span>Mis intereses</span></button>' +
+            '<div class="mt-2 border-t border-gray-100 pt-2">' +
+              '<p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-5 mb-2 mt-2">Privacidad</p>' +
+              '<button id="drawer-privacy-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">🔒 <span>Configuración de privacidad</span></button>' +
+            '</div>' +
+            '<div class="mt-2 border-t border-gray-100 pt-2">' +
+              '<p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-5 mb-2 mt-2">Apariencia</p>' +
+              '<button id="drawer-theme-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">🌙 <span>Tema oscuro/claro</span></button>' +
+            '</div>' +
+            '<div class="mt-2 border-t border-gray-100 pt-2">' +
+              '<p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-5 mb-2 mt-2">Información</p>' +
+              '<button id="drawer-about-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">ℹ️ <span>Acerca de la app</span></button>' +
+            '</div>' +
+            '<div class="mt-2 border-t border-gray-100 pt-2">' +
+              '<button id="drawer-delete-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-red-500 hover:bg-red-50 text-left">🗑 <span>Eliminar cuenta</span></button>' +
+            '</div>' +
             (isAdmin
               ? '<div class="mt-2 border-t border-gray-100 pt-2">' +
                   '<p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-5 mb-2 mt-2">Administración</p>' +
@@ -335,6 +356,175 @@
         }).catch(function() {
           toast('No se pudieron cargar los intereses', 'error');
         });
+      });
+    }
+
+    // Cambiar nombre
+    var nameBtn = document.getElementById('drawer-name-btn');
+    if (nameBtn) {
+      nameBtn.addEventListener('click', function() {
+        var nav = document.getElementById('drawer-panel').querySelector('nav');
+        nav.innerHTML =
+          '<div class="px-5 py-4">' +
+            '<button id="drawer-name-back" class="text-xs text-primary mb-4 flex items-center gap-1">← Volver</button>' +
+            '<p class="text-sm font-semibold text-gray-700 mb-3">✏️ Cambiar nombre</p>' +
+            '<input id="drawer-name-input" type="text" placeholder="Tu nombre completo" class="w-full px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm mb-3" />' +
+            '<button id="drawer-name-save" class="w-full py-2.5 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">Guardar</button>' +
+          '</div>';
+        window.LyfterAPI.getProfile().then(function(p) {
+          var input = document.getElementById('drawer-name-input');
+          if (input) input.value = p.nombre || '';
+        });
+        document.getElementById('drawer-name-back').addEventListener('click', function() {
+          closeModal();
+          window.LyfterAPI.getProfile().then(function(p) { showDrawer(p.avatar, p.nombre, onAvatarSave, isAdmin); }).catch(function() { showDrawer(null, null, onAvatarSave, isAdmin); });
+        });
+        document.getElementById('drawer-name-save').addEventListener('click', async function() {
+          var btn = this;
+          var name = document.getElementById('drawer-name-input').value.trim();
+          if (!name) { toast('Ingresa un nombre', 'error'); return; }
+          btn.disabled = true; btn.textContent = 'Guardando...';
+          try {
+            await window.LyfterAPI.updateName(name);
+            toast('Nombre actualizado', 'success');
+            closeModal();
+          } catch(err) { toast(err.message || 'Error', 'error'); btn.disabled = false; btn.textContent = 'Guardar'; }
+        });
+      });
+    }
+
+    // Cambiar email
+    var emailBtn = document.getElementById('drawer-email-btn');
+    if (emailBtn) {
+      emailBtn.addEventListener('click', function() {
+        var nav = document.getElementById('drawer-panel').querySelector('nav');
+        nav.innerHTML =
+          '<div class="px-5 py-4">' +
+            '<button id="drawer-email-back" class="text-xs text-primary mb-4 flex items-center gap-1">← Volver</button>' +
+            '<p class="text-sm font-semibold text-gray-700 mb-3">📧 Cambiar email</p>' +
+            '<input id="drawer-email-input" type="email" placeholder="nuevo@email.com" class="w-full px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm mb-3" />' +
+            '<button id="drawer-email-save" class="w-full py-2.5 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">Guardar</button>' +
+          '</div>';
+        window.LyfterAPI.getProfile().then(function(p) {
+          var input = document.getElementById('drawer-email-input');
+          if (input) input.value = p.email || '';
+        });
+        document.getElementById('drawer-email-back').addEventListener('click', function() {
+          closeModal();
+          window.LyfterAPI.getProfile().then(function(p) { showDrawer(p.avatar, p.nombre, onAvatarSave, isAdmin); }).catch(function() { showDrawer(null, null, onAvatarSave, isAdmin); });
+        });
+        document.getElementById('drawer-email-save').addEventListener('click', async function() {
+          var btn = this;
+          var email = document.getElementById('drawer-email-input').value.trim();
+          if (!email) { toast('Ingresa un email', 'error'); return; }
+          btn.disabled = true; btn.textContent = 'Guardando...';
+          try {
+            await window.LyfterAPI.updateEmail(email);
+            toast('Email actualizado', 'success');
+            closeModal();
+          } catch(err) { toast(err.message || 'Error', 'error'); btn.disabled = false; btn.textContent = 'Guardar'; }
+        });
+      });
+    }
+
+    // Privacidad
+    var privacyBtn = document.getElementById('drawer-privacy-btn');
+    if (privacyBtn) {
+      privacyBtn.addEventListener('click', function() {
+        var nav = document.getElementById('drawer-panel').querySelector('nav');
+        window.LyfterAPI.getProfile().then(function(p) {
+          var privacy = p.privacy || { show_in_leaderboard: true, show_badges: true };
+          nav.innerHTML =
+            '<div class="px-5 py-4">' +
+              '<button id="drawer-privacy-back" class="text-xs text-primary mb-4 flex items-center gap-1">← Volver</button>' +
+              '<p class="text-sm font-semibold text-gray-700 mb-4">🔒 Privacidad</p>' +
+              '<div class="space-y-4">' +
+                '<div class="flex items-center justify-between">' +
+                  '<div><p class="text-sm text-gray-700">Aparecer en clasificación</p><p class="text-xs text-gray-400">Otros usuarios pueden verte en el ranking</p></div>' +
+                  '<input type="checkbox" id="priv-leaderboard" ' + (privacy.show_in_leaderboard ? 'checked' : '') + ' class="w-5 h-5 accent-primary cursor-pointer" />' +
+                '</div>' +
+                '<div class="flex items-center justify-between">' +
+                  '<div><p class="text-sm text-gray-700">Mostrar mis badges</p><p class="text-xs text-gray-400">Otros pueden ver tus badges obtenidos</p></div>' +
+                  '<input type="checkbox" id="priv-badges" ' + (privacy.show_badges ? 'checked' : '') + ' class="w-5 h-5 accent-primary cursor-pointer" />' +
+                '</div>' +
+              '</div>' +
+              '<button id="drawer-privacy-save" class="w-full mt-5 py-2.5 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">Guardar</button>' +
+            '</div>';
+          document.getElementById('drawer-privacy-back').addEventListener('click', function() {
+            closeModal();
+            window.LyfterAPI.getProfile().then(function(p2) { showDrawer(p2.avatar, p2.nombre, onAvatarSave, isAdmin); }).catch(function() { showDrawer(null, null, onAvatarSave, isAdmin); });
+          });
+          document.getElementById('drawer-privacy-save').addEventListener('click', async function() {
+            var btn = this;
+            btn.disabled = true; btn.textContent = 'Guardando...';
+            try {
+              await window.LyfterAPI.updatePrivacy({
+                show_in_leaderboard: document.getElementById('priv-leaderboard').checked,
+                show_badges: document.getElementById('priv-badges').checked
+              });
+              toast('Privacidad actualizada', 'success');
+              closeModal();
+            } catch(err) { toast(err.message || 'Error', 'error'); btn.disabled = false; btn.textContent = 'Guardar'; }
+          });
+        });
+      });
+    }
+
+    // Tema oscuro/claro
+    var themeBtn = document.getElementById('drawer-theme-btn');
+    if (themeBtn) {
+      themeBtn.addEventListener('click', function() {
+        var html = document.documentElement;
+        var isDark = html.getAttribute('data-theme') === 'dark';
+        html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+        try { localStorage.setItem('lyfter_theme', isDark ? 'light' : 'dark'); } catch(e) {}
+        themeBtn.querySelector('span').textContent = isDark ? 'Tema oscuro/claro' : 'Tema oscuro/claro ✓';
+        toast(isDark ? 'Tema claro activado' : 'Tema oscuro activado', 'info');
+      });
+    }
+
+    // Acerca de
+    var aboutBtn = document.getElementById('drawer-about-btn');
+    if (aboutBtn) {
+      aboutBtn.addEventListener('click', function() {
+        var nav = document.getElementById('drawer-panel').querySelector('nav');
+        nav.innerHTML =
+          '<div class="px-5 py-4">' +
+            '<button id="drawer-about-back" class="text-xs text-primary mb-4 flex items-center gap-1">← Volver</button>' +
+            '<div class="text-center py-4">' +
+              '<div class="text-4xl mb-3">🏆</div>' +
+              '<p class="font-bold text-gray-800 text-lg">Lyfter Badge App</p>' +
+              '<p class="text-xs text-gray-400 mt-1">Versión 1.0.0</p>' +
+              '<p class="text-xs text-gray-400 mt-3">Escanea, colecciona y gana badges en eventos</p>' +
+              '<div class="mt-4 pt-4 border-t border-gray-100 text-left space-y-2">' +
+                '<p class="text-xs text-gray-500 font-medium">Términos y condiciones</p>' +
+                '<p class="text-xs text-gray-500 font-medium">Política de privacidad</p>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+        document.getElementById('drawer-about-back').addEventListener('click', function() {
+          closeModal();
+          window.LyfterAPI.getProfile().then(function(p) { showDrawer(p.avatar, p.nombre, onAvatarSave, isAdmin); }).catch(function() { showDrawer(null, null, onAvatarSave, isAdmin); });
+        });
+      });
+    }
+
+    // Eliminar cuenta
+    var deleteBtn = document.getElementById('drawer-delete-btn');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', function() {
+        showConfirm(
+          '¿Estás seguro de que quieres eliminar tu cuenta? Esta acción es irreversible.',
+          async function() {
+            try {
+              await window.LyfterAPI.deleteAccount();
+              window.LyfterAPI.logout();
+              window.location.href = 'login.html';
+            } catch(err) { toast(err.message || 'No se pudo eliminar la cuenta', 'error'); }
+          },
+          null,
+          { confirmLabel: 'Eliminar cuenta', danger: true }
+        );
       });
     }
 

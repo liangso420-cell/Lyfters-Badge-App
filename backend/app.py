@@ -221,13 +221,64 @@ def get_profile():
     if not u:
         return jsonify(error="Usuario no encontrado"), 404
     return jsonify({
-        "id": str(u["_id"]),
-        "nombre": u.get("name", ""),
-        "email": u.get("email", ""),
-        "rol": u.get("role", "participant"),
-        "avatar": u.get("avatar", None),
-        "interests": u.get("interests", [])
+        "id":      str(u["_id"]),
+        "nombre":  u.get("name", ""),
+        "email":   u.get("email", ""),
+        "rol":     u.get("role", "participant"),
+        "avatar":  u.get("avatar", None),
+        "interests": u.get("interests", []),
+        "privacy": u.get("privacy", {"show_in_leaderboard": True, "show_badges": True})
     }), 200
+
+
+@app.route("/auth/profile/name", methods=["POST"])
+@jwt_required()
+def update_name():
+    uid = get_jwt_identity()
+    data = request.get_json() or {}
+    name = sanitize(data.get("name", ""), max_len=100)
+    if not name:
+        return jsonify(error="El nombre no puede estar vacío"), 400
+    users().update_one({"_id": ObjectId(uid)}, {"$set": {"name": name}})
+    return jsonify(ok=True), 200
+
+
+@app.route("/auth/profile/email", methods=["POST"])
+@jwt_required()
+def update_email():
+    uid = get_jwt_identity()
+    data = request.get_json() or {}
+    email = sanitize(data.get("email", ""), max_len=254).lower()
+    if not email or not EMAIL_RE.match(email):
+        return jsonify(error="Email inválido"), 400
+    existing = users().find_one({"email": email, "_id": {"$ne": ObjectId(uid)}})
+    if existing:
+        return jsonify(error="Ese email ya está en uso"), 409
+    users().update_one({"_id": ObjectId(uid)}, {"$set": {"email": email}})
+    return jsonify(ok=True), 200
+
+
+@app.route("/auth/profile/privacy", methods=["POST"])
+@jwt_required()
+def update_privacy():
+    uid = get_jwt_identity()
+    data = request.get_json() or {}
+    privacy = {
+        "show_in_leaderboard": bool(data.get("show_in_leaderboard", True)),
+        "show_badges":         bool(data.get("show_badges", True)),
+    }
+    users().update_one({"_id": ObjectId(uid)}, {"$set": {"privacy": privacy}})
+    return jsonify(ok=True), 200
+
+
+@app.route("/auth/profile", methods=["DELETE"])
+@jwt_required()
+def delete_account():
+    uid = get_jwt_identity()
+    oid = ObjectId(uid)
+    scans().delete_many({"user_id": oid})
+    users().delete_one({"_id": oid})
+    return jsonify(ok=True), 200
 
 
 @app.route("/auth/profile/avatar", methods=["POST"])
