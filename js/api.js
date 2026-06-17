@@ -316,7 +316,24 @@
     async getProfile() {
       var sess = getSession();
       var u = mockState.users.find(function(x){ return x.id === sess.user.id; });
-      return { id: u.id, nombre: u.name, email: u.email, rol: u.role, avatar: u.avatar || null, interests: u.interests || [] };
+      return { id: u.id, nombre: u.name, email: u.email, rol: u.role, avatar: u.avatar || null, interests: u.interests || [], privacy: u.privacy || { show_in_leaderboard: true, show_badges: true } };
+    },
+    async updateName(name) {
+      var sess = getSession(); var u = mockState.users.find(function(x){ return x.id === sess.user.id; });
+      if (u) { u.name = name; persist(); } return { ok: true };
+    },
+    async updateEmail(email) {
+      var sess = getSession(); var u = mockState.users.find(function(x){ return x.id === sess.user.id; });
+      if (u) { u.email = email; persist(); } return { ok: true };
+    },
+    async updatePrivacy(settings) {
+      var sess = getSession(); var u = mockState.users.find(function(x){ return x.id === sess.user.id; });
+      if (u) { u.privacy = settings; persist(); } return { ok: true };
+    },
+    async deleteAccount() {
+      var sess = getSession();
+      mockState.users = mockState.users.filter(function(x){ return x.id !== sess.user.id; });
+      persist(); return { ok: true };
     },
     async updateAvatar(base64) {
       var sess = getSession();
@@ -513,6 +530,18 @@
     async getProfile() {
       return await apiRequest('GET', '/auth/profile');
     },
+    async updateName(name) {
+      return await apiRequest('POST', '/auth/profile/name', { name: name });
+    },
+    async updateEmail(email) {
+      return await apiRequest('POST', '/auth/profile/email', { email: email });
+    },
+    async updatePrivacy(settings) {
+      return await apiRequest('POST', '/auth/profile/privacy', settings);
+    },
+    async deleteAccount() {
+      return await apiRequest('DELETE', '/auth/profile');
+    },
     async updateAvatar(base64) {
       return await apiRequest('POST', '/auth/profile/avatar', { avatar: base64 });
     },
@@ -568,6 +597,10 @@
     regenerateBadgeQr: impl.regenerateBadgeQr.bind(impl),
     changePassword:   impl.changePassword.bind(impl),
     getProfile:       impl.getProfile.bind(impl),
+    updateName:       impl.updateName.bind(impl),
+    updateEmail:      impl.updateEmail.bind(impl),
+    updatePrivacy:    impl.updatePrivacy.bind(impl),
+    deleteAccount:    impl.deleteAccount.bind(impl),
     updateAvatar:     impl.updateAvatar.bind(impl),
     getLeaderboard:         impl.getLeaderboard.bind(impl),
     generateEventAccessQr:  impl.generateEventAccessQr.bind(impl),
