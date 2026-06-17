@@ -589,7 +589,7 @@
             var lang = btn.getAttribute('data-lang');
             try { localStorage.setItem('lyfter_lang', lang); } catch(e) {}
             closeModal();
-            toast('Traduciendo a ' + LANGUAGES[lang] + '...', 'info');
+            toast('Traduciendo...', 'info');
             var elements = document.querySelectorAll('p, h1, h2, h3, h4, button, label, a, span, td, th, li');
             for (var i = 0; i < elements.length; i++) {
               var el = elements[i];
