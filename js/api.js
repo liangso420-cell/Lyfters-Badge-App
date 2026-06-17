@@ -298,7 +298,7 @@
     async getProfile() {
       var sess = getSession();
       var u = mockState.users.find(function(x){ return x.id === sess.user.id; });
-      return { id: u.id, nombre: u.name, email: u.email, rol: u.role, avatar: u.avatar || null };
+      return { id: u.id, nombre: u.name, email: u.email, rol: u.role, avatar: u.avatar || null, interests: u.interests || [] };
     },
     async updateAvatar(base64) {
       var sess = getSession();

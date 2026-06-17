@@ -175,6 +175,7 @@
             '<p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-5 mb-2">Cuenta</p>' +
             '<button id="drawer-avatar-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">📷 <span>Cambiar foto de perfil</span></button>' +
             '<button id="drawer-pw-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">🔑 <span>Cambiar contraseña</span></button>' +
+            '<button id="drawer-interests-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">🎯 <span>Mis intereses</span></button>' +
             (isAdmin
               ? '<div class="mt-2 border-t border-gray-100 pt-2">' +
                   '<p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-5 mb-2 mt-2">Administración</p>' +
@@ -265,6 +266,77 @@
         }
       });
     });
+
+    var interestsBtn = document.getElementById('drawer-interests-btn');
+    if (interestsBtn) {
+      interestsBtn.addEventListener('click', function() {
+        var TAGS = ['Desarrollo Web','Mobile','Inteligencia Artificial','Data Science','Ciberseguridad',
+          'DevOps','Cloud','Blockchain','UX/UI','Product Management','Emprendimiento','Marketing Digital',
+          'Diseño','Videojuegos','Robótica','Fintech','Educación Tech','Open Source','Backend','Frontend'];
+        var panel = document.getElementById('drawer-panel');
+        var nav = panel.querySelector('nav');
+
+        window.LyfterAPI.getProfile().then(function(p) {
+          var currentInterests = p.interests || [];
+          var selected = currentInterests.slice();
+
+          nav.innerHTML =
+            '<div class="px-5 py-4">' +
+              '<button id="drawer-interests-back" class="text-xs text-primary mb-4 flex items-center gap-1">← Volver</button>' +
+              '<p class="text-sm font-semibold text-gray-700 mb-3">🎯 Mis intereses</p>' +
+              '<div class="flex flex-wrap gap-2 mb-4">' +
+                TAGS.map(function(tag) {
+                  var isSelected = selected.indexOf(tag) !== -1;
+                  return '<button type="button" data-itag="' + esc(tag) + '" class="itag-btn px-3 py-1.5 rounded-full text-xs border transition ' +
+                    (isSelected ? 'text-white" style="background:#6C63FF; border-color:#6C63FF;"' : 'border-gray-200 text-gray-600"') + '>' +
+                    esc(tag) + '</button>';
+                }).join('') +
+              '</div>' +
+              '<button id="drawer-interests-save" class="w-full py-2.5 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">Guardar</button>' +
+            '</div>';
+
+          Array.prototype.forEach.call(nav.querySelectorAll('.itag-btn'), function(btn) {
+            btn.addEventListener('click', function() {
+              var tag = btn.getAttribute('data-itag');
+              var idx = selected.indexOf(tag);
+              if (idx === -1) {
+                selected.push(tag);
+                btn.style.background = '#6C63FF';
+                btn.style.color = 'white';
+                btn.style.borderColor = '#6C63FF';
+              } else {
+                selected.splice(idx, 1);
+                btn.style.background = '';
+                btn.style.color = '';
+                btn.style.borderColor = '';
+              }
+            });
+          });
+
+          document.getElementById('drawer-interests-back').addEventListener('click', function() {
+            closeModal();
+            window.LyfterAPI.getProfile().then(function(p2) {
+              showDrawer(p2.avatar, p2.nombre, onAvatarSave, isAdmin);
+            }).catch(function() { showDrawer(null, null, onAvatarSave, isAdmin); });
+          });
+
+          document.getElementById('drawer-interests-save').addEventListener('click', async function() {
+            var btn = this;
+            btn.disabled = true; btn.textContent = 'Guardando...';
+            try {
+              await window.LyfterAPI.updateInterests(selected);
+              toast('Intereses actualizados', 'success');
+              closeModal();
+            } catch(err) {
+              toast(err.message || 'No se pudo guardar', 'error');
+              btn.disabled = false; btn.textContent = 'Guardar';
+            }
+          });
+        }).catch(function() {
+          toast('No se pudieron cargar los intereses', 'error');
+        });
+      });
+    }
 
     var usersBtn = document.getElementById('drawer-users-btn');
     if (usersBtn) {

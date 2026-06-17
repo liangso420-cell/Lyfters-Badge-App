@@ -207,7 +207,8 @@ def get_profile():
         "nombre": u.get("name", ""),
         "email": u.get("email", ""),
         "rol": u.get("role", "participant"),
-        "avatar": u.get("avatar", None)
+        "avatar": u.get("avatar", None),
+        "interests": u.get("interests", [])
     }), 200
 
 
