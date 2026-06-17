@@ -23,14 +23,10 @@
   async function translateText(text, targetLang) {
     if (!text || !text.trim() || targetLang === 'es') return text;
     try {
-      var res = await fetch('https://libretranslate.com/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ q: text, source: 'es', target: targetLang, format: 'text' })
-      });
+      var res = await fetch('https://api.mymemory.translated.net/get?q=' + encodeURIComponent(text) + '&langpair=es|' + targetLang);
       if (!res.ok) return text;
       var data = await res.json();
-      return data.translatedText || text;
+      return (data.responseStatus === 200 && data.responseData && data.responseData.translatedText) ? data.responseData.translatedText : text;
     } catch(e) {
       return text;
     }
