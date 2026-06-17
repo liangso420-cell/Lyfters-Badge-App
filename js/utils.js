@@ -636,8 +636,8 @@
               '<p class="text-xs text-gray-400 mt-1">Versión 1.0.0</p>' +
               '<p class="text-xs text-gray-400 mt-3">Escanea, colecciona y gana badges en eventos</p>' +
               '<div class="mt-4 pt-4 border-t border-gray-100 text-left space-y-2">' +
-                '<p class="text-xs text-gray-500 font-medium">Términos y condiciones</p>' +
-                '<p class="text-xs text-gray-500 font-medium">Política de privacidad</p>' +
+                '<a href="terms.html" class="text-xs text-gray-500 font-medium block">Términos y condiciones</a>' +
+                '<a href="privacy.html" class="text-xs text-gray-500 font-medium block">Política de privacidad</a>' +
               '</div>' +
             '</div>' +
           '</div>';
