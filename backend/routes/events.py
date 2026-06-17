@@ -22,13 +22,9 @@ leaderboard_bp = Blueprint("leaderboard", __name__)
 @events_bp.route("",  methods=["GET"])
 def list_events():
     now = datetime.utcnow()
+    visible_statuses = ("upcoming", "open", "ongoing")
     docs = list(events().find({"active": True, "end_date": {"$gte": now}}))
-    visible_statuses = ("ongoing", "open", "upcoming", "postponed")
-    result = []
-    for e in docs:
-        status = compute_event_status(e)
-        if status not in ("draft", "pending", "cancelled", "archived", "finished"):
-            result.append(fmt_event(e))
+    result = [fmt_event(e) for e in docs if compute_event_status(e) in visible_statuses]
     return jsonify(result), 200
 
 
@@ -54,11 +50,20 @@ def recommended_events():
     user = users().find_one({"_id": ObjectId(uid)})
     user_interests = user.get("interests", []) if user else []
     now = datetime.utcnow()
+
+    # Solo estados que tienen sentido recomendar
+    visible_statuses = ("upcoming", "open", "ongoing")
+
     all_events = list(events().find({"active": True, "end_date": {"$gte": now}}))
+
+    # Filtrar por estado visible
+    visible_events = [e for e in all_events if compute_event_status(e) in visible_statuses]
+
     if not user_interests:
-        return jsonify([fmt_event(e) for e in all_events[:5]]), 200
+        return jsonify([fmt_event(e) for e in visible_events[:5]]), 200
+
     scored = []
-    for e in all_events:
+    for e in visible_events:
         event_tags = e.get("tags", [])
         score = len(set(user_interests) & set(event_tags))
         if score > 0:
