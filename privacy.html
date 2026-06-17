@@ -4,445 +4,175 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Política de Privacidad — Lyfter Badge App</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --primary: #6C63FF;
-      --primary-light: #EEF0FF;
-      --primary-dark: #5A52D5;
-      --text: #1F2937;
-      --muted: #6B7280;
-      --border: #E5E7EB;
-      --bg: #F9FAFB;
-      --white: #FFFFFF;
-      --radius: 16px;
+      --brand: #6C63FF; --brand-light: #EEEDFF; --brand-dark: #4B44CC;
+      --ink: #1A1A2E; --ink-mid: #4A4A6A; --ink-soft: #7A7A9A;
+      --bg: #FAFAFA; --surface: #FFFFFF; --border: #E8E8F0;
+      --radius: 12px; --radius-sm: 8px;
     }
-
     html { scroll-behavior: smooth; }
-
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.7;
-    }
-
-    /* ── HERO ── */
-    .hero {
-      background: linear-gradient(135deg, var(--primary) 0%, #8B85FF 100%);
-      color: #fff;
-      padding: 56px 24px 48px;
-      text-align: center;
-    }
-    .hero-back {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      color: rgba(255,255,255,.8);
-      font-size: .78rem;
-      font-weight: 500;
-      text-decoration: none;
-      margin-bottom: 28px;
-      transition: color .2s;
-    }
-    .hero-back:hover { color: #fff; }
-    .hero-icon { font-size: 3rem; margin-bottom: 16px; }
-    .hero h1 { font-size: clamp(1.5rem, 4vw, 2.2rem); font-weight: 700; margin-bottom: 8px; }
-    .hero-sub { font-size: .85rem; opacity: .75; }
-
-    /* ── LAYOUT ── */
-    .layout {
-      max-width: 1080px;
-      margin: 0 auto;
-      padding: 40px 20px 80px;
-      display: grid;
-      grid-template-columns: 220px 1fr;
-      gap: 36px;
-      align-items: start;
-    }
-    @media (max-width: 720px) {
-      .layout { grid-template-columns: 1fr; }
-      .sidebar { display: none; }
-    }
-
-    /* ── SIDEBAR ── */
-    .sidebar {
-      position: sticky;
-      top: 24px;
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px 0;
-      box-shadow: 0 2px 12px rgba(0,0,0,.05);
-    }
-    .sidebar-title {
-      font-size: .7rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      color: var(--muted);
-      padding: 0 18px 12px;
-    }
-    .sidebar nav a {
-      display: block;
-      font-size: .78rem;
-      color: var(--muted);
-      text-decoration: none;
-      padding: 7px 18px;
-      border-left: 3px solid transparent;
-      transition: all .18s;
-      line-height: 1.4;
-    }
-    .sidebar nav a:hover { color: var(--primary); background: var(--primary-light); }
-    .sidebar nav a.active { color: var(--primary); font-weight: 600; border-left-color: var(--primary); background: var(--primary-light); }
-
-    /* ── CONTENT ── */
+    body { font-family: 'Poppins', system-ui, sans-serif; background: var(--bg); color: var(--ink); line-height: 1.7; font-size: 15px; }
+    nav { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; color: var(--ink); text-decoration: none; }
+    .nav-brand span { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; background: var(--brand); border-radius: 8px; font-size: 16px; }
+    .nav-back { font-size: 13px; color: var(--brand); text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 4px; transition: opacity .15s; }
+    .nav-back:hover { opacity: .7; }
+    .hero { background: linear-gradient(135deg, var(--brand-light) 0%, #F0EEFF 100%); padding: 64px 24px 48px; text-align: center; border-bottom: 1px solid var(--border); }
+    .hero-icon { display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: var(--brand); border-radius: 20px; font-size: 30px; margin-bottom: 20px; box-shadow: 0 8px 24px rgba(108,99,255,0.3); }
+    .hero h1 { font-size: clamp(24px, 5vw, 36px); font-weight: 700; color: var(--ink); margin-bottom: 12px; }
+    .hero p { color: var(--ink-mid); max-width: 500px; margin: 0 auto 20px; font-size: 15px; }
+    .hero-meta { display: inline-flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 6px 16px; font-size: 12px; color: var(--ink-soft); font-weight: 500; }
+    .hero-meta::before { content: ''; display: inline-block; width: 8px; height: 8px; background: #22C55E; border-radius: 50%; }
+    .page { max-width: 1040px; margin: 0 auto; padding: 48px 24px; display: grid; grid-template-columns: 220px 1fr; gap: 48px; align-items: start; }
+    @media (max-width: 768px) { .page { grid-template-columns: 1fr; gap: 32px; } .sidebar { display: none; } }
+    .sidebar { position: sticky; top: 72px; }
+    .sidebar-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft); margin-bottom: 12px; }
+    .sidebar nav { position: static; background: none; backdrop-filter: none; border: none; padding: 0; height: auto; display: flex; flex-direction: column; gap: 2px; }
+    .sidebar-link { display: block; padding: 8px 12px; border-radius: var(--radius-sm); font-size: 13px; color: var(--ink-mid); text-decoration: none; font-weight: 500; transition: all .15s; border-left: 2px solid transparent; }
+    .sidebar-link:hover, .sidebar-link.active { background: var(--brand-light); color: var(--brand); border-left-color: var(--brand); }
     .content { min-width: 0; }
-
-    .section {
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 32px 36px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 12px rgba(0,0,0,.04);
-      scroll-margin-top: 28px;
-    }
-    @media (max-width: 560px) { .section { padding: 22px 18px; } }
-
-    .section-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 18px;
-    }
-    .section-icon {
-      width: 40px; height: 40px;
-      border-radius: 10px;
-      background: var(--primary-light);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.1rem;
-      flex-shrink: 0;
-    }
-    .section h2 {
-      font-size: 1.05rem;
-      font-weight: 600;
-      color: var(--text);
-    }
-
-    .section p { font-size: .88rem; color: #374151; margin-bottom: 12px; }
+    .section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; margin-bottom: 20px; scroll-margin-top: 72px; }
+    .section-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+    .section-icon { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: var(--brand-light); border-radius: 10px; font-size: 20px; flex-shrink: 0; }
+    .section-title { font-size: 18px; font-weight: 600; color: var(--ink); }
+    .section p { color: var(--ink-mid); margin-bottom: 14px; }
     .section p:last-child { margin-bottom: 0; }
-
-    .item-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-    .item-list li {
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
-      font-size: .86rem;
-      color: #374151;
-    }
-    .item-list li .dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: var(--primary);
-      flex-shrink: 0;
-      margin-top: 6px;
-    }
-
-    .tag-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
-    .tag {
-      background: var(--primary-light);
-      color: var(--primary-dark);
-      font-size: .75rem;
-      font-weight: 500;
-      padding: 4px 12px;
-      border-radius: 999px;
-    }
-
-    .info-box {
-      background: var(--primary-light);
-      border-left: 4px solid var(--primary);
-      border-radius: 8px;
-      padding: 14px 18px;
-      font-size: .84rem;
-      color: var(--primary-dark);
-      margin-top: 14px;
-    }
-
-    .rights-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 12px;
-      margin-top: 4px;
-    }
-    .right-card {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px 16px;
-      font-size: .82rem;
-    }
-    .right-card strong { display: block; color: var(--primary); margin-bottom: 4px; font-size: .85rem; }
-
-    .contact-box {
-      background: linear-gradient(135deg, var(--primary) 0%, #8B85FF 100%);
-      color: #fff;
-      border-radius: var(--radius);
-      padding: 32px 36px;
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .contact-box h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; }
-    .contact-box p { font-size: .86rem; opacity: .85; margin-bottom: 18px; }
-    .contact-btn {
-      display: inline-block;
-      background: #fff;
-      color: var(--primary);
-      font-family: 'Poppins', sans-serif;
-      font-weight: 600;
-      font-size: .88rem;
-      padding: 10px 28px;
-      border-radius: 999px;
-      text-decoration: none;
-      transition: opacity .2s;
-    }
-    .contact-btn:hover { opacity: .9; }
-
-    .footer-note {
-      text-align: center;
-      font-size: .75rem;
-      color: var(--muted);
-      padding-bottom: 20px;
-    }
+    .section ul { list-style: none; margin: 14px 0; display: flex; flex-direction: column; gap: 8px; }
+    .section ul li { display: flex; align-items: baseline; gap: 10px; color: var(--ink-mid); font-size: 14px; }
+    .section ul li::before { content: ''; display: inline-block; width: 6px; height: 6px; background: var(--brand); border-radius: 50%; flex-shrink: 0; margin-top: 7px; }
+    .highlight-box { background: var(--brand-light); border: 1px solid rgba(108,99,255,0.2); border-radius: var(--radius-sm); padding: 16px 20px; margin: 16px 0; }
+    .highlight-box p { color: var(--brand-dark); font-size: 14px; font-weight: 500; margin: 0; }
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 16px 0; }
+    .info-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; }
+    .info-card-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-soft); margin-bottom: 6px; }
+    .info-card-value { font-size: 14px; font-weight: 500; color: var(--ink); }
+    .contact-card { background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%); border-radius: var(--radius); padding: 32px; text-align: center; color: white; margin-bottom: 20px; }
+    .contact-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .contact-card p { opacity: .85; margin-bottom: 20px; font-size: 14px; }
+    .contact-email { display: inline-block; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; padding: 10px 20px; color: white; font-weight: 600; text-decoration: none; font-size: 14px; transition: background .15s; }
+    .contact-email:hover { background: rgba(255,255,255,0.25); }
+    footer { text-align: center; padding: 32px 24px; border-top: 1px solid var(--border); color: var(--ink-soft); font-size: 13px; }
+    footer a { color: var(--brand); text-decoration: none; }
   </style>
 </head>
 <body>
-
-<!-- HERO -->
-<div class="hero">
-  <a href="index.html" class="hero-back">← Volver a la app</a>
-  <div class="hero-icon">🔒</div>
-  <h1>Política de Privacidad</h1>
-  <p class="hero-sub">Última actualización: junio de 2026</p>
-</div>
-
-<!-- LAYOUT -->
-<div class="layout">
-
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <div class="sidebar-title">Contenido</div>
-    <nav id="sidebar-nav">
-      <a href="#recopilamos">Qué recopilamos</a>
-      <a href="#uso">Cómo usamos la info</a>
-      <a href="#compartimos">Con quién compartimos</a>
-      <a href="#retencion">Retención de datos</a>
-      <a href="#seguridad">Seguridad</a>
-      <a href="#derechos">Tus derechos</a>
-      <a href="#cookies">Cookies y localStorage</a>
-      <a href="#menores">Menores de edad</a>
-      <a href="#cambios">Cambios a esta política</a>
-      <a href="#contacto">Contacto</a>
-    </nav>
-  </aside>
-
-  <!-- CONTENT -->
-  <main class="content">
-
-    <!-- Qué recopilamos -->
-    <section class="section" id="recopilamos">
-      <div class="section-header">
-        <div class="section-icon">📋</div>
-        <h2>Qué información recopilamos</h2>
-      </div>
-      <p>Al registrarte y usar Lyfter Badge App, recopilamos únicamente los datos necesarios para que la plataforma funcione correctamente:</p>
-      <ul class="item-list" style="margin-top:14px">
-        <li><span class="dot"></span><span><strong>Nombre y apellido</strong> — para identificarte dentro de la plataforma y en el ranking de eventos.</span></li>
-        <li><span class="dot"></span><span><strong>Correo electrónico</strong> — usado como identificador único de cuenta y para comunicaciones relacionadas con el servicio.</span></li>
-        <li><span class="dot"></span><span><strong>Contraseña hasheada</strong> — nunca almacenamos tu contraseña en texto plano. Se aplica bcrypt con salt antes de guardarla.</span></li>
-        <li><span class="dot"></span><span><strong>Badges canjeados</strong> — registro de los badges que obtuviste al escanear códigos QR en eventos.</span></li>
-        <li><span class="dot"></span><span><strong>Participación en eventos</strong> — qué eventos visitaste y cuándo, para calcular tu progreso y posición en el leaderboard.</span></li>
-        <li><span class="dot"></span><span><strong>Avatar de perfil</strong> — imagen opcional que elegís para personalizar tu cuenta.</span></li>
-      </ul>
-    </section>
-
-    <!-- Cómo usamos -->
-    <section class="section" id="uso">
-      <div class="section-header">
-        <div class="section-icon">⚙️</div>
-        <h2>Cómo usamos la información</h2>
-      </div>
-      <p>Los datos que recopilamos se usan exclusivamente para los siguientes fines:</p>
-      <ul class="item-list" style="margin-top:14px">
-        <li><span class="dot"></span><span><strong>Autenticación</strong> — verificar tu identidad al iniciar sesión y mantener tu sesión activa mediante JWT.</span></li>
-        <li><span class="dot"></span><span><strong>Progreso y gamificación</strong> — mostrar tus badges, puntaje y posición en el ranking de cada evento.</span></li>
-        <li><span class="dot"></span><span><strong>Gestión de eventos</strong> — permitir a administradores crear eventos, asignar badges y ver estadísticas de participación.</span></li>
-        <li><span class="dot"></span><span><strong>Personalización</strong> — mostrar tu nombre y avatar en la interfaz para una experiencia personalizada.</span></li>
-      </ul>
-      <div class="info-box">
-        No usamos tus datos para publicidad, perfilado comercial ni los procesamos con sistemas de inteligencia artificial.
-      </div>
-    </section>
-
-    <!-- Con quién compartimos -->
-    <section class="section" id="compartimos">
-      <div class="section-header">
-        <div class="section-icon">🤝</div>
-        <h2>Con quién compartimos tus datos</h2>
-      </div>
-      <p>No vendemos ni cedemos tu información personal a terceros. Solo la compartimos con los proveedores de infraestructura que hacen funcionar la plataforma:</p>
-      <ul class="item-list" style="margin-top:14px">
-        <li><span class="dot"></span><span><strong>MongoDB Atlas</strong> — base de datos en la nube donde se almacena la información. Operado por MongoDB Inc. bajo estrictos estándares de seguridad.</span></li>
-        <li><span class="dot"></span><span><strong>Render</strong> — plataforma donde corre el servidor backend (API). Procesa datos únicamente para servir las peticiones de la app.</span></li>
-        <li><span class="dot"></span><span><strong>Vercel</strong> — plataforma de hosting del frontend. No accede a datos personales almacenados.</span></li>
-      </ul>
-      <div class="tag-grid" style="margin-top:18px">
-        <span class="tag">Solo infraestructura</span>
-        <span class="tag">Sin publicidad</span>
-        <span class="tag">Sin venta de datos</span>
-        <span class="tag">Sin brokers de datos</span>
-      </div>
-    </section>
-
-    <!-- Retención -->
-    <section class="section" id="retencion">
-      <div class="section-header">
-        <div class="section-icon">🗂️</div>
-        <h2>Cuánto tiempo guardamos tus datos</h2>
-      </div>
-      <p>Conservamos tu información mientras tu cuenta esté activa o mientras sea necesaria para brindarte el servicio.</p>
-      <ul class="item-list" style="margin-top:14px">
-        <li><span class="dot"></span><span><strong>Cuenta activa</strong> — tus datos se mantienen mientras uses la plataforma.</span></li>
-        <li><span class="dot"></span><span><strong>Solicitud de eliminación</strong> — si solicitás eliminar tu cuenta, borramos todos tus datos personales en un plazo máximo de 30 días.</span></li>
-        <li><span class="dot"></span><span><strong>Registros de auditoría</strong> — ciertos registros de actividad pueden conservarse por hasta 12 meses por razones de seguridad y cumplimiento.</span></li>
-      </ul>
-    </section>
-
-    <!-- Seguridad -->
-    <section class="section" id="seguridad">
-      <div class="section-header">
-        <div class="section-icon">🛡️</div>
-        <h2>Seguridad</h2>
-      </div>
-      <p>Aplicamos medidas técnicas para proteger tu información:</p>
-      <ul class="item-list" style="margin-top:14px">
-        <li><span class="dot"></span><span><strong>bcrypt con salt</strong> — las contraseñas nunca se almacenan en texto plano.</span></li>
-        <li><span class="dot"></span><span><strong>HTTPS en tránsito</strong> — toda la comunicación entre tu dispositivo y nuestros servidores viaja cifrada.</span></li>
-        <li><span class="dot"></span><span><strong>JWT de sesión</strong> — los tokens de acceso tienen tiempo de expiración y se validan en cada petición.</span></li>
-        <li><span class="dot"></span><span><strong>Índices únicos en base de datos</strong> — evitan la duplicación de cuentas y accesos no autorizados.</span></li>
-        <li><span class="dot"></span><span><strong>Variables de entorno</strong> — las credenciales de infraestructura nunca se incluyen en el código fuente.</span></li>
-      </ul>
-    </section>
-
-    <!-- Derechos -->
-    <section class="section" id="derechos">
-      <div class="section-header">
-        <div class="section-icon">✅</div>
-        <h2>Tus derechos</h2>
-      </div>
-      <p>Tenés derecho a ejercer los siguientes derechos sobre tus datos personales en cualquier momento:</p>
-      <div class="rights-grid">
-        <div class="right-card">
-          <strong>Acceso</strong>
-          Solicitar una copia de todos los datos que tenemos sobre vos.
+  <nav>
+    <a href="index.html" class="nav-brand"><span>🏆</span> Lyfter Badge App</a>
+    <a href="index.html" class="nav-back">← Volver</a>
+  </nav>
+  <div class="hero">
+    <div class="hero-icon">🔒</div>
+    <h1>Política de Privacidad</h1>
+    <p>Cómo recopilamos, usamos y protegemos tu información cuando usás Lyfter Badge App.</p>
+    <div class="hero-meta">Última actualización: junio 2026</div>
+  </div>
+  <div class="page">
+    <aside class="sidebar">
+      <div class="sidebar-label">Contenido</div>
+      <nav>
+        <a href="#que-recopilamos" class="sidebar-link">Qué recopilamos</a>
+        <a href="#como-usamos" class="sidebar-link">Cómo lo usamos</a>
+        <a href="#compartir" class="sidebar-link">Con quién compartimos</a>
+        <a href="#retencion" class="sidebar-link">Cuánto tiempo guardamos</a>
+        <a href="#seguridad" class="sidebar-link">Seguridad</a>
+        <a href="#tus-derechos" class="sidebar-link">Tus derechos</a>
+        <a href="#cookies" class="sidebar-link">Cookies y almacenamiento</a>
+        <a href="#menores" class="sidebar-link">Menores de edad</a>
+        <a href="#cambios" class="sidebar-link">Cambios a esta política</a>
+        <a href="#contacto" class="sidebar-link">Contacto</a>
+      </nav>
+    </aside>
+    <main class="content">
+      <section class="section" id="que-recopilamos">
+        <div class="section-header"><div class="section-icon">📋</div><h2 class="section-title">Qué información recopilamos</h2></div>
+        <p>Recopilamos únicamente la información necesaria para que la app funcione.</p>
+        <ul>
+          <li>Nombre completo y dirección de correo electrónico</li>
+          <li>Contraseña (guardada como hash cifrado, nunca en texto plano)</li>
+          <li>Rol dentro de la plataforma: participante o administrador</li>
+          <li>Registro de badges canjeados y eventos en los que participaste</li>
+          <li>Fecha y hora de cada escaneo de código QR</li>
+        </ul>
+        <div class="highlight-box"><p>No recopilamos datos de ubicación, información financiera ni datos sensibles de ningún tipo.</p></div>
+      </section>
+      <section class="section" id="como-usamos">
+        <div class="section-header"><div class="section-icon">⚙️</div><h2 class="section-title">Cómo usamos tu información</h2></div>
+        <p>Usamos tu información exclusivamente para que la experiencia de la app funcione:</p>
+        <ul>
+          <li>Autenticarte y mantener tu sesión activa de forma segura</li>
+          <li>Registrar los badges que canjeás al escanear códigos QR</li>
+          <li>Mostrarte tu progreso y los eventos disponibles</li>
+          <li>Permitir a los administradores gestionar eventos, badges y participantes</li>
+        </ul>
+        <p>No usamos tu información para publicidad ni la vendemos a terceros.</p>
+      </section>
+      <section class="section" id="compartir">
+        <div class="section-header"><div class="section-icon">🤝</div><h2 class="section-title">Con quién compartimos tu información</h2></div>
+        <p>Tu información puede ser procesada por estos proveedores de infraestructura:</p>
+        <div class="info-grid">
+          <div class="info-card"><div class="info-card-label">Base de datos</div><div class="info-card-value">MongoDB Atlas</div></div>
+          <div class="info-card"><div class="info-card-label">Servidor backend</div><div class="info-card-value">Render</div></div>
+          <div class="info-card"><div class="info-card-label">Hosting frontend</div><div class="info-card-value">Vercel / GitHub Pages</div></div>
         </div>
-        <div class="right-card">
-          <strong>Rectificación</strong>
-          Corregir datos incorrectos o desactualizados desde tu perfil.
-        </div>
-        <div class="right-card">
-          <strong>Eliminación</strong>
-          Pedir que borremos tu cuenta y todos tus datos personales.
-        </div>
-        <div class="right-card">
-          <strong>Portabilidad</strong>
-          Recibir tus datos en un formato estructurado y legible por máquina.
-        </div>
-        <div class="right-card">
-          <strong>Oposición</strong>
-          Oponerte a determinados tipos de procesamiento de tus datos.
-        </div>
-        <div class="right-card">
-          <strong>Restricción</strong>
-          Solicitar que limitemos el uso de tus datos en ciertos casos.
-        </div>
+        <p>No comparten tu información con terceros para sus propios fines.</p>
+      </section>
+      <section class="section" id="retencion">
+        <div class="section-header"><div class="section-icon">🗓️</div><h2 class="section-title">Cuánto tiempo guardamos tu información</h2></div>
+        <p>Conservamos tu información mientras tu cuenta esté activa. Si solicitás la eliminación de tu cuenta, borraremos tus datos personales dentro de un plazo razonable.</p>
+        <div class="highlight-box"><p>Los registros de badges pueden conservarse de forma anonimizada con fines estadísticos.</p></div>
+      </section>
+      <section class="section" id="seguridad">
+        <div class="section-header"><div class="section-icon">🛡️</div><h2 class="section-title">Cómo protegemos tu información</h2></div>
+        <ul>
+          <li>Las contraseñas se almacenan como hashes bcrypt — nunca en texto plano</li>
+          <li>Toda la comunicación usa HTTPS con cifrado TLS</li>
+          <li>La autenticación usa tokens JWT con tiempo de expiración</li>
+          <li>El acceso administrativo requiere credenciales con rol verificado</li>
+        </ul>
+      </section>
+      <section class="section" id="tus-derechos">
+        <div class="section-header"><div class="section-icon">⚖️</div><h2 class="section-title">Tus derechos</h2></div>
+        <ul>
+          <li><strong>Acceso:</strong> saber qué datos tenemos sobre vos</li>
+          <li><strong>Rectificación:</strong> corregir información incorrecta</li>
+          <li><strong>Eliminación:</strong> solicitar que borremos tu cuenta y datos</li>
+          <li><strong>Portabilidad:</strong> recibir una copia de tus datos</li>
+        </ul>
+        <p>Para ejercer estos derechos, contactanos usando la dirección al final de esta página.</p>
+      </section>
+      <section class="section" id="cookies">
+        <div class="section-header"><div class="section-icon">🍪</div><h2 class="section-title">Cookies y almacenamiento local</h2></div>
+        <p>Lyfter Badge App usa <strong>localStorage</strong> del navegador para guardar tu sesión activa. No usamos cookies de rastreo ni herramientas de analytics de terceros.</p>
+        <div class="highlight-box"><p>Podés cerrar sesión en cualquier momento y la información de sesión se elimina automáticamente.</p></div>
+      </section>
+      <section class="section" id="menores">
+        <div class="section-header"><div class="section-icon">👶</div><h2 class="section-title">Menores de edad</h2></div>
+        <p>Lyfter Badge App no está dirigida a personas menores de 13 años. Si creés que un menor nos proporcionó información, contactanos para eliminarla de inmediato.</p>
+      </section>
+      <section class="section" id="cambios">
+        <div class="section-header"><div class="section-icon">📝</div><h2 class="section-title">Cambios a esta política</h2></div>
+        <p>Podemos actualizar esta política para reflejar cambios en nuestras prácticas. Cuando lo hagamos, actualizaremos la fecha al inicio de este documento.</p>
+      </section>
+      <div class="contact-card" id="contacto">
+        <h3>¿Tenés preguntas?</h3>
+        <p>Si tenés dudas sobre esta política o sobre cómo tratamos tu información, escribinos.</p>
+        <a href="mailto:privacy@lyfter.team" class="contact-email">privacy@lyfter.team</a>
       </div>
-      <div class="info-box" style="margin-top:18px">
-        Para ejercer cualquiera de estos derechos, contactanos en <strong>privacy@lyfter.team</strong>. Responderemos en un plazo máximo de 30 días.
-      </div>
-    </section>
-
-    <!-- Cookies -->
-    <section class="section" id="cookies">
-      <div class="section-header">
-        <div class="section-icon">🍪</div>
-        <h2>Cookies y localStorage</h2>
-      </div>
-      <p>Lyfter Badge App usa <strong>localStorage</strong> del navegador únicamente para mantener tu sesión activa y guardar preferencias de la interfaz. No usamos cookies de terceros ni herramientas de seguimiento.</p>
-      <ul class="item-list" style="margin-top:14px">
-        <li><span class="dot"></span><span><strong>Token de sesión (JWT)</strong> — se guarda localmente para no pedirte el login en cada visita. Se elimina al cerrar sesión.</span></li>
-        <li><span class="dot"></span><span><strong>Preferencias de UI</strong> — configuraciones visuales opcionales que mejoran tu experiencia.</span></li>
-        <li><span class="dot"></span><span><strong>Sin tracking</strong> — no usamos Google Analytics, Facebook Pixel ni ningún sistema de seguimiento.</span></li>
-      </ul>
-    </section>
-
-    <!-- Menores -->
-    <section class="section" id="menores">
-      <div class="section-header">
-        <div class="section-icon">👶</div>
-        <h2>Menores de edad</h2>
-      </div>
-      <p>Lyfter Badge App no está dirigida a personas menores de 13 años y no recopilamos conscientemente datos de menores de esa edad.</p>
-      <p>Si sos padre, madre o tutor/a y creés que tu hijo/a menor de 13 años nos proporcionó información personal, contactanos inmediatamente a <strong>privacy@lyfter.team</strong> para eliminarla.</p>
-    </section>
-
-    <!-- Cambios -->
-    <section class="section" id="cambios">
-      <div class="section-header">
-        <div class="section-icon">📝</div>
-        <h2>Cambios a esta política</h2>
-      </div>
-      <p>Podemos actualizar esta Política de Privacidad periódicamente. Cuando lo hagamos, actualizaremos la fecha de "última actualización" al inicio de esta página.</p>
-      <p>Si los cambios son significativos, te notificaremos por correo electrónico o mediante un aviso destacado en la app antes de que entren en vigor.</p>
-      <p>Te recomendamos revisar esta política ocasionalmente para estar al tanto de cómo protegemos tu información.</p>
-    </section>
-
-    <!-- Contacto -->
-    <div class="contact-box" id="contacto">
-      <h2>¿Tenés preguntas?</h2>
-      <p>Si tenés dudas sobre esta política o querés ejercer tus derechos, no dudes en contactarnos. Te respondemos en menos de 30 días.</p>
-      <a href="mailto:privacy@lyfter.team" class="contact-btn">✉ privacy@lyfter.team</a>
-    </div>
-
-    <p class="footer-note">© 2026 Lyfter Badge App · <a href="terms.html" style="color:#6C63FF;text-decoration:none">Términos y condiciones</a></p>
-
-  </main>
-</div>
-
-<script>
-  // Scroll spy para el sidebar
-  (function () {
-    var links = document.querySelectorAll('#sidebar-nav a');
-    var sections = Array.from(links).map(function (a) {
-      return document.querySelector(a.getAttribute('href'));
-    });
-
+    </main>
+  </div>
+  <footer><p>© 2026 Lyfter Team · <a href="privacy.html">Política de Privacidad</a> · <a href="index.html">Volver a la app</a></p></footer>
+  <script>
+    var sections = document.querySelectorAll('.section[id], .contact-card[id]');
+    var links = document.querySelectorAll('.sidebar-link');
     function onScroll() {
-      var scrollY = window.scrollY + 80;
-      var active = 0;
-      sections.forEach(function (sec, i) {
-        if (sec && sec.offsetTop <= scrollY) active = i;
-      });
-      links.forEach(function (a, i) {
-        a.classList.toggle('active', i === active);
-      });
+      var scrollY = window.scrollY + 80; var current = '';
+      sections.forEach(function(s) { if (s.offsetTop <= scrollY) current = s.id; });
+      links.forEach(function(l) { l.classList.toggle('active', l.getAttribute('href') === '#' + current); });
     }
-
-    window.addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
-  })();
-</script>
+    window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
+  </script>
 </body>
 </html>
