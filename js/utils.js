@@ -202,6 +202,9 @@
                   '<button id="drawer-users-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">👥 <span>Gestionar usuarios</span></button>' +
                 '</div>'
               : '') +
+            '<div class="mt-2 border-t border-gray-100 pt-2">' +
+              '<button id="drawer-logout-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-500 hover:bg-gray-50 text-left">⎋ <span>Cerrar sesión</span></button>' +
+            '</div>' +
           '</nav>' +
           '<div class="p-5 border-t border-gray-100">' +
             '<button id="drawer-close" class="w-full py-2.5 rounded-btn border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50">Cerrar</button>' +
@@ -519,6 +522,13 @@
       });
     }
 
+    var logoutBtn = document.getElementById('drawer-logout-btn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', function() {
+        showConfirm('¿Cerrar sesión?', function() { logout(); }, null, { confirmLabel: 'Cerrar sesión', danger: false });
+      });
+    }
+
     var usersBtn = document.getElementById('drawer-users-btn');
     if (usersBtn) {
       usersBtn.addEventListener('click', function() {
@@ -667,9 +677,7 @@
         '<div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">' +
           '<div class="flex items-center gap-2"><span class="text-xl">🏆</span><span class="font-bold text-gray-800">Panel Admin</span></div>' +
           '<div class="flex items-center gap-3">' +
-            (events.length ? '<select id="admin-event-select" class="px-3 py-2 bg-base rounded-btn border border-gray-200 text-sm focus:border-primary outline-none">' + eventOptions + '</select>' : '') +
             '<button id="admin-profile-menu" class="w-9 h-9 rounded-full bg-primary-soft flex items-center justify-center text-sm font-medium text-primary" style="background-size:cover;background-position:center;">☰</button>' +
-            '<button id="admin-logout" class="text-sm text-gray-400 hover:text-primary flex items-center gap-1">⎋ Salir</button>' +
           '</div>' +
         '</div>' +
         '<nav class="max-w-4xl mx-auto px-4 flex gap-1">' + tabs + '</nav>' +
@@ -678,10 +686,6 @@
   }
 
   function mountAdminShell() {
-    var sel = document.getElementById('admin-event-select');
-    if (sel) sel.addEventListener('change', function () { setActiveId(sel.value); location.reload(); });
-    var out = document.getElementById('admin-logout');
-    if (out) out.addEventListener('click', logout);
     var profileBtn = document.getElementById('admin-profile-menu');
     if (profileBtn) {
       profileBtn.addEventListener('click', async function() {
