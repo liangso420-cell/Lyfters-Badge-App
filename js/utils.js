@@ -242,7 +242,7 @@
             '<div class="mt-2 border-t border-gray-100 pt-2">' +
               '<p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-5 mb-2 mt-2">Apariencia</p>' +
               '<button id="drawer-theme-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">🌙 <span>Tema oscuro/claro</span></button>' +
-              '<button id="drawer-lang-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">🌐 <span>Idioma — ' + (LANGUAGES[_currentLang] || 'Español') + '</span></button>' +
+              '<button id="drawer-lang-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">🌐 <span>Idioma</span></button>' +
             '</div>' +
             '<div class="mt-2 border-t border-gray-100 pt-2">' +
               '<p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-5 mb-2 mt-2">Información</p>' +
@@ -551,6 +551,14 @@
     var langBtn = document.getElementById('drawer-lang-btn');
     if (langBtn) {
       langBtn.addEventListener('click', function() {
+        var LANGUAGES = {
+          'es': 'Español', 'en': 'English', 'pt': 'Português',
+          'fr': 'Français', 'de': 'Deutsch', 'hi': 'हिन्दी',
+          'zh': '中文', 'ar': 'العربية', 'ja': '日本語', 'ru': 'Русский'
+        };
+        var currentLang = 'es';
+        try { currentLang = localStorage.getItem('lyfter_lang') || 'es'; } catch(e) {}
+
         var nav = document.getElementById('drawer-panel').querySelector('nav');
         nav.innerHTML =
           '<div class="px-5 py-4">' +
@@ -558,8 +566,9 @@
             '<p class="text-sm font-semibold text-gray-700 mb-3">🌐 Idioma</p>' +
             '<div class="space-y-1">' +
               Object.keys(LANGUAGES).map(function(code) {
-                var isSelected = _currentLang === code;
-                return '<button data-lang="' + code + '" class="lang-option w-full flex items-center justify-between px-4 py-3 rounded-btn text-sm hover:bg-gray-50 ' + (isSelected ? 'text-primary font-semibold bg-primary-soft' : 'text-gray-700') + '">' +
+                var isSelected = currentLang === code;
+                return '<button data-lang="' + code + '" class="lang-option w-full flex items-center justify-between px-4 py-3 rounded-btn text-sm hover:bg-gray-50 ' +
+                  (isSelected ? 'text-primary font-semibold bg-primary-soft' : 'text-gray-700') + '">' +
                   '<span>' + LANGUAGES[code] + '</span>' +
                   (isSelected ? '<span class="text-primary">✓</span>' : '') +
                 '</button>';
@@ -570,17 +579,40 @@
 
         document.getElementById('drawer-lang-back').addEventListener('click', function() {
           closeModal();
-          window.LyfterAPI.getProfile().then(function(p) { showDrawer(p.avatar, p.nombre, onAvatarSave, isAdmin); }).catch(function() { showDrawer(null, null, onAvatarSave, isAdmin); });
+          window.LyfterAPI.getProfile().then(function(p) {
+            showDrawer(p.avatar, p.nombre, onAvatarSave, isAdmin);
+          }).catch(function() { showDrawer(null, null, onAvatarSave, isAdmin); });
         });
 
         Array.prototype.forEach.call(document.querySelectorAll('.lang-option'), function(btn) {
           btn.addEventListener('click', async function() {
             var lang = btn.getAttribute('data-lang');
-            setCurrentLang(lang);
+            try { localStorage.setItem('lyfter_lang', lang); } catch(e) {}
             closeModal();
             toast('Traduciendo a ' + LANGUAGES[lang] + '...', 'info');
-            await translatePage();
-            toast('Idioma cambiado a ' + LANGUAGES[lang], 'success');
+            var elements = document.querySelectorAll('p, h1, h2, h3, h4, button, label, a, span, td, th, li');
+            for (var i = 0; i < elements.length; i++) {
+              var el = elements[i];
+              if (el.children.length === 0 && el.textContent.trim() && lang !== 'es') {
+                try {
+                  var original = el.getAttribute('data-original') || el.textContent.trim();
+                  el.setAttribute('data-original', original);
+                  var res = await fetch('https://libretranslate.com/translate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ q: original, source: 'es', target: lang, format: 'text' })
+                  });
+                  if (res.ok) {
+                    var data = await res.json();
+                    if (data.translatedText) el.textContent = data.translatedText;
+                  }
+                } catch(e) {}
+              } else if (lang === 'es') {
+                var orig = el.getAttribute('data-original');
+                if (orig) el.textContent = orig;
+              }
+            }
+            toast('Idioma cambiado ✅', 'success');
           });
         });
       });
