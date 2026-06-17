@@ -176,12 +176,14 @@
             '</div>' +
           '</div>' +
           '<nav class="flex-1 overflow-y-auto py-4">' +
-            '<p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-5 mb-2">Cuenta</p>' +
-            '<button id="drawer-avatar-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">📷 <span>Cambiar foto de perfil</span></button>' +
-            '<button id="drawer-name-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">✏️ <span>Cambiar nombre</span></button>' +
-            '<button id="drawer-email-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">📧 <span>Cambiar email</span></button>' +
-            '<button id="drawer-pw-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">🔑 <span>Cambiar contraseña</span></button>' +
-            '<button id="drawer-interests-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">🎯 <span>Mis intereses</span></button>' +
+            '<p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-5 mb-2">Configuración</p>' +
+            '<button id="drawer-account-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left justify-between">' +
+              '<div class="flex items-center gap-3">' +
+                (avatarUrl ? '<img src="' + avatarUrl + '" class="w-8 h-8 rounded-full object-cover" />' : '<div class="w-8 h-8 rounded-full bg-primary-soft flex items-center justify-center text-sm">👤</div>') +
+                '<span>Centro de cuenta</span>' +
+              '</div>' +
+              '<span class="text-gray-300">›</span>' +
+            '</button>' +
             '<div class="mt-2 border-t border-gray-100 pt-2">' +
               '<p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-5 mb-2 mt-2">Privacidad</p>' +
               '<button id="drawer-privacy-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">🔒 <span>Configuración de privacidad</span></button>' +
@@ -193,9 +195,6 @@
             '<div class="mt-2 border-t border-gray-100 pt-2">' +
               '<p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-5 mb-2 mt-2">Información</p>' +
               '<button id="drawer-about-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">ℹ️ <span>Acerca de la app</span></button>' +
-            '</div>' +
-            '<div class="mt-2 border-t border-gray-100 pt-2">' +
-              '<button id="drawer-delete-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-red-500 hover:bg-red-50 text-left">🗑 <span>Eliminar cuenta</span></button>' +
             '</div>' +
             (isAdmin
               ? '<div class="mt-2 border-t border-gray-100 pt-2">' +
@@ -225,205 +224,216 @@
       if (e.target === this) closeDrawer();
     });
 
-    document.getElementById('drawer-avatar-btn').addEventListener('click', function() {
-      var input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'image/*';
-      input.onchange = function() {
-        var file = input.files[0];
-        if (!file) return;
-        if (file.size > 2 * 1024 * 1024) { toast('La imagen no puede superar 2MB', 'error'); return; }
-        var reader = new FileReader();
-        reader.onload = async function(e) {
-          try {
-            await window.LyfterAPI.updateAvatar(e.target.result);
-            toast('Foto actualizada', 'success');
-            if (onAvatarSave) onAvatarSave(e.target.result);
-            var img = document.querySelector('#drawer-panel img, #drawer-panel div.w-16');
-            if (img) {
-              var newImg = document.createElement('img');
-              newImg.src = e.target.result;
-              newImg.className = 'w-16 h-16 rounded-full object-cover border-2 border-primary';
-              img.replaceWith(newImg);
-            }
-          } catch(err) { toast(err.message || 'No se pudo guardar la foto', 'error'); }
-        };
-        reader.readAsDataURL(file);
-      };
-      input.click();
-    });
-
-    document.getElementById('drawer-pw-btn').addEventListener('click', function() {
-      var panel = document.getElementById('drawer-panel');
-      panel.querySelector('nav').innerHTML =
-        '<div class="px-5 py-4">' +
-          '<button id="drawer-pw-back" class="text-xs text-primary mb-4 flex items-center gap-1">← Volver</button>' +
-          '<p class="text-sm font-semibold text-gray-700 mb-3">Cambiar contraseña</p>' +
-          '<div class="space-y-3">' +
-            '<input id="drawer-pw-current" type="password" placeholder="Contraseña actual" class="w-full px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
-            '<input id="drawer-pw-new" type="password" placeholder="Nueva contraseña (mín. 6)" class="w-full px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
-            '<button id="drawer-pw-save" class="w-full py-2.5 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">Guardar</button>' +
-          '</div>' +
-        '</div>';
-      document.getElementById('drawer-pw-back').addEventListener('click', function() {
-        closeModal();
+    // Centro de cuenta
+    var accountBtn = document.getElementById('drawer-account-btn');
+    if (accountBtn) {
+      accountBtn.addEventListener('click', function() {
+        var nav = document.getElementById('drawer-panel').querySelector('nav');
         window.LyfterAPI.getProfile().then(function(p) {
-          showDrawer(p.avatar, p.nombre, onAvatarSave, isAdmin);
-        }).catch(function() { showDrawer(null, null, onAvatarSave, isAdmin); });
-      });
-      document.getElementById('drawer-pw-save').addEventListener('click', async function() {
-        var btn = this;
-        var current = document.getElementById('drawer-pw-current').value;
-        var newPw = document.getElementById('drawer-pw-new').value;
-        if (!current || !newPw) { toast('Completa ambos campos', 'error'); return; }
-        btn.disabled = true; btn.textContent = 'Guardando...';
-        try {
-          await window.LyfterAPI.changePassword(current, newPw);
-          toast('Contraseña actualizada', 'success');
-          closeDrawer();
-        } catch(err) {
-          toast(err.message || 'No se pudo cambiar', 'error');
-          btn.disabled = false; btn.textContent = 'Guardar';
-        }
-      });
-    });
-
-    var interestsBtn = document.getElementById('drawer-interests-btn');
-    if (interestsBtn) {
-      interestsBtn.addEventListener('click', function() {
-        var TAGS = ['Desarrollo Web','Mobile','Inteligencia Artificial','Data Science','Ciberseguridad',
-          'DevOps','Cloud','Blockchain','UX/UI','Product Management','Emprendimiento','Marketing Digital',
-          'Diseño','Videojuegos','Robótica','Fintech','Educación Tech','Open Source','Backend','Frontend'];
-        var panel = document.getElementById('drawer-panel');
-        var nav = panel.querySelector('nav');
-
-        window.LyfterAPI.getProfile().then(function(p) {
-          var currentInterests = p.interests || [];
-          var selected = currentInterests.slice();
+          var avatarEl = p.avatar
+            ? '<img src="' + p.avatar + '" class="w-20 h-20 rounded-full object-cover border-2 border-gray-100 cursor-pointer" id="account-avatar-img" />'
+            : '<div class="w-20 h-20 rounded-full bg-primary-soft flex items-center justify-center text-4xl cursor-pointer" id="account-avatar-img">👤</div>';
 
           nav.innerHTML =
-            '<div class="px-5 py-4">' +
-              '<button id="drawer-interests-back" class="text-xs text-primary mb-4 flex items-center gap-1">← Volver</button>' +
-              '<p class="text-sm font-semibold text-gray-700 mb-3">🎯 Mis intereses</p>' +
-              '<div class="flex flex-wrap gap-2 mb-4">' +
-                TAGS.map(function(tag) {
-                  var isSelected = selected.indexOf(tag) !== -1;
-                  return '<button type="button" data-itag="' + esc(tag) + '" class="itag-btn px-3 py-1.5 rounded-full text-xs border transition ' +
-                    (isSelected ? 'text-white" style="background:#6C63FF; border-color:#6C63FF;"' : 'border-gray-200 text-gray-600"') + '>' +
-                    esc(tag) + '</button>';
-                }).join('') +
+            '<div class="py-4">' +
+              '<div class="px-5 mb-4">' +
+                '<button id="drawer-account-back" class="text-xs text-primary flex items-center gap-1">← Volver</button>' +
               '</div>' +
-              '<button id="drawer-interests-save" class="w-full py-2.5 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">Guardar</button>' +
+              '<div class="text-center px-5 mb-6">' +
+                '<div class="flex justify-center mb-3">' + avatarEl + '</div>' +
+                '<p class="font-bold text-gray-800 text-lg">' + esc(p.nombre || '') + '</p>' +
+                '<p class="text-xs text-gray-400">' + esc(p.email || '') + '</p>' +
+              '</div>' +
+              '<div class="border-t border-gray-100">' +
+                '<button id="acc-photo-btn" class="w-full flex items-center justify-between px-5 py-3.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">' +
+                  '<span>📷 Foto de perfil</span><span class="text-gray-300">›</span>' +
+                '</button>' +
+                '<button id="acc-name-btn" class="w-full flex items-center justify-between px-5 py-3.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">' +
+                  '<div class="text-left"><p class="text-sm text-gray-700">Nombre</p><p class="text-xs text-gray-400">' + esc(p.nombre || '') + '</p></div><span class="text-gray-300">›</span>' +
+                '</button>' +
+                '<button id="acc-email-btn" class="w-full flex items-center justify-between px-5 py-3.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">' +
+                  '<div class="text-left"><p class="text-sm text-gray-700">Email</p><p class="text-xs text-gray-400">' + esc(p.email || '') + '</p></div><span class="text-gray-300">›</span>' +
+                '</button>' +
+                '<button id="acc-pw-btn" class="w-full flex items-center justify-between px-5 py-3.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">' +
+                  '<span>🔑 Contraseña</span><span class="text-gray-300">›</span>' +
+                '</button>' +
+                '<button id="acc-interests-btn" class="w-full flex items-center justify-between px-5 py-3.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">' +
+                  '<div class="text-left"><p class="text-sm text-gray-700">🎯 Mis intereses</p><p class="text-xs text-gray-400">' + (p.interests && p.interests.length ? p.interests.slice(0,2).join(', ') + (p.interests.length > 2 ? '...' : '') : 'Sin configurar') + '</p></div><span class="text-gray-300">›</span>' +
+                '</button>' +
+              '</div>' +
+              '<div class="border-t border-gray-100 mt-4">' +
+                '<button id="acc-delete-btn" class="w-full flex items-center justify-between px-5 py-3.5 text-sm text-red-500 hover:bg-red-50">' +
+                  '<span>🗑 Eliminar cuenta</span><span class="text-red-300">›</span>' +
+                '</button>' +
+              '</div>' +
             '</div>';
 
-          Array.prototype.forEach.call(nav.querySelectorAll('.itag-btn'), function(btn) {
-            btn.addEventListener('click', function() {
-              var tag = btn.getAttribute('data-itag');
-              var idx = selected.indexOf(tag);
-              if (idx === -1) {
-                selected.push(tag);
-                btn.style.background = '#6C63FF';
-                btn.style.color = 'white';
-                btn.style.borderColor = '#6C63FF';
-              } else {
-                selected.splice(idx, 1);
-                btn.style.background = '';
-                btn.style.color = '';
-                btn.style.borderColor = '';
-              }
+          function goBack() {
+            closeModal();
+            window.LyfterAPI.getProfile().then(function(p2) { showDrawer(p2.avatar, p2.nombre, onAvatarSave, isAdmin); }).catch(function() { showDrawer(null, null, onAvatarSave, isAdmin); });
+          }
+
+          document.getElementById('drawer-account-back').addEventListener('click', goBack);
+
+          // Foto
+          document.getElementById('account-avatar-img').addEventListener('click', function() {
+            var input = document.createElement('input');
+            input.type = 'file'; input.accept = 'image/*';
+            input.onchange = function() {
+              var file = input.files[0];
+              if (!file) return;
+              if (file.size > 2 * 1024 * 1024) { toast('Máximo 2MB', 'error'); return; }
+              var reader = new FileReader();
+              reader.onload = async function(ev) {
+                try {
+                  await window.LyfterAPI.updateAvatar(ev.target.result);
+                  toast('Foto actualizada', 'success');
+                  if (onAvatarSave) onAvatarSave(ev.target.result);
+                  goBack();
+                } catch(err) { toast(err.message || 'Error', 'error'); }
+              };
+              reader.readAsDataURL(file);
+            };
+            input.click();
+          });
+
+          // Nombre
+          document.getElementById('acc-name-btn').addEventListener('click', function() {
+            var currentName = p.nombre || '';
+            var modalRoot = document.getElementById('modal-root');
+            modalRoot.innerHTML =
+              '<div class="fixed inset-0 z-50 flex items-center justify-center p-6 anim-fade" style="background:rgba(17,24,39,0.75);">' +
+                '<div class="bg-white rounded-card p-6 w-full max-w-sm shadow-soft anim-pop">' +
+                  '<p class="text-sm font-semibold text-gray-700 mb-3">✏️ Cambiar nombre</p>' +
+                  '<input id="inline-name-input" type="text" value="' + esc(currentName) + '" class="w-full px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm mb-4" />' +
+                  '<div class="flex gap-3 justify-end">' +
+                    '<button id="inline-cancel" class="px-5 py-2.5 rounded-btn border border-gray-200 text-sm font-medium text-gray-600">Cancelar</button>' +
+                    '<button id="inline-save" class="px-5 py-2.5 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">Guardar</button>' +
+                  '</div>' +
+                '</div>' +
+              '</div>';
+            document.getElementById('inline-cancel').addEventListener('click', closeModal);
+            document.getElementById('inline-save').addEventListener('click', async function() {
+              var btn = this;
+              var name = document.getElementById('inline-name-input').value.trim();
+              if (!name) { toast('Ingresa un nombre', 'error'); return; }
+              btn.disabled = true; btn.textContent = 'Guardando...';
+              try {
+                await window.LyfterAPI.updateName(name);
+                toast('Nombre actualizado', 'success');
+                closeModal();
+                goBack();
+              } catch(err) { toast(err.message || 'Error', 'error'); btn.disabled = false; btn.textContent = 'Guardar'; }
             });
           });
 
-          document.getElementById('drawer-interests-back').addEventListener('click', function() {
-            closeModal();
-            window.LyfterAPI.getProfile().then(function(p2) {
-              showDrawer(p2.avatar, p2.nombre, onAvatarSave, isAdmin);
-            }).catch(function() { showDrawer(null, null, onAvatarSave, isAdmin); });
+          // Email
+          document.getElementById('acc-email-btn').addEventListener('click', function() {
+            var currentEmail = p.email || '';
+            var modalRoot = document.getElementById('modal-root');
+            modalRoot.innerHTML =
+              '<div class="fixed inset-0 z-50 flex items-center justify-center p-6 anim-fade" style="background:rgba(17,24,39,0.75);">' +
+                '<div class="bg-white rounded-card p-6 w-full max-w-sm shadow-soft anim-pop">' +
+                  '<p class="text-sm font-semibold text-gray-700 mb-3">📧 Cambiar email</p>' +
+                  '<input id="inline-email-input" type="email" value="' + esc(currentEmail) + '" class="w-full px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm mb-4" />' +
+                  '<div class="flex gap-3 justify-end">' +
+                    '<button id="inline-cancel" class="px-5 py-2.5 rounded-btn border border-gray-200 text-sm font-medium text-gray-600">Cancelar</button>' +
+                    '<button id="inline-save" class="px-5 py-2.5 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">Guardar</button>' +
+                  '</div>' +
+                '</div>' +
+              '</div>';
+            document.getElementById('inline-cancel').addEventListener('click', closeModal);
+            document.getElementById('inline-save').addEventListener('click', async function() {
+              var btn = this;
+              var email = document.getElementById('inline-email-input').value.trim();
+              if (!email) { toast('Ingresa un email', 'error'); return; }
+              btn.disabled = true; btn.textContent = 'Guardando...';
+              try {
+                await window.LyfterAPI.updateEmail(email);
+                toast('Email actualizado', 'success');
+                closeModal();
+                goBack();
+              } catch(err) { toast(err.message || 'Error', 'error'); btn.disabled = false; btn.textContent = 'Guardar'; }
+            });
           });
 
-          document.getElementById('drawer-interests-save').addEventListener('click', async function() {
-            var btn = this;
-            btn.disabled = true; btn.textContent = 'Guardando...';
-            try {
-              await window.LyfterAPI.updateInterests(selected);
-              toast('Intereses actualizados', 'success');
-              closeModal();
-            } catch(err) {
-              toast(err.message || 'No se pudo guardar', 'error');
-              btn.disabled = false; btn.textContent = 'Guardar';
-            }
+          // Contraseña
+          document.getElementById('acc-pw-btn').addEventListener('click', function() {
+            var modalRoot = document.getElementById('modal-root');
+            modalRoot.innerHTML =
+              '<div class="fixed inset-0 z-50 flex items-center justify-center p-6 anim-fade" style="background:rgba(17,24,39,0.75);">' +
+                '<div class="bg-white rounded-card p-6 w-full max-w-sm shadow-soft anim-pop">' +
+                  '<p class="text-sm font-semibold text-gray-700 mb-3">🔑 Cambiar contraseña</p>' +
+                  '<div class="space-y-3 mb-4">' +
+                    '<input id="inline-pw-current" type="password" placeholder="Contraseña actual" class="w-full px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
+                    '<input id="inline-pw-new" type="password" placeholder="Nueva contraseña (mín. 6)" class="w-full px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
+                  '</div>' +
+                  '<div class="flex gap-3 justify-end">' +
+                    '<button id="inline-cancel" class="px-5 py-2.5 rounded-btn border border-gray-200 text-sm font-medium text-gray-600">Cancelar</button>' +
+                    '<button id="inline-save" class="px-5 py-2.5 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">Guardar</button>' +
+                  '</div>' +
+                '</div>' +
+              '</div>';
+            document.getElementById('inline-cancel').addEventListener('click', closeModal);
+            document.getElementById('inline-save').addEventListener('click', async function() {
+              var btn = this;
+              var current = document.getElementById('inline-pw-current').value;
+              var newPw = document.getElementById('inline-pw-new').value;
+              if (!current || !newPw) { toast('Completa ambos campos', 'error'); return; }
+              btn.disabled = true; btn.textContent = 'Guardando...';
+              try {
+                await window.LyfterAPI.changePassword(current, newPw);
+                toast('Contraseña actualizada', 'success');
+                closeModal();
+              } catch(err) { toast(err.message || 'Error', 'error'); btn.disabled = false; btn.textContent = 'Guardar'; }
+            });
           });
-        }).catch(function() {
-          toast('No se pudieron cargar los intereses', 'error');
-        });
-      });
-    }
 
-    // Cambiar nombre
-    var nameBtn = document.getElementById('drawer-name-btn');
-    if (nameBtn) {
-      nameBtn.addEventListener('click', function() {
-        var nav = document.getElementById('drawer-panel').querySelector('nav');
-        nav.innerHTML =
-          '<div class="px-5 py-4">' +
-            '<button id="drawer-name-back" class="text-xs text-primary mb-4 flex items-center gap-1">← Volver</button>' +
-            '<p class="text-sm font-semibold text-gray-700 mb-3">✏️ Cambiar nombre</p>' +
-            '<input id="drawer-name-input" type="text" placeholder="Tu nombre completo" class="w-full px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm mb-3" />' +
-            '<button id="drawer-name-save" class="w-full py-2.5 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">Guardar</button>' +
-          '</div>';
-        window.LyfterAPI.getProfile().then(function(p) {
-          var input = document.getElementById('drawer-name-input');
-          if (input) input.value = p.nombre || '';
-        });
-        document.getElementById('drawer-name-back').addEventListener('click', function() {
-          closeModal();
-          window.LyfterAPI.getProfile().then(function(p) { showDrawer(p.avatar, p.nombre, onAvatarSave, isAdmin); }).catch(function() { showDrawer(null, null, onAvatarSave, isAdmin); });
-        });
-        document.getElementById('drawer-name-save').addEventListener('click', async function() {
-          var btn = this;
-          var name = document.getElementById('drawer-name-input').value.trim();
-          if (!name) { toast('Ingresa un nombre', 'error'); return; }
-          btn.disabled = true; btn.textContent = 'Guardando...';
-          try {
-            await window.LyfterAPI.updateName(name);
-            toast('Nombre actualizado', 'success');
-            closeModal();
-          } catch(err) { toast(err.message || 'Error', 'error'); btn.disabled = false; btn.textContent = 'Guardar'; }
-        });
-      });
-    }
+          // Intereses
+          document.getElementById('acc-interests-btn').addEventListener('click', function() {
+            var TAGS = ['Desarrollo Web','Mobile','Inteligencia Artificial','Data Science','Ciberseguridad','DevOps','Cloud','Blockchain','UX/UI','Product Management','Emprendimiento','Marketing Digital','Diseño','Videojuegos','Robótica','Fintech','Educación Tech','Open Source','Backend','Frontend'];
+            var selected = (p.interests || []).slice();
+            var nav2 = document.getElementById('drawer-panel').querySelector('nav');
+            nav2.innerHTML =
+              '<div class="px-5 py-4">' +
+                '<button id="interests-back" class="text-xs text-primary mb-4 flex items-center gap-1">← Volver</button>' +
+                '<p class="text-sm font-semibold text-gray-700 mb-3">🎯 Mis intereses</p>' +
+                '<div class="flex flex-wrap gap-2 mb-4">' +
+                  TAGS.map(function(tag) {
+                    var isSel = selected.indexOf(tag) !== -1;
+                    return '<button type="button" data-itag="' + esc(tag) + '" class="itag-btn px-3 py-1.5 rounded-full text-xs border transition ' + (isSel ? 'text-white" style="background:#6C63FF; border-color:#6C63FF;"' : 'border-gray-200 text-gray-600"') + '>' + esc(tag) + '</button>';
+                  }).join('') +
+                '</div>' +
+                '<button id="interests-save" class="w-full py-2.5 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">Guardar</button>' +
+              '</div>';
+            Array.prototype.forEach.call(document.querySelectorAll('.itag-btn'), function(btn) {
+              btn.addEventListener('click', function() {
+                var tag = btn.getAttribute('data-itag');
+                var idx = selected.indexOf(tag);
+                if (idx === -1) { selected.push(tag); btn.style.background='#6C63FF'; btn.style.color='white'; btn.style.borderColor='#6C63FF'; }
+                else { selected.splice(idx,1); btn.style.background=''; btn.style.color=''; btn.style.borderColor=''; }
+              });
+            });
+            document.getElementById('interests-back').addEventListener('click', function() { accountBtn.click(); });
+            document.getElementById('interests-save').addEventListener('click', async function() {
+              var btn = this; btn.disabled = true; btn.textContent = 'Guardando...';
+              try { await window.LyfterAPI.updateInterests(selected); toast('Intereses actualizados','success'); accountBtn.click(); }
+              catch(err) { toast(err.message||'Error','error'); btn.disabled=false; btn.textContent='Guardar'; }
+            });
+          });
 
-    // Cambiar email
-    var emailBtn = document.getElementById('drawer-email-btn');
-    if (emailBtn) {
-      emailBtn.addEventListener('click', function() {
-        var nav = document.getElementById('drawer-panel').querySelector('nav');
-        nav.innerHTML =
-          '<div class="px-5 py-4">' +
-            '<button id="drawer-email-back" class="text-xs text-primary mb-4 flex items-center gap-1">← Volver</button>' +
-            '<p class="text-sm font-semibold text-gray-700 mb-3">📧 Cambiar email</p>' +
-            '<input id="drawer-email-input" type="email" placeholder="nuevo@email.com" class="w-full px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm mb-3" />' +
-            '<button id="drawer-email-save" class="w-full py-2.5 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">Guardar</button>' +
-          '</div>';
-        window.LyfterAPI.getProfile().then(function(p) {
-          var input = document.getElementById('drawer-email-input');
-          if (input) input.value = p.email || '';
-        });
-        document.getElementById('drawer-email-back').addEventListener('click', function() {
-          closeModal();
-          window.LyfterAPI.getProfile().then(function(p) { showDrawer(p.avatar, p.nombre, onAvatarSave, isAdmin); }).catch(function() { showDrawer(null, null, onAvatarSave, isAdmin); });
-        });
-        document.getElementById('drawer-email-save').addEventListener('click', async function() {
-          var btn = this;
-          var email = document.getElementById('drawer-email-input').value.trim();
-          if (!email) { toast('Ingresa un email', 'error'); return; }
-          btn.disabled = true; btn.textContent = 'Guardando...';
-          try {
-            await window.LyfterAPI.updateEmail(email);
-            toast('Email actualizado', 'success');
-            closeModal();
-          } catch(err) { toast(err.message || 'Error', 'error'); btn.disabled = false; btn.textContent = 'Guardar'; }
-        });
+          // Eliminar cuenta
+          document.getElementById('acc-delete-btn').addEventListener('click', function() {
+            showConfirm('¿Eliminar tu cuenta? Esta acción es irreversible.', async function() {
+              try {
+                await window.LyfterAPI.deleteAccount();
+                window.LyfterAPI.logout();
+                window.location.href = 'login.html';
+              } catch(err) { toast(err.message || 'Error', 'error'); }
+            }, null, { confirmLabel: 'Eliminar cuenta', danger: true });
+          });
+
+        }).catch(function() { toast('No se pudo cargar el perfil', 'error'); });
       });
     }
 
@@ -506,25 +516,6 @@
           closeModal();
           window.LyfterAPI.getProfile().then(function(p) { showDrawer(p.avatar, p.nombre, onAvatarSave, isAdmin); }).catch(function() { showDrawer(null, null, onAvatarSave, isAdmin); });
         });
-      });
-    }
-
-    // Eliminar cuenta
-    var deleteBtn = document.getElementById('drawer-delete-btn');
-    if (deleteBtn) {
-      deleteBtn.addEventListener('click', function() {
-        showConfirm(
-          '¿Estás seguro de que quieres eliminar tu cuenta? Esta acción es irreversible.',
-          async function() {
-            try {
-              await window.LyfterAPI.deleteAccount();
-              window.LyfterAPI.logout();
-              window.location.href = 'login.html';
-            } catch(err) { toast(err.message || 'No se pudo eliminar la cuenta', 'error'); }
-          },
-          null,
-          { confirmLabel: 'Eliminar cuenta', danger: true }
-        );
       });
     }
 
