@@ -10,3 +10,4 @@ google-auth>=2.28
 google-auth-oauthlib>=1.2
 requests>=2.31
 google-auth-httplib2>=0.2
+upstash-redis>=1.0
