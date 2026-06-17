@@ -15,31 +15,6 @@
   var _currentLang = 'es';
   try { _currentLang = localStorage.getItem('lyfter_lang') || 'es'; } catch(e) {}
 
-  async function translateText(text, targetLang) {
-    if (!text || !text.trim() || targetLang === 'es') return text;
-    try {
-      var res = await fetch('https://api.mymemory.translated.net/get?q=' + encodeURIComponent(text) + '&langpair=es|' + targetLang);
-      if (!res.ok) return text;
-      var data = await res.json();
-      return (data.responseStatus === 200 && data.responseData && data.responseData.translatedText) ? data.responseData.translatedText : text;
-    } catch(e) {
-      return text;
-    }
-  }
-
-  async function translatePage() {
-    var lang = _currentLang;
-    if (lang === 'es') return;
-    var elements = document.querySelectorAll('[data-i18n]');
-    for (var i = 0; i < elements.length; i++) {
-      var el = elements[i];
-      var original = el.getAttribute('data-i18n-original') || el.textContent;
-      el.setAttribute('data-i18n-original', original);
-      var translated = await translateText(original, lang);
-      el.textContent = translated;
-    }
-  }
-
   function getCurrentLang() { return _currentLang; }
   function setCurrentLang(lang) {
     _currentLang = lang;
@@ -579,7 +554,6 @@
             var lang = btn.getAttribute('data-lang');
             try { localStorage.setItem('lyfter_lang', lang); } catch(e) {}
             closeModal();
-
             if (lang === 'es') {
               Array.prototype.forEach.call(document.querySelectorAll('[data-original]'), function(el) {
                 var orig = el.getAttribute('data-original');
@@ -588,28 +562,18 @@
               toast('Idioma: Español', 'success');
               return;
             }
-
             toast('Cargando ' + LANGUAGES[lang] + '...', 'info');
             try {
-              var res = await fetch('locales/' + lang + '.json?v=' + Date.now());
+              var res = await fetch('locales/' + lang + '.json');
               if (!res.ok) { toast('Idioma no disponible', 'error'); return; }
               var translations = await res.json();
-
               Array.prototype.forEach.call(document.querySelectorAll('[data-i18n]'), function(el) {
                 var key = el.getAttribute('data-i18n');
                 if (translations[key]) {
-                  if (!el.getAttribute('data-original')) {
-                    el.setAttribute('data-original', el.textContent.trim());
-                  }
+                  if (!el.getAttribute('data-original')) el.setAttribute('data-original', el.textContent.trim());
                   el.textContent = translations[key];
                 }
               });
-
-              Array.prototype.forEach.call(document.querySelectorAll('[data-i18n-placeholder]'), function(el) {
-                var key = el.getAttribute('data-i18n-placeholder');
-                if (translations[key]) el.placeholder = translations[key];
-              });
-
               toast('Idioma: ' + LANGUAGES[lang], 'success');
             } catch(e) {
               toast('No se pudo cargar el idioma', 'error');
@@ -848,10 +812,6 @@
           el.textContent = translations[key];
         }
       });
-      Array.prototype.forEach.call(document.querySelectorAll('[data-i18n-placeholder]'), function(el) {
-        var key = el.getAttribute('data-i18n-placeholder');
-        if (translations[key]) el.placeholder = translations[key];
-      });
     } catch(e) {}
   }
 
@@ -879,10 +839,8 @@
     getActiveId: getActiveId,
     setActiveId: setActiveId,
     ensureActive: ensureActive,
-    translatePage: translatePage,
     getCurrentLang: getCurrentLang,
     setCurrentLang: setCurrentLang,
-    translateText: translateText,
     applyStoredLang: applyStoredLang
   };
 
