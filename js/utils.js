@@ -9,12 +9,7 @@
     'en': 'English',
     'pt': 'Português',
     'fr': 'Français',
-    'de': 'Deutsch',
-    'hi': 'हिन्दी',
-    'zh': '中文',
-    'ar': 'العربية',
-    'ja': '日本語',
-    'ru': 'Русский'
+    'de': 'Deutsch'
   };
 
   var _currentLang = 'es';
@@ -549,8 +544,7 @@
       langBtn.addEventListener('click', function() {
         var LANGUAGES = {
           'es': 'Español', 'en': 'English', 'pt': 'Português',
-          'fr': 'Français', 'de': 'Deutsch', 'hi': 'हिन्दी',
-          'zh': '中文', 'ar': 'العربية', 'ja': '日本語', 'ru': 'Русский'
+          'fr': 'Français', 'de': 'Deutsch'
         };
         var currentLang = 'es';
         try { currentLang = localStorage.getItem('lyfter_lang') || 'es'; } catch(e) {}
@@ -585,38 +579,30 @@
             var lang = btn.getAttribute('data-lang');
             try { localStorage.setItem('lyfter_lang', lang); } catch(e) {}
             closeModal();
-            toast('Traduciendo...', 'info');
-            var elements = document.querySelectorAll('p, h1, h2, h3, h4, button, label, a, span, td, th, li');
-            var elementsToTranslate = [];
-            Array.prototype.forEach.call(elements, function(el) {
-              if (el.children.length === 0 && el.textContent.trim()) {
-                elementsToTranslate.push(el);
-              }
-            });
-
             if (lang === 'es') {
-              elementsToTranslate.forEach(function(el) {
+              Array.prototype.forEach.call(document.querySelectorAll('[data-original]'), function(el) {
                 var orig = el.getAttribute('data-original');
                 if (orig) el.textContent = orig;
               });
-            } else {
-              for (var i = 0; i < elementsToTranslate.length; i++) {
-                var el = elementsToTranslate[i];
-                try {
-                  var original = el.getAttribute('data-original') || el.textContent.trim();
-                  el.setAttribute('data-original', original);
-                  var res = await fetch('https://api.mymemory.translated.net/get?q=' + encodeURIComponent(original) + '&langpair=es|' + lang);
-                  if (res.ok) {
-                    var data = await res.json();
-                    if (data.responseStatus === 200 && data.responseData && data.responseData.translatedText) {
-                      el.textContent = data.responseData.translatedText;
-                    }
-                  }
-                  await new Promise(function(r) { setTimeout(r, 50); });
-                } catch(e) {}
-              }
+              toast('Idioma: Español', 'success');
+              return;
             }
-            toast('Idioma cambiado ✅', 'success');
+            toast('Cargando ' + LANGUAGES[lang] + '...', 'info');
+            try {
+              var res = await fetch('locales/' + lang + '.json');
+              if (!res.ok) { toast('Idioma no disponible', 'error'); return; }
+              var translations = await res.json();
+              Array.prototype.forEach.call(document.querySelectorAll('[data-i18n]'), function(el) {
+                var key = el.getAttribute('data-i18n');
+                if (translations[key]) {
+                  if (!el.getAttribute('data-original')) el.setAttribute('data-original', el.textContent);
+                  el.textContent = translations[key];
+                }
+              });
+              toast('Idioma: ' + LANGUAGES[lang], 'success');
+            } catch(e) {
+              toast('No se pudo cargar el idioma', 'error');
+            }
           });
         });
       });
