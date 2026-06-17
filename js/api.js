@@ -227,9 +227,13 @@
       var e = mockEvent(eventId); if (!e) throw new Error('Evento no encontrado');
       e.photo = base64; persist(); return { ok: true };
     },
-    async joinEvent(eventId) {
+    async joinEvent(eventId, coords) {
       var e = mockEvent(eventId); if (!e) throw new Error('Evento no encontrado');
       return { status: 'joined', event: eventDto(e) };
+    },
+    async updateEventCoordinates(eventId, lat, lng) {
+      var e = mockEvent(eventId); if (!e) throw new Error('Evento no encontrado');
+      e.lat = lat; e.lng = lng; persist(); return { ok: true };
     },
     async getJoinedEvents() {
       var sess = getSession();
@@ -472,9 +476,10 @@
         prizeRevealed: d.premio_revelado || null
       };
     },
-    async redeem(eventId, token) {
+    async redeem(eventId, token, coords) {
       if (!token) throw new Error('Ingresa el token del QR');
-      var d = await apiRequest('POST', '/redeem/' + eventId + '/' + token);
+      var body = coords ? { lat: coords.lat, lng: coords.lng } : {};
+      var d = await apiRequest('POST', '/redeem/' + eventId + '/' + token, body);
       return {
         status: d.status === 'duplicado' ? 'duplicate' : 'ok',
         badge: d.badge ? { emoji: d.badge.icon || '🏅', name: d.badge.nombre, desc: d.badge.descripcion } : null,
@@ -517,8 +522,12 @@
     async updateEventPhoto(eventId, base64) {
       return await apiRequest('POST', '/admin/events/' + eventId + '/photo', { photo: base64 });
     },
-    async joinEvent(eventId) {
-      return await apiRequest('POST', '/events/' + eventId + '/join');
+    async joinEvent(eventId, coords) {
+      var body = coords ? { lat: coords.lat, lng: coords.lng } : {};
+      return await apiRequest('POST', '/events/' + eventId + '/join', body);
+    },
+    async updateEventCoordinates(eventId, lat, lng) {
+      return await apiRequest('POST', '/admin/events/' + eventId + '/coordinates', { lat: lat, lng: lng });
     },
     async getJoinedEvents() {
       return (await apiRequest('GET', '/events/joined')).map(mapEvent);
@@ -645,7 +654,8 @@
     updateEventPhoto:       impl.updateEventPhoto.bind(impl),
     joinEvent:              impl.joinEvent.bind(impl),
     getJoinedEvents:      impl.getJoinedEvents.bind(impl),
-    updateEventLocation:  impl.updateEventLocation.bind(impl),
+    updateEventLocation:      impl.updateEventLocation.bind(impl),
+    updateEventCoordinates:   impl.updateEventCoordinates.bind(impl),
     updateInterests:  impl.updateInterests.bind(impl),
     getRecommended:   impl.getRecommended.bind(impl),
     updateEventTags:  impl.updateEventTags.bind(impl),

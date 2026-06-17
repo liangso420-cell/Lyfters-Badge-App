@@ -3,11 +3,11 @@
 from datetime import datetime
 
 from bson import ObjectId
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from db import users, events, badges, scans, event_joins
-from utils import valid_oid, fmt_event, fmt_badge, compute_event_status
+from utils import valid_oid, fmt_event, fmt_badge, compute_event_status, haversine
 
 events_bp = Blueprint("events", __name__)
 # /leaderboard no cuelga de /events, va en su propio blueprint sin prefix
@@ -128,6 +128,20 @@ def join_event(event_id):
     event = events().find_one({"_id": oid, "active": True})
     if not event:
         return jsonify(error="Evento no encontrado o inactivo"), 404
+
+    body = request.get_json(silent=True) or {}
+    user_lat = body.get("lat")
+    user_lng = body.get("lng")
+    event_lat = event.get("lat")
+    event_lng = event.get("lng")
+    if event_lat is not None and event_lng is not None and user_lat is not None and user_lng is not None:
+        try:
+            dist = haversine(float(user_lat), float(user_lng), float(event_lat), float(event_lng))
+            if dist > 1000:
+                return jsonify(error="Estás demasiado lejos del evento (máx 1km)"), 403
+        except (TypeError, ValueError):
+            pass
+
     user_oid = ObjectId(uid)
     already = event_joins().find_one({"user_id": user_oid, "event_id": oid})
     if not already:

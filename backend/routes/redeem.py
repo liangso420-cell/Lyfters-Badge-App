@@ -3,11 +3,11 @@
 from datetime import datetime
 
 from bson import ObjectId
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from db import events, badges, scans
-from utils import valid_oid
+from utils import valid_oid, haversine
 from security.limiter import redeem_limit
 
 redeem_bp = Blueprint("redeem", __name__)
@@ -29,6 +29,19 @@ def redeem_badge(event_id, token):
     event = events().find_one({"_id": oid_event, "active": True})
     if not event:
         return jsonify(error="Evento no encontrado o inactivo"), 404
+
+    body = request.get_json(silent=True) or {}
+    user_lat = body.get("lat")
+    user_lng = body.get("lng")
+    event_lat = event.get("lat")
+    event_lng = event.get("lng")
+    if event_lat is not None and event_lng is not None and user_lat is not None and user_lng is not None:
+        try:
+            dist = haversine(float(user_lat), float(user_lng), float(event_lat), float(event_lng))
+            if dist > 1000:
+                return jsonify(error="Estás demasiado lejos del evento (máx 1km)"), 403
+        except (TypeError, ValueError):
+            pass
 
     badge = badges().find_one({"token": token, "event_id": oid_event})
     if not badge:

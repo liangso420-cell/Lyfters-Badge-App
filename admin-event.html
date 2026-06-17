@@ -151,6 +151,10 @@
                 '</div>' +
                 U.inputField({ label: 'Premio sorpresa 🎁', name: 'prize', placeholder: 'Entrada VIP al after-party' }) +
                 U.inputField({ label: 'Ubicación 📍', name: 'location', placeholder: 'Ciudad, País o enlace virtual' }) +
+                '<div class="grid grid-cols-2 gap-3">' +
+                  U.inputField({ label: 'Latitud 🌐', type: 'number', name: 'lat', placeholder: '4.6097' }) +
+                  U.inputField({ label: 'Longitud 🌐', type: 'number', name: 'lng', placeholder: '-74.0817' }) +
+                '</div>' +
                 '<div class="pt-2 border-t border-gray-100">' +
                   '<p class="text-sm font-semibold text-gray-700 mb-2 mt-4">🏷️ Tags del evento</p>' +
                   '<p class="text-xs text-gray-400 mb-3">Ayudan a recomendar este evento a usuarios interesados</p>' +
@@ -209,6 +213,10 @@
                     '</div>' +
                     '<div><label class="text-xs font-medium text-gray-500">Descripción</label><input type="text" name="descripcion" value="' + U.esc(e.description || '') + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
                     '<div><label class="text-xs font-medium text-gray-500">Ubicación 📍</label><input type="text" name="location" value="' + U.esc(e.location || '') + '" placeholder="Ciudad, País o enlace virtual" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
+                    '<div class="grid grid-cols-2 gap-3 mt-2">' +
+                      '<div><label class="text-xs font-medium text-gray-500">Latitud 🌐</label><input type="number" step="any" name="lat" value="' + (e.lat != null ? e.lat : '') + '" placeholder="4.6097" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
+                      '<div><label class="text-xs font-medium text-gray-500">Longitud 🌐</label><input type="number" step="any" name="lng" value="' + (e.lng != null ? e.lng : '') + '" placeholder="-74.0817" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
+                    '</div>' +
                     '<div class="grid grid-cols-2 gap-3">' +
                       '<div><label class="text-xs font-medium text-gray-500">Inicio</label><input type="date" name="fecha_inicio" value="' + isoDate(e.start) + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
                       '<div><label class="text-xs font-medium text-gray-500">Fin</label><input type="date" name="fecha_fin" value="' + isoDate(e.end) + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
@@ -455,6 +463,9 @@
                   location: form.elements['location'] ? form.elements['location'].value.trim() : '',
                 })];
                 if (form._selectedTags && form._selectedTags.length) saves.push(API.updateEventTags(eid, form._selectedTags));
+                var elat = form.elements['lat'] ? parseFloat(form.elements['lat'].value) : NaN;
+                var elng = form.elements['lng'] ? parseFloat(form.elements['lng'].value) : NaN;
+                if (!isNaN(elat) && !isNaN(elng)) saves.push(API.updateEventCoordinates(eid, elat, elng));
                 await Promise.all(saves);
                 U.toast('Evento actualizado ✅', 'success'); init();
               } catch(err) { U.toast(err.message || 'Error', 'error'); saveBtn.disabled = false; saveBtn.textContent = 'Guardar'; }
@@ -500,6 +511,9 @@
               for (var i = 0; i < createPendingBadges.length; i++) {
                 savePromises.push(API.addBadge(created.id, createPendingBadges[i]));
               }
+              var clat = createFormEl.lat ? parseFloat(createFormEl.lat.value) : NaN;
+              var clng = createFormEl.lng ? parseFloat(createFormEl.lng.value) : NaN;
+              if (!isNaN(clat) && !isNaN(clng)) savePromises.push(API.updateEventCoordinates(created.id, clat, clng));
               await Promise.all(savePromises);
               U.setActiveId(created.id);
               expandedId = created.id;

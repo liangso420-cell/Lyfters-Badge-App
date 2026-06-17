@@ -208,7 +208,9 @@
               } else if (urlParams && urlParams.get('event') && !urlParams.get('token')) {
                 stream.getTracks().forEach(function(t) { t.stop(); });
                 var eid = urlParams.get('event');
-                API.joinEvent(eid).then(function(r) {
+                getLocation().then(function(coords) {
+                  return API.joinEvent(eid, coords);
+                }).then(function(r) {
                   U.setActiveId(eid);
                   U.toastNextPage(r.status === 'already_joined' ? 'Ya estás en este evento' : '¡Te uniste al evento! 🎉', 'success');
                   window.location.href = 'profile.html';
@@ -230,12 +232,24 @@
         setTimeout(tick, 150);
       }
 
+      function getLocation() {
+        return new Promise(function(resolve) {
+          if (!navigator.geolocation) { resolve(null); return; }
+          navigator.geolocation.getCurrentPosition(
+            function(pos) { resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }); },
+            function() { resolve(null); },
+            { timeout: 8000, maximumAge: 30000 }
+          );
+        });
+      }
+
       async function doRedeem(token, eventId) {
         setStatus('Procesando...');
         try {
           var events = await API.listEvents();
           var activeId = eventId || U.ensureActive(events);
-          var r = await API.redeem(activeId, token);
+          var coords = await getLocation();
+          var r = await API.redeem(activeId, token, coords);
 
           if (r.status === 'none') {
             vibrate(200);

@@ -238,6 +238,27 @@ def update_event_location(event_id):
     return jsonify(ok=True), 200
 
 
+@admin_bp.route("/events/<event_id>/coordinates", methods=["POST"])
+@jwt_required()
+def update_event_coordinates(event_id):
+    if not require_admin():
+        return jsonify(error="Acceso denegado"), 403
+    oid = valid_oid(event_id)
+    if not oid:
+        return jsonify(error="ID inválido"), 400
+    data = request.get_json() or {}
+    lat = data.get("lat")
+    lng = data.get("lng")
+    if lat is None or lng is None:
+        return jsonify(error="Se requieren lat y lng"), 400
+    try:
+        lat, lng = float(lat), float(lng)
+    except (TypeError, ValueError):
+        return jsonify(error="lat y lng deben ser números"), 400
+    events().update_one({"_id": oid}, {"$set": {"lat": lat, "lng": lng}})
+    return jsonify(ok=True), 200
+
+
 # ──────────────────────────────────────────────
 # ADMIN — badges
 # ──────────────────────────────────────────────
