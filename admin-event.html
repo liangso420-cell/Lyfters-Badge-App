@@ -9,7 +9,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDmWM6P5Si8VMH1mGE7Xc9c0p3BpkwoVkY&libraries=places&region=CR&language=es"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -157,7 +158,8 @@
                     '<input id="location-search" type="text" placeholder="Busca el lugar del evento en Costa Rica..." ' +
                       'class="w-full px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none" />' +
                   '</div>' +
-                  '<div id="location-map" class="mt-2 rounded-card overflow-hidden" style="height:200px; display:none;"></div>' +
+                  '<div id="location-suggestions" class="border border-gray-200 rounded-btn bg-white shadow-soft mt-1 overflow-hidden"></div>' +
+                  '<div id="location-map" class="mt-2 rounded-card overflow-hidden" style="height:250px;"></div>' +
                   '<div id="location-selected" class="mt-2 hidden">' +
                     '<p class="text-xs text-green-600 font-medium">📍 <span id="location-address"></span></p>' +
                     '<p class="text-xs text-gray-400">Lat: <span id="location-lat"></span> · Lng: <span id="location-lng"></span></p>' +
@@ -274,62 +276,85 @@
           app.innerHTML = U.adminShell('event', inner, events, activeId);
           U.mountAdminShell();
 
-          // Inicializar Google Maps con Places Autocomplete
-          var mapInstance = null;
-          var markerInstance = null;
-
           function initLocationPicker() {
-            var input = document.getElementById('location-search');
-            if (!input || typeof google === 'undefined') return;
+            var mapDiv = document.getElementById('location-map');
+            if (!mapDiv) return;
+            mapDiv.style.display = 'block';
 
-            var autocomplete = new google.maps.places.Autocomplete(input, {
-              componentRestrictions: { country: 'cr' },
-              fields: ['geometry', 'formatted_address', 'name']
+            var map = L.map('location-map').setView([9.7489, -83.7534], 8);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              attribution: '© OpenStreetMap'
+            }).addTo(map);
+
+            var marker = null;
+
+            var searchInput = document.getElementById('location-search');
+            var searchTimeout = null;
+
+            searchInput.addEventListener('input', function() {
+              clearTimeout(searchTimeout);
+              var q = searchInput.value.trim();
+              if (q.length < 3) return;
+              searchTimeout = setTimeout(async function() {
+                try {
+                  var res = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(q + ' Costa Rica') + '&format=json&limit=5&countrycodes=cr');
+                  var results = await res.json();
+                  var suggestions = document.getElementById('location-suggestions');
+                  if (!results.length) { suggestions.innerHTML = ''; return; }
+                  suggestions.innerHTML = results.map(function(r) {
+                    return '<div class="location-suggestion px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer border-b border-gray-100">' + r.display_name + '</div>';
+                  }).join('');
+                  Array.prototype.forEach.call(suggestions.querySelectorAll('.location-suggestion'), function(el, i) {
+                    el.addEventListener('click', function() {
+                      var r = results[i];
+                      var lat = parseFloat(r.lat);
+                      var lng = parseFloat(r.lon);
+                      var address = r.display_name;
+                      map.setView([lat, lng], 15);
+                      if (marker) marker.setLatLng([lat, lng]);
+                      else marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+                      marker.on('dragend', function() {
+                        var pos = marker.getLatLng();
+                        document.getElementById('lat-value').value = pos.lat;
+                        document.getElementById('lng-value').value = pos.lng;
+                        document.getElementById('location-lat').textContent = pos.lat.toFixed(6);
+                        document.getElementById('location-lng').textContent = pos.lng.toFixed(6);
+                      });
+                      document.getElementById('location-value').value = address;
+                      document.getElementById('lat-value').value = lat;
+                      document.getElementById('lng-value').value = lng;
+                      document.getElementById('location-selected').classList.remove('hidden');
+                      document.getElementById('location-address').textContent = address;
+                      document.getElementById('location-lat').textContent = lat.toFixed(6);
+                      document.getElementById('location-lng').textContent = lng.toFixed(6);
+                      searchInput.value = r.display_name.split(',')[0];
+                      suggestions.innerHTML = '';
+                    });
+                  });
+                } catch(e) {}
+              }, 500);
             });
 
-            autocomplete.addListener('place_changed', function() {
-              var place = autocomplete.getPlace();
-              if (!place.geometry) return;
-
-              var lat = place.geometry.location.lat();
-              var lng = place.geometry.location.lng();
-              var address = place.formatted_address || place.name || input.value;
-
-              var mapDiv = document.getElementById('location-map');
-              mapDiv.style.display = 'block';
-
-              if (!mapInstance) {
-                mapInstance = new google.maps.Map(mapDiv, {
-                  zoom: 15,
-                  center: { lat: lat, lng: lng },
-                  mapTypeControl: false,
-                  streetViewControl: false,
-                  fullscreenControl: false
-                });
-                markerInstance = new google.maps.Marker({
-                  position: { lat: lat, lng: lng },
-                  map: mapInstance,
-                  draggable: true,
-                  title: 'Ubicación del evento'
-                });
-                markerInstance.addListener('dragend', function() {
-                  var pos = markerInstance.getPosition();
-                  document.getElementById('lat-value').value = pos.lat();
-                  document.getElementById('lng-value').value = pos.lng();
-                  document.getElementById('location-lat').textContent = pos.lat().toFixed(6);
-                  document.getElementById('location-lng').textContent = pos.lng().toFixed(6);
-                });
-              } else {
-                mapInstance.setCenter({ lat: lat, lng: lng });
-                markerInstance.setPosition({ lat: lat, lng: lng });
-              }
-
-              document.getElementById('location-value').value = address;
+            map.on('click', async function(e) {
+              var lat = e.latlng.lat;
+              var lng = e.latlng.lng;
+              if (marker) marker.setLatLng([lat, lng]);
+              else marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+              marker.on('dragend', function() {
+                var pos = marker.getLatLng();
+                document.getElementById('lat-value').value = pos.lat;
+                document.getElementById('lng-value').value = pos.lng;
+              });
+              try {
+                var res = await fetch('https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lng + '&format=json');
+                var data = await res.json();
+                var address = data.display_name || (lat.toFixed(4) + ', ' + lng.toFixed(4));
+                document.getElementById('location-value').value = address;
+                document.getElementById('location-selected').classList.remove('hidden');
+                document.getElementById('location-address').textContent = address;
+              } catch(e) {}
               document.getElementById('lat-value').value = lat;
               document.getElementById('lng-value').value = lng;
-
-              document.getElementById('location-selected').classList.remove('hidden');
-              document.getElementById('location-address').textContent = address;
               document.getElementById('location-lat').textContent = lat.toFixed(6);
               document.getElementById('location-lng').textContent = lng.toFixed(6);
             });
