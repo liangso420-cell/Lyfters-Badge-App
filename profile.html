@@ -116,25 +116,26 @@
 
       async function init() {
         try {
-          var events = await API.listEvents();
+          var events = await API.getJoinedEvents();
           if (!events.length) {
             app.innerHTML =
               '<section class="device-frame px-4 pt-12 pb-28">' +
-                '<div class="bg-white rounded-card p-8 shadow-soft text-center text-gray-500 mb-4">' +
-                  emptySvg +
-                  '<p class="text-sm font-medium text-gray-700 mb-1">No hay eventos disponibles todavía.</p>' +
-                  '<p class="text-xs text-gray-400 mb-4">Escanea el QR de un evento para unirte.</p>' +
-                  '<button id="profile-logout" class="text-sm text-primary">⎋ Salir</button>' +
+                '<div class="bg-white rounded-card p-8 shadow-soft text-center mb-4">' +
+                  '<div class="text-5xl mb-4">🎫</div>' +
+                  '<h3 class="font-bold text-gray-800 mb-2">Aún no estás en ningún evento</h3>' +
+                  '<p class="text-sm text-gray-400 mb-2">Escanea el QR de un evento para unirte y empezar a coleccionar badges.</p>' +
+                  '<p class="text-xs text-gray-300 mb-5">O explora los eventos disponibles para encontrar uno que te interese.</p>' +
+                  '<button id="btn-explore" class="w-full py-3 rounded-btn text-white font-semibold mb-3" style="background:#6C63FF;">🎪 Explorar eventos</button>' +
+                  '<button id="profile-logout" class="text-sm text-gray-400">⎋ Salir</button>' +
                 '</div>' +
               '</section>' +
-              '<div class="fixed bottom-0 left-0 right-0 flex justify-center gap-3 pb-6 pointer-events-none z-30">' +
-                '<button id="fab-events-empty" class="pointer-events-auto px-5 py-4 rounded-full text-primary font-semibold shadow-soft flex items-center gap-2 active:scale-95 transition bg-white border border-primary">🎪 Eventos</button>' +
+              '<div class="fixed bottom-0 left-0 right-0 flex justify-center pb-6 pointer-events-none z-30">' +
                 '<button id="fab-scan-empty" class="pointer-events-auto px-7 py-4 rounded-full text-white font-semibold shadow-soft flex items-center gap-2 active:scale-95 transition" ' +
                   'style="background:#6C63FF; box-shadow:0 4px 24px rgba(108,99,255,0.5);">📷 Escanear QR</button>' +
               '</div>';
             document.getElementById('profile-logout').addEventListener('click', U.logout);
+            document.getElementById('btn-explore').addEventListener('click', function() { window.location.href = 'events.html'; });
             document.getElementById('fab-scan-empty').addEventListener('click', function() { window.location.href = 'scan.html'; });
-            document.getElementById('fab-events-empty').addEventListener('click', function() { window.location.href = 'events.html'; });
             return;
           }
 

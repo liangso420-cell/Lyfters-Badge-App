@@ -132,6 +132,7 @@ def fmt_event(doc):
         "id":           str(doc["_id"]),
         "nombre":       doc.get("title", ""),
         "descripcion":  doc.get("description", ""),
+        "description":  doc.get("description", ""),
         "fecha_inicio": doc.get("start_date", datetime.utcnow()).isoformat(),
         "fecha_fin":    doc.get("end_date",   datetime.utcnow()).isoformat(),
         "premio":       doc.get("prize", ""),
@@ -140,6 +141,7 @@ def fmt_event(doc):
         "photo":        doc.get("photo", None),
         "access_qr":    doc.get("access_qr", None),
         "tags":         doc.get("tags", []),
+        "location":     doc.get("location", ""),
     }
 
 
@@ -420,6 +422,21 @@ def list_events():
     return jsonify(result), 200
 
 
+@app.route("/events/joined", methods=["GET"])
+@jwt_required()
+def joined_events():
+    uid = get_jwt_identity()
+    user_oid = ObjectId(uid)
+    joined = event_joins().find({"user_id": user_oid})
+    event_ids = [j["event_id"] for j in joined]
+    result = []
+    for eid in event_ids:
+        e = events().find_one({"_id": eid, "active": True})
+        if e:
+            result.append(fmt_event(e))
+    return jsonify(result), 200
+
+
 @app.route("/events/recommended", methods=["GET"])
 @jwt_required()
 def recommended_events():
@@ -633,6 +650,7 @@ def create_event():
     nombre      = sanitize(data.get("nombre")      or data.get("title")       or "", max_len=100)
     descripcion = sanitize(data.get("descripcion") or data.get("description") or "", max_len=500)
     premio      = sanitize(data.get("premio")      or data.get("prize")       or "", max_len=200)
+    location    = sanitize(data.get("location", ""), max_len=200)
     fecha_ini   = data.get("fecha_inicio") or data.get("start_date")
     fecha_fin   = data.get("fecha_fin")    or data.get("end_date")
 
@@ -658,6 +676,7 @@ def create_event():
         "start_date":  start,
         "end_date":    end,
         "prize":       premio,
+        "location":    location,
         "active":      bool(data.get("active", True)),
         "created_by":  admin["_id"],
         "created_at":  datetime.utcnow(),
@@ -712,6 +731,7 @@ def update_event(event_id):
     if "active"      in data: updates["active"]      = bool(data["active"])
     if "activo"      in data: updates["active"]      = bool(data["activo"])
     if "status"      in data: updates["status"]      = data["status"]
+    if "location"    in data: updates["location"]    = sanitize(data["location"], max_len=200)
 
     new_start = new_end = None
     for field, key in [("fecha_inicio", "start_date"), ("fecha_fin", "end_date"),
@@ -734,6 +754,20 @@ def update_event(event_id):
 
     events().update_one({"_id": oid}, {"$set": updates})
     return jsonify(fmt_event(events().find_one({"_id": oid}))), 200
+
+
+@app.route("/admin/events/<event_id>/location", methods=["POST"])
+@jwt_required()
+def update_event_location(event_id):
+    if not require_admin():
+        return jsonify(error="Acceso denegado"), 403
+    oid = valid_oid(event_id)
+    if not oid:
+        return jsonify(error="ID inválido"), 400
+    data = request.get_json() or {}
+    location = sanitize(data.get("location", ""), max_len=200)
+    events().update_one({"_id": oid}, {"$set": {"location": location}})
+    return jsonify(ok=True), 200
 
 
 # ──────────────────────────────────────────────
