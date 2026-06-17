@@ -126,7 +126,6 @@
                     '<div class="flex items-center gap-2">' +
                       '<button id="fab-events-empty" class="px-3 py-1.5 rounded-btn text-xs font-medium text-primary border border-primary hover:bg-primary-soft">🎪 Eventos</button>' +
                       '<button id="profile-menu-btn-empty" class="w-9 h-9 rounded-full bg-gray-100 hover:bg-primary-soft flex items-center justify-center text-lg transition" title="Mi perfil">☰</button>' +
-                      '<button id="profile-logout" class="text-sm text-gray-400 hover:text-primary">⎋ Salir</button>' +
                     '</div>' +
                   '</div>' +
                 '</div>' +
@@ -146,7 +145,6 @@
               if (el.children.length === 0 && el.textContent.trim()) { el.setAttribute('data-i18n', ''); }
             });
             if (U.getCurrentLang() !== 'es') U.translatePage();
-            document.getElementById('profile-logout').addEventListener('click', U.logout);
             document.getElementById('btn-explore').addEventListener('click', function() { window.location.href = 'events.html'; });
             document.getElementById('fab-scan-empty').addEventListener('click', function() { window.location.href = 'scan.html'; });
             document.getElementById('fab-events-empty').addEventListener('click', function() { window.location.href = 'events.html'; });
@@ -275,7 +273,6 @@
                   '<div class="flex items-center gap-2">' +
                     '<button id="fab-events" class="px-3 py-1.5 rounded-btn text-xs font-medium text-primary border border-primary hover:bg-primary-soft">🎪 Eventos</button>' +
                     '<button id="profile-menu-btn" class="w-9 h-9 rounded-full bg-gray-100 hover:bg-primary-soft flex items-center justify-center text-lg transition" title="Mi perfil">☰</button>' +
-                    '<button id="profile-logout" class="text-sm text-gray-400 hover:text-primary">⎋ Salir</button>' +
                   '</div>' +
                 '</div>' +
                 '<label class="text-xs font-medium text-gray-500">Evento activo</label>' +
@@ -306,7 +303,6 @@
           });
           if (U.getCurrentLang() !== 'es') U.translatePage();
 
-          document.getElementById('profile-logout').addEventListener('click', U.logout);
           document.getElementById('tab-badges').addEventListener('click', function() {
             document.getElementById('panel-badges').style.display = '';
             document.getElementById('panel-ranking').style.display = 'none';
