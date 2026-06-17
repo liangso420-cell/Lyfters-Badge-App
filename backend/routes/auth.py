@@ -15,6 +15,10 @@ from google.auth.transport import requests as grequests
 
 from db import users, scans
 from utils import sanitize, fmt_user
+from security.limiter import (
+    register_limit, login_participant_limit, login_admin_limit, avatar_limit
+)
+from security.ip_guard import ip_guard_register, ip_guard_login
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -45,6 +49,8 @@ def clear_attempts(email):
 # ──────────────────────────────────────────────
 
 @auth_bp.route("/register", methods=["POST"])
+@register_limit
+@ip_guard_register
 def register():
     data     = request.get_json() or {}
     name     = sanitize(data.get("nombre") or data.get("name") or "", max_len=100)
@@ -145,6 +151,7 @@ def delete_account():
 
 @auth_bp.route("/profile/avatar", methods=["POST"])
 @jwt_required()
+@avatar_limit
 def update_avatar():
     uid = get_jwt_identity()
     data = request.get_json() or {}
@@ -188,6 +195,9 @@ def update_interests():
 
 
 @auth_bp.route("/login", methods=["POST"])
+@login_participant_limit
+@login_admin_limit
+@ip_guard_login
 def login():
     data     = request.get_json() or {}
     email    = sanitize(data.get("email") or "", max_len=254).lower()
