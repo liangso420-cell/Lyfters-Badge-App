@@ -124,16 +124,12 @@
                   '<p class="text-xs text-primary font-semibold">🔑 ¿Cómo participar?</p>' +
                   '<p class="text-xs text-gray-600 mt-1">Escanea el QR del evento para unirte y empezar a coleccionar badges.</p>' +
                 '</div>' +
-                '<div class="flex gap-3">' +
-                  '<button id="modal-close" class="flex-1 py-2.5 rounded-btn border border-gray-200 text-sm font-medium text-gray-600">Cerrar</button>' +
-                  '<button id="modal-scan" class="flex-1 py-2.5 rounded-btn text-white text-sm font-semibold" style="background:#6C63FF;">📷 Escanear QR</button>' +
-                '</div>' +
+                '<button id="modal-close" class="w-full py-2.5 rounded-btn border border-gray-200 text-sm font-medium text-gray-600">Cerrar</button>' +
               '</div>' +
             '</div>' +
           '</div>';
 
         document.getElementById('modal-close').addEventListener('click', function() { modalRoot.innerHTML = ''; });
-        document.getElementById('modal-scan').addEventListener('click', function() { window.location.href = 'scan.html'; });
         document.getElementById('event-modal-overlay').addEventListener('click', function(ev) {
           if (ev.target === this) modalRoot.innerHTML = '';
         });
