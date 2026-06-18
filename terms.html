@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Términos y Condiciones — Lyfter Badge App</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --brand: #6C63FF; --brand-light: #EEEDFF; --brand-dark: #4B44CC;
+      --ink: #1A1A2E; --ink-mid: #4A4A6A; --ink-soft: #7A7A9A;
+      --bg: #FAFAFA; --surface: #FFFFFF; --border: #E8E8F0;
+      --radius: 12px; --radius-sm: 8px;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Poppins', system-ui, sans-serif; background: var(--bg); color: var(--ink); line-height: 1.7; font-size: 15px; }
+    nav { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; color: var(--ink); text-decoration: none; }
+    .nav-brand span { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; background: var(--brand); border-radius: 8px; font-size: 16px; }
+    .nav-back { font-size: 13px; color: var(--brand); text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 4px; transition: opacity .15s; }
+    .nav-back:hover { opacity: .7; }
+    .hero { background: linear-gradient(135deg, var(--brand-light) 0%, #F0EEFF 100%); padding: 64px 24px 48px; text-align: center; border-bottom: 1px solid var(--border); }
+    .hero-icon { display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: var(--brand); border-radius: 20px; font-size: 30px; margin-bottom: 20px; box-shadow: 0 8px 24px rgba(108,99,255,0.3); }
+    .hero h1 { font-size: clamp(24px, 5vw, 36px); font-weight: 700; color: var(--ink); margin-bottom: 12px; }
+    .hero p { color: var(--ink-mid); max-width: 500px; margin: 0 auto 20px; font-size: 15px; }
+    .hero-meta { display: inline-flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 6px 16px; font-size: 12px; color: var(--ink-soft); font-weight: 500; }
+    .hero-meta::before { content: ''; display: inline-block; width: 8px; height: 8px; background: #22C55E; border-radius: 50%; }
+    .page { max-width: 1040px; margin: 0 auto; padding: 48px 24px; display: grid; grid-template-columns: 220px 1fr; gap: 48px; align-items: start; }
+    @media (max-width: 768px) { .page { grid-template-columns: 1fr; gap: 32px; } .sidebar { display: none; } }
+    .sidebar { position: sticky; top: 72px; }
+    .sidebar-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft); margin-bottom: 12px; }
+    .sidebar nav { position: static; background: none; backdrop-filter: none; border: none; padding: 0; height: auto; display: flex; flex-direction: column; gap: 2px; }
+    .sidebar-link { display: block; padding: 8px 12px; border-radius: var(--radius-sm); font-size: 13px; color: var(--ink-mid); text-decoration: none; font-weight: 500; transition: all .15s; border-left: 2px solid transparent; }
+    .sidebar-link:hover, .sidebar-link.active { background: var(--brand-light); color: var(--brand); border-left-color: var(--brand); }
+    .content { min-width: 0; }
+    .section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; margin-bottom: 20px; scroll-margin-top: 72px; }
+    .section-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+    .section-icon { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: var(--brand-light); border-radius: 10px; font-size: 20px; flex-shrink: 0; }
+    .section-title { font-size: 18px; font-weight: 600; color: var(--ink); }
+    .section p { color: var(--ink-mid); margin-bottom: 14px; }
+    .section p:last-child { margin-bottom: 0; }
+    .section ul { list-style: none; margin: 14px 0; display: flex; flex-direction: column; gap: 8px; }
+    .section ul li { display: flex; align-items: baseline; gap: 10px; color: var(--ink-mid); font-size: 14px; }
+    .section ul li::before { content: ''; display: inline-block; width: 6px; height: 6px; background: var(--brand); border-radius: 50%; flex-shrink: 0; margin-top: 7px; }
+    .highlight-box { background: var(--brand-light); border: 1px solid rgba(108,99,255,0.2); border-radius: var(--radius-sm); padding: 16px 20px; margin: 16px 0; }
+    .highlight-box p { color: var(--brand-dark); font-size: 14px; font-weight: 500; margin: 0; }
+    .contact-card { background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%); border-radius: var(--radius); padding: 32px; text-align: center; color: white; margin-bottom: 20px; }
+    .contact-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .contact-card p { opacity: .85; margin-bottom: 20px; font-size: 14px; }
+    .contact-email { display: inline-block; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; padding: 10px 20px; color: white; font-weight: 600; text-decoration: none; font-size: 14px; transition: background .15s; }
+    .contact-email:hover { background: rgba(255,255,255,0.25); }
+    footer { text-align: center; padding: 32px 24px; border-top: 1px solid var(--border); color: var(--ink-soft); font-size: 13px; }
+    footer a { color: var(--brand); text-decoration: none; }
+  </style>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/utils.js"></script>
+</head>
+<body>
+  <nav>
+    <a href="index.html" class="nav-brand"><span>🏆</span> Lyfter Badge App</a>
+    <a href="index.html" class="nav-back">← Volver</a>
+  </nav>
+
+  <div class="hero">
+    <div class="hero-icon">📋</div>
+    <h1>Términos y Condiciones</h1>
+    <p>Las reglas de uso de Lyfter Badge App. Por favor leelas antes de usar la plataforma.</p>
+    <div class="hero-meta">junio 2026</div>
+  </div>
+
+  <div class="page">
+    <aside class="sidebar">
+      <div class="sidebar-label">Contenido</div>
+      <nav>
+        <a href="#aceptacion"       class="sidebar-link">Aceptación</a>
+        <a href="#servicio"         class="sidebar-link">El servicio</a>
+        <a href="#cuenta"           class="sidebar-link">Tu cuenta</a>
+        <a href="#uso-aceptable"    class="sidebar-link">Uso aceptable</a>
+        <a href="#badges-premios"   class="sidebar-link">Badges y premios</a>
+        <a href="#propiedad"        class="sidebar-link">Propiedad intelectual</a>
+        <a href="#responsabilidad"  class="sidebar-link">Limitación de responsabilidad</a>
+        <a href="#modificaciones"   class="sidebar-link">Modificaciones</a>
+        <a href="#cancelacion"      class="sidebar-link">Cancelación</a>
+        <a href="#ley"              class="sidebar-link">Ley aplicable</a>
+        <a href="#contacto"         class="sidebar-link">Contacto</a>
+      </nav>
+    </aside>
+
+    <main class="content">
+
+      <section class="section" id="aceptacion">
+        <div class="section-header">
+          <div class="section-icon">✅</div>
+          <h2 class="section-title">Aceptación de los términos</h2>
+        </div>
+        <p>Al acceder o usar Lyfter Badge App, aceptás estos Términos y Condiciones en su totalidad. Si no estás de acuerdo con alguna parte, no uses la plataforma.</p>
+        <p>Estos términos aplican a todos los usuarios: participantes y administradores.</p>
+      </section>
+
+      <section class="section" id="servicio">
+        <div class="section-header">
+          <div class="section-icon">🏆</div>
+          <h2 class="section-title">Descripción del servicio</h2>
+        </div>
+        <p>Lyfter Badge App es una plataforma de gamificación para eventos presenciales. Permite a los participantes:</p>
+        <ul>
+          <li>Escanear códigos QR para canjear badges digitales</li>
+          <li>Acumular insignias durante eventos</li>
+          <li>Desbloquear premios sorpresa al completar todos los badges de un evento</li>
+          <li>Ver su progreso y historial de participación</li>
+        </ul>
+        <p>Los administradores pueden crear eventos, gestionar badges, generar códigos QR y monitorear la participación.</p>
+      </section>
+
+      <section class="section" id="cuenta">
+        <div class="section-header">
+          <div class="section-icon">👤</div>
+          <h2 class="section-title">Registro y cuenta</h2>
+        </div>
+        <p>Para usar la plataforma necesitás crear una cuenta con nombre, email y contraseña.</p>
+        <p>Sos responsable de:</p>
+        <ul>
+          <li>Mantener la confidencialidad de tu contraseña</li>
+          <li>Toda la actividad que ocurra bajo tu cuenta</li>
+          <li>Notificarnos de inmediato si sospechás un acceso no autorizado</li>
+          <li>Proporcionar información veraz y actualizada</li>
+        </ul>
+        <p>No podés crear cuentas con información falsa, suplantar la identidad de otras personas ni usar la plataforma si tenés menos de 13 años.</p>
+      </section>
+
+      <section class="section" id="uso-aceptable">
+        <div class="section-header">
+          <div class="section-icon">🤝</div>
+          <h2 class="section-title">Uso aceptable</h2>
+        </div>
+        <p>Usá la plataforma de forma responsable. Está prohibido:</p>
+        <ul>
+          <li>Intentar acceder a cuentas o datos de otros usuarios sin autorización</li>
+          <li>Escanear códigos QR que no te fueron entregados legítimamente en un evento</li>
+          <li>Manipular el sistema de badges o puntajes mediante medios técnicos</li>
+          <li>Usar bots, scripts o herramientas automatizadas para interactuar con la app</li>
+          <li>Compartir tu cuenta con otras personas</li>
+          <li>Usar la plataforma para fines ilegales o que violen derechos de terceros</li>
+        </ul>
+        <div class="highlight-box"><p>El incumplimiento puede resultar en la suspensión o eliminación de tu cuenta.</p></div>
+      </section>
+
+      <section class="section" id="badges-premios">
+        <div class="section-header">
+          <div class="section-icon">🎁</div>
+          <h2 class="section-title">Badges y premios</h2>
+        </div>
+        <p>Los badges son insignias digitales sin valor monetario.</p>
+        <p>Sobre los premios:</p>
+        <ul>
+          <li>Los premios son definidos por el organizador del evento</li>
+          <li>Lyfter Badge App actúa como plataforma tecnológica y no es responsable por la entrega de premios físicos</li>
+          <li>La disponibilidad y características de los premios pueden cambiar</li>
+          <li>El premio se revela únicamente al completar todos los badges del evento</li>
+          <li>Los badges y premios no son transferibles entre usuarios ni eventos</li>
+        </ul>
+      </section>
+
+      <section class="section" id="propiedad">
+        <div class="section-header">
+          <div class="section-icon">©️</div>
+          <h2 class="section-title">Propiedad intelectual</h2>
+        </div>
+        <p>Todo el contenido de Lyfter Badge App — incluyendo diseño, código, logos, textos e iconografía — es propiedad de Lyfter Team o de sus licenciantes.</p>
+        <p>No podés:</p>
+        <ul>
+          <li>Copiar, modificar o distribuir el contenido de la plataforma sin autorización</li>
+          <li>Usar el nombre o logo de Lyfter para fines comerciales propios</li>
+          <li>Hacer ingeniería inversa del código de la aplicación</li>
+        </ul>
+        <p>El contenido generado por los administradores (nombres de eventos, descripciones de badges) es responsabilidad de quien lo crea.</p>
+      </section>
+
+      <section class="section" id="responsabilidad">
+        <div class="section-header">
+          <div class="section-icon">⚠️</div>
+          <h2 class="section-title">Limitación de responsabilidad</h2>
+        </div>
+        <p>Lyfter Badge App se provee "tal como está". En la máxima medida permitida por la ley:</p>
+        <ul>
+          <li>No garantizamos disponibilidad ininterrumpida del servicio</li>
+          <li>No somos responsables por pérdida de datos por fallas técnicas</li>
+          <li>No somos responsables por daños indirectos derivados del uso de la plataforma</li>
+          <li>No somos responsables por el contenido creado por administradores de eventos</li>
+        </ul>
+        <p>La plataforma puede estar no disponible por mantenimiento, actualizaciones o causas fuera de nuestro control.</p>
+      </section>
+
+      <section class="section" id="modificaciones">
+        <div class="section-header">
+          <div class="section-icon">🔄</div>
+          <h2 class="section-title">Modificaciones del servicio</h2>
+        </div>
+        <p>Nos reservamos el derecho de modificar, suspender o discontinuar cualquier parte del servicio en cualquier momento, con o sin previo aviso.</p>
+        <p>También podemos actualizar estos Términos. Los cambios entran en vigencia al publicarse en esta página. El uso continuado de la plataforma implica la aceptación de los nuevos términos.</p>
+      </section>
+
+      <section class="section" id="cancelacion">
+        <div class="section-header">
+          <div class="section-icon">🚫</div>
+          <h2 class="section-title">Cancelación y suspensión de cuenta</h2>
+        </div>
+        <p>Podés cancelar tu cuenta en cualquier momento contactándonos.</p>
+        <p>Nos reservamos el derecho de suspender o eliminar cuentas que:</p>
+        <ul>
+          <li>Violen estos Términos y Condiciones</li>
+          <li>Realicen actividades fraudulentas o dañinas</li>
+          <li>Lleven más de 12 meses sin actividad</li>
+        </ul>
+        <div class="highlight-box"><p>Al cancelar tu cuenta, perdés el acceso a tus badges y progreso acumulado.</p></div>
+      </section>
+
+      <section class="section" id="ley">
+        <div class="section-header">
+          <div class="section-icon">⚖️</div>
+          <h2 class="section-title">Ley aplicable</h2>
+        </div>
+        <p>Estos términos se rigen por las leyes aplicables en el lugar de operación de Lyfter Team. Cualquier disputa se resolverá en los tribunales competentes de dicha jurisdicción.</p>
+        <p>Si alguna disposición de estos términos resulta inválida o inaplicable, el resto permanece en plena vigencia.</p>
+      </section>
+
+      <div class="contact-card" id="contacto">
+        <h3>¿Tenés preguntas sobre estos términos?</h3>
+        <p>Si necesitás aclarar algo antes de usar la plataforma, escribinos.</p>
+        <a href="mailto:legal@lyfter.team" class="contact-email">legal@lyfter.team</a>
+      </div>
+
+    </main>
+  </div>
+
+  <footer>
+    <p>© 2026 Lyfter Team · <a href="privacy.html">Política de Privacidad</a> · <a href="terms.html">Términos y Condiciones</a> · <a href="index.html">Volver a la app</a></p>
+  </footer>
+
+  <script>
+    var sections = document.querySelectorAll('.section[id], .contact-card[id]');
+    var links = document.querySelectorAll('.sidebar-link');
+    function onScroll() {
+      var scrollY = window.scrollY + 80;
+      var current = '';
+      sections.forEach(function(s) { if (s.offsetTop <= scrollY) current = s.id; });
+      links.forEach(function(l) { l.classList.toggle('active', l.getAttribute('href') === '#' + current); });
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  </script>
+</body>
+</html>
