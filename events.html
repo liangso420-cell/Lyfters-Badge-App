@@ -65,7 +65,7 @@
           return '<span class="px-2 py-0.5 rounded-full text-xs bg-white/20 text-white">' + U.esc(t) + '</span>';
         }).join('');
         var badge = isRecommended
-          ? '<span class="absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-semibold text-white" style="background:#6C63FF;">✨ Recomendado</span>'
+          ? '<span class="absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-semibold text-white" style="background:#6C63FF;">' + U.t('recommended_badge') + '</span>'
           : '';
         var statusInfo = STATUS_LABELS[e.status];
         var statusBadge = statusInfo
@@ -121,10 +121,10 @@
                 '</div>' +
                 (tags ? '<div class="flex flex-wrap gap-2 mb-4">' + tags + '</div>' : '') +
                 '<div class="p-3 rounded-card mb-4" style="background:#EEEDFF;">' +
-                  '<p class="text-xs text-primary font-semibold">🔑 ¿Cómo participar?</p>' +
-                  '<p class="text-xs text-gray-600 mt-1">Escanea el QR del evento para unirte y empezar a coleccionar badges.</p>' +
+                  '<p class="text-xs text-primary font-semibold">' + U.t('how_to_participate') + '</p>' +
+                  '<p class="text-xs text-gray-600 mt-1">' + U.t('how_to_participate_desc') + '</p>' +
                 '</div>' +
-                '<button id="modal-close" class="w-full py-2.5 rounded-btn border border-gray-200 text-sm font-medium text-gray-600">Cerrar</button>' +
+                '<button id="modal-close" class="w-full py-2.5 rounded-btn border border-gray-200 text-sm font-medium text-gray-600">' + U.t('close') + '</button>' +
               '</div>' +
             '</div>' +
           '</div>';
@@ -150,7 +150,7 @@
 
           var recommendedSection = recommended.length
             ? '<div class="mb-8">' +
-                '<h2 class="text-lg font-bold text-gray-800 mb-4">✨ Recomendados para ti</h2>' +
+                '<h2 class="text-lg font-bold text-gray-800 mb-4">' + U.t('recommended_for_you') + '</h2>' +
                 '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">' +
                   recommended.map(function(e) { return eventCard(e, true); }).join('') +
                 '</div>' +
@@ -159,7 +159,7 @@
 
           var allSection = otherEvents.length
             ? '<div>' +
-                '<h2 class="text-lg font-bold text-gray-800 mb-4">🎪 Todos los eventos</h2>' +
+                '<h2 class="text-lg font-bold text-gray-800 mb-4">' + U.t('all_events') + '</h2>' +
                 '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">' +
                   otherEvents.map(function(e) { return eventCard(e, false); }).join('') +
                 '</div>' +
@@ -169,7 +169,7 @@
           var emptyHtml = (!recommended.length && !otherEvents.length)
             ? '<div class="text-center py-16 text-gray-400">' +
                 '<div class="text-5xl mb-4">🎪</div>' +
-                '<p class="text-sm">No hay eventos disponibles por ahora.</p>' +
+                '<p class="text-sm">' + U.t('no_events_available') + '</p>' +
               '</div>'
             : '';
 
@@ -177,7 +177,7 @@
             '<div class="max-w-2xl mx-auto px-4 py-6 pb-28">' +
               '<div class="flex items-center gap-3 mb-6">' +
                 '<button id="back-btn" class="w-9 h-9 rounded-full bg-white shadow-soft flex items-center justify-center text-gray-600 hover:bg-gray-50">←</button>' +
-                '<h1 class="text-xl font-bold text-gray-800">Explorar eventos</h1>' +
+                '<h1 class="text-xl font-bold text-gray-800">' + U.t('explore_events_title') + '</h1>' +
               '</div>' +
               recommendedSection +
               allSection +
@@ -185,7 +185,7 @@
             '</div>' +
             '<div class="fixed bottom-0 left-0 right-0 flex justify-center pb-6 pointer-events-none z-30">' +
               '<button id="fab-scan" class="pointer-events-auto px-7 py-4 rounded-full text-white font-semibold shadow-soft flex items-center gap-2 active:scale-95 transition" ' +
-                'style="background:#6C63FF; box-shadow:0 4px 24px rgba(108,99,255,0.5);">📷 Escanear QR</button>' +
+                'style="background:#6C63FF; box-shadow:0 4px 24px rgba(108,99,255,0.5);">' + U.t('scan_qr') + '</button>' +
             '</div>';
           document.getElementById('back-btn').addEventListener('click', function() { window.location.href = 'profile.html'; });
           document.getElementById('fab-scan').addEventListener('click', function() { window.location.href = 'scan.html'; });
