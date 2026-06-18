@@ -15,6 +15,7 @@ from routes.auth import auth_bp
 from routes.events import events_bp, leaderboard_bp
 from routes.admin import admin_bp
 from routes.redeem import redeem_bp
+from routes.xp import xp_bp
 from security import init_security
 
 load_dotenv()
@@ -53,6 +54,7 @@ app.register_blueprint(events_bp,      url_prefix="/events")
 app.register_blueprint(leaderboard_bp)
 app.register_blueprint(admin_bp,       url_prefix="/admin")
 app.register_blueprint(redeem_bp,      url_prefix="/redeem")
+app.register_blueprint(xp_bp,          url_prefix="/profile")
 
 # Capa de seguridad (ProxyFix + rate limiting + IP guard).
 # No hace nada si FLASK_ENV=development.

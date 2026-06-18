@@ -17,6 +17,23 @@ from utils import (
 admin_bp = Blueprint("admin", __name__)
 
 
+def _parse_int_in_range(value, lo, hi, field):
+    """
+    Convierte `value` a int y valida que esté en [lo, hi].
+    Retorna (int|None, error_msg|None). Si value es None retorna (None, None)
+    para que el llamador aplique su default.
+    """
+    if value is None:
+        return None, None
+    try:
+        n = int(value)
+    except (TypeError, ValueError):
+        return None, f"{field} debe ser un número entero"
+    if n < lo or n > hi:
+        return None, f"{field} debe estar entre {lo} y {hi}"
+    return n, None
+
+
 # ──────────────────────────────────────────────
 # ADMIN — eventos
 # ──────────────────────────────────────────────
@@ -138,6 +155,17 @@ def create_event():
     if end < start:
         return jsonify(error="La fecha de fin no puede ser anterior a la de inicio"), 400
 
+    # Configuración de XP del evento (opcional, con defaults).
+    xp_first_scan, err = _parse_int_in_range(data.get("xp_first_scan"), 0, 1000, "xp_first_scan")
+    if err:
+        return jsonify(error=err), 400
+    xp_rare_bonus, err = _parse_int_in_range(data.get("xp_rare_bonus"), 0, 1000, "xp_rare_bonus")
+    if err:
+        return jsonify(error=err), 400
+    xp_completion_bonus, err = _parse_int_in_range(data.get("xp_completion_bonus"), 0, 1000, "xp_completion_bonus")
+    if err:
+        return jsonify(error=err), 400
+
     result = events().insert_one({
         "title":       nombre,
         "description": descripcion,
@@ -146,6 +174,9 @@ def create_event():
         "prize":       premio,
         "location":    location,
         "active":      bool(data.get("active", True)),
+        "xp_first_scan":       xp_first_scan if xp_first_scan is not None else 5,
+        "xp_rare_bonus":       xp_rare_bonus if xp_rare_bonus is not None else 15,
+        "xp_completion_bonus": xp_completion_bonus if xp_completion_bonus is not None else 50,
         "created_by":  admin["_id"],
         "created_at":  datetime.utcnow(),
     })
@@ -200,6 +231,14 @@ def update_event(event_id):
     if "activo"      in data: updates["active"]      = bool(data["activo"])
     if "status"      in data: updates["status"]      = data["status"]
     if "location"    in data: updates["location"]    = sanitize(data["location"], max_len=200)
+
+    # Campos de XP del evento (solo afectan scans futuros).
+    for field in ("xp_first_scan", "xp_rare_bonus", "xp_completion_bonus"):
+        if field in data:
+            n, err = _parse_int_in_range(data[field], 0, 1000, field)
+            if err:
+                return jsonify(error=err), 400
+            updates[field] = n
 
     new_start = new_end = None
     for field, key in [("fecha_inicio", "start_date"), ("fecha_fin", "end_date"),
@@ -315,6 +354,12 @@ def create_badge(event_id):
     if not nombre:
         return jsonify(error="El nombre del badge es requerido"), 400
 
+    # XP del badge (opcional). xp_value en [1, 500]; is_rare booleano.
+    xp_value, err = _parse_int_in_range(data.get("xp_value"), 1, 500, "xp_value")
+    if err:
+        return jsonify(error=err), 400
+    is_rare = bool(data.get("is_rare", False))
+
     token    = str(uuid.uuid4())
     base_url = os.getenv("APP_BASE_URL", "http://localhost:5500")
     qr_data  = f"{base_url}/redeem.html?event={event_id}&token={token}"
@@ -328,6 +373,8 @@ def create_badge(event_id):
             "icon":        icon,
             "token":       token,
             "qr_base64":   qr_b64,
+            "xp_value":    xp_value if xp_value is not None else 10,
+            "is_rare":     is_rare,
             "created_at":  datetime.utcnow(),
         })
     except DuplicateKeyError:
@@ -341,6 +388,8 @@ def create_badge(event_id):
         "descripcion": new_badge.get("description", ""),
         "token":       new_badge.get("token", ""),
         "qr_image":    new_badge.get("qr_base64", None),
+        "xp_value":    new_badge.get("xp_value", 10),
+        "is_rare":     bool(new_badge.get("is_rare", False)),
     }), 201
 
 
