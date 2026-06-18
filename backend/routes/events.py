@@ -6,8 +6,9 @@ from bson import ObjectId
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
-from db import users, events, badges, scans, event_joins
+from db import users, events, badges, scans, event_joins, user_achievements
 from utils import valid_oid, fmt_event, fmt_badge, compute_event_status, haversine
+from services.xp import compute_level, level_name
 
 events_bp = Blueprint("events", __name__)
 # /leaderboard no cuelga de /events, va en su propio blueprint sin prefix
@@ -176,3 +177,125 @@ def leaderboard():
         })
     result.sort(key=lambda x: x["badges"], reverse=True)
     return jsonify(result), 200
+
+
+# ──────────────────────────────────────────────
+# LEADERBOARD — ranking por evento (público)
+# ──────────────────────────────────────────────
+
+@leaderboard_bp.route("/leaderboard/<event_id>", methods=["GET"])
+@jwt_required(optional=True)
+def event_leaderboard(event_id):
+    oid = valid_oid(event_id)
+    if not oid:
+        return jsonify(error="ID inválido"), 400
+
+    event = events().find_one({"_id": oid})
+    if not event:
+        return jsonify(error="Evento no encontrado"), 404
+
+    total_badges = badges().count_documents({"event_id": oid})
+
+    # 1+2. Agrupar scans del evento por usuario y traer datos del usuario.
+    pipeline = [
+        {"$match": {"event_id": oid}},
+        {"$group": {"_id": "$user_id", "badges_in_event": {"$sum": 1}}},
+        {"$lookup": {
+            "from": "users", "localField": "_id",
+            "foreignField": "_id", "as": "user",
+        }},
+        {"$unwind": "$user"},
+    ]
+    rows = list(scans().aggregate(pipeline))
+
+    entries = []
+    for r in rows:
+        uid = r["_id"]
+        u = r.get("user", {})
+        xp_total = int(u.get("xp_total", 0))
+        badges_in_event = r["badges_in_event"]
+        entries.append({
+            "user_id":         str(uid),
+            "name":            u.get("name", ""),
+            "badges_in_event": badges_in_event,
+            "badges_total":    scans().count_documents({"user_id": uid}),
+            "completed":       total_badges > 0 and badges_in_event >= total_badges,
+            "xp_total":        xp_total,
+            "level":           compute_level(xp_total),
+            "level_name":      level_name(compute_level(xp_total)),
+            "_uid":            uid,
+        })
+
+    # 5. Ordenar: badges_in_event DESC, desempate por xp_total DESC.
+    entries.sort(key=lambda e: (e["badges_in_event"], e["xp_total"]), reverse=True)
+
+    my_position = None
+    me = get_jwt_identity()
+    me_oid = ObjectId(me) if me else None
+    for i, e in enumerate(entries):
+        e["position"] = i + 1
+        if me_oid and e["_uid"] == me_oid:
+            my_position = {
+                "position":        e["position"],
+                "xp_total":        e["xp_total"],
+                "level":           e["level"],
+                "badges_in_event": e["badges_in_event"],
+            }
+        del e["_uid"]
+
+    return jsonify({"ranking": entries, "my_position": my_position}), 200
+
+
+# ──────────────────────────────────────────────
+# LEADERBOARD — ranking global (público)
+# ──────────────────────────────────────────────
+
+@leaderboard_bp.route("/leaderboard/global", methods=["GET"])
+@jwt_required(optional=True)
+def global_leaderboard():
+    def stats_for(uid):
+        """badges_total, events_participated y achievements_count de un usuario."""
+        badges_total = scans().count_documents({"user_id": uid})
+        events_participated = len(scans().distinct("event_id", {"user_id": uid}))
+        achievements_count = user_achievements().count_documents({"user_id": uid})
+        return badges_total, events_participated, achievements_count
+
+    # Top 50 por XP total.
+    top = list(users().find({}, {"name": 1, "xp_total": 1}).sort("xp_total", -1).limit(50))
+
+    ranking = []
+    for i, u in enumerate(top):
+        uid = u["_id"]
+        xp_total = int(u.get("xp_total", 0))
+        badges_total, events_participated, achievements_count = stats_for(uid)
+        lvl = compute_level(xp_total)
+        ranking.append({
+            "position":            i + 1,
+            "user_id":             str(uid),
+            "name":                u.get("name", ""),
+            "xp_total":            xp_total,
+            "level":               lvl,
+            "level_name":          level_name(lvl),
+            "badges_total":        badges_total,
+            "events_participated": events_participated,
+            "achievements_count":  achievements_count,
+        })
+
+    my_position = None
+    me = get_jwt_identity()
+    if me:
+        me_oid = ObjectId(me)
+        u = users().find_one({"_id": me_oid}, {"xp_total": 1})
+        if u:
+            my_xp = int(u.get("xp_total", 0))
+            # Posición global = cuántos usuarios tienen estrictamente más XP + 1.
+            ahead = users().count_documents({"xp_total": {"$gt": my_xp}})
+            badges_total, _ev, _ac = stats_for(me_oid)
+            my_position = {
+                "position": ahead + 1,
+                "xp_total": my_xp,
+                "level":    compute_level(my_xp),
+                "badges_total": badges_total,
+            }
+
+    return jsonify({"ranking": ranking, "my_position": my_position}), 200

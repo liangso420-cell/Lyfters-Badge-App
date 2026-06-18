@@ -47,6 +47,11 @@ def badges():      return get_db()["badges"]
 def scans():       return get_db()["scans"]
 def event_joins(): return get_db()["event_joins"]
 
+# Colecciones del sistema de XP y logros
+def achievements():      return get_db()["achievements"]
+def user_achievements(): return get_db()["user_achievements"]
+def xp_log():            return get_db()["xp_log"]
+
 
 def init_indexes():
     from pymongo import ASCENDING
@@ -63,3 +68,15 @@ def init_indexes():
     badges().create_index("event_id")
     # Búsquedas rápidas de scans por usuario y evento
     scans().create_index([("user_id", ASCENDING), ("event_id", ASCENDING)])
+
+    # ── Sistema de XP y logros ──────────────────────────────
+    # Slug único por definición de logro
+    achievements().create_index("slug", unique=True)
+    # Un logro solo se puede desbloquear una vez por usuario.
+    # Este índice es la barrera real contra duplicados (no la lógica Python).
+    user_achievements().create_index(
+        [("user_id", ASCENDING), ("achievement_id", ASCENDING)],
+        unique=True
+    )
+    # Auditoría de XP por usuario, ordenable por fecha
+    xp_log().create_index([("user_id", ASCENDING), ("created_at", ASCENDING)])

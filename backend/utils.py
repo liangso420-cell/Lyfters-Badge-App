@@ -99,6 +99,9 @@ def fmt_event(doc):
         "location":     doc.get("location", ""),
         "lat":          doc.get("lat", None),
         "lng":          doc.get("lng", None),
+        "xp_first_scan":       doc.get("xp_first_scan", 5),
+        "xp_rare_bonus":       doc.get("xp_rare_bonus", 15),
+        "xp_completion_bonus": doc.get("xp_completion_bonus", 50),
     }
 
 
@@ -125,4 +128,6 @@ def fmt_admin_badge(doc, canjeados=0, base_url=""):
         "redeem_url":  f"{base_url}/redeem.html?event={event_id}&token={token}",
         "canjeados":   canjeados,
         "qr_image":    doc.get("qr_base64", None),
+        "xp_value":    doc.get("xp_value", 10),
+        "is_rare":     bool(doc.get("is_rare", False)),
     }
