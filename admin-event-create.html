@@ -25,6 +25,20 @@
 
       var TAGS_LIST = ['Desarrollo Web','Mobile','Inteligencia Artificial','Data Science','Ciberseguridad','DevOps','Cloud','Blockchain','UX/UI','Product Management','Emprendimiento','Marketing Digital','Diseño','Videojuegos','Robótica','Fintech','Educación Tech','Open Source','Backend','Frontend'];
 
+      var BADGE_ICONS = [
+        { file: 'api.png', label: 'API' },
+        { file: 'codificacion.png', label: 'Código' },
+        { file: 'computacion-en-la-nube.png', label: 'Nube' },
+        { file: 'diseno.png', label: 'Diseño' },
+        { file: 'error.png', label: 'Error' },
+        { file: 'javascript.png', label: 'JavaScript' },
+        { file: 'mundial.png', label: 'Web' },
+        { file: 'proteccion-de-archivos.png', label: 'Seguridad' },
+        { file: 'sitio-web.png', label: 'Sitio Web' },
+        { file: 'vinculo-de-retroceso.png', label: 'Backend' },
+      ];
+      var selectedBadgeIcon = null;
+
       var API = window.LyfterAPI;
       var U   = window.LyfterUtils;
 
@@ -115,8 +129,16 @@
                 '<p style="font-family:Poppins,sans-serif;font-size:14px;font-weight:700;color:#f4f6f9;margin:0 0 6px;">🏅 Badges</p>' +
                 '<p style="font-size:12px;color:#8b93a3;font-family:Manrope,sans-serif;margin:0 0 10px;">Agrega los badges que los asistentes podrán coleccionar</p>' +
                 '<div id="create-badges-preview" style="margin-bottom:12px;display:flex;flex-direction:column;gap:6px;"></div>' +
-                '<div style="display:grid;grid-template-columns:60px 1fr 1fr;gap:8px;margin-bottom:8px;">' +
-                  '<input type="text" id="create-badge-emoji" placeholder="🏅" maxlength="4" style="' + INP + 'text-align:center;padding-left:4px;padding-right:4px;" />' +
+                '<div style="margin-bottom:12px;">' +
+                  '<label style="font-size:12px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;">Icono del badge</label>' +
+                  '<div style="display:flex;align-items:center;gap:10px;margin-top:6px;">' +
+                    '<div id="selected-icon-preview" style="width:48px;height:48px;border-radius:10px;border:1px solid #353a46;background:#2e323d;display:flex;align-items:center;justify-content:center;">' +
+                      '<span style="color:#8b93a3;font-size:20px;">🏅</span>' +
+                    '</div>' +
+                    '<button type="button" id="open-icon-picker" style="padding:8px 16px;border-radius:10px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-size:13px;cursor:pointer;font-family:Manrope,sans-serif;">Elegir icono</button>' +
+                  '</div>' +
+                '</div>' +
+                '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">' +
                   '<input type="text" id="create-badge-name" placeholder="Nombre del badge" style="' + INP + '" />' +
                   '<input type="text" id="create-badge-desc" placeholder="Descripción" style="' + INP + '" />' +
                 '</div>' +
@@ -262,7 +284,7 @@
         if (!createPendingBadges.length) { preview.innerHTML = ''; return; }
         preview.innerHTML = createPendingBadges.map(function(b, i) {
           return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:' + (b.is_rare ? '#2a2310' : '#20242d') + ';border:1px solid ' + (b.is_rare ? '#5a4a10' : '#2f343f') + ';">' +
-            '<span style="font-size:20px;">' + (b.emoji || '🏅') + '</span>' +
+            '<span style="font-size:20px;">' + (b.icon_url ? '<img src="' + b.icon_url + '" style="width:28px;height:28px;object-fit:contain;" />' : (b.emoji || '🏅')) + '</span>' +
             '<span style="font-size:13px;font-family:Manrope,sans-serif;color:#f4f6f9;flex:1;">' + U.esc(b.name) +
               ' <span style="color:#8b93a3;font-size:11px;">· ' + (b.xp_value || 10) + ' XP' + (b.is_rare ? ' · ⭐ raro' : '') + '</span>' +
             '</span>' +
@@ -278,19 +300,74 @@
       }
 
       function initBadgeForm() {
+        document.getElementById('open-icon-picker').addEventListener('click', function() {
+          var modalRoot = document.getElementById('modal-root');
+          modalRoot.innerHTML =
+            '<div class="fixed inset-0 z-50 flex items-center justify-center p-6" style="background:rgba(0,0,0,0.7);" id="icon-picker-overlay">' +
+              '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:16px;padding:24px;width:100%;max-width:400px;">' +
+                '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">' +
+                  '<p style="font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#f4f6f9;margin:0;">Selecciona un icono</p>' +
+                  '<button id="close-icon-picker" style="background:transparent;border:none;color:#8b93a3;font-size:20px;cursor:pointer;">✕</button>' +
+                '</div>' +
+                '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">' +
+                  BADGE_ICONS.map(function(icon) {
+                    return '<button type="button" data-icon="' + icon.file + '" class="icon-option" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:10px;border:1px solid #353a46;background:#2e323d;cursor:pointer;transition:border-color 0.15s;" onmouseover="this.style.borderColor=\'#d897e7\'" onmouseout="this.style.borderColor=\'#353a46\'">' +
+                      '<img src="assets/icons/' + icon.file + '" style="width:36px;height:36px;object-fit:contain;" />' +
+                      '<span style="font-size:10px;color:#8b93a3;font-family:Manrope,sans-serif;text-align:center;">' + icon.label + '</span>' +
+                    '</button>';
+                  }).join('') +
+                  '<button type="button" id="use-emoji-option" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:10px;border:1px solid #353a46;background:#2e323d;cursor:pointer;">' +
+                    '<span style="font-size:32px;">😀</span>' +
+                    '<span style="font-size:10px;color:#8b93a3;font-family:Manrope,sans-serif;">Emoji</span>' +
+                  '</button>' +
+                '</div>' +
+              '</div>' +
+            '</div>';
+
+          document.getElementById('close-icon-picker').addEventListener('click', function() { modalRoot.innerHTML = ''; });
+          document.getElementById('icon-picker-overlay').addEventListener('click', function(ev) {
+            if (ev.target === this) modalRoot.innerHTML = '';
+          });
+
+          Array.prototype.forEach.call(document.querySelectorAll('.icon-option'), function(btn) {
+            btn.addEventListener('click', function() {
+              var iconFile = btn.getAttribute('data-icon');
+              selectedBadgeIcon = 'assets/icons/' + iconFile;
+              var preview = document.getElementById('selected-icon-preview');
+              preview.innerHTML = '<img src="' + selectedBadgeIcon + '" style="width:36px;height:36px;object-fit:contain;" />';
+              modalRoot.innerHTML = '';
+            });
+          });
+
+          document.getElementById('use-emoji-option').addEventListener('click', function() {
+            modalRoot.innerHTML = '';
+            var emoji = prompt('Ingresa un emoji:');
+            if (emoji) {
+              selectedBadgeIcon = null;
+              var preview = document.getElementById('selected-icon-preview');
+              preview.innerHTML = '<span style="font-size:28px;">' + emoji + '</span>';
+            }
+          });
+        });
+
         document.getElementById('create-add-badge-btn').addEventListener('click', function() {
           var name = document.getElementById('create-badge-name').value.trim();
           if (!name) { U.toast('Ingresa un nombre para el badge', 'error'); return; }
+          var previewEl = document.getElementById('selected-icon-preview');
+          var spanEl = previewEl ? previewEl.querySelector('span') : null;
+          var currentEmoji = spanEl ? spanEl.textContent.trim() : '🏅';
           createPendingBadges.push({
             name: name,
             desc: document.getElementById('create-badge-desc').value.trim(),
-            emoji: document.getElementById('create-badge-emoji').value.trim() || '🏅',
+            emoji: selectedBadgeIcon ? null : (currentEmoji || '🏅'),
+            icon_url: selectedBadgeIcon || null,
             xp_value: parseInt(document.getElementById('create-badge-xp').value, 10) || 10,
             is_rare: document.getElementById('create-badge-rare').checked
           });
           document.getElementById('create-badge-name').value = '';
           document.getElementById('create-badge-desc').value = '';
-          document.getElementById('create-badge-emoji').value = '';
+          selectedBadgeIcon = null;
+          if (previewEl) previewEl.innerHTML = '<span style="color:#8b93a3;font-size:20px;">🏅</span>';
           document.getElementById('create-badge-xp').value = '10';
           document.getElementById('create-badge-rare').checked = false;
           renderBadgePreview();
