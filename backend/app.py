@@ -46,6 +46,7 @@ _env_origins = [
 # Also accept any *.vercel.app URL (preview and production deployments)
 _cors_origins = _env_origins + [re.compile(r"^https://[a-zA-Z0-9][a-zA-Z0-9\-]*\.vercel\.app$")]
 CORS(app, origins=_cors_origins, supports_credentials=True,
+     allow_headers=["Content-Type", "Authorization"],
      methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"])
 
 # ──────────────────────────────────────────────
