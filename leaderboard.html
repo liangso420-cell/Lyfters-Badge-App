@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ranking — Lyfter Badge App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Poppins', 'sans-serif'] },
+          colors: { primary: '#6C63FF', 'primary-soft': '#EEEDFF', base: '#F8F9FA' },
+          borderRadius: { card: '16px', btn: '8px' },
+          boxShadow: { soft: '0 4px 20px rgba(0,0,0,0.08)' },
+        },
+      },
+    };
+  </script>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <main id="app"></main>
+  <div id="modal-root"></div>
+  <div id="toast-root" class="fixed top-4 left-1/2 -translate-x-1/2 z-[60] flex flex-col gap-2 items-center pointer-events-none"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      var API = window.LyfterAPI;
+      var U   = window.LyfterUtils;
+
+      var user = API.currentUser();
+      if (!user) { window.location.replace('login.html?next=' + encodeURIComponent(window.location.pathname)); return; }
+
+      var app = document.getElementById('app');
+      app.innerHTML = U.loadingHtml();
+
+      var currentTab = 'global';
+
+      function rarityColor(level) {
+        return level >= 4 ? '#D97706' : level >= 3 ? '#7C3AED' : level >= 2 ? '#2563EB' : '#6B7280';
+      }
+
+      function header() {
+        return '<div class="bg-white rounded-card p-5 shadow-soft mb-4">' +
+            '<div class="flex items-center justify-between mb-4">' +
+              '<h2 class="text-lg font-bold text-gray-800">🏆 Ranking</h2>' +
+              '<button id="lb-back" class="px-3 py-1.5 rounded-btn text-xs font-medium text-primary border border-primary hover:bg-primary-soft">← Perfil</button>' +
+            '</div>' +
+            '<div class="flex gap-2">' +
+              '<button id="tab-global" class="flex-1 py-2 rounded-btn text-sm font-medium ' + (currentTab === 'global' ? 'text-white' : 'text-gray-500 bg-gray-100') + '" style="' + (currentTab === 'global' ? 'background:#6C63FF;' : '') + '">🌍 Global</button>' +
+              '<button id="tab-event" class="flex-1 py-2 rounded-btn text-sm font-medium ' + (currentTab === 'event' ? 'text-white' : 'text-gray-500 bg-gray-100') + '" style="' + (currentTab === 'event' ? 'background:#6C63FF;' : '') + '">🎪 Mi evento</button>' +
+            '</div>' +
+          '</div>';
+      }
+
+      function globalRow(e) {
+        var rank = e.position;
+        var medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '<span class="text-gray-400 font-bold">' + rank + '</span>';
+        var isSelf = e.user_id === user.id;
+        var lname = e.level_name || (API.levelName ? API.levelName(e.level) : ('Nivel ' + e.level));
+        return '<div class="flex items-center gap-3 py-2.5 border-b border-gray-100 last:border-0' + (isSelf ? ' bg-primary-soft/30 -mx-4 px-4 rounded-card' : '') + '">' +
+          '<span class="w-6 text-center text-sm">' + medal + '</span>' +
+          '<div class="flex-1 min-w-0">' +
+            '<p class="text-sm font-medium text-gray-700 truncate">' + U.esc(e.name) + (isSelf ? ' <span class="text-xs text-primary">(tú)</span>' : '') + '</p>' +
+            '<p class="text-[11px] text-gray-400">' +
+              '<span class="font-semibold" style="color:' + rarityColor(e.level) + ';">Nv ' + e.level + ' · ' + U.esc(lname) + '</span>' +
+              ' · ' + e.badges_total + ' 🏅 · ' + e.events_participated + ' 🎪 · ' + e.achievements_count + ' 🏆' +
+            '</p>' +
+          '</div>' +
+          '<span class="text-sm font-bold text-primary whitespace-nowrap">' + e.xp_total + ' XP</span>' +
+        '</div>';
+      }
+
+      function eventRow(e) {
+        var rank = e.position;
+        var medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '<span class="text-gray-400 font-bold">' + rank + '</span>';
+        var isSelf = e.user_id === user.id;
+        var lname = e.level_name || (API.levelName ? API.levelName(e.level) : ('Nivel ' + e.level));
+        var completedChip = e.completed ? ' <span title="Completó el evento">✅</span>' : '';
+        return '<div class="flex items-center gap-3 py-2.5 border-b border-gray-100 last:border-0' + (isSelf ? ' bg-primary-soft/30 -mx-4 px-4 rounded-card' : '') + '">' +
+          '<span class="w-6 text-center text-sm">' + medal + '</span>' +
+          '<div class="flex-1 min-w-0">' +
+            '<p class="text-sm font-medium text-gray-700 truncate">' + U.esc(e.name) + (isSelf ? ' <span class="text-xs text-primary">(tú)</span>' : '') + completedChip + '</p>' +
+            '<p class="text-[11px] text-gray-400">Nv ' + e.level + ' · ' + U.esc(lname) + ' · ' + e.xp_total + ' XP</p>' +
+          '</div>' +
+          '<span class="text-sm font-bold text-primary whitespace-nowrap">' + e.badges_in_event + ' 🏅</span>' +
+        '</div>';
+      }
+
+      function mountTabs() {
+        document.getElementById('lb-back').addEventListener('click', function () { window.location.href = 'profile.html'; });
+        document.getElementById('tab-global').addEventListener('click', function () { if (currentTab !== 'global') { currentTab = 'global'; render(); } });
+        document.getElementById('tab-event').addEventListener('click', function () { if (currentTab !== 'event') { currentTab = 'event'; render(); } });
+      }
+
+      async function render() {
+        app.innerHTML = '<section class="device-frame px-4 pt-10 pb-12">' + header() +
+          '<div id="lb-list" class="bg-white rounded-card p-5 shadow-soft"><div class="text-center text-gray-400 text-sm py-4">' + U.t('loading') + '</div></div>' +
+          '</section>';
+        mountTabs();
+        var listBox = document.getElementById('lb-list');
+        try {
+          if (currentTab === 'global') {
+            var lb = await API.getGlobalLeaderboard();
+            var rows = lb.ranking || [];
+            var html = rows.length ? rows.map(globalRow).join('') : '<p class="text-sm text-gray-400 text-center py-4">' + U.t('no_data') + '</p>';
+            var inList = rows.some(function (e) { return e.user_id === user.id; });
+            if (lb.my_position && !inList) {
+              html += '<div class="border-t-2 border-dashed border-gray-200 my-2"></div>' +
+                globalRow({ position: lb.my_position.position, user_id: user.id, name: (user.name || 'Tú'),
+                  level: lb.my_position.level, level_name: '', badges_total: lb.my_position.badges_total || 0,
+                  events_participated: 0, achievements_count: 0, xp_total: lb.my_position.xp_total });
+            }
+            listBox.innerHTML = html;
+          } else {
+            var events = await API.getJoinedEvents();
+            var activeId = U.getActiveId() || (events[0] && events[0].id);
+            if (!activeId) {
+              listBox.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">Unite a un evento para ver su ranking.</p>';
+              return;
+            }
+            var elb = await API.getEventLeaderboard(activeId);
+            var erows = elb.ranking || [];
+            var ehtml = erows.length ? erows.map(eventRow).join('') : '<p class="text-sm text-gray-400 text-center py-4">' + U.t('no_data') + '</p>';
+            var einList = erows.some(function (e) { return e.user_id === user.id; });
+            if (elb.my_position && !einList) {
+              ehtml += '<div class="border-t-2 border-dashed border-gray-200 my-2"></div>' +
+                eventRow({ position: elb.my_position.position, user_id: user.id, name: (user.name || 'Tú'),
+                  badges_in_event: elb.my_position.badges_in_event, completed: false,
+                  level: elb.my_position.level, level_name: '', xp_total: elb.my_position.xp_total });
+            }
+            listBox.innerHTML = ehtml;
+          }
+        } catch (err) {
+          listBox.innerHTML = '<p class="text-sm text-red-400 text-center py-4">' + U.t('load_error') + '</p>';
+        }
+        window.scrollTo(0, 0);
+      }
+
+      render();
+    })();
+  </script>
+</body>
+</html>

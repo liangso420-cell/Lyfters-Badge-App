@@ -117,6 +117,7 @@ db.users.insertMany([
     email:         "admin@lyfter.app",
     password_hash: "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36zLVBhmA3Sb1G8CvTWpWXC", // admin123
     role:          "admin",
+    xp_total:      0,
     created_at:    new Date("2026-01-15T10:00:00Z")
   },
   {
@@ -125,6 +126,7 @@ db.users.insertMany([
     email:         "ana@lyfter.app",
     password_hash: "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36zLVBhmA3Sb1G8CvTWpWXC",
     role:          "participant",
+    xp_total:      0,
     created_at:    new Date("2026-05-01T09:00:00Z")
   },
   {
@@ -133,6 +135,7 @@ db.users.insertMany([
     email:         "carlos@lyfter.app",
     password_hash: "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36zLVBhmA3Sb1G8CvTWpWXC",
     role:          "participant",
+    xp_total:      0,
     created_at:    new Date("2026-05-03T11:00:00Z")
   },
   {
@@ -141,6 +144,7 @@ db.users.insertMany([
     email:         "lucia@lyfter.app",
     password_hash: "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36zLVBhmA3Sb1G8CvTWpWXC",
     role:          "participant",
+    xp_total:      0,
     created_at:    new Date("2026-05-10T14:00:00Z")
   }
 ]);
@@ -155,6 +159,9 @@ db.events.insertMany([
     end_date:    new Date("2026-09-11T20:00:00Z"),
     prize:       "🎟️ Entrada VIP al after-party + kit Lyfter exclusivo",
     active:      true,
+    xp_first_scan:       5,
+    xp_rare_bonus:       15,
+    xp_completion_bonus: 50,
     created_by:  adminId,
     created_at:  new Date("2026-06-01T10:00:00Z")
   },
@@ -166,27 +173,32 @@ db.events.insertMany([
     end_date:    new Date("2026-07-02T20:00:00Z"),
     prize:       "💻 MacBook Air M3 + mentoría 1:1 con el jurado",
     active:      true,
+    xp_first_scan:       5,
+    xp_rare_bonus:       20,
+    xp_completion_bonus: 75,
     created_by:  adminId,
     created_at:  new Date("2026-06-02T10:00:00Z")
   }
 ]);
 
 // ── Badges — Summit ───────────────────────────────────────
+// El "Stand Lyfter" es raro (is_rare) y otorga el bonus de evento.
 db.badges.insertMany([
-  { _id: sb1, event_id: summitId, name: "Bienvenida",  description: "Check-in en recepción",        icon: "👋", token: "summit-bienvenida-" + sb1, qr_base64: "pending", created_at: new Date() },
-  { _id: sb2, event_id: summitId, name: "Keynote",     description: "Asististe a la charla central", icon: "🎤", token: "summit-keynote-" + sb2,    qr_base64: "pending", created_at: new Date() },
-  { _id: sb3, event_id: summitId, name: "Workshop",    description: "Completaste el taller práctico", icon: "💡", token: "summit-workshop-" + sb3,  qr_base64: "pending", created_at: new Date() },
-  { _id: sb4, event_id: summitId, name: "Networking",  description: "Café + conexiones",              icon: "☕", token: "summit-network-" + sb4,   qr_base64: "pending", created_at: new Date() },
-  { _id: sb5, event_id: summitId, name: "Stand Lyfter",description: "Visitaste el stand principal",   icon: "🏆", token: "summit-stand-" + sb5,     qr_base64: "pending", created_at: new Date() }
+  { _id: sb1, event_id: summitId, name: "Bienvenida",  description: "Check-in en recepción",        icon: "👋", token: "summit-bienvenida-" + sb1, qr_base64: "pending", xp_value: 10, is_rare: false, created_at: new Date() },
+  { _id: sb2, event_id: summitId, name: "Keynote",     description: "Asististe a la charla central", icon: "🎤", token: "summit-keynote-" + sb2,    qr_base64: "pending", xp_value: 10, is_rare: false, created_at: new Date() },
+  { _id: sb3, event_id: summitId, name: "Workshop",    description: "Completaste el taller práctico", icon: "💡", token: "summit-workshop-" + sb3,  qr_base64: "pending", xp_value: 15, is_rare: false, created_at: new Date() },
+  { _id: sb4, event_id: summitId, name: "Networking",  description: "Café + conexiones",              icon: "☕", token: "summit-network-" + sb4,   qr_base64: "pending", xp_value: 10, is_rare: false, created_at: new Date() },
+  { _id: sb5, event_id: summitId, name: "Stand Lyfter",description: "Visitaste el stand principal",   icon: "🏆", token: "summit-stand-" + sb5,     qr_base64: "pending", xp_value: 20, is_rare: true,  created_at: new Date() }
 ]);
 
 // ── Badges — Hackathon ────────────────────────────────────
+// El "Pitch Final" es raro (is_rare).
 db.badges.insertMany([
-  { _id: hb1, event_id: hackId, name: "Kick-off",   description: "Apertura del hackathon",         icon: "🚀", token: "hack-kickoff-" + hb1,   qr_base64: "pending", created_at: new Date() },
-  { _id: hb2, event_id: hackId, name: "Mentoría",   description: "Sesión con un mentor",           icon: "🧠", token: "hack-mentoria-" + hb2,  qr_base64: "pending", created_at: new Date() },
-  { _id: hb3, event_id: hackId, name: "Deploy",     description: "Subiste tu primer commit",       icon: "💻", token: "hack-deploy-" + hb3,    qr_base64: "pending", created_at: new Date() },
-  { _id: hb4, event_id: hackId, name: "Demo Day",   description: "Presentaste tu proyecto",        icon: "📊", token: "hack-demo-" + hb4,      qr_base64: "pending", created_at: new Date() },
-  { _id: hb5, event_id: hackId, name: "Pitch Final",description: "Pitch ante el jurado",           icon: "🎯", token: "hack-pitch-" + hb5,     qr_base64: "pending", created_at: new Date() }
+  { _id: hb1, event_id: hackId, name: "Kick-off",   description: "Apertura del hackathon",         icon: "🚀", token: "hack-kickoff-" + hb1,   qr_base64: "pending", xp_value: 10, is_rare: false, created_at: new Date() },
+  { _id: hb2, event_id: hackId, name: "Mentoría",   description: "Sesión con un mentor",           icon: "🧠", token: "hack-mentoria-" + hb2,  qr_base64: "pending", xp_value: 10, is_rare: false, created_at: new Date() },
+  { _id: hb3, event_id: hackId, name: "Deploy",     description: "Subiste tu primer commit",       icon: "💻", token: "hack-deploy-" + hb3,    qr_base64: "pending", xp_value: 15, is_rare: false, created_at: new Date() },
+  { _id: hb4, event_id: hackId, name: "Demo Day",   description: "Presentaste tu proyecto",        icon: "📊", token: "hack-demo-" + hb4,      qr_base64: "pending", xp_value: 15, is_rare: false, created_at: new Date() },
+  { _id: hb5, event_id: hackId, name: "Pitch Final",description: "Pitch ante el jurado",           icon: "🎯", token: "hack-pitch-" + hb5,     qr_base64: "pending", xp_value: 25, is_rare: true,  created_at: new Date() }
 ]);
 
 // ── Scans — Ana tiene 3 badges del summit ─────────────────

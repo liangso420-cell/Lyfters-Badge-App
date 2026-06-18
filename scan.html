@@ -266,6 +266,9 @@
 
           vibrate(200);
           stopCamera();
+          if (r.xp && r.xp.gained > 0) {
+            U.showXpGain(r.xp.gained, { levelUp: r.xp.levelUp, level: r.xp.level });
+          }
           showCelebration(r);
         } catch (err) {
           processing = false;
@@ -300,6 +303,13 @@
             '<p class="text-xs text-gray-400 mt-1">' + r.progress.obtained + ' de ' + r.progress.total + ' badges</p>'
           : '';
 
+        var xpBlock = (r.xp && r.xp.gained > 0)
+          ? '<div class="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full" style="background:#EAFBF3;">' +
+              '<span class="text-sm font-extrabold" style="color:#16a34a;">+' + r.xp.gained + ' XP</span>' +
+              '<span class="text-xs text-gray-400">· Nivel ' + r.xp.level + '</span>' +
+            '</div>'
+          : '';
+
         var linkedinShareUrl = 'https://www.linkedin.com/sharing/share-offsite/?url=' +
           encodeURIComponent(window.location.origin + '/profile.html') +
           '&summary=' +
@@ -312,6 +322,7 @@
               '<h3 class="text-xl font-bold text-primary">' + (isLast ? U.t('completed_event') : U.t('badge_obtained')) + '</h3>' +
               '<p class="text-lg font-semibold mt-1 text-gray-800">' + U.esc(badgeName) + '</p>' +
               '<p class="text-sm text-gray-500 mt-1">' + U.esc(r.badge ? (r.badge.desc || '') : '') + '</p>' +
+              xpBlock +
               progressBlock +
               prizeBlock +
               '<div class="mt-5 space-y-3">' +
@@ -327,7 +338,11 @@
 
         document.getElementById('celebrate-ok').addEventListener('click', function() {
           U.closeModal();
-          window.location.href = 'profile.html';
+          // Tras cerrar la celebración, mostrar los logros desbloqueados (si hay)
+          // y luego ir al perfil.
+          U.showAchievementUnlocks(r.achievements || [], function() {
+            window.location.href = 'profile.html';
+          });
         });
 
         document.getElementById('celebrate-share').addEventListener('click', async function() {

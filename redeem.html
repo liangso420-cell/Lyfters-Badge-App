@@ -129,6 +129,17 @@
             '</div>';
         }
 
+        var xpBlock = '';
+        if (r.xp && r.xp.gained > 0 && !isDup) {
+          xpBlock =
+            '<div style="margin:16px 0;display:flex;justify-content:center;">' +
+              '<span style="display:inline-flex;align-items:center;gap:8px;background:#EAFBF3;border-radius:999px;padding:8px 16px;">' +
+                '<span style="font-size:15px;font-weight:800;color:#16a34a;">+' + r.xp.gained + ' XP</span>' +
+                '<span style="font-size:12px;color:#9CA3AF;">· Nivel ' + r.xp.level + '</span>' +
+              '</span>' +
+            '</div>';
+        }
+
         var shareUrl  = window.location.origin + '/profile.html';
         var badgeName = badge.name || 'un badge';
         var shareText = 'Acabo de obtener el badge "' + badgeName + '" en Lyfter Badge App. ¡Coleccioná los tuyos!';
@@ -191,6 +202,7 @@
               '<div class="badge-glow" style="background:' + bgGradient + ';">' + icon + '</div>' +
               '<h2 class="redeem-title" style="color:' + accentColor + ';">' + title + '</h2>' +
               '<p class="redeem-sub">' + subtitle + '</p>' +
+              xpBlock +
               progressBlock +
               prizeBlock +
               shareButtons +
@@ -226,6 +238,16 @@
           setTimeout(function () {
             if (typeof launchConfetti === 'function') launchConfetti();
           }, 300);
+        }
+
+        // Feedback de XP y logros (solo en scans nuevos).
+        if (!isDup && r.xp && r.xp.gained > 0) {
+          U.showXpGain(r.xp.gained, { levelUp: r.xp.levelUp, level: r.xp.level });
+        }
+        if (!isDup && r.achievements && r.achievements.length) {
+          setTimeout(function () {
+            U.showAchievementUnlocks(r.achievements, function () {});
+          }, 900);
         }
       }
 
