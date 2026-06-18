@@ -73,6 +73,7 @@
         if (el.children.length === 0 && el.textContent.trim()) { el.setAttribute('data-i18n', el.textContent.trim()); }
       });
       U.applyStoredLang();
+      U.applyTranslationsNow();
 
       var TAGS = ['Desarrollo Web','Mobile','Inteligencia Artificial','Data Science','Ciberseguridad',
         'DevOps','Cloud','Blockchain','UX/UI','Product Management','Emprendimiento','Marketing Digital',
@@ -101,6 +102,7 @@
           if (el.children.length === 0 && el.textContent.trim()) { el.setAttribute('data-i18n', el.textContent.trim()); }
         });
         U.applyStoredLang();
+      U.applyTranslationsNow();
 
         Array.prototype.forEach.call(document.querySelectorAll('.tag-btn'), function(btn) {
           btn.addEventListener('click', function() {

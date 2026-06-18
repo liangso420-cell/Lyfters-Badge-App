@@ -93,6 +93,7 @@
         if (el.children.length === 0 && el.textContent.trim()) { el.setAttribute('data-i18n', el.textContent.trim()); }
       });
       U.applyStoredLang();
+      U.applyTranslationsNow();
 
       var form = document.getElementById('login-form');
       form.addEventListener('submit', async function (e) {

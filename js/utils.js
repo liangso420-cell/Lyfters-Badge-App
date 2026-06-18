@@ -805,6 +805,7 @@
       var res = await fetch('locales/' + lang + '.json');
       if (!res.ok) return;
       var translations = await res.json();
+      window._lyfterTranslations = translations;
       Array.prototype.forEach.call(document.querySelectorAll('[data-i18n]'), function(el) {
         var key = el.getAttribute('data-i18n');
         if (translations[key]) {
@@ -813,6 +814,20 @@
         }
       });
     } catch(e) {}
+  }
+
+  function applyTranslationsNow() {
+    var lang = 'es';
+    try { lang = localStorage.getItem('lyfter_lang') || 'es'; } catch(e) {}
+    if (lang === 'es' || !window._lyfterTranslations) return;
+    var translations = window._lyfterTranslations;
+    Array.prototype.forEach.call(document.querySelectorAll('[data-i18n]'), function(el) {
+      var key = el.getAttribute('data-i18n');
+      if (translations[key]) {
+        if (!el.getAttribute('data-original')) el.setAttribute('data-original', el.textContent.trim());
+        el.textContent = translations[key];
+      }
+    });
   }
 
   /* ── API pública ── */
@@ -841,7 +856,8 @@
     ensureActive: ensureActive,
     getCurrentLang: getCurrentLang,
     setCurrentLang: setCurrentLang,
-    applyStoredLang: applyStoredLang
+    applyStoredLang: applyStoredLang,
+    applyTranslationsNow: applyTranslationsNow
   };
 
   window.lyfterReset = function () {

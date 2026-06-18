@@ -191,6 +191,7 @@
             if (el.children.length === 0 && el.textContent.trim()) { el.setAttribute('data-i18n', el.textContent.trim()); }
           });
           U.applyStoredLang();
+          U.applyTranslationsNow();
 
           document.getElementById('back-btn').addEventListener('click', function() { window.location.href = 'profile.html'; });
           document.getElementById('fab-scan').addEventListener('click', function() { window.location.href = 'scan.html'; });
