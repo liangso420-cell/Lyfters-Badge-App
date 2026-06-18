@@ -1078,15 +1078,7 @@
       return '<a href="' + href + '" style="' + s + '"><span style="font-size:17px;">' + icon + '</span>' + label + '</a>';
     }
 
-    var eventBlock = events.length
-      ? '<div style="margin-top:20px;border-radius:14px;padding:16px;background:linear-gradient(155deg,rgba(216,151,231,0.14),rgba(112,207,255,0.08));border:1px solid rgba(216,151,231,0.22);">' +
-          '<div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#c9a9e0;font-weight:700;margin-bottom:10px;">Evento activo</div>' +
-          '<div style="position:relative;">' +
-            '<select id="admin-event-select" style="width:100%;height:42px;border-radius:11px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:14px;font-weight:600;padding:0 34px 0 12px;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;">' + eventOptions + '</select>' +
-            '<span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:#8b93a3;font-size:10px;">▼</span>' +
-          '</div>' +
-        '</div>'
-      : '';
+    var eventBlock = '';
 
     var sidebar =
       '<aside style="position:fixed;top:0;left:0;bottom:0;width:248px;background:#1a1d24;border-right:1px solid #262a33;display:flex;flex-direction:column;padding:26px 18px;z-index:20;overflow-y:auto;">' +
@@ -1097,11 +1089,11 @@
         '<div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#5a6172;font-weight:700;padding:6px 12px 10px;">Admin</div>' +
         '<nav style="display:flex;flex-direction:column;gap:4px;">' +
           navItem('event',         '🎟️', 'Eventos',    'admin-event.html') +
-          navItem('badges',        '🏅', 'Badges',      'admin-badges.html') +
           navItem('participation', '📊', 'Dashboard',   'admin-participation.html') +
         '</nav>' +
         eventBlock +
         '<div style="margin-top:auto;padding-top:22px;">' +
+          '<button id="admin-profile-menu" style="width:100%;height:44px;border-radius:12px;border:1px solid #353a46;background:transparent;color:#aab1bf;font-family:Poppins,sans-serif;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;">☰ Mi perfil</button>' +
           '<button id="admin-logout" style="width:100%;height:44px;border-radius:12px;border:1px solid #353a46;background:transparent;color:#aab1bf;font-family:Poppins,sans-serif;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">↩ Salir</button>' +
         '</div>' +
       '</aside>';
@@ -1134,6 +1126,8 @@
         }
       });
     }
+    var out = document.getElementById('admin-logout');
+    if (out) out.addEventListener('click', logout);
   }
 
   /* ── XP & Logros: feedback visual ── */
