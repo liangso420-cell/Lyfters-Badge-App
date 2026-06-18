@@ -143,8 +143,12 @@
           var activeId = U.ensureActive(events);
 
           var createForm =
-            '<div class="bg-white rounded-card p-6 shadow-soft mb-6 anim-fade">' +
-              '<h2 class="text-lg font-bold mb-1 text-gray-800">' + U.t('admin_create_event') + '</h2>' +
+            '<div class="bg-white rounded-card shadow-soft mb-6 anim-fade overflow-hidden">' +
+              '<button type="button" id="create-toggle" class="w-full flex items-center justify-between p-6 text-left hover:bg-gray-50 transition">' +
+                '<span class="text-lg font-bold text-gray-800">+ ' + U.t('admin_create_event') + '</span>' +
+                '<span id="create-chevron" class="text-gray-400 text-xl leading-none">▸</span>' +
+              '</button>' +
+              '<div id="create-body" class="hidden px-6 pb-6">' +
               '<p class="text-sm text-gray-400 mb-5">' + U.t('admin_create_event_desc') + '</p>' +
               '<form id="event-form" class="space-y-4" novalidate>' +
                 U.inputField({ label: U.t('admin_event_name'), name: 'name', placeholder: 'Lyfter Summit 2026' }) +
@@ -199,14 +203,18 @@
                     '<input type="text" id="create-badge-name" placeholder="' + U.t('admin_badge_name_placeholder') + '" class="px-3 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
                     '<input type="text" id="create-badge-desc" placeholder="' + U.t('admin_badge_desc_placeholder') + '" class="px-3 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
                   '</div>' +
-                  '<div class="flex items-center gap-4 mb-2">' +
-                    '<input type="number" id="create-badge-xp" placeholder="XP" min="1" max="500" value="10" class="w-24 px-3 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
-                    '<label class="flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" id="create-badge-rare" class="w-4 h-4 accent-primary" /> Raro</label>' +
+                  '<div class="flex items-end gap-4 mb-2">' +
+                    '<div>' +
+                      '<label class="text-xs font-medium text-gray-500">XP por escanear</label>' +
+                      '<input type="number" id="create-badge-xp" placeholder="XP" min="1" max="500" value="10" class="w-28 mt-1 px-3 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
+                    '</div>' +
+                    '<label class="flex items-center gap-2 text-sm text-gray-700 pb-2.5"><input type="checkbox" id="create-badge-rare" class="w-4 h-4 accent-primary" /> Badge raro</label>' +
                   '</div>' +
                   '<button type="button" id="create-add-badge-btn" class="px-4 py-2 rounded-btn text-sm font-medium border border-primary text-primary hover:bg-primary-soft mb-4">' + U.t('admin_add_badge') + '</button>' +
                 '</div>' +
                 U.primaryButton(U.t('admin_create_btn'), 'type="submit" id="create-btn"') +
               '</form>' +
+              '</div>' +
             '</div>';
 
           var eventCards = events.length ? events.map(function(e) {
@@ -300,12 +308,15 @@
           app.innerHTML = U.adminShell('event', inner, events, activeId);
           U.mountAdminShell();
 
+          var locationMap = null;
+
           function initLocationPicker() {
             var mapDiv = document.getElementById('location-map');
             if (!mapDiv) return;
             mapDiv.style.display = 'block';
 
             var map = L.map('location-map').setView([9.7489, -83.7534], 8);
+            locationMap = map;
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
               attribution: '© OpenStreetMap'
             }).addTo(map);
@@ -386,6 +397,21 @@
 
           initLocationPicker();
 
+          // Acordeón "Crear evento" — colapsado por defecto.
+          var createToggle = document.getElementById('create-toggle');
+          var createBody = document.getElementById('create-body');
+          if (createToggle && createBody) {
+            createToggle.addEventListener('click', function() {
+              var nowHidden = createBody.classList.toggle('hidden');
+              var chev = document.getElementById('create-chevron');
+              if (chev) chev.textContent = nowHidden ? '▸' : '▾';
+              // El mapa se inicializa oculto; al expandir hay que recalcular su tamaño.
+              if (!nowHidden && locationMap) {
+                setTimeout(function() { locationMap.invalidateSize(); }, 60);
+              }
+            });
+          }
+
           var createPendingBadges = [];
           var createSelectedTags = [];
 
@@ -419,10 +445,13 @@
             };
             createPendingBadges.push(badge);
             document.getElementById('create-badges-preview').innerHTML = createPendingBadges.map(function(b, i) {
-              return '<div class="flex items-center gap-3 p-3 rounded-card bg-base">' +
+              var rareStyle = b.is_rare ? ' style="background:#FFD700;"' : '';
+              var nameColor = b.is_rare ? 'text-gray-900' : 'text-gray-700';
+              var metaColor = b.is_rare ? 'text-gray-700' : 'text-gray-400';
+              return '<div class="flex items-center gap-3 p-3 rounded-card' + (b.is_rare ? '' : ' bg-base') + '"' + rareStyle + '>' +
                 '<span class="text-xl">' + (b.emoji || '🏅') + '</span>' +
-                '<span class="text-sm font-medium text-gray-700 flex-1">' + U.esc(b.name) +
-                  ' <span class="text-xs text-gray-400">· ' + (b.xp_value || 10) + ' XP' + (b.is_rare ? ' · ⭐ raro' : '') + '</span>' +
+                '<span class="text-sm font-medium ' + nameColor + ' flex-1">' + U.esc(b.name) +
+                  ' <span class="text-xs ' + metaColor + '">· ' + (b.xp_value || 10) + ' XP' + (b.is_rare ? ' · ⭐ raro' : '') + '</span>' +
                 '</span>' +
                 '<button type="button" data-idx="' + i + '" class="remove-badge-btn text-xs text-red-400 hover:text-red-600">✕</button>' +
               '</div>';
@@ -693,12 +722,14 @@
                 var bdesc = b.desc || b.descripcion || '';
                 var bemoji = b.emoji || b.icon || '🏅';
                 var bxp = b.xp_value != null ? b.xp_value : 10;
+                var rareRowStyle = b.is_rare ? ' style="background:#FFD700;"' : '';
+                var metaColor = b.is_rare ? 'text-gray-700' : 'text-gray-400';
                 return '<div class="rounded-card bg-white mb-2 shadow-soft overflow-hidden">' +
-                  '<div class="flex items-center justify-between p-3">' +
+                  '<div class="flex items-center justify-between p-3"' + rareRowStyle + '>' +
                     '<div class="flex items-center gap-3 flex-1 min-w-0">' +
                       '<span class="text-2xl">' + bemoji + '</span>' +
-                      '<div class="min-w-0"><p class="font-medium text-sm text-gray-800 truncate">' + U.esc(bname) + (b.is_rare ? ' <span class="text-amber-500" title="Raro">⭐</span>' : '') + '</p>' +
-                      '<p class="text-xs text-gray-400">' + (b.redeemed || 0) + ' ' + U.t('admin_redeem_count') + ' · ' + bxp + ' XP</p></div>' +
+                      '<div class="min-w-0"><p class="font-medium text-sm text-gray-900 truncate">' + U.esc(bname) + (b.is_rare ? ' <span class="text-amber-700" title="Badge raro">⭐</span>' : '') + '</p>' +
+                      '<p class="text-xs ' + metaColor + '">' + (b.redeemed || 0) + ' ' + U.t('admin_redeem_count') + ' · ' + bxp + ' XP</p></div>' +
                     '</div>' +
                     '<div class="flex gap-1.5">' +
                       '<button data-qr-b="' + b.id + '" data-qr-url="' + U.esc(b.redeemUrl || b.redeem_url || '') + '" data-qr-img="' + U.esc(b.qrImage || b.qr_image || '') + '" data-qr-name="' + U.esc(bname) + '" class="badge-qr-btn px-3 py-1.5 rounded-btn text-xs font-medium text-primary border border-primary hover:bg-primary-soft">QR</button>' +
@@ -713,9 +744,12 @@
                         '<input name="name" value="' + U.esc(bname) + '" placeholder="Nombre" class="col-span-3 px-3 py-2 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
                       '</div>' +
                       '<input name="description" value="' + U.esc(bdesc) + '" placeholder="Descripción" class="w-full px-3 py-2 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
-                      '<div class="flex items-center gap-4">' +
-                        '<input type="number" name="xp_value" min="1" max="500" value="' + bxp + '" placeholder="XP" class="w-24 px-3 py-2 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
-                        '<label class="flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" name="is_rare" ' + (b.is_rare ? 'checked' : '') + ' class="w-4 h-4 accent-primary" /> Raro</label>' +
+                      '<div class="flex items-end gap-4">' +
+                        '<div>' +
+                          '<label class="text-xs font-medium text-gray-500">XP por escanear</label>' +
+                          '<input type="number" name="xp_value" min="1" max="500" value="' + bxp + '" placeholder="XP" class="w-24 mt-1 px-3 py-2 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
+                        '</div>' +
+                        '<label class="flex items-center gap-2 text-sm text-gray-700 pb-2"><input type="checkbox" name="is_rare" ' + (b.is_rare ? 'checked' : '') + ' class="w-4 h-4 accent-primary" /> Badge raro</label>' +
                       '</div>' +
                       '<div class="flex gap-2"><button type="submit" class="px-4 py-2 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">' + U.t('admin_save') + '</button>' +
                         '<button type="button" class="badge-edit-cancel px-4 py-2 rounded-btn text-sm font-medium border border-gray-200 text-gray-600">' + U.t('admin_cancel') + '</button></div>' +
