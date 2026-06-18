@@ -558,9 +558,7 @@
           badges_total: mockTotalBadges(u.id), completed: total > 0 && done.length >= total,
           xp_total: xpTotal, level: lvl, level_name: levelName(lvl) };
       }).filter(function (r) { return r.badges_in_event > 0; });
-      ranking.sort(function (a, b) {
-        return (b.badges_in_event - a.badges_in_event) || (b.xp_total - a.xp_total);
-      });
+      ranking.sort(function (a, b) { return b.xp_total - a.xp_total; });
       var myPos = null;
       ranking.forEach(function (r, i) {
         r.position = i + 1;
