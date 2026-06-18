@@ -362,11 +362,6 @@
 
           initLocationPicker();
 
-          Array.prototype.forEach.call(document.querySelectorAll('p, h1, h2, h3, h4, button, label, span:not(.text-primary):not(.text-white)'), function(el) {
-            if (el.children.length === 0 && el.textContent.trim()) { el.setAttribute('data-i18n', ''); }
-          });
-          U.applyStoredLang();
-
           var createPendingBadges = [];
           var createSelectedTags = [];
 

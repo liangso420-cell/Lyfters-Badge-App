@@ -539,7 +539,6 @@
                 '</button>';
               }).join('') +
             '</div>' +
-            '<p class="text-xs text-gray-400 mt-3 px-1">La traducción puede tardar unos segundos.</p>' +
           '</div>';
 
         document.getElementById('drawer-lang-back').addEventListener('click', function() {
@@ -550,34 +549,11 @@
         });
 
         Array.prototype.forEach.call(document.querySelectorAll('.lang-option'), function(btn) {
-          btn.addEventListener('click', async function() {
+          btn.addEventListener('click', function() {
             var lang = btn.getAttribute('data-lang');
             try { localStorage.setItem('lyfter_lang', lang); } catch(e) {}
             closeModal();
-            if (lang === 'es') {
-              Array.prototype.forEach.call(document.querySelectorAll('[data-original]'), function(el) {
-                var orig = el.getAttribute('data-original');
-                if (orig) el.textContent = orig;
-              });
-              toast('Idioma: Español', 'success');
-              return;
-            }
-            toast('Cargando ' + LANGUAGES[lang] + '...', 'info');
-            try {
-              var res = await fetch('locales/' + lang + '.json');
-              if (!res.ok) { toast('Idioma no disponible', 'error'); return; }
-              var translations = await res.json();
-              Array.prototype.forEach.call(document.querySelectorAll('[data-i18n]'), function(el) {
-                var key = el.getAttribute('data-i18n');
-                if (translations[key]) {
-                  if (!el.getAttribute('data-original')) el.setAttribute('data-original', el.textContent.trim());
-                  el.textContent = translations[key];
-                }
-              });
-              toast('Idioma: ' + LANGUAGES[lang], 'success');
-            } catch(e) {
-              toast('No se pudo cargar el idioma', 'error');
-            }
+            toast('Idioma: ' + LANGUAGES[lang], 'success');
           });
         });
       });
@@ -797,39 +773,6 @@
     window.location.href = 'login.html';
   }
 
-  async function applyStoredLang() {
-    var lang = 'es';
-    try { lang = localStorage.getItem('lyfter_lang') || 'es'; } catch(e) {}
-    if (lang === 'es') return;
-    try {
-      var res = await fetch('locales/' + lang + '.json');
-      if (!res.ok) return;
-      var translations = await res.json();
-      window._lyfterTranslations = translations;
-      Array.prototype.forEach.call(document.querySelectorAll('[data-i18n]'), function(el) {
-        var key = el.getAttribute('data-i18n');
-        if (translations[key]) {
-          if (!el.getAttribute('data-original')) el.setAttribute('data-original', el.textContent.trim());
-          el.textContent = translations[key];
-        }
-      });
-    } catch(e) {}
-  }
-
-  function applyTranslationsNow() {
-    var lang = 'es';
-    try { lang = localStorage.getItem('lyfter_lang') || 'es'; } catch(e) {}
-    if (lang === 'es' || !window._lyfterTranslations) return;
-    var translations = window._lyfterTranslations;
-    Array.prototype.forEach.call(document.querySelectorAll('[data-i18n]'), function(el) {
-      var key = el.getAttribute('data-i18n');
-      if (translations[key]) {
-        if (!el.getAttribute('data-original')) el.setAttribute('data-original', el.textContent.trim());
-        el.textContent = translations[key];
-      }
-    });
-  }
-
   /* ── API pública ── */
   window.LyfterUtils = {
     EMAIL_RE: EMAIL_RE,
@@ -855,9 +798,7 @@
     setActiveId: setActiveId,
     ensureActive: ensureActive,
     getCurrentLang: getCurrentLang,
-    setCurrentLang: setCurrentLang,
-    applyStoredLang: applyStoredLang,
-    applyTranslationsNow: applyTranslationsNow
+    setCurrentLang: setCurrentLang
   };
 
   window.lyfterReset = function () {
