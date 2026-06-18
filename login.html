@@ -187,7 +187,7 @@
           if (!email) { U.toast('Ingresa tu email', 'error'); return; }
           btn.disabled = true; btn.textContent = 'Enviando...';
           try {
-            var res = await fetch(window.LYFTER_CONFIG.apiBaseUrl + '/auth/forgot-password', {
+            var res = await fetch('https://lyfters-badge-app.onrender.com/auth/forgot-password', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ email: email })
