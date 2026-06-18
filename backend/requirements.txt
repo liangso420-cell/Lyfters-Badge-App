@@ -12,3 +12,4 @@ requests>=2.31
 google-auth-httplib2>=0.2
 flask-limiter>=3.5
 redis>=5.0
+resend>=2.0
