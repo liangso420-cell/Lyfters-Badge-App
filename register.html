@@ -50,22 +50,22 @@
           '<div class="card-soft p-8 anim-fade">' +
             '<div class="text-center mb-6">' +
               '<div class="text-4xl mb-2">🏆</div>' +
-              '<h2 class="text-2xl font-bold">Crear cuenta</h2>' +
-              '<p class="text-gray-400 text-sm mt-1">Únete y empieza a coleccionar badges</p>' +
+              '<h2 class="text-2xl font-bold">' + U.t('create_account') + '</h2>' +
+              '<p class="text-gray-400 text-sm mt-1">' + U.t('join_tagline') + '</p>' +
             '</div>' +
             '<form id="register-form" class="space-y-4" novalidate>' +
-              U.inputField({ label: 'Nombre completo', name: 'name', placeholder: 'Ana Pérez' }) +
-              U.inputField({ label: 'Email', type: 'email', name: 'email', placeholder: 'tu@correo.com' }) +
-              U.inputField({ label: 'Contraseña', type: 'password', name: 'password', placeholder: '••••••••' }) +
-              U.inputField({ label: 'Confirmar contraseña', type: 'password', name: 'confirm', placeholder: '••••••••' }) +
-              U.primaryButton('Crear cuenta', 'type="submit"') +
-              '<div class="divider text-gray-400 text-xs my-2">o continúa con</div>' +
+              U.inputField({ label: U.t('full_name'), name: 'name', placeholder: 'Ana Pérez' }) +
+              U.inputField({ label: U.t('email_label'), type: 'email', name: 'email', placeholder: 'tu@correo.com' }) +
+              U.inputField({ label: U.t('password_label'), type: 'password', name: 'password', placeholder: '••••••••' }) +
+              U.inputField({ label: U.t('confirm_password'), type: 'password', name: 'confirm', placeholder: '••••••••' }) +
+              U.primaryButton(U.t('create_account'), 'type="submit"') +
+              '<div class="divider text-gray-400 text-xs my-2">' + U.t('or_continue') + '</div>' +
               '<button type="button" id="btn-google" ' +
                 'class="btn w-full border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-medium gap-2 normal-case">' +
                 '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5" alt="Google" />' +
-                'Continuar con Google' +
+                U.t('continue_google') +
               '</button>' +
-              '<p class="text-center text-sm text-gray-500">¿Ya tienes cuenta? <a href="login.html" class="text-primary font-medium">Inicia sesión</a></p>' +
+              '<p class="text-center text-sm text-gray-500">' + U.t('already_account') + ' <a href="login.html" class="text-primary font-medium">' + U.t('sign_in') + '</a></p>' +
             '</form>' +
           '</div>' +
         '</section>';
@@ -80,16 +80,16 @@
             '<div class="card-soft p-8 anim-fade">' +
               '<div class="text-center mb-6">' +
                 '<div class="text-4xl mb-2">🎯</div>' +
-                '<h2 class="text-xl font-bold">¿Cuáles son tus intereses?</h2>' +
-                '<p class="text-gray-400 text-sm mt-1">Selecciona los temas que te interesan para recibir recomendaciones personalizadas</p>' +
+                '<h2 class="text-xl font-bold">' + U.t('interests_title') + '</h2>' +
+                '<p class="text-gray-400 text-sm mt-1">' + U.t('interests_desc') + '</p>' +
               '</div>' +
               '<div id="tags-container" class="flex flex-wrap gap-2 mb-6">' +
                 TAGS.map(function(tag) {
                   return '<button type="button" data-tag="' + U.esc(tag) + '" class="tag-btn px-3 py-1.5 rounded-full text-sm border border-gray-200 text-gray-600 hover:border-primary hover:text-primary transition">' + U.esc(tag) + '</button>';
                 }).join('') +
               '</div>' +
-              '<button id="save-interests" class="w-full py-3 rounded-btn text-white font-semibold mb-3" style="background:#6C63FF;">Guardar y continuar</button>' +
-              '<button id="skip-interests" class="w-full py-2 text-sm text-gray-400 hover:text-primary">Omitir por ahora</button>' +
+              '<button id="save-interests" class="w-full py-3 rounded-btn text-white font-semibold mb-3" style="background:#6C63FF;">' + U.t('save_continue') + '</button>' +
+              '<button id="skip-interests" class="w-full py-2 text-sm text-gray-400 hover:text-primary">' + U.t('skip_now') + '</button>' +
             '</div>' +
           '</section>';
         Array.prototype.forEach.call(document.querySelectorAll('.tag-btn'), function(btn) {
@@ -114,7 +114,7 @@
           try {
             if (selected.length) await API.updateInterests(selected);
           } catch(e) {}
-          U.toastNextPage('¡Cuenta creada! 🎉', 'success');
+          U.toastNextPage(U.t('account_created'), 'success');
           window.location.href = 'profile.html';
         }
 
@@ -133,7 +133,7 @@
         if (!ok) return;
         var btn = form.querySelector('[type="submit"]');
         btn.disabled = true;
-        btn.textContent = 'Cargando...';
+        btn.textContent = U.t('loading');
         try {
           var newUser = await API.register({ name: name.value.trim(), email: email.value.trim(), password: pass.value });
           if (newUser.role !== 'admin') {
@@ -145,7 +145,7 @@
           U.setFieldError(email, err.message || 'No se pudo crear la cuenta');
         } finally {
           btn.disabled = false;
-          btn.textContent = 'Crear cuenta';
+          btn.textContent = U.t('create_account');
         }
       });
 
@@ -160,7 +160,7 @@
       document.getElementById('btn-google').addEventListener('click', async function () {
         var btn = this;
         btn.disabled = true;
-        btn.textContent = 'Conectando...';
+        btn.textContent = U.t('connecting');
         try {
           var provider = new firebase.auth.GoogleAuthProvider();
           provider.setCustomParameters({ prompt: 'select_account' });
@@ -186,7 +186,7 @@
           U.toast(mensajes[err.code] || err.message || 'No se pudo iniciar con Google', 'error');
         } finally {
           btn.disabled = false;
-          btn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5" alt="Google" /> Continuar con Google';
+          btn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5" alt="Google" /> ' + U.t('continue_google');
         }
       });
     })();
