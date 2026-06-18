@@ -384,5 +384,16 @@
       init();
     })();
   </script>
+  <script>
+    (function() {
+      var glow = document.querySelector('[data-scroll-glow]');
+      if (!glow) return;
+      window.addEventListener('scroll', function() {
+        var p = Math.min(window.scrollY / (document.body.scrollHeight - window.innerHeight || 1), 1);
+        glow.style.transform = 'translateY(' + (p * 80) + 'px)';
+        glow.style.opacity = String(0.6 + p * 0.4);
+      }, { passive: true });
+    })();
+  </script>
 </body>
 </html>

@@ -69,31 +69,58 @@
         : '';
 
       app.innerHTML =
-        '<section class="device-frame px-4 pt-12 pb-12">' +
-          '<div class="card-soft p-8 anim-fade">' +
-            '<div class="text-center mb-6">' +
-              '<div class="text-4xl mb-2">🏆</div>' +
-              '<h2 class="text-2xl font-bold">Lyfter Badge App</h2>' +
-              '<p class="text-gray-400 text-sm mt-1">' + U.t('app_tagline') + '</p>' +
+        '<div style="position:fixed;top:-200px;right:-120px;width:900px;height:620px;pointer-events:none;z-index:0;background:radial-gradient(44% 60% at 30% 30%,rgba(216,151,231,0.16),transparent 70%),radial-gradient(44% 60% at 76% 40%,rgba(112,207,255,0.12),transparent 70%),radial-gradient(50% 50% at 54% 88%,rgba(230,138,141,0.10),transparent 70%);"></div>' +
+        '<div style="position:relative;z-index:1;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 20px;">' +
+          '<div style="width:100%;max-width:1100px;background:#1c1f27;border:1px solid #2f343f;border-radius:26px;padding:28px 32px 36px;box-shadow:0 40px 100px rgba(0,0,0,0.55);display:flex;gap:48px;align-items:stretch;">' +
+
+            '<div id="login-deco" style="width:380px;flex-shrink:0;border-radius:20px;overflow:hidden;position:relative;min-height:460px;background:radial-gradient(80% 60% at 22% 16%,rgba(112,207,255,0.45),transparent 60%),radial-gradient(75% 60% at 84% 26%,rgba(216,151,231,0.5),transparent 60%),radial-gradient(80% 70% at 80% 90%,rgba(255,203,138,0.4),transparent 62%),radial-gradient(80% 70% at 14% 92%,rgba(171,209,148,0.4),transparent 62%),radial-gradient(70% 60% at 52% 56%,rgba(230,138,141,0.34),transparent 62%),linear-gradient(158deg,#232732,#1a1d25);display:none;">' +
+              '<span style="position:absolute;top:8%;left:12%;font-family:JetBrains Mono,monospace;font-size:30px;font-weight:600;color:rgba(255,255,255,0.28);">&lt;/&gt;</span>' +
+              '<span style="position:absolute;top:18%;right:14%;font-family:JetBrains Mono,monospace;font-size:22px;color:rgba(255,255,255,0.22);">$_</span>' +
+              '<span style="position:absolute;top:34%;left:18%;font-family:JetBrains Mono,monospace;font-size:26px;color:rgba(255,203,138,0.45);">{ }</span>' +
+              '<span style="position:absolute;top:44%;right:18%;font-family:JetBrains Mono,monospace;font-size:34px;color:rgba(112,207,255,0.4);">;</span>' +
+              '<span style="position:absolute;top:58%;left:24%;font-family:JetBrains Mono,monospace;font-size:24px;color:rgba(216,151,231,0.42);">=&gt;</span>' +
+              '<span style="position:absolute;top:70%;right:22%;font-family:JetBrains Mono,monospace;font-size:20px;font-weight:600;color:rgba(171,209,148,0.5);">JS</span>' +
+              '<span style="position:absolute;top:80%;left:16%;font-family:JetBrains Mono,monospace;font-size:22px;font-weight:600;color:rgba(230,138,141,0.5);">TS</span>' +
+              '<div style="position:absolute;left:0;right:0;bottom:0;padding:26px 28px;background:linear-gradient(180deg,transparent,rgba(20,22,28,0.55));">' +
+                '<div style="font-family:Poppins,sans-serif;font-size:18px;font-weight:600;color:#fff;line-height:1.35;">Conviértete en<br><span style="color:#d897e7;">Frontend Developer</span></div>' +
+                '<div style="font-family:Manrope,sans-serif;font-size:13px;color:rgba(255,255,255,0.6);margin-top:6px;">1 año intensivo · acompañamiento real</div>' +
+              '</div>' +
             '</div>' +
-            '<form id="login-form" class="space-y-4" novalidate>' +
-              U.inputField({ label: U.t('email_label'), type: 'email', name: 'email', placeholder: 'tu@correo.com' }) +
-              U.inputField({ label: U.t('password_label'), type: 'password', name: 'password', placeholder: '••••••••' }) +
-              U.primaryButton(U.t('enter_btn'), 'type="submit"') +
-              '<div class="divider text-gray-400 text-xs my-2">' + U.t('or_continue') + '</div>' +
-              '<button type="button" id="btn-google" ' +
-                'class="btn w-full font-medium gap-2 normal-case">' +
-                '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5" alt="Google" />' +
-                U.t('continue_google') +
-              '</button>' +
-              '<p class="text-center text-sm text-gray-500">' + U.t('no_account') + ' <a href="register.html" class="text-primary font-medium">' + U.t('sign_up') + '</a></p>' +
-              '<p class="text-center text-sm text-gray-400 mt-2">' +
-                '<button type="button" id="forgot-pw-btn" class="text-primary hover:underline text-sm">' + U.t('forgot_password') + '</button>' +
-              '</p>' +
-              demoHint +
-            '</form>' +
+
+            '<div style="flex:1;display:flex;flex-direction:column;justify-content:center;min-width:0;">' +
+              '<div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">' +
+                '<span style="font-size:32px;">🏆</span>' +
+                '<span style="font-family:Poppins,sans-serif;font-size:24px;font-weight:700;color:#f4f6f9;letter-spacing:-0.01em;">Lyfter</span>' +
+              '</div>' +
+              '<h1 style="margin:0;font-family:Poppins,sans-serif;font-size:36px;font-weight:700;color:#f4f6f9;letter-spacing:-0.01em;">Iniciar sesión</h1>' +
+              '<p style="margin:10px 0 32px;font-size:15px;color:#8b93a3;font-family:Manrope,sans-serif;">' + U.t('no_account') + ' <a href="register.html" style="font-weight:700;text-decoration:none;color:#d897e7;">' + U.t('sign_up') + '</a></p>' +
+              '<form id="login-form" style="display:flex;flex-direction:column;gap:18px;" novalidate>' +
+                U.inputField({ label: U.t('email_label'), type: 'email', name: 'email', placeholder: 'tu@correo.com' }) +
+                U.inputField({ label: U.t('password_label'), type: 'password', name: 'password', placeholder: '••••••••' }) +
+                U.primaryButton(U.t('enter_btn'), 'type="submit"') +
+                '<div style="display:flex;align-items:center;gap:12px;margin:4px 0;">' +
+                  '<div style="flex:1;height:1px;background:#2f343f;"></div>' +
+                  '<span style="font-size:12px;color:#6f7686;font-family:Manrope,sans-serif;">' + U.t('or_continue') + '</span>' +
+                  '<div style="flex:1;height:1px;background:#2f343f;"></div>' +
+                '</div>' +
+                '<button type="button" id="btn-google" style="width:100%;height:52px;border-radius:13px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">' +
+                  '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:20px;height:20px;" alt="Google" />' +
+                  U.t('continue_google') +
+                '</button>' +
+                '<p style="text-align:center;font-size:13px;color:#8b93a3;margin:0;font-family:Manrope,sans-serif;">' +
+                  '<button type="button" id="forgot-pw-btn" style="background:none;border:none;color:#6f7686;font-size:13px;cursor:pointer;font-family:Manrope,sans-serif;text-decoration:underline;">' + U.t('forgot_password') + '</button>' +
+                '</p>' +
+                demoHint +
+              '</form>' +
+            '</div>' +
           '</div>' +
-        '</section>';
+        '</div>';
+
+      // Mostrar panel deco en desktop
+      (function() {
+        var d = document.getElementById('login-deco');
+        if (d && window.innerWidth >= 900) { d.style.display = 'block'; }
+      })();
       var form = document.getElementById('login-form');
       form.addEventListener('submit', async function (e) {
         e.preventDefault();
@@ -193,6 +220,17 @@
           }
         });
       });
+    })();
+  </script>
+  <script>
+    (function() {
+      var glow = document.querySelector('[data-scroll-glow]');
+      if (!glow) return;
+      window.addEventListener('scroll', function() {
+        var p = Math.min(window.scrollY / (document.body.scrollHeight - window.innerHeight || 1), 1);
+        glow.style.transform = 'translateY(' + (p * 80) + 'px)';
+        glow.style.opacity = String(0.6 + p * 0.4);
+      }, { passive: true });
     })();
   </script>
 </body>

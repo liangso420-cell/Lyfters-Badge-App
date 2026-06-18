@@ -1066,29 +1066,55 @@
 
   /* ----- Shell admin ----- */
   function adminShell(activeTab, innerHtml, events, activeId) {
-    var eventOptions = events.map(function (e) {
+    var eventOptions = events.map(function(e) {
       return '<option value="' + e.id + '"' + (e.id === activeId ? ' selected' : '') + '>' + esc(e.name) + '</option>';
     }).join('');
-    var tabs = [
-      { id: 'event',         label: 'Eventos',    href: 'admin-event.html' },
-      { id: 'participation', label: 'Dashboard',  href: 'admin-participation.html' }
-    ].map(function (t) {
-      var on = t.id === activeTab;
-      return '<a href="' + t.href + '" class="admin-tab px-4 py-2 text-sm font-medium border-b-2 ' +
-        (on ? 'text-primary border-primary' : 'text-gray-400 border-transparent hover:text-primary') + '">' + esc(t.label) + '</a>';
-    }).join('');
 
-    return '' +
-      '<header class="sticky top-0 z-40" style="background:#1c1f27;border-bottom:1px solid rgba(255,255,255,0.07);">' +
-        '<div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">' +
-          '<div class="flex items-center gap-2"><span class="text-xl">🏆</span><span class="font-bold" style="color:#f0eaf2;">Panel Admin</span></div>' +
-          '<div class="flex items-center gap-3">' +
-            '<button id="admin-profile-menu" class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium" style="background:rgba(216,151,231,0.15);color:#d897e7;background-size:cover;background-position:center;">☰</button>' +
+    function navItem(id, icon, label, href) {
+      var on = activeTab === id;
+      var s = on
+        ? 'display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 14px;border-radius:12px;font-family:Poppins,sans-serif;font-size:15px;font-weight:600;cursor:pointer;text-decoration:none;color:#f4f6f9;background:linear-gradient(90deg,rgba(216,151,231,0.18),rgba(230,138,141,0.10));border:1px solid rgba(216,151,231,0.28);'
+        : 'display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 14px;border-radius:12px;font-family:Poppins,sans-serif;font-size:15px;font-weight:600;cursor:pointer;text-decoration:none;color:#8b93a3;background:transparent;border:1px solid transparent;';
+      return '<a href="' + href + '" style="' + s + '"><span style="font-size:17px;">' + icon + '</span>' + label + '</a>';
+    }
+
+    var eventBlock = events.length
+      ? '<div style="margin-top:20px;border-radius:14px;padding:16px;background:linear-gradient(155deg,rgba(216,151,231,0.14),rgba(112,207,255,0.08));border:1px solid rgba(216,151,231,0.22);">' +
+          '<div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#c9a9e0;font-weight:700;margin-bottom:10px;">Evento activo</div>' +
+          '<div style="position:relative;">' +
+            '<select id="admin-event-select" style="width:100%;height:42px;border-radius:11px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:14px;font-weight:600;padding:0 34px 0 12px;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;">' + eventOptions + '</select>' +
+            '<span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:#8b93a3;font-size:10px;">▼</span>' +
           '</div>' +
+        '</div>'
+      : '';
+
+    var sidebar =
+      '<aside style="position:fixed;top:0;left:0;bottom:0;width:248px;background:#1a1d24;border-right:1px solid #262a33;display:flex;flex-direction:column;padding:26px 18px;z-index:20;overflow-y:auto;">' +
+        '<div style="display:flex;align-items:center;gap:10px;padding:0 8px 26px;">' +
+          '<span style="font-size:28px;">🏆</span>' +
+          '<span style="font-family:Poppins,sans-serif;font-size:20px;font-weight:700;color:#f4f6f9;letter-spacing:-0.01em;">Lyfter</span>' +
         '</div>' +
-        '<nav class="max-w-4xl mx-auto px-4 flex gap-1">' + tabs + '</nav>' +
-      '</header>' +
-      '<section class="max-w-4xl mx-auto px-4 py-6">' + innerHtml + '</section>';
+        '<div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#5a6172;font-weight:700;padding:6px 12px 10px;">Admin</div>' +
+        '<nav style="display:flex;flex-direction:column;gap:4px;">' +
+          navItem('event',         '🎟️', 'Eventos',    'admin-event.html') +
+          navItem('badges',        '🏅', 'Badges',      'admin-badges.html') +
+          navItem('participation', '📊', 'Dashboard',   'admin-participation.html') +
+        '</nav>' +
+        eventBlock +
+        '<div style="margin-top:auto;padding-top:22px;">' +
+          '<button id="admin-logout" style="width:100%;height:44px;border-radius:12px;border:1px solid #353a46;background:transparent;color:#aab1bf;font-family:Poppins,sans-serif;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">↩ Salir</button>' +
+        '</div>' +
+      '</aside>';
+
+    var glows =
+      '<div style="position:fixed;top:-200px;right:-120px;width:900px;height:620px;pointer-events:none;z-index:0;background:radial-gradient(44% 60% at 30% 30%,rgba(216,151,231,0.16),transparent 70%),radial-gradient(44% 60% at 76% 40%,rgba(112,207,255,0.12),transparent 70%);"></div>';
+
+    var main =
+      '<main style="margin-left:248px;min-height:100vh;position:relative;z-index:1;padding:34px 44px 70px;background:#15171d;">' +
+        innerHtml +
+      '</main>';
+
+    return glows + sidebar + main;
   }
 
   function mountAdminShell() {
