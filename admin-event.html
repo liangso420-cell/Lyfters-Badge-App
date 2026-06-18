@@ -6,9 +6,7 @@
   <title>Eventos — Lyfter Badge App</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
@@ -22,19 +20,18 @@
   <script>
     (function () {
       'use strict';
-      var TAGS_LIST = ['Desarrollo Web','Mobile','Inteligencia Artificial','Data Science','Ciberseguridad','DevOps','Cloud','Blockchain','UX/UI','Product Management','Emprendimiento','Marketing Digital','Diseño','Videojuegos','Robótica','Fintech','Educación Tech','Open Source','Backend','Frontend'];
       var STATUS_MAP = {
-        draft:     { label: 'Borrador',             color: 'text-gray-500 border-gray-300',    bg: 'bg-gray-50' },
-        pending:   { label: 'Pendiente aprobación', color: 'text-yellow-600 border-yellow-300', bg: 'bg-yellow-50' },
-        upcoming:  { label: 'Próximo',              color: 'text-blue-600 border-blue-300',    bg: 'bg-blue-50' },
-        open:      { label: 'Abierto registro',     color: 'text-green-600 border-green-300',  bg: 'bg-green-50' },
-        closed:    { label: 'Registro cerrado',     color: 'text-orange-600 border-orange-300', bg: 'bg-orange-50' },
-        ongoing:   { label: 'En curso',             color: 'text-primary border-primary',      bg: 'bg-primary-soft' },
-        paused:    { label: 'Pausado',              color: 'text-gray-500 border-gray-300',    bg: 'bg-gray-50' },
-        finished:  { label: 'Finalizado',           color: 'text-gray-600 border-gray-300',    bg: 'bg-gray-100' },
-        cancelled: { label: 'Cancelado',            color: 'text-red-500 border-red-300',      bg: 'bg-red-50' },
-        postponed: { label: 'Pospuesto',            color: 'text-purple-600 border-purple-300', bg: 'bg-purple-50' },
-        archived:  { label: 'Archivado',            color: 'text-gray-400 border-gray-200',    bg: 'bg-gray-50' },
+        draft:     { label: 'Borrador' },
+        pending:   { label: 'Pendiente aprobación' },
+        upcoming:  { label: 'Próximo' },
+        open:      { label: 'Abierto registro' },
+        closed:    { label: 'Registro cerrado' },
+        ongoing:   { label: 'En curso' },
+        paused:    { label: 'Pausado' },
+        finished:  { label: 'Finalizado' },
+        cancelled: { label: 'Cancelado' },
+        postponed: { label: 'Pospuesto' },
+        archived:  { label: 'Archivado' },
       };
       var API = window.LyfterAPI;
       var U   = window.LyfterUtils;
@@ -52,152 +49,11 @@
         try { return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }); }
         catch(e) { return iso; }
       }
-      function isoDate(s) { return s ? s.split('T')[0] : ''; }
-
-      var expandedId = null;
-
-      function showAddBadgesStep(createdEvent) {
-        var section = document.getElementById('create-form-section');
-        if (section) {
-          section.innerHTML =
-            '<div class="bg-white rounded-card p-6 shadow-soft mb-6 anim-fade">' +
-              '<div class="flex items-center gap-3 mb-4">' +
-                '<div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-sm">✅</div>' +
-                '<div>' +
-                  '<p class="font-semibold text-gray-800">' + U.t('admin_event_created') + U.esc(createdEvent.name) + U.t('admin_event_created2') + '</p>' +
-                  '<p class="text-xs text-gray-400">' + U.t('admin_now_add_badges') + '</p>' +
-                '</div>' +
-              '</div>' +
-              '<form id="quick-badge-form" class="space-y-3" novalidate>' +
-                '<div class="grid grid-cols-1 sm:grid-cols-3 gap-2">' +
-                  '<input type="text" name="emoji" placeholder="' + U.t('admin_badge_emoji_placeholder') + '" maxlength="4" class="px-3 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
-                  '<input type="text" name="name" placeholder="' + U.t('admin_badge_name_placeholder') + '" class="px-3 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
-                  '<input type="text" name="desc" placeholder="' + U.t('admin_badge_desc_placeholder') + '" class="px-3 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
-                '</div>' +
-                '<div class="flex gap-2">' +
-                  '<button type="submit" class="px-5 py-2.5 rounded-btn text-white font-medium text-sm" style="background:#6C63FF;">' + U.t('admin_add_badge') + '</button>' +
-                  '<button type="button" id="finish-create" class="px-5 py-2.5 rounded-btn text-sm font-medium border border-gray-200 text-gray-600 hover:bg-gray-50">' + U.t('admin_finish') + '</button>' +
-                '</div>' +
-              '</form>' +
-              '<div id="quick-badge-list" class="mt-4 space-y-2"></div>' +
-            '</div>';
-
-          var quickForm = document.getElementById('quick-badge-form');
-          var badgeList = document.getElementById('quick-badge-list');
-          var addedBadges = [];
-
-          quickForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            var nameField = quickForm.elements['name'];
-            if (!nameField.value.trim()) { U.toast('Ingresa un nombre para el badge', 'error'); return; }
-            var submitBtn = quickForm.querySelector('[type="submit"]');
-            submitBtn.disabled = true; submitBtn.textContent = U.t('admin_adding');
-            try {
-              var b = await API.addBadge(createdEvent.id, {
-                name: nameField.value.trim(),
-                desc: quickForm.elements['desc'].value.trim(),
-                emoji: quickForm.elements['emoji'].value.trim() || '🏅'
-              });
-              addedBadges.push(b);
-              badgeList.innerHTML = addedBadges.map(function(badge) {
-                return '<div class="flex items-center gap-3 p-3 rounded-card bg-base">' +
-                  '<span class="text-xl">' + (badge.emoji || '🏅') + '</span>' +
-                  '<span class="text-sm font-medium text-gray-700">' + U.esc(badge.name) + '</span>' +
-                  '<span class="text-xs text-green-500 ml-auto">' + U.t('admin_added') + '</span>' +
-                '</div>';
-              }).join('');
-              quickForm.reset();
-              U.toast('Badge agregado', 'success');
-            } catch(err) { U.toast(err.message || 'Error', 'error'); }
-            submitBtn.disabled = false; submitBtn.textContent = U.t('admin_add_badge');
-          });
-
-          document.getElementById('finish-create').addEventListener('click', function() {
-            expandedId = createdEvent.id;
-            init();
-          });
-        }
-      }
 
       async function init() {
         try {
           var events = await API.listAdminEvents();
           var activeId = U.ensureActive(events);
-
-          var createForm =
-            '<div class="bg-white rounded-card shadow-soft mb-6 anim-fade overflow-hidden">' +
-              '<button type="button" id="create-toggle" class="w-full flex items-center justify-between p-6 text-left hover:bg-gray-50 transition">' +
-                '<span class="text-lg font-bold text-gray-800">+ ' + U.t('admin_create_event') + '</span>' +
-                '<span id="create-chevron" class="text-gray-400 text-xl leading-none">▸</span>' +
-              '</button>' +
-              '<div id="create-body" class="hidden px-6 pb-6">' +
-              '<p class="text-sm text-gray-400 mb-5">' + U.t('admin_create_event_desc') + '</p>' +
-              '<form id="event-form" class="space-y-4" novalidate>' +
-                U.inputField({ label: U.t('admin_event_name'), name: 'name', placeholder: 'Lyfter Summit 2026' }) +
-                '<div><label class="text-sm font-medium text-gray-600">' + U.t('admin_description') + '</label>' +
-                  '<textarea name="description" rows="2" placeholder="' + U.t('admin_description_placeholder') + '" ' +
-                  'class="w-full mt-1 px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm resize-none"></textarea></div>' +
-                '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">' +
-                  U.inputField({ label: U.t('admin_start_date'), type: 'date', name: 'start' }) +
-                  U.inputField({ label: U.t('admin_end_date'), type: 'date', name: 'end' }) +
-                '</div>' +
-                U.inputField({ label: U.t('admin_prize'), name: 'prize', placeholder: 'Entrada VIP al after-party' }) +
-                '<div>' +
-                  '<label class="text-sm font-medium text-gray-600">' + U.t('admin_location') + '</label>' +
-                  '<div class="relative mt-1">' +
-                    '<input id="location-search" type="text" placeholder="Busca el lugar del evento en Costa Rica..." ' +
-                      'class="w-full px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none" />' +
-                  '</div>' +
-                  '<div id="location-suggestions" class="border border-gray-200 rounded-btn bg-white shadow-soft mt-1 overflow-hidden"></div>' +
-                  '<div id="location-map" class="mt-2 rounded-card overflow-hidden" style="height:250px;"></div>' +
-                  '<div id="location-selected" class="mt-2 hidden">' +
-                    '<p class="text-xs text-green-600 font-medium">📍 <span id="location-address"></span></p>' +
-                    '<p class="text-xs text-gray-400">Lat: <span id="location-lat"></span> · Lng: <span id="location-lng"></span></p>' +
-                  '</div>' +
-                  '<input type="hidden" name="location" id="location-value" />' +
-                  '<input type="hidden" name="lat" id="lat-value" />' +
-                  '<input type="hidden" name="lng" id="lng-value" />' +
-                '</div>' +
-                '<div class="pt-2 border-t border-gray-100">' +
-                  '<p class="text-sm font-semibold text-gray-700 mb-3 mt-2">⚡ Bonus de XP</p>' +
-                  '<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">' +
-                    '<div><label class="text-xs font-medium text-gray-500">Bonus primer badge</label>' +
-                      '<input type="number" name="xp_first_scan" min="0" max="1000" value="5" class="w-full mt-1 px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" /></div>' +
-                    '<div><label class="text-xs font-medium text-gray-500">Bonus badge raro</label>' +
-                      '<input type="number" name="xp_rare_bonus" min="0" max="1000" value="15" class="w-full mt-1 px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" /></div>' +
-                    '<div><label class="text-xs font-medium text-gray-500">Bonus completar evento</label>' +
-                      '<input type="number" name="xp_completion_bonus" min="0" max="1000" value="50" class="w-full mt-1 px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" /></div>' +
-                  '</div>' +
-                '</div>' +
-                '<div class="pt-2 border-t border-gray-100">' +
-                  '<p class="text-sm font-semibold text-gray-700 mb-2 mt-4">' + U.t('admin_tags_title') + '</p>' +
-                  '<p class="text-xs text-gray-400 mb-3">' + U.t('admin_tags_desc') + '</p>' +
-                  '<div id="create-tags-container" class="flex flex-wrap gap-2 mb-4">' +
-                    TAGS_LIST.map(function(tag) {
-                      return '<button type="button" data-ctag="' + U.esc(tag) + '" class="ctag-btn px-3 py-1.5 rounded-full text-xs border border-gray-200 text-gray-600 hover:border-primary hover:text-primary transition">' + U.esc(tag) + '</button>';
-                    }).join('') +
-                  '</div>' +
-                  '<p class="text-sm font-semibold text-gray-700 mb-2">' + U.t('admin_badges_title') + '</p>' +
-                  '<p class="text-xs text-gray-400 mb-3">' + U.t('admin_badges_desc') + '</p>' +
-                  '<div id="create-badges-preview" class="space-y-2 mb-3"></div>' +
-                  '<div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">' +
-                    '<input type="text" id="create-badge-emoji" placeholder="' + U.t('admin_badge_emoji_placeholder') + '" maxlength="4" class="px-3 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
-                    '<input type="text" id="create-badge-name" placeholder="' + U.t('admin_badge_name_placeholder') + '" class="px-3 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
-                    '<input type="text" id="create-badge-desc" placeholder="' + U.t('admin_badge_desc_placeholder') + '" class="px-3 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
-                  '</div>' +
-                  '<div class="flex items-end gap-4 mb-2">' +
-                    '<div>' +
-                      '<label class="text-xs font-medium text-gray-500">XP por escanear</label>' +
-                      '<input type="number" id="create-badge-xp" placeholder="XP" min="1" max="500" value="10" class="w-28 mt-1 px-3 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
-                    '</div>' +
-                    '<label class="flex items-center gap-2 text-sm text-gray-700 pb-2.5"><input type="checkbox" id="create-badge-rare" class="w-4 h-4 accent-primary" /> Badge raro</label>' +
-                  '</div>' +
-                  '<button type="button" id="create-add-badge-btn" class="px-4 py-2 rounded-btn text-sm font-medium border border-primary text-primary hover:bg-primary-soft mb-4">' + U.t('admin_add_badge') + '</button>' +
-                '</div>' +
-                U.primaryButton(U.t('admin_create_btn'), 'type="submit" id="create-btn"') +
-              '</form>' +
-              '</div>' +
-            '</div>';
 
           var CARD_GRADIENTS = [
             'linear-gradient(120deg,#d897e7 0%,#e68a8d 60%,#ffcb8a 100%)',
@@ -205,309 +61,94 @@
             'linear-gradient(120deg,#ffcb8a 0%,#e68a8d 100%)',
             'linear-gradient(120deg,#abd194 0%,#70cfff 100%)',
           ];
-          var INP = 'width:100%;margin-top:4px;padding:8px 12px;font-size:13px;background:#2e323d;border:1px solid #353a46;border-radius:8px;color:#f4f6f9;outline:none;box-sizing:border-box;font-family:Manrope,sans-serif;';
-          var LBL = 'font-size:12px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;';
 
           var eventCards = events.length ? events.map(function(e, i) {
-            var isExpanded = expandedId === e.id;
-            var statusLabel = STATUS_MAP[e.status] ? STATUS_MAP[e.status].label : (e.status || 'draft');
-            var isActive = e.status === 'active';
             var grad = CARD_GRADIENTS[i % CARD_GRADIENTS.length];
-            var bgImg = e.photo ? 'background-image:url(' + e.photo + ');background-size:cover;background-position:center;' : '';
-
+            var bgImg = e.photo ? 'background-image:url(' + U.esc(e.photo) + ');background-size:cover;background-position:center;' : '';
+            var statusLabel = STATUS_MAP[e.status] ? STATUS_MAP[e.status].label : (e.status || 'draft');
             return '<div style="border-radius:16px;overflow:hidden;border:1px solid #2f343f;background:#20242d;margin-bottom:16px;" class="anim-fade">' +
-
-              // Gradient header — click to expand
-              '<div style="position:relative;height:86px;background:' + grad + ';' + bgImg + 'display:flex;align-items:flex-end;padding:12px 16px;cursor:pointer;" data-expand="' + e.id + '">' +
-                '<div style="position:absolute;inset:0;background:radial-gradient(120% 100% at 80% 0%,rgba(255,255,255,0.18),transparent 60%);opacity:.7;pointer-events:none;"></div>' +
-                (e.photo ? '<div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 20%,rgba(0,0,0,0.55));pointer-events:none;"></div>' : '') +
-                '<span style="position:absolute;top:10px;right:12px;font-size:11px;font-weight:700;background:rgba(255,255,255,0.9);padding:4px 11px;border-radius:999px;color:' + (isActive ? '#1a3a1a' : '#3a2a0a') + ';">' + statusLabel + '</span>' +
-                '<span style="position:absolute;top:10px;left:14px;font-size:24px;">🏆</span>' +
-                '<span style="position:relative;font-family:Poppins,sans-serif;font-size:17px;font-weight:700;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,0.4);">' + U.esc(e.name) + '</span>' +
-                // Hidden photo-area for JS compatibility
-                '<div id="photo-area-' + e.id + '" style="position:absolute;inset:0;opacity:0;cursor:pointer;">' +
-                  (e.photo ? '' : '<div id="photo-placeholder-' + e.id + '" style="width:100%;height:100%;"></div>') +
+              '<div style="position:relative;height:140px;background:' + grad + ';' + bgImg + '">' +
+                '<div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,rgba(0,0,0,0.6));pointer-events:none;"></div>' +
+                '<span style="position:absolute;top:12px;right:14px;font-size:11px;font-weight:700;background:rgba(255,255,255,0.9);padding:4px 11px;border-radius:999px;color:#3a1f20;">' + statusLabel + '</span>' +
+                '<div style="position:absolute;bottom:12px;left:16px;right:16px;">' +
+                  '<p style="font-family:Poppins,sans-serif;font-size:17px;font-weight:700;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,0.5);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + U.esc(e.name) + '</p>' +
+                '</div>' +
+                '<div id="photo-area-' + e.id + '" style="position:absolute;top:12px;left:14px;cursor:pointer;" title="Cambiar foto">' +
+                  '<span style="font-size:20px;background:rgba(0,0,0,0.4);border-radius:8px;padding:4px 8px;">📷</span>' +
                 '</div>' +
               '</div>' +
-
-              // Footer row
-              '<div style="padding:14px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-top:1px solid #2f343f;">' +
+              '<div style="padding:14px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
                 '<span style="font-size:12px;color:#8b93a3;font-family:Manrope,sans-serif;">📅 ' + fmtDate(e.start) + (e.end ? ' — ' + fmtDate(e.end) : '') + '</span>' +
                 (e.prize ? '<span style="font-size:12px;color:#8b93a3;font-family:Manrope,sans-serif;">🎁 ' + U.esc(e.prize) + '</span>' : '') +
                 '<div style="margin-left:auto;display:flex;gap:8px;align-items:center;">' +
-                  '<select data-status-sel="' + e.id + '" class="status-sel" style="height:32px;padding:0 8px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-size:12px;font-weight:600;outline:none;cursor:pointer;font-family:Manrope,sans-serif;">' +
+                  '<select data-status-sel="' + e.id + '" class="status-sel" style="height:32px;padding:0 8px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-size:12px;outline:none;cursor:pointer;">' +
                     Object.keys(STATUS_MAP).map(function(k) {
                       return '<option value="' + k + '"' + (e.status === k ? ' selected' : '') + '>' + STATUS_MAP[k].label + '</option>';
                     }).join('') +
                   '</select>' +
-                  '<button data-edit="' + e.id + '" class="edit-btn" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid #353a46;background:transparent;color:#cdd2db;font-size:12px;font-weight:600;cursor:pointer;font-family:Manrope,sans-serif;">✏️ Editar</button>' +
-                  '<button data-del="' + e.id + '" data-name="' + U.esc(e.name) + '" class="del-btn" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid rgba(230,138,141,0.40);background:transparent;color:#e68a8d;font-size:12px;font-weight:600;cursor:pointer;font-family:Manrope,sans-serif;">🗑</button>' +
+                  '<button data-enter="' + e.id + '" class="enter-btn" style="height:32px;padding:0 14px;border-radius:8px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-size:12px;font-weight:700;cursor:pointer;font-family:Poppins,sans-serif;">Entrar →</button>' +
+                  '<button data-del="' + e.id + '" data-name="' + U.esc(e.name) + '" class="del-btn" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid rgba(230,138,141,0.4);background:transparent;color:#e68a8d;font-size:12px;cursor:pointer;">🗑</button>' +
                 '</div>' +
               '</div>' +
-
-              // Edit form (hidden, all IDs preserved)
-              '<div id="edit-form-' + e.id + '" class="hidden" style="border-top:1px solid #2f343f;padding:20px 16px;">' +
-                '<form class="inline-edit-form" data-eid="' + e.id + '" novalidate style="display:flex;flex-direction:column;gap:12px;">' +
-                  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">' +
-                    '<div><label style="' + LBL + '">' + U.t('admin_name_label') + '</label><input type="text" name="nombre" value="' + U.esc(e.name) + '" style="' + INP + '" /></div>' +
-                    '<div><label style="' + LBL + '">' + U.t('admin_prize_label') + '</label><input type="text" name="premio" value="' + U.esc(e.prize || '') + '" style="' + INP + '" /></div>' +
-                  '</div>' +
-                  '<div><label style="' + LBL + '">' + U.t('admin_description') + '</label><input type="text" name="descripcion" value="' + U.esc(e.description || '') + '" style="' + INP + '" /></div>' +
-                  '<div><label style="' + LBL + '">Ubicación 📍</label><input type="text" name="location" value="' + U.esc(e.location || '') + '" placeholder="Ciudad, País o enlace virtual" style="' + INP + '" /></div>' +
-                  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">' +
-                    '<div><label style="' + LBL + '">Latitud 🌐</label><input type="number" step="any" name="lat" value="' + (e.lat != null ? e.lat : '') + '" placeholder="4.6097" style="' + INP + '" /></div>' +
-                    '<div><label style="' + LBL + '">Longitud 🌐</label><input type="number" step="any" name="lng" value="' + (e.lng != null ? e.lng : '') + '" placeholder="-74.0817" style="' + INP + '" /></div>' +
-                  '</div>' +
-                  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">' +
-                    '<div><label style="' + LBL + '">' + U.t('admin_inicio_label') + '</label><input type="date" name="fecha_inicio" value="' + isoDate(e.start) + '" style="' + INP + '" /></div>' +
-                    '<div><label style="' + LBL + '">' + U.t('admin_fin_label') + '</label><input type="date" name="fecha_fin" value="' + isoDate(e.end) + '" style="' + INP + '" /></div>' +
-                  '</div>' +
-                  '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">' +
-                    '<div><label style="' + LBL + '">Bonus primer badge</label><input type="number" name="xp_first_scan" min="0" max="1000" value="' + (e.xp_first_scan != null ? e.xp_first_scan : 5) + '" style="' + INP + '" /></div>' +
-                    '<div><label style="' + LBL + '">Bonus badge raro</label><input type="number" name="xp_rare_bonus" min="0" max="1000" value="' + (e.xp_rare_bonus != null ? e.xp_rare_bonus : 15) + '" style="' + INP + '" /></div>' +
-                    '<div><label style="' + LBL + '">Bonus completar evento</label><input type="number" name="xp_completion_bonus" min="0" max="1000" value="' + (e.xp_completion_bonus != null ? e.xp_completion_bonus : 50) + '" style="' + INP + '" /></div>' +
-                  '</div>' +
-                  '<div style="border-top:1px solid #2f343f;padding-top:12px;">' +
-                    '<p style="' + LBL + 'margin-bottom:8px;">' + U.t('admin_tags_label') + '</p>' +
-                    '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">' +
-                      TAGS_LIST.map(function(tag) {
-                        var isSel = (e.tags || []).indexOf(tag) !== -1;
-                        return '<button type="button" data-eitag="' + U.esc(tag) + '" ' + (isSel ? 'data-sel="1" ' : '') + 'class="inline-etag-btn" style="padding:4px 10px;border-radius:999px;font-size:12px;font-family:Manrope,sans-serif;border:1px solid ' + (isSel ? '#d897e7;background:rgba(216,151,231,0.2);color:#d897e7' : '#353a46;background:transparent;color:#8b93a3') + ';cursor:pointer;">' + U.esc(tag) + '</button>';
-                      }).join('') +
-                    '</div>' +
-                    '<p style="' + LBL + 'margin-bottom:8px;">' + U.t('admin_add_badge_label') + '</p>' +
-                    '<div style="display:flex;gap:8px;">' +
-                      '<input type="text" id="ib-emoji-' + e.id + '" placeholder="🏅" maxlength="4" style="width:52px;padding:8px;background:#2e323d;border:1px solid #353a46;border-radius:8px;color:#f4f6f9;font-size:14px;outline:none;" />' +
-                      '<input type="text" id="ib-name-' + e.id + '" placeholder="' + U.t('admin_badge_name_placeholder') + '" style="flex:1;padding:8px 12px;background:#2e323d;border:1px solid #353a46;border-radius:8px;color:#f4f6f9;font-size:13px;outline:none;font-family:Manrope,sans-serif;" />' +
-                      '<button type="button" id="ib-add-' + e.id + '" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(216,151,231,0.4);background:rgba(216,151,231,0.1);color:#d897e7;font-size:13px;font-weight:600;cursor:pointer;">➕</button>' +
-                    '</div>' +
-                  '</div>' +
-                  '<div style="display:flex;gap:8px;padding-top:8px;">' +
-                    '<button type="submit" style="padding:10px 18px;border-radius:10px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;cursor:pointer;">' + U.t('admin_save') + '</button>' +
-                    '<button type="button" class="cancel-edit" style="padding:10px 18px;border-radius:10px;border:1px solid #353a46;background:transparent;color:#8b93a3;font-family:Manrope,sans-serif;font-size:14px;font-weight:600;cursor:pointer;">' + U.t('admin_cancel') + '</button>' +
-                  '</div>' +
-                '</form>' +
-              '</div>' +
-
-              // Expanded section
-              '<div id="expanded-' + e.id + '" class="' + (isExpanded ? '' : 'hidden') + '" style="border-top:1px solid #2f343f;background:#1a1d24;padding:20px;">' +
-                '<div id="expanded-content-' + e.id + '"><div style="text-align:center;color:#8b93a3;font-size:13px;font-family:Manrope,sans-serif;padding:16px;">Cargando...</div></div>' +
-              '</div>' +
-
             '</div>';
-          }).join('') : '<p style="color:#8b93a3;font-size:14px;font-family:Manrope,sans-serif;text-align:center;padding:24px;">' + U.t('admin_no_events') + '</p>';
+          }).join('') : '<p style="color:#8b93a3;font-size:14px;text-align:center;padding:40px;">No hay eventos. Crea el primero con el botón + New</p>';
 
-          var eventListHtml =
-            '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:18px;padding:24px 28px;margin-bottom:20px;" class="anim-fade">' +
-              '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">' +
-                '<h2 style="font-family:Poppins,sans-serif;font-size:20px;font-weight:700;color:#f4f6f9;margin:0;">' + U.t('admin_events_title') + ' <span style="font-size:15px;color:#8b93a3;font-weight:500;">(' + events.length + ')</span></h2>' +
-              '</div>' +
-              '<div style="position:relative;">' +
+          var inner =
+            '<div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">' +
+              '<div style="position:relative;flex:1;">' +
                 '<span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none;">🔍</span>' +
-                '<input id="event-search" type="text" placeholder="' + U.t('admin_search_placeholder') + '" style="width:100%;height:50px;padding:0 18px 0 44px;background:#2e323d;border:1px solid #353a46;border-radius:13px;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:14px;outline:none;box-sizing:border-box;" />' +
+                '<input id="event-search" type="text" placeholder="Buscar evento..." style="width:100%;height:50px;padding:0 18px 0 44px;background:#2e323d;border:1px solid #353a46;border-radius:13px;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:14px;outline:none;box-sizing:border-box;" />' +
               '</div>' +
+              '<button id="btn-new-event" style="height:50px;padding:0 22px;border-radius:13px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:8px;">+ New</button>' +
             '</div>' +
             '<div id="events-list">' + eventCards + '</div>';
-
-          var createFormHtml = '<div id="create-form-section">' + createForm + '</div>';
-          var inner = createFormHtml + eventListHtml;
 
           app.innerHTML = U.adminShell('event', inner, events, activeId);
           U.mountAdminShell();
 
-          var locationMap = null;
-
-          function initLocationPicker() {
-            var mapDiv = document.getElementById('location-map');
-            if (!mapDiv) return;
-            mapDiv.style.display = 'block';
-
-            var map = L.map('location-map').setView([9.7489, -83.7534], 8);
-            locationMap = map;
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-              attribution: '© OpenStreetMap'
-            }).addTo(map);
-
-            var marker = null;
-
-            var searchInput = document.getElementById('location-search');
-            var searchTimeout = null;
-
-            searchInput.addEventListener('input', function() {
-              clearTimeout(searchTimeout);
-              var q = searchInput.value.trim();
-              if (q.length < 3) return;
-              searchTimeout = setTimeout(async function() {
-                try {
-                  var res = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(q + ' Costa Rica') + '&format=json&limit=5&countrycodes=cr');
-                  var results = await res.json();
-                  var suggestions = document.getElementById('location-suggestions');
-                  if (!results.length) { suggestions.innerHTML = ''; return; }
-                  suggestions.innerHTML = results.map(function(r) {
-                    return '<div class="location-suggestion px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer border-b border-gray-100">' + r.display_name + '</div>';
-                  }).join('');
-                  Array.prototype.forEach.call(suggestions.querySelectorAll('.location-suggestion'), function(el, i) {
-                    el.addEventListener('click', function() {
-                      var r = results[i];
-                      var lat = parseFloat(r.lat);
-                      var lng = parseFloat(r.lon);
-                      var address = r.display_name;
-                      map.setView([lat, lng], 15);
-                      if (marker) marker.setLatLng([lat, lng]);
-                      else marker = L.marker([lat, lng], { draggable: true }).addTo(map);
-                      marker.on('dragend', function() {
-                        var pos = marker.getLatLng();
-                        document.getElementById('lat-value').value = pos.lat;
-                        document.getElementById('lng-value').value = pos.lng;
-                        document.getElementById('location-lat').textContent = pos.lat.toFixed(6);
-                        document.getElementById('location-lng').textContent = pos.lng.toFixed(6);
-                      });
-                      document.getElementById('location-value').value = address;
-                      document.getElementById('lat-value').value = lat;
-                      document.getElementById('lng-value').value = lng;
-                      document.getElementById('location-selected').classList.remove('hidden');
-                      document.getElementById('location-address').textContent = address;
-                      document.getElementById('location-lat').textContent = lat.toFixed(6);
-                      document.getElementById('location-lng').textContent = lng.toFixed(6);
-                      searchInput.value = r.display_name.split(',')[0];
-                      suggestions.innerHTML = '';
-                    });
-                  });
-                } catch(e) {}
-              }, 500);
-            });
-
-            map.on('click', async function(e) {
-              var lat = e.latlng.lat;
-              var lng = e.latlng.lng;
-              if (marker) marker.setLatLng([lat, lng]);
-              else marker = L.marker([lat, lng], { draggable: true }).addTo(map);
-              marker.on('dragend', function() {
-                var pos = marker.getLatLng();
-                document.getElementById('lat-value').value = pos.lat;
-                document.getElementById('lng-value').value = pos.lng;
-              });
-              try {
-                var res = await fetch('https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lng + '&format=json');
-                var data = await res.json();
-                var address = data.display_name || (lat.toFixed(4) + ', ' + lng.toFixed(4));
-                document.getElementById('location-value').value = address;
-                document.getElementById('location-selected').classList.remove('hidden');
-                document.getElementById('location-address').textContent = address;
-              } catch(e) {}
-              document.getElementById('lat-value').value = lat;
-              document.getElementById('lng-value').value = lng;
-              document.getElementById('location-lat').textContent = lat.toFixed(6);
-              document.getElementById('location-lng').textContent = lng.toFixed(6);
-            });
-          }
-
-          initLocationPicker();
-
-          // Acordeón "Crear evento" — colapsado por defecto.
-          var createToggle = document.getElementById('create-toggle');
-          var createBody = document.getElementById('create-body');
-          if (createToggle && createBody) {
-            createToggle.addEventListener('click', function() {
-              var nowHidden = createBody.classList.toggle('hidden');
-              var chev = document.getElementById('create-chevron');
-              if (chev) chev.textContent = nowHidden ? '▸' : '▾';
-              // El mapa se inicializa oculto; al expandir hay que recalcular su tamaño.
-              if (!nowHidden && locationMap) {
-                setTimeout(function() { locationMap.invalidateSize(); }, 60);
-              }
-            });
-          }
-
-          var createPendingBadges = [];
-          var createSelectedTags = [];
-
-          Array.prototype.forEach.call(document.querySelectorAll('.ctag-btn'), function(btn) {
-            btn.addEventListener('click', function() {
-              var tag = btn.getAttribute('data-ctag');
-              var idx = createSelectedTags.indexOf(tag);
-              if (idx === -1) {
-                createSelectedTags.push(tag);
-                btn.style.background = '#6C63FF';
-                btn.style.color = 'white';
-                btn.style.borderColor = '#6C63FF';
-              } else {
-                createSelectedTags.splice(idx, 1);
-                btn.style.background = '';
-                btn.style.color = '';
-                btn.style.borderColor = '';
-              }
-            });
-          });
-
-          document.getElementById('create-add-badge-btn').addEventListener('click', function() {
-            var name = document.getElementById('create-badge-name').value.trim();
-            if (!name) { U.toast('Ingresa un nombre para el badge', 'error'); return; }
-            var badge = {
-              name: name,
-              desc: document.getElementById('create-badge-desc').value.trim(),
-              emoji: document.getElementById('create-badge-emoji').value.trim() || '🏅',
-              xp_value: parseInt(document.getElementById('create-badge-xp').value, 10) || 10,
-              is_rare: document.getElementById('create-badge-rare').checked
-            };
-            createPendingBadges.push(badge);
-            document.getElementById('create-badges-preview').innerHTML = createPendingBadges.map(function(b, i) {
-              var rareStyle = b.is_rare ? ' style="background:#FFD700;"' : '';
-              var nameColor = b.is_rare ? 'text-gray-900' : 'text-gray-700';
-              var metaColor = b.is_rare ? 'text-gray-700' : 'text-gray-400';
-              return '<div class="flex items-center gap-3 p-3 rounded-card' + (b.is_rare ? '' : ' bg-base') + '"' + rareStyle + '>' +
-                '<span class="text-xl">' + (b.emoji || '🏅') + '</span>' +
-                '<span class="text-sm font-medium ' + nameColor + ' flex-1">' + U.esc(b.name) +
-                  ' <span class="text-xs ' + metaColor + '">· ' + (b.xp_value || 10) + ' XP' + (b.is_rare ? ' · ⭐ raro' : '') + '</span>' +
-                '</span>' +
-                '<button type="button" data-idx="' + i + '" class="remove-badge-btn text-xs text-red-400 hover:text-red-600">✕</button>' +
-              '</div>';
-            }).join('');
-            Array.prototype.forEach.call(document.querySelectorAll('.remove-badge-btn'), function(rbtn) {
-              rbtn.addEventListener('click', function() {
-                createPendingBadges.splice(parseInt(rbtn.getAttribute('data-idx')), 1);
-                rbtn.closest('.flex').remove();
-              });
-            });
-            document.getElementById('create-badge-name').value = '';
-            document.getElementById('create-badge-desc').value = '';
-            document.getElementById('create-badge-emoji').value = '';
-            document.getElementById('create-badge-xp').value = '10';
-            document.getElementById('create-badge-rare').checked = false;
-          });
-
+          // Buscador
           var eventSearch = document.getElementById('event-search');
           if (eventSearch) {
             eventSearch.addEventListener('input', function() {
               var q = eventSearch.value.trim().toLowerCase();
-              var list = document.getElementById('events-list');
-              if (!list) return;
-              Array.prototype.forEach.call(list.children, function(card) {
-                var name = card.querySelector('.font-semibold');
+              Array.prototype.forEach.call(document.querySelectorAll('#events-list > div'), function(card) {
+                var name = card.querySelector('p');
                 if (!name) return;
-                var match = !q || name.textContent.toLowerCase().includes(q);
-                card.style.display = match ? '' : 'none';
+                card.style.display = (!q || name.textContent.toLowerCase().includes(q)) ? '' : 'none';
               });
             });
           }
 
-          // Foto del evento
+          // Botón New
+          document.getElementById('btn-new-event').addEventListener('click', function() {
+            window.location.href = 'admin-event-create.html';
+          });
+
+          // Entrar al evento
+          Array.prototype.forEach.call(document.querySelectorAll('.enter-btn'), function(btn) {
+            btn.addEventListener('click', function() {
+              window.location.href = 'admin-event-detail.html?id=' + btn.getAttribute('data-enter');
+            });
+          });
+
+          // Cambiar foto
           Array.prototype.forEach.call(document.querySelectorAll('[id^="photo-area-"]'), function(area) {
-            area.addEventListener('click', function() {
+            area.addEventListener('click', function(ev) {
+              ev.stopPropagation();
               var eid = area.id.replace('photo-area-', '');
               var input = document.createElement('input');
               input.type = 'file'; input.accept = 'image/*';
               input.onchange = function() {
                 var file = input.files[0];
                 if (!file) return;
-                if (file.size > 3 * 1024 * 1024) { U.toast('La imagen no puede superar 3MB', 'error'); return; }
+                if (file.size > 3 * 1024 * 1024) { U.toast('Máximo 3MB', 'error'); return; }
                 var reader = new FileReader();
                 reader.onload = async function(ev) {
                   try {
                     await API.updateEventPhoto(eid, ev.target.result);
                     U.toast('Foto actualizada', 'success');
                     init();
-                  } catch(err) { U.toast(err.message || 'Error al guardar foto', 'error'); }
+                  } catch(err) { U.toast(err.message || 'Error', 'error'); }
                 };
                 reader.readAsDataURL(file);
               };
@@ -515,28 +156,7 @@
             });
           });
 
-          // Expandir evento
-          Array.prototype.forEach.call(document.querySelectorAll('[data-expand]'), function(el) {
-            el.addEventListener('click', async function() {
-              var eid = el.getAttribute('data-expand');
-              var panel = document.getElementById('expanded-' + eid);
-              if (!panel) return;
-              if (expandedId === eid) {
-                expandedId = null;
-                panel.classList.add('hidden');
-                return;
-              }
-              if (expandedId) {
-                var prev = document.getElementById('expanded-' + expandedId);
-                if (prev) prev.classList.add('hidden');
-              }
-              expandedId = eid;
-              panel.classList.remove('hidden');
-              await loadEventDetail(eid);
-            });
-          });
-
-          // Estado del evento
+          // Cambiar estado
           Array.prototype.forEach.call(document.querySelectorAll('.status-sel'), function(sel) {
             sel.addEventListener('change', async function() {
               var eid = sel.getAttribute('data-status-sel');
@@ -545,94 +165,12 @@
               sel.disabled = true;
               try {
                 await API.updateEvent(eid, { status: newStatus, activo: active });
-                U.toast('Estado actualizado a "' + STATUS_MAP[newStatus].label + '"', 'success');
+                U.toast('Estado actualizado', 'success');
                 init();
               } catch(err) {
                 U.toast(err.message || 'Error', 'error');
                 sel.disabled = false;
               }
-            });
-          });
-
-          // Editar
-          Array.prototype.forEach.call(document.querySelectorAll('.edit-btn'), function(btn) {
-            btn.addEventListener('click', function() {
-              var form = document.getElementById('edit-form-' + btn.getAttribute('data-edit'));
-              if (form) form.classList.toggle('hidden');
-            });
-          });
-          Array.prototype.forEach.call(document.querySelectorAll('.cancel-edit'), function(btn) {
-            btn.addEventListener('click', function() {
-              var form = btn.closest('[id^="edit-form-"]');
-              if (form) form.classList.add('hidden');
-            });
-          });
-          Array.prototype.forEach.call(document.querySelectorAll('.inline-edit-form'), function(form) {
-            var eid = form.getAttribute('data-eid');
-            form._selectedTags = [];
-            Array.prototype.forEach.call(form.querySelectorAll('.inline-etag-btn'), function(btn) {
-              if (btn.getAttribute('data-sel')) form._selectedTags.push(btn.getAttribute('data-eitag'));
-              btn.addEventListener('click', function() {
-                var tag = btn.getAttribute('data-eitag');
-                var idx = form._selectedTags.indexOf(tag);
-                if (idx === -1) {
-                  form._selectedTags.push(tag);
-                  btn.style.background = '#6C63FF';
-                  btn.style.color = 'white';
-                  btn.style.borderColor = '#6C63FF';
-                } else {
-                  form._selectedTags.splice(idx, 1);
-                  btn.style.background = '';
-                  btn.style.color = '';
-                  btn.style.borderColor = '';
-                }
-              });
-            });
-            var addBtn = document.getElementById('ib-add-' + eid);
-            if (addBtn) {
-              addBtn.addEventListener('click', async function() {
-                var nameInput = document.getElementById('ib-name-' + eid);
-                var name = nameInput ? nameInput.value.trim() : '';
-                if (!name) { U.toast('Ingresa un nombre para el badge', 'error'); return; }
-                addBtn.disabled = true;
-                try {
-                  var emojiInput = document.getElementById('ib-emoji-' + eid);
-                  await API.addBadge(eid, {
-                    name: name,
-                    desc: '',
-                    emoji: (emojiInput ? emojiInput.value.trim() : '') || '🏅'
-                  });
-                  U.toast('Badge agregado ✅', 'success');
-                  if (nameInput) nameInput.value = '';
-                  if (emojiInput) emojiInput.value = '';
-                  if (expandedId === eid) await loadEventDetail(eid);
-                } catch(err) { U.toast(err.message || 'Error', 'error'); }
-                addBtn.disabled = false;
-              });
-            }
-            form.addEventListener('submit', async function(e) {
-              e.preventDefault();
-              var saveBtn = form.querySelector('[type="submit"]');
-              saveBtn.disabled = true; saveBtn.textContent = U.t('admin_saving');
-              try {
-                var saves = [API.updateEvent(eid, {
-                  nombre: form.elements['nombre'].value.trim(),
-                  descripcion: form.elements['descripcion'].value.trim(),
-                  premio: form.elements['premio'].value.trim(),
-                  fecha_inicio: form.elements['fecha_inicio'].value,
-                  fecha_fin: form.elements['fecha_fin'].value,
-                  location: form.elements['location'] ? form.elements['location'].value.trim() : '',
-                  xp_first_scan: parseInt(form.elements['xp_first_scan'].value, 10),
-                  xp_rare_bonus: parseInt(form.elements['xp_rare_bonus'].value, 10),
-                  xp_completion_bonus: parseInt(form.elements['xp_completion_bonus'].value, 10),
-                })];
-                if (form._selectedTags && form._selectedTags.length) saves.push(API.updateEventTags(eid, form._selectedTags));
-                var elat = form.elements['lat'] ? parseFloat(form.elements['lat'].value) : NaN;
-                var elng = form.elements['lng'] ? parseFloat(form.elements['lng'].value) : NaN;
-                if (!isNaN(elat) && !isNaN(elng)) saves.push(API.updateEventCoordinates(eid, elat, elng));
-                await Promise.all(saves);
-                U.toast('Evento actualizado ✅', 'success'); init();
-              } catch(err) { U.toast(err.message || 'Error', 'error'); saveBtn.disabled = false; saveBtn.textContent = U.t('admin_save'); }
             });
           });
 
@@ -649,54 +187,6 @@
             });
           });
 
-          // Crear evento
-          var createFormEl = document.getElementById('event-form');
-          createFormEl.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            var nameField = createFormEl.elements['name'];
-            var ok = true;
-            ok = U.setFieldError(nameField, nameField.value.trim() ? '' : 'Ingresa un nombre') && ok;
-            ok = U.setFieldError(createFormEl.start, createFormEl.start.value ? '' : 'Selecciona fecha de inicio') && ok;
-            ok = U.setFieldError(createFormEl.end, createFormEl.end.value ? '' : 'Selecciona fecha de fin') && ok;
-            if (!ok) return;
-            var btn = document.getElementById('create-btn');
-            btn.disabled = true; btn.textContent = U.t('admin_creating');
-            try {
-              var created = await API.createEvent({
-                name: nameField.value.trim(),
-                description: createFormEl.description.value.trim(),
-                start: createFormEl.start.value,
-                end: createFormEl.end.value,
-                prize: createFormEl.prize.value.trim(),
-                location: document.getElementById('location-value').value,
-                xp_first_scan: parseInt(createFormEl.elements['xp_first_scan'].value, 10),
-                xp_rare_bonus: parseInt(createFormEl.elements['xp_rare_bonus'].value, 10),
-                xp_completion_bonus: parseInt(createFormEl.elements['xp_completion_bonus'].value, 10)
-              });
-              var savePromises = [];
-              if (createSelectedTags.length) savePromises.push(API.updateEventTags(created.id, createSelectedTags));
-              for (var i = 0; i < createPendingBadges.length; i++) {
-                savePromises.push(API.addBadge(created.id, createPendingBadges[i]));
-              }
-              await Promise.all(savePromises);
-              var latVal = document.getElementById('lat-value').value;
-              var lngVal = document.getElementById('lng-value').value;
-              if (latVal && lngVal) {
-                await API.updateEventCoordinates(created.id, parseFloat(latVal), parseFloat(lngVal));
-              }
-              U.setActiveId(created.id);
-              expandedId = created.id;
-              U.toast('Evento creado ✅', 'success');
-              init();
-            } catch(err) { U.toast(err.message || 'Error', 'error'); btn.disabled = false; btn.textContent = U.t('admin_create_btn'); }
-          });
-
-          // Re-expandir si había uno expandido
-          if (expandedId) {
-            var panel = document.getElementById('expanded-' + expandedId);
-            if (panel) { panel.classList.remove('hidden'); await loadEventDetail(expandedId); }
-          }
-
         } catch(err) {
           app.innerHTML = U.errorHtml(err && err.message ? err.message : 'Error inesperado');
           var retry = document.getElementById('err-retry');
@@ -705,192 +195,7 @@
         window.scrollTo(0, 0);
       }
 
-      async function loadEventDetail(eid) {
-        var contentEl = document.getElementById('expanded-content-' + eid);
-        if (!contentEl) return;
-        try {
-          var data = await API.listAdminBadges(eid);
-          var blist = data.badges;
-
-          var accessQrHtml = '<div class="mb-5 p-4 rounded-card bg-white shadow-soft">' +
-            '<p class="text-sm font-semibold text-gray-700 mb-2">' + U.t('admin_access_qr') + '</p>' +
-            '<p class="text-xs text-gray-400 mb-3">' + U.t('admin_access_qr_desc') + '</p>' +
-            '<div id="access-qr-area-' + eid + '" class="text-center">' +
-              (data.event.access_qr
-                ? '<img src="' + data.event.access_qr + '" class="w-32 h-32 mx-auto mb-2" />' +
-                  '<button id="dl-access-qr-' + eid + '" class="px-4 py-2 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">' + U.t('admin_download') + '</button>'
-                : '<button id="gen-access-qr-' + eid + '" class="px-4 py-2 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;"' + U.t('admin_generate_qr') + '</button>') +
-            '</div>' +
-          '</div>';
-
-          var badgeItems = blist.length
-            ? blist.map(function(b) {
-                var bname = b.name || b.nombre || '';
-                var bdesc = b.desc || b.descripcion || '';
-                var bemoji = b.emoji || b.icon || '🏅';
-                var bxp = b.xp_value != null ? b.xp_value : 10;
-                var rareRowStyle = b.is_rare ? ' style="background:#FFD700;"' : '';
-                var metaColor = b.is_rare ? 'text-gray-700' : 'text-gray-400';
-                return '<div class="rounded-card bg-white mb-2 shadow-soft overflow-hidden">' +
-                  '<div class="flex items-center justify-between p-3"' + rareRowStyle + '>' +
-                    '<div class="flex items-center gap-3 flex-1 min-w-0">' +
-                      '<span class="text-2xl">' + bemoji + '</span>' +
-                      '<div class="min-w-0"><p class="font-medium text-sm text-gray-900 truncate">' + U.esc(bname) + (b.is_rare ? ' <span class="text-amber-700" title="Badge raro">⭐</span>' : '') + '</p>' +
-                      '<p class="text-xs ' + metaColor + '">' + (b.redeemed || 0) + ' ' + U.t('admin_redeem_count') + ' · ' + bxp + ' XP</p></div>' +
-                    '</div>' +
-                    '<div class="flex gap-1.5">' +
-                      '<button data-qr-b="' + b.id + '" data-qr-url="' + U.esc(b.redeemUrl || b.redeem_url || '') + '" data-qr-img="' + U.esc(b.qrImage || b.qr_image || '') + '" data-qr-name="' + U.esc(bname) + '" class="badge-qr-btn px-3 py-1.5 rounded-btn text-xs font-medium text-primary border border-primary hover:bg-primary-soft">QR</button>' +
-                      '<button data-edit-b="' + b.id + '" class="badge-edit-btn px-2.5 py-1.5 rounded-btn text-xs text-primary border border-primary hover:bg-primary-soft">✏️</button>' +
-                      '<button data-del-b="' + b.id + '" data-del-eid="' + eid + '" data-del-bname="' + U.esc(bname) + '" class="badge-del-btn px-2.5 py-1.5 rounded-btn text-xs text-red-500 border border-red-300 hover:bg-red-50">🗑</button>' +
-                    '</div>' +
-                  '</div>' +
-                  '<div id="badge-edit-' + b.id + '" class="hidden px-3 pb-3 border-t border-gray-100">' +
-                    '<form class="badge-edit-form space-y-2 mt-2" data-bid="' + b.id + '" data-eid="' + eid + '" novalidate>' +
-                      '<div class="grid grid-cols-4 gap-2">' +
-                        '<input name="icon" value="' + U.esc(bemoji) + '" maxlength="4" placeholder="🏅" class="px-2 py-2 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm text-center" />' +
-                        '<input name="name" value="' + U.esc(bname) + '" placeholder="Nombre" class="col-span-3 px-3 py-2 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
-                      '</div>' +
-                      '<input name="description" value="' + U.esc(bdesc) + '" placeholder="Descripción" class="w-full px-3 py-2 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
-                      '<div class="flex items-end gap-4">' +
-                        '<div>' +
-                          '<label class="text-xs font-medium text-gray-500">XP por escanear</label>' +
-                          '<input type="number" name="xp_value" min="1" max="500" value="' + bxp + '" placeholder="XP" class="w-24 mt-1 px-3 py-2 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
-                        '</div>' +
-                        '<label class="flex items-center gap-2 text-sm text-gray-700 pb-2"><input type="checkbox" name="is_rare" ' + (b.is_rare ? 'checked' : '') + ' class="w-4 h-4 accent-primary" /> Badge raro</label>' +
-                      '</div>' +
-                      '<div class="flex gap-2"><button type="submit" class="px-4 py-2 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">' + U.t('admin_save') + '</button>' +
-                        '<button type="button" class="badge-edit-cancel px-4 py-2 rounded-btn text-sm font-medium border border-gray-200 text-gray-600">' + U.t('admin_cancel') + '</button></div>' +
-                    '</form>' +
-                  '</div>' +
-                '</div>';
-              }).join('')
-            : '<p class="text-sm text-gray-400 text-center py-4">' + U.t('admin_no_badges') + '</p>';
-
-          contentEl.innerHTML =
-            accessQrHtml +
-            '<div class="mb-4">' +
-              '<p class="text-sm font-semibold text-gray-700 mb-3">🏅 Badges (' + blist.length + ')</p>' +
-              badgeItems +
-              '<div id="badge-qr-preview-' + eid + '"></div>' +
-            '</div>';
-
-          // Generar QR de acceso
-          var genBtn = document.getElementById('gen-access-qr-' + eid);
-          if (genBtn) {
-            genBtn.addEventListener('click', async function() {
-              genBtn.disabled = true; genBtn.textContent = U.t('admin_generating');
-              try {
-                var r = await API.generateEventAccessQr(eid);
-                var area = document.getElementById('access-qr-area-' + eid);
-                area.innerHTML = '<img src="' + r.access_qr + '" class="w-32 h-32 mx-auto mb-2" />' +
-                  '<button id="dl-access-qr-' + eid + '" class="px-4 py-2 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">' + U.t('admin_download') + '</button>';
-                document.getElementById('dl-access-qr-' + eid).addEventListener('click', function() {
-                  var a = document.createElement('a');
-                  a.href = r.access_qr; a.download = 'acceso-evento.png'; a.click();
-                });
-              } catch(err) { U.toast(err.message || 'Error', 'error'); genBtn.disabled = false; genBtn.textContent = U.t('admin_generate_qr'); }
-            });
-          }
-
-          // Descargar QR de acceso existente
-          var dlBtn = document.getElementById('dl-access-qr-' + eid);
-          if (dlBtn) {
-            dlBtn.addEventListener('click', function() {
-              var img = dlBtn.previousElementSibling;
-              if (img) { var a = document.createElement('a'); a.href = img.src; a.download = 'acceso-evento.png'; a.click(); }
-            });
-          }
-
-          // Ver QR de badge
-          Array.prototype.forEach.call(contentEl.querySelectorAll('.badge-qr-btn'), function(btn) {
-            btn.addEventListener('click', function() {
-              var preview = document.getElementById('badge-qr-preview-' + eid);
-              var qrImg = btn.getAttribute('data-qr-img');
-              var qrUrl = btn.getAttribute('data-qr-url');
-              var name  = btn.getAttribute('data-qr-name');
-              if (qrImg) {
-                preview.innerHTML = '<div class="mt-3 p-4 rounded-card text-center" style="background:#EEEDFF;">' +
-                  '<p class="text-xs font-semibold text-primary mb-2">QR — ' + U.esc(name) + '</p>' +
-                  '<img src="' + qrImg + '" class="w-32 h-32 mx-auto mb-2" />' +
-                  '<button id="dl-badge-qr" class="px-4 py-2 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">' + U.t('admin_download') + '</button>' +
-                '</div>';
-                document.getElementById('dl-badge-qr').addEventListener('click', function() {
-                  var a = document.createElement('a'); a.href = qrImg; a.download = 'badge-' + name + '.png'; a.click();
-                });
-              }
-            });
-          });
-
-          // Editar badge — abrir/cerrar form inline
-          Array.prototype.forEach.call(contentEl.querySelectorAll('.badge-edit-btn'), function(btn) {
-            btn.addEventListener('click', function() {
-              var form = document.getElementById('badge-edit-' + btn.getAttribute('data-edit-b'));
-              if (form) form.classList.toggle('hidden');
-            });
-          });
-          Array.prototype.forEach.call(contentEl.querySelectorAll('.badge-edit-cancel'), function(btn) {
-            btn.addEventListener('click', function() {
-              var box = btn.closest('[id^="badge-edit-"]');
-              if (box) box.classList.add('hidden');
-            });
-          });
-          Array.prototype.forEach.call(contentEl.querySelectorAll('.badge-edit-form'), function(form) {
-            form.addEventListener('submit', async function(e) {
-              e.preventDefault();
-              var bid = form.getAttribute('data-bid');
-              var beid = form.getAttribute('data-eid');
-              var nameVal = form.elements['name'].value.trim();
-              if (!nameVal) { U.toast('Ingresa un nombre para el badge', 'error'); return; }
-              var saveBtn = form.querySelector('[type="submit"]');
-              saveBtn.disabled = true; saveBtn.textContent = U.t('admin_saving');
-              try {
-                await API.updateBadge(beid, bid, {
-                  name: nameVal,
-                  desc: form.elements['description'].value.trim(),
-                  emoji: form.elements['icon'].value.trim() || '🏅',
-                  xp_value: parseInt(form.elements['xp_value'].value, 10) || 10,
-                  is_rare: form.elements['is_rare'].checked
-                });
-                U.toast('Badge actualizado ✅', 'success');
-                await loadEventDetail(eid);
-              } catch(err) {
-                U.toast(err.message || 'Error', 'error');
-                saveBtn.disabled = false; saveBtn.textContent = U.t('admin_save');
-              }
-            });
-          });
-
-          // Eliminar badge
-          Array.prototype.forEach.call(contentEl.querySelectorAll('.badge-del-btn'), function(btn) {
-            btn.addEventListener('click', function() {
-              U.showConfirm('¿Eliminar el badge "' + btn.getAttribute('data-del-bname') + '"?', async function() {
-                btn.disabled = true;
-                try {
-                  await API.deleteBadge(btn.getAttribute('data-del-eid'), btn.getAttribute('data-del-b'));
-                  U.toast('Badge eliminado', 'success');
-                  await loadEventDetail(eid);
-                } catch(err) { U.toast(err.message || 'Error', 'error'); btn.disabled = false; }
-              });
-            });
-          });
-
-        } catch(err) {
-          if (contentEl) contentEl.innerHTML = '<p class="text-sm text-red-400 text-center py-4">Error al cargar: ' + U.esc(err.message) + '</p>';
-        }
-      }
-
       init();
-    })();
-  </script>
-  <script>
-    (function() {
-      var glow = document.querySelector('[data-scroll-glow]');
-      if (!glow) return;
-      window.addEventListener('scroll', function() {
-        var p = Math.min(window.scrollY / (document.body.scrollHeight - window.innerHeight || 1), 1);
-        glow.style.transform = 'translateY(' + (p * 80) + 'px)';
-        glow.style.opacity = String(0.6 + p * 0.4);
-      }, { passive: true });
     })();
   </script>
 </body>

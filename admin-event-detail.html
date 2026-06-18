@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Detalle Evento — Lyfter Badge App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <main id="app"></main>
+  <div id="modal-root"></div>
+  <div id="toast-root" class="fixed top-4 left-1/2 -translate-x-1/2 z-[60] flex flex-col gap-2 items-center pointer-events-none"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      var TAGS_LIST = ['Desarrollo Web','Mobile','Inteligencia Artificial','Data Science','Ciberseguridad','DevOps','Cloud','Blockchain','UX/UI','Product Management','Emprendimiento','Marketing Digital','Diseño','Videojuegos','Robótica','Fintech','Educación Tech','Open Source','Backend','Frontend'];
+      var STATUS_MAP = {
+        draft:     { label: 'Borrador' },
+        pending:   { label: 'Pendiente aprobación' },
+        upcoming:  { label: 'Próximo' },
+        open:      { label: 'Abierto registro' },
+        closed:    { label: 'Registro cerrado' },
+        ongoing:   { label: 'En curso' },
+        paused:    { label: 'Pausado' },
+        finished:  { label: 'Finalizado' },
+        cancelled: { label: 'Cancelado' },
+        postponed: { label: 'Pospuesto' },
+        archived:  { label: 'Archivado' },
+      };
+
+      var API = window.LyfterAPI;
+      var U   = window.LyfterUtils;
+
+      var user = API.currentUser();
+      if (!user) { window.location.replace('login.html'); return; }
+      if (user.role !== 'admin') { window.location.replace('profile.html'); return; }
+
+      var params = new URLSearchParams(window.location.search);
+      var eid = params.get('id');
+      if (!eid) { window.location.replace('admin-event.html'); return; }
+
+      var app = document.getElementById('app');
+      app.innerHTML = U.loadingHtml();
+      U.showPendingToast();
+
+      var INP = 'width:100%;margin-top:4px;padding:8px 12px;font-size:13px;background:#2e323d;border:1px solid #353a46;border-radius:8px;color:#f4f6f9;outline:none;box-sizing:border-box;font-family:Manrope,sans-serif;';
+      var LBL = 'font-size:12px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;';
+      var CARD = 'background:#1c1f27;border:1px solid #2f343f;border-radius:16px;padding:24px 28px;margin-bottom:20px;';
+
+      function fmtDate(iso) {
+        if (!iso) return '—';
+        try { return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }); }
+        catch(e) { return iso; }
+      }
+      function isoDate(s) { return s ? s.split('T')[0] : ''; }
+
+      async function init() {
+        try {
+          var data = await API.listAdminBadges(eid);
+          var ev = data.event;
+          var blist = data.badges || [];
+
+          var statusLabel = STATUS_MAP[ev.status] ? STATUS_MAP[ev.status].label : (ev.status || '');
+          var CARD_GRADIENTS = [
+            'linear-gradient(120deg,#d897e7 0%,#e68a8d 60%,#ffcb8a 100%)',
+            'linear-gradient(120deg,#70cfff 0%,#abd194 100%)',
+          ];
+          var grad = CARD_GRADIENTS[0];
+          var bgImg = ev.photo ? 'background-image:url(' + U.esc(ev.photo) + ');background-size:cover;background-position:center;' : '';
+
+          // ── Cabecera del evento ──
+          var headerCard =
+            '<div style="' + CARD + 'padding:0;overflow:hidden;">' +
+              '<div style="position:relative;height:160px;background:' + grad + ';' + bgImg + '">' +
+                '<div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 20%,rgba(0,0,0,0.65));pointer-events:none;"></div>' +
+                '<span style="position:absolute;top:14px;right:16px;font-size:11px;font-weight:700;background:rgba(255,255,255,0.9);padding:4px 12px;border-radius:999px;color:#3a1f20;">' + statusLabel + '</span>' +
+                '<div id="photo-btn" style="position:absolute;top:14px;left:16px;cursor:pointer;title:Cambiar foto;">' +
+                  '<span style="font-size:20px;background:rgba(0,0,0,0.45);border-radius:8px;padding:4px 8px;">📷</span>' +
+                '</div>' +
+                '<div style="position:absolute;bottom:14px;left:20px;right:20px;">' +
+                  '<p style="font-family:Poppins,sans-serif;font-size:22px;font-weight:700;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,0.5);margin:0;">' + U.esc(ev.name) + '</p>' +
+                  '<p style="font-size:13px;color:rgba(255,255,255,0.8);font-family:Manrope,sans-serif;margin:4px 0 0;">📅 ' + fmtDate(ev.start) + (ev.end ? ' — ' + fmtDate(ev.end) : '') + (ev.prize ? '  🎁 ' + U.esc(ev.prize) : '') + '</p>' +
+                '</div>' +
+              '</div>' +
+            '</div>';
+
+          // ── QR de acceso ──
+          var qrCard =
+            '<div style="' + CARD + '">' +
+              '<p style="font-family:Poppins,sans-serif;font-size:15px;font-weight:700;color:#f4f6f9;margin:0 0 6px;">🔑 QR de acceso</p>' +
+              '<p style="font-size:12px;color:#8b93a3;font-family:Manrope,sans-serif;margin:0 0 16px;">Los asistentes escanean este QR para unirse al evento.</p>' +
+              '<div id="access-qr-area" style="display:flex;flex-direction:column;align-items:flex-start;gap:12px;">' +
+                (ev.access_qr
+                  ? '<img src="' + U.esc(ev.access_qr) + '" style="width:140px;height:140px;border-radius:10px;border:1px solid #353a46;" />' +
+                    '<button id="dl-access-qr" style="height:36px;padding:0 18px;border-radius:9px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⬇ Descargar QR</button>'
+                  : '<button id="gen-access-qr" style="height:38px;padding:0 20px;border-radius:10px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Generar QR de acceso</button>') +
+              '</div>' +
+            '</div>';
+
+          // ── Lista de badges ──
+          var badgeItems = blist.length
+            ? blist.map(function(b) {
+                var bname  = b.name || b.nombre || '';
+                var bdesc  = b.desc || b.descripcion || '';
+                var bemoji = b.emoji || b.icon || '🏅';
+                var bxp    = b.xp_value != null ? b.xp_value : 10;
+                return (
+                  '<div style="border-radius:12px;border:1px solid ' + (b.is_rare ? '#5a4a10' : '#2f343f') + ';background:' + (b.is_rare ? '#1e1a08' : '#20242d') + ';overflow:hidden;margin-bottom:10px;">' +
+                    '<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;">' +
+                      '<span style="font-size:26px;">' + bemoji + '</span>' +
+                      '<div style="flex:1;min-width:0;">' +
+                        '<p style="font-family:Manrope,sans-serif;font-size:14px;font-weight:700;color:#f4f6f9;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + U.esc(bname) + (b.is_rare ? ' <span style="color:#f5c842;" title="Badge raro">⭐</span>' : '') + '</p>' +
+                        '<p style="font-size:11px;color:#8b93a3;font-family:Manrope,sans-serif;margin:2px 0 0;">' + (b.redeemed || 0) + ' canjes · ' + bxp + ' XP</p>' +
+                      '</div>' +
+                      '<div style="display:flex;gap:6px;flex-shrink:0;">' +
+                        '<button data-qr-b="' + b.id + '" data-qr-img="' + U.esc(b.qrImage || b.qr_image || '') + '" data-qr-name="' + U.esc(bname) + '" class="badge-qr-btn" style="height:30px;padding:0 10px;border-radius:8px;border:1px solid rgba(112,207,255,0.4);background:rgba(112,207,255,0.08);color:#70cfff;font-size:12px;font-weight:600;cursor:pointer;font-family:Manrope,sans-serif;">QR</button>' +
+                        '<button data-edit-b="' + b.id + '" class="badge-edit-btn" style="height:30px;padding:0 10px;border-radius:8px;border:1px solid #353a46;background:transparent;color:#cdd2db;font-size:12px;cursor:pointer;">✏️</button>' +
+                        '<button data-del-b="' + b.id + '" data-del-bname="' + U.esc(bname) + '" class="badge-del-btn" style="height:30px;padding:0 10px;border-radius:8px;border:1px solid rgba(230,138,141,0.4);background:transparent;color:#e68a8d;font-size:12px;cursor:pointer;">🗑</button>' +
+                      '</div>' +
+                    '</div>' +
+                    // Inline edit form
+                    '<div id="badge-edit-' + b.id + '" style="display:none;border-top:1px solid #2f343f;padding:14px;">' +
+                      '<form class="badge-edit-form" data-bid="' + b.id + '" novalidate style="display:flex;flex-direction:column;gap:10px;">' +
+                        '<div style="display:grid;grid-template-columns:56px 1fr;gap:8px;">' +
+                          '<input name="icon" value="' + U.esc(bemoji) + '" maxlength="4" placeholder="🏅" style="' + INP + 'text-align:center;padding-left:4px;padding-right:4px;" />' +
+                          '<input name="name" value="' + U.esc(bname) + '" placeholder="Nombre" style="' + INP + '" />' +
+                        '</div>' +
+                        '<input name="description" value="' + U.esc(bdesc) + '" placeholder="Descripción" style="' + INP + '" />' +
+                        '<div style="display:flex;align-items:flex-end;gap:16px;">' +
+                          '<div><label style="' + LBL + '">XP por escanear</label><input type="number" name="xp_value" min="1" max="500" value="' + bxp + '" style="' + INP + 'width:90px;" /></div>' +
+                          '<label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#f4f6f9;font-family:Manrope,sans-serif;padding-bottom:2px;cursor:pointer;"><input type="checkbox" name="is_rare" ' + (b.is_rare ? 'checked' : '') + ' style="width:15px;height:15px;" /> Badge raro</label>' +
+                        '</div>' +
+                        '<div style="display:flex;gap:8px;">' +
+                          '<button type="submit" style="height:34px;padding:0 16px;border-radius:9px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Guardar</button>' +
+                          '<button type="button" class="badge-edit-cancel" style="height:34px;padding:0 14px;border-radius:9px;border:1px solid #353a46;background:transparent;color:#8b93a3;font-family:Manrope,sans-serif;font-size:13px;cursor:pointer;">Cancelar</button>' +
+                        '</div>' +
+                      '</form>' +
+                    '</div>' +
+                    // QR preview area
+                    '<div id="badge-qr-preview-' + b.id + '" style="display:none;border-top:1px solid #2f343f;padding:14px;text-align:center;"></div>' +
+                  '</div>'
+                );
+              }).join('')
+            : '<p style="color:#8b93a3;font-size:14px;font-family:Manrope,sans-serif;text-align:center;padding:24px 0;">No hay badges aún.</p>';
+
+          var badgesCard =
+            '<div style="' + CARD + '">' +
+              '<div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">' +
+                '<p style="font-family:Poppins,sans-serif;font-size:15px;font-weight:700;color:#f4f6f9;margin:0;flex:1;">🏅 Badges (' + blist.length + ')</p>' +
+              '</div>' +
+              badgeItems +
+              // Add badge inline form
+              '<div style="border-top:1px solid #2f343f;margin-top:10px;padding-top:16px;">' +
+                '<p style="font-size:12px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;margin:0 0 10px;">Agregar badge</p>' +
+                '<div style="display:flex;gap:8px;">' +
+                  '<input type="text" id="ib-emoji" placeholder="🏅" maxlength="4" style="width:52px;padding:8px;background:#2e323d;border:1px solid #353a46;border-radius:8px;color:#f4f6f9;font-size:14px;outline:none;text-align:center;" />' +
+                  '<input type="text" id="ib-name" placeholder="Nombre del badge" style="flex:1;padding:8px 12px;background:#2e323d;border:1px solid #353a46;border-radius:8px;color:#f4f6f9;font-size:13px;outline:none;font-family:Manrope,sans-serif;" />' +
+                  '<button id="ib-add" style="padding:8px 14px;border-radius:8px;border:1px solid rgba(216,151,231,0.4);background:rgba(216,151,231,0.1);color:#d897e7;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">+ Agregar</button>' +
+                '</div>' +
+              '</div>' +
+            '</div>';
+
+          // ── Formulario de edición ──
+          var selectedTags = ev.tags ? ev.tags.slice() : [];
+          var editTagsHtml = TAGS_LIST.map(function(tag) {
+            var sel = selectedTags.indexOf(tag) !== -1;
+            return '<button type="button" data-etag="' + U.esc(tag) + '" ' + (sel ? 'data-sel="1"' : '') + ' class="etag-btn" style="padding:4px 10px;border-radius:999px;font-size:12px;font-family:Manrope,sans-serif;border:1px solid ' + (sel ? 'rgba(216,151,231,0.6);background:rgba(216,151,231,0.2);color:#d897e7' : '#353a46;background:transparent;color:#8b93a3') + ';cursor:pointer;">' + U.esc(tag) + '</button>';
+          }).join('');
+
+          var editCard =
+            '<div style="' + CARD + '">' +
+              '<button id="edit-toggle" style="display:flex;align-items:center;justify-content:space-between;width:100%;background:transparent;border:none;cursor:pointer;padding:0;margin-bottom:0;">' +
+                '<p style="font-family:Poppins,sans-serif;font-size:15px;font-weight:700;color:#f4f6f9;margin:0;">✏️ Editar evento</p>' +
+                '<span id="edit-chevron" style="font-size:18px;color:#8b93a3;">▸</span>' +
+              '</button>' +
+              '<div id="edit-body" style="display:none;margin-top:18px;">' +
+                '<form id="edit-form" novalidate style="display:flex;flex-direction:column;gap:12px;">' +
+                  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">' +
+                    '<div><label style="' + LBL + '">Nombre</label><input type="text" name="nombre" value="' + U.esc(ev.name) + '" style="' + INP + '" /></div>' +
+                    '<div><label style="' + LBL + '">Premio</label><input type="text" name="premio" value="' + U.esc(ev.prize || '') + '" style="' + INP + '" /></div>' +
+                  '</div>' +
+                  '<div><label style="' + LBL + '">Descripción</label><input type="text" name="descripcion" value="' + U.esc(ev.description || '') + '" style="' + INP + '" /></div>' +
+                  '<div><label style="' + LBL + '">Ubicación 📍</label><input type="text" name="location" value="' + U.esc(ev.location || '') + '" placeholder="Ciudad, País o enlace virtual" style="' + INP + '" /></div>' +
+                  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">' +
+                    '<div><label style="' + LBL + '">Latitud 🌐</label><input type="number" step="any" name="lat" value="' + (ev.lat != null ? ev.lat : '') + '" placeholder="4.6097" style="' + INP + '" /></div>' +
+                    '<div><label style="' + LBL + '">Longitud 🌐</label><input type="number" step="any" name="lng" value="' + (ev.lng != null ? ev.lng : '') + '" placeholder="-74.0817" style="' + INP + '" /></div>' +
+                  '</div>' +
+                  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">' +
+                    '<div><label style="' + LBL + '">Fecha inicio</label><input type="date" name="fecha_inicio" value="' + isoDate(ev.start) + '" style="' + INP + '" /></div>' +
+                    '<div><label style="' + LBL + '">Fecha fin</label><input type="date" name="fecha_fin" value="' + isoDate(ev.end) + '" style="' + INP + '" /></div>' +
+                  '</div>' +
+                  '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">' +
+                    '<div><label style="' + LBL + '">Bonus primer badge</label><input type="number" name="xp_first_scan" min="0" max="1000" value="' + (ev.xp_first_scan != null ? ev.xp_first_scan : 5) + '" style="' + INP + '" /></div>' +
+                    '<div><label style="' + LBL + '">Bonus badge raro</label><input type="number" name="xp_rare_bonus" min="0" max="1000" value="' + (ev.xp_rare_bonus != null ? ev.xp_rare_bonus : 15) + '" style="' + INP + '" /></div>' +
+                    '<div><label style="' + LBL + '">Bonus completar evento</label><input type="number" name="xp_completion_bonus" min="0" max="1000" value="' + (ev.xp_completion_bonus != null ? ev.xp_completion_bonus : 50) + '" style="' + INP + '" /></div>' +
+                  '</div>' +
+                  '<div style="border-top:1px solid #2f343f;padding-top:12px;">' +
+                    '<p style="' + LBL + 'margin-bottom:8px;">Tags</p>' +
+                    '<div style="display:flex;flex-wrap:wrap;gap:6px;">' + editTagsHtml + '</div>' +
+                  '</div>' +
+                  '<div style="display:flex;gap:8px;padding-top:4px;">' +
+                    '<button type="submit" id="edit-save-btn" style="height:40px;padding:0 20px;border-radius:10px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Guardar cambios</button>' +
+                  '</div>' +
+                '</form>' +
+              '</div>' +
+            '</div>';
+
+          var inner =
+            '<div style="display:flex;align-items:center;gap:16px;margin-bottom:28px;">' +
+              '<a href="admin-event.html" style="display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 16px;border-radius:10px;border:1px solid #353a46;background:transparent;color:#8b93a3;font-family:Manrope,sans-serif;font-size:14px;font-weight:600;text-decoration:none;">← Volver</a>' +
+              '<h1 style="font-family:Poppins,sans-serif;font-size:20px;font-weight:700;color:#f4f6f9;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + U.esc(ev.name) + '</h1>' +
+            '</div>' +
+            headerCard +
+            qrCard +
+            badgesCard +
+            editCard;
+
+          app.innerHTML = U.adminShell('event', inner, [], null);
+          U.mountAdminShell();
+
+          // ── Cambiar foto ──
+          var photoBtn = document.getElementById('photo-btn');
+          if (photoBtn) {
+            photoBtn.addEventListener('click', function() {
+              var input = document.createElement('input');
+              input.type = 'file'; input.accept = 'image/*';
+              input.onchange = function() {
+                var file = input.files[0];
+                if (!file) return;
+                if (file.size > 3 * 1024 * 1024) { U.toast('Máximo 3MB', 'error'); return; }
+                var reader = new FileReader();
+                reader.onload = async function(ev2) {
+                  try {
+                    await API.updateEventPhoto(eid, ev2.target.result);
+                    U.toast('Foto actualizada', 'success');
+                    init();
+                  } catch(err) { U.toast(err.message || 'Error', 'error'); }
+                };
+                reader.readAsDataURL(file);
+              };
+              input.click();
+            });
+          }
+
+          // ── QR de acceso ──
+          var genBtn = document.getElementById('gen-access-qr');
+          if (genBtn) {
+            genBtn.addEventListener('click', async function() {
+              genBtn.disabled = true; genBtn.textContent = 'Generando...';
+              try {
+                var r = await API.generateEventAccessQr(eid);
+                var area = document.getElementById('access-qr-area');
+                area.innerHTML =
+                  '<img src="' + r.access_qr + '" style="width:140px;height:140px;border-radius:10px;border:1px solid #353a46;" />' +
+                  '<button id="dl-access-qr" style="height:36px;padding:0 18px;border-radius:9px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⬇ Descargar QR</button>';
+                document.getElementById('dl-access-qr').addEventListener('click', function() {
+                  var a = document.createElement('a'); a.href = r.access_qr; a.download = 'acceso-evento.png'; a.click();
+                });
+              } catch(err) { U.toast(err.message || 'Error', 'error'); genBtn.disabled = false; genBtn.textContent = 'Generar QR de acceso'; }
+            });
+          }
+          var dlBtn = document.getElementById('dl-access-qr');
+          if (dlBtn) {
+            dlBtn.addEventListener('click', function() {
+              var img = document.querySelector('#access-qr-area img');
+              if (img) { var a = document.createElement('a'); a.href = img.src; a.download = 'acceso-evento.png'; a.click(); }
+            });
+          }
+
+          // ── Badges: abrir/cerrar edit ──
+          Array.prototype.forEach.call(document.querySelectorAll('.badge-edit-btn'), function(btn) {
+            btn.addEventListener('click', function() {
+              var box = document.getElementById('badge-edit-' + btn.getAttribute('data-edit-b'));
+              if (box) box.style.display = box.style.display === 'none' ? 'block' : 'none';
+            });
+          });
+          Array.prototype.forEach.call(document.querySelectorAll('.badge-edit-cancel'), function(btn) {
+            btn.addEventListener('click', function() {
+              var box = btn.closest('[id^="badge-edit-"]');
+              if (box) box.style.display = 'none';
+            });
+          });
+
+          // ── Badges: guardar edición ──
+          Array.prototype.forEach.call(document.querySelectorAll('.badge-edit-form'), function(form) {
+            form.addEventListener('submit', async function(e) {
+              e.preventDefault();
+              var bid = form.getAttribute('data-bid');
+              var nameVal = form.elements['name'].value.trim();
+              if (!nameVal) { U.toast('Ingresa un nombre para el badge', 'error'); return; }
+              var saveBtn = form.querySelector('[type="submit"]');
+              saveBtn.disabled = true; saveBtn.textContent = 'Guardando...';
+              try {
+                await API.updateBadge(eid, bid, {
+                  name: nameVal,
+                  desc: form.elements['description'].value.trim(),
+                  emoji: form.elements['icon'].value.trim() || '🏅',
+                  xp_value: parseInt(form.elements['xp_value'].value, 10) || 10,
+                  is_rare: form.elements['is_rare'].checked
+                });
+                U.toast('Badge actualizado ✅', 'success');
+                init();
+              } catch(err) {
+                U.toast(err.message || 'Error', 'error');
+                saveBtn.disabled = false; saveBtn.textContent = 'Guardar';
+              }
+            });
+          });
+
+          // ── Badges: ver QR ──
+          Array.prototype.forEach.call(document.querySelectorAll('.badge-qr-btn'), function(btn) {
+            btn.addEventListener('click', function() {
+              var bid = btn.getAttribute('data-qr-b');
+              var preview = document.getElementById('badge-qr-preview-' + bid);
+              if (!preview) return;
+              if (preview.style.display !== 'none') { preview.style.display = 'none'; return; }
+              var qrImg = btn.getAttribute('data-qr-img');
+              var name  = btn.getAttribute('data-qr-name');
+              if (qrImg) {
+                preview.style.display = 'block';
+                preview.innerHTML =
+                  '<p style="font-size:12px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;margin:0 0 10px;">QR — ' + U.esc(name) + '</p>' +
+                  '<img src="' + qrImg + '" style="width:130px;height:130px;border-radius:8px;" /><br>' +
+                  '<button id="dl-badge-qr-' + bid + '" style="margin-top:10px;height:32px;padding:0 14px;border-radius:8px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-size:12px;font-weight:700;cursor:pointer;font-family:Poppins,sans-serif;">⬇ Descargar</button>';
+                document.getElementById('dl-badge-qr-' + bid).addEventListener('click', function() {
+                  var a = document.createElement('a'); a.href = qrImg; a.download = 'badge-' + name + '.png'; a.click();
+                });
+              } else {
+                U.toast('Este badge aún no tiene QR generado', 'error');
+              }
+            });
+          });
+
+          // ── Badges: eliminar ──
+          Array.prototype.forEach.call(document.querySelectorAll('.badge-del-btn'), function(btn) {
+            btn.addEventListener('click', function() {
+              var bid = btn.getAttribute('data-del-b');
+              var bname = btn.getAttribute('data-del-bname');
+              U.showConfirm('¿Eliminar el badge "' + bname + '"?', async function() {
+                btn.disabled = true;
+                try {
+                  await API.deleteBadge(eid, bid);
+                  U.toast('Badge eliminado', 'success');
+                  init();
+                } catch(err) { U.toast(err.message || 'Error', 'error'); btn.disabled = false; }
+              });
+            });
+          });
+
+          // ── Badges: agregar inline ──
+          var ibAdd = document.getElementById('ib-add');
+          if (ibAdd) {
+            ibAdd.addEventListener('click', async function() {
+              var nameInput = document.getElementById('ib-name');
+              var name = nameInput ? nameInput.value.trim() : '';
+              if (!name) { U.toast('Ingresa un nombre para el badge', 'error'); return; }
+              ibAdd.disabled = true;
+              try {
+                var emojiInput = document.getElementById('ib-emoji');
+                await API.addBadge(eid, {
+                  name: name,
+                  desc: '',
+                  emoji: (emojiInput ? emojiInput.value.trim() : '') || '🏅'
+                });
+                U.toast('Badge agregado ✅', 'success');
+                init();
+              } catch(err) { U.toast(err.message || 'Error', 'error'); ibAdd.disabled = false; }
+            });
+          }
+
+          // ── Editar evento: toggle ──
+          var editToggle = document.getElementById('edit-toggle');
+          var editBody = document.getElementById('edit-body');
+          var editChevron = document.getElementById('edit-chevron');
+          if (editToggle && editBody) {
+            editToggle.addEventListener('click', function() {
+              var open = editBody.style.display !== 'none';
+              editBody.style.display = open ? 'none' : 'block';
+              if (editChevron) editChevron.textContent = open ? '▸' : '▾';
+            });
+          }
+
+          // ── Editar evento: tags ──
+          var formSelectedTags = selectedTags.slice();
+          Array.prototype.forEach.call(document.querySelectorAll('.etag-btn'), function(btn) {
+            btn.addEventListener('click', function() {
+              var tag = btn.getAttribute('data-etag');
+              var idx = formSelectedTags.indexOf(tag);
+              if (idx === -1) {
+                formSelectedTags.push(tag);
+                btn.style.background = 'rgba(216,151,231,0.2)';
+                btn.style.color = '#d897e7';
+                btn.style.borderColor = 'rgba(216,151,231,0.6)';
+              } else {
+                formSelectedTags.splice(idx, 1);
+                btn.style.background = '';
+                btn.style.color = '#8b93a3';
+                btn.style.borderColor = '#353a46';
+              }
+            });
+          });
+
+          // ── Editar evento: submit ──
+          var editForm = document.getElementById('edit-form');
+          if (editForm) {
+            editForm.addEventListener('submit', async function(e) {
+              e.preventDefault();
+              var saveBtn = document.getElementById('edit-save-btn');
+              saveBtn.disabled = true; saveBtn.textContent = 'Guardando...';
+              try {
+                var saves = [API.updateEvent(eid, {
+                  nombre: editForm.elements['nombre'].value.trim(),
+                  descripcion: editForm.elements['descripcion'].value.trim(),
+                  premio: editForm.elements['premio'].value.trim(),
+                  fecha_inicio: editForm.elements['fecha_inicio'].value,
+                  fecha_fin: editForm.elements['fecha_fin'].value,
+                  location: editForm.elements['location'] ? editForm.elements['location'].value.trim() : '',
+                  xp_first_scan: parseInt(editForm.elements['xp_first_scan'].value, 10),
+                  xp_rare_bonus: parseInt(editForm.elements['xp_rare_bonus'].value, 10),
+                  xp_completion_bonus: parseInt(editForm.elements['xp_completion_bonus'].value, 10),
+                })];
+                if (formSelectedTags.length) saves.push(API.updateEventTags(eid, formSelectedTags));
+                var elat = parseFloat(editForm.elements['lat'].value);
+                var elng = parseFloat(editForm.elements['lng'].value);
+                if (!isNaN(elat) && !isNaN(elng)) saves.push(API.updateEventCoordinates(eid, elat, elng));
+                await Promise.all(saves);
+                U.toast('Evento actualizado ✅', 'success');
+                init();
+              } catch(err) {
+                U.toast(err.message || 'Error', 'error');
+                saveBtn.disabled = false; saveBtn.textContent = 'Guardar cambios';
+              }
+            });
+          }
+
+        } catch(err) {
+          app.innerHTML = U.errorHtml(err && err.message ? err.message : 'Error inesperado');
+          var retry = document.getElementById('err-retry');
+          if (retry) retry.addEventListener('click', init);
+        }
+        window.scrollTo(0, 0);
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>
