@@ -1,15 +1,16 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="light">
+<html lang="es" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Unirse al evento — Lyfter Badge App</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
-  <script>tailwind.config = { theme: { extend: { fontFamily: { sans: ['Poppins','sans-serif'] }, colors: { primary: '#6C63FF' }, borderRadius: { card: '16px', btn: '8px' } } } };</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
 </head>
-<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
-  <div id="app" class="bg-white rounded-card shadow-lg p-8 w-full max-w-sm text-center">
+<body class="min-h-screen flex items-center justify-center p-4">
+  <div id="app" class="rounded-card p-8 w-full max-w-sm text-center" style="background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);">
     <div class="text-4xl mb-4">🎪</div>
     <p class="text-gray-400 text-sm">Cargando...</p>
   </div>

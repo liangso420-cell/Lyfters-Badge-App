@@ -1,26 +1,12 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="light">
+<html lang="es" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Iniciar sesión — Lyfter Badge App</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: { sans: ['Poppins', 'sans-serif'] },
-          colors: { primary: '#6C63FF', 'primary-soft': '#EEEDFF', base: '#F8F9FA' },
-          borderRadius: { card: '16px', btn: '8px' },
-          boxShadow: { soft: '0 4px 20px rgba(0,0,0,0.08)' },
-        },
-      },
-    };
-  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -31,7 +17,7 @@
 </head>
 <body>
   <div class="fixed top-4 right-4 z-50">
-    <select id="lang-selector" class="px-3 py-1.5 text-xs rounded-btn border border-gray-200 bg-white text-gray-600 outline-none cursor-pointer shadow-soft">
+    <select id="lang-selector" class="px-3 py-1\.5 text-xs rounded-btn outline-none cursor-pointer" style="background:#1c1f27;border:1px solid rgba(255,255,255,0.1);color:rgba(240,234,242,0.7);">
       <option value="es">🇪🇸 ES</option>
       <option value="en">🇬🇧 EN</option>
     </select>
@@ -96,7 +82,7 @@
               U.primaryButton(U.t('enter_btn'), 'type="submit"') +
               '<div class="divider text-gray-400 text-xs my-2">' + U.t('or_continue') + '</div>' +
               '<button type="button" id="btn-google" ' +
-                'class="btn w-full border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-medium gap-2 normal-case">' +
+                'class="btn w-full font-medium gap-2 normal-case">' +
                 '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5" alt="Google" />' +
                 U.t('continue_google') +
               '</button>' +

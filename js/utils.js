@@ -425,11 +425,11 @@
     var confirmColor = opts.danger !== false ? '#ef4444' : '#6C63FF';
     var root = document.getElementById('modal-root');
     root.innerHTML =
-      '<div class="fixed inset-0 z-50 flex items-center justify-center p-6 anim-fade" style="background:rgba(17,24,39,0.75);">' +
-        '<div class="bg-white rounded-card p-6 w-full max-w-sm shadow-soft anim-pop">' +
-          '<p class="text-sm text-gray-700 leading-relaxed mb-6">' + esc(msg) + '</p>' +
+      '<div class="fixed inset-0 z-50 flex items-center justify-center p-6 anim-fade" style="background:rgba(0,0,0,0.65);">' +
+        '<div class="rounded-card p-6 w-full max-w-sm anim-pop" style="background:#1c1f27;border:1px solid rgba(255,255,255,0.08);box-shadow:0 4px 24px rgba(0,0,0,0.5);">' +
+          '<p class="text-sm leading-relaxed mb-6" style="color:rgba(240,234,242,0.85);">' + esc(msg) + '</p>' +
           '<div class="flex gap-3 justify-end">' +
-            '<button id="confirm-cancel" class="px-5 py-2.5 rounded-btn border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50">Cancelar</button>' +
+            '<button id="confirm-cancel" class="px-5 py-2.5 rounded-btn text-sm font-medium" style="border:1px solid rgba(255,255,255,0.1);color:rgba(240,234,242,0.7);background:transparent;">Cancelar</button>' +
             '<button id="confirm-ok" class="px-5 py-2.5 rounded-btn text-white text-sm font-medium" style="background:' + confirmColor + ';">' + esc(confirmLabel) + '</button>' +
           '</div>' +
         '</div>' +
@@ -446,7 +446,7 @@
   function errorHtml(msg) {
     return '<div class="device-frame px-4 pt-24 text-center">' +
       '<div class="text-3xl mb-2">⚠️</div>' +
-      '<p class="text-sm text-gray-600">' + esc(msg) + '</p>' +
+      '<p class="text-sm text-gray-400">' + esc(msg) + '</p>' +
       '<button id="err-retry" class="mt-4 px-5 py-2.5 rounded-btn text-white font-medium text-sm" style="background:#6C63FF;">Reintentar</button>' +
       '</div>';
   }
@@ -501,14 +501,15 @@
   /* ── Componentes de markup ── */
   function inputField(opts) {
     return '<div>' +
-      '<label class="text-sm font-medium text-gray-600">' + esc(opts.label) + '</label>' +
+      '<label class="text-sm font-medium text-gray-400">' + esc(opts.label) + '</label>' +
       '<input type="' + (opts.type || 'text') + '" name="' + opts.name + '" ' +
         'placeholder="' + esc(opts.placeholder || '') + '" value="' + esc(opts.value || '') + '" ' +
-        'class="w-full mt-1 px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none" />' +
+        'class="w-full mt-1 px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none" ' +
+        'style="background:#1a1d24;color:#f0eaf2;border-color:rgba(255,255,255,0.1);" />' +
       '</div>';
   }
   function primaryButton(label, attrs) {
-    return '<button ' + (attrs || '') + ' class="w-full py-3 rounded-btn text-white font-semibold" style="background:#6C63FF;">' + esc(label) + '</button>';
+    return '<button ' + (attrs || '') + ' class="w-full py-3 rounded-btn font-semibold" style="background:#6C63FF;color:#fff;">' + esc(label) + '</button>';
   }
 
   /* ----- Drawer lateral ----- */
@@ -519,53 +520,54 @@
     } catch(e) {}
     var root = document.getElementById('modal-root');
     var avatarHtml = avatarUrl
-      ? '<img src="' + avatarUrl + '" class="w-16 h-16 rounded-full object-cover border-2 border-primary" />'
-      : '<div class="w-16 h-16 rounded-full bg-primary-soft flex items-center justify-center text-3xl">👤</div>';
+      ? '<img src="' + avatarUrl + '" class="w-16 h-16 rounded-full object-cover" style="border:2px solid rgba(216,151,231,0.5);" />'
+      : '<div class="w-16 h-16 rounded-full flex items-center justify-center text-3xl" style="background:rgba(216,151,231,0.15);">👤</div>';
+    var dBtn = 'style="background:transparent;border:none;width:100%;display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1.25rem;font-size:0.875rem;color:rgba(240,234,242,0.75);text-align:left;cursor:pointer;transition:background 0.15s;"';
+    var dBtnHover = 'onmouseover="this.style.background=\'rgba(255,255,255,0.04)\'" onmouseout="this.style.background=\'transparent\'"';
 
     root.innerHTML =
-      '<div id="drawer-overlay" class="fixed inset-0 z-50 flex justify-end" style="background:rgba(17,24,39,0.5);">' +
-        '<div id="drawer-panel" class="bg-white h-full w-72 shadow-soft flex flex-col" style="transform:translateX(100%); transition:transform 0.25s ease;">' +
-          '<div class="p-5 border-b border-gray-100 flex items-center gap-3">' +
+      '<div id="drawer-overlay" class="fixed inset-0 z-50 flex justify-end" style="background:rgba(0,0,0,0.55);">' +
+        '<div id="drawer-panel" class="h-full w-72 flex flex-col" style="background:#1c1f27;border-left:1px solid rgba(255,255,255,0.07);box-shadow:-8px 0 32px rgba(0,0,0,0.4);transform:translateX(100%);transition:transform 0.25s ease;">' +
+          '<div class="p-5 flex items-center gap-3" style="border-bottom:1px solid rgba(255,255,255,0.07);">' +
             avatarHtml +
             '<div>' +
-              '<p class="font-semibold text-gray-800">' + esc(userName || 'Usuario') + '</p>' +
-              '<p class="text-xs text-gray-400">Mi cuenta</p>' +
+              '<p class="font-semibold" style="color:#f0eaf2;">' + esc(userName || 'Usuario') + '</p>' +
+              '<p class="text-xs" style="color:rgba(240,234,242,0.45);">Mi cuenta</p>' +
             '</div>' +
           '</div>' +
           '<nav class="flex-1 overflow-y-auto py-4">' +
-            '<p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-5 mb-2">Configuración</p>' +
-            '<button id="drawer-account-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left justify-between">' +
+            '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2" style="color:rgba(240,234,242,0.35);">Configuración</p>' +
+            '<button id="drawer-account-btn" ' + dBtn + ' ' + dBtnHover + ' style="background:transparent;border:none;width:100%;display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1.25rem;font-size:0.875rem;color:rgba(240,234,242,0.75);cursor:pointer;">' +
               '<div class="flex items-center gap-3">' +
-                (avatarUrl ? '<img src="' + avatarUrl + '" class="w-8 h-8 rounded-full object-cover" />' : '<div class="w-8 h-8 rounded-full bg-primary-soft flex items-center justify-center text-sm">👤</div>') +
+                (avatarUrl ? '<img src="' + avatarUrl + '" class="w-8 h-8 rounded-full object-cover" />' : '<div class="w-8 h-8 rounded-full flex items-center justify-center text-sm" style="background:rgba(216,151,231,0.15);">👤</div>') +
                 '<span>Centro de cuenta</span>' +
               '</div>' +
-              '<span class="text-gray-300">›</span>' +
+              '<span style="color:rgba(240,234,242,0.25);">›</span>' +
             '</button>' +
-            '<div class="mt-2 border-t border-gray-100 pt-2">' +
-              '<p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-5 mb-2 mt-2">Privacidad</p>' +
-              '<button id="drawer-privacy-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">🔒 <span>Configuración de privacidad</span></button>' +
+            '<div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.07);">' +
+              '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2 mt-2" style="color:rgba(240,234,242,0.35);">Privacidad</p>' +
+              '<button id="drawer-privacy-btn" ' + dBtn + ' ' + dBtnHover + '>🔒 <span>Configuración de privacidad</span></button>' +
             '</div>' +
-            '<div class="mt-2 border-t border-gray-100 pt-2">' +
-              '<p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-5 mb-2 mt-2">Apariencia</p>' +
-              '<button id="drawer-theme-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">🌙 <span>Tema oscuro/claro</span></button>' +
-              '<button id="drawer-lang-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">🌐 <span>Idioma</span></button>' +
+            '<div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.07);">' +
+              '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2 mt-2" style="color:rgba(240,234,242,0.35);">Apariencia</p>' +
+              '<button id="drawer-lang-btn" ' + dBtn + ' ' + dBtnHover + '>🌐 <span>Idioma</span></button>' +
             '</div>' +
-            '<div class="mt-2 border-t border-gray-100 pt-2">' +
-              '<p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-5 mb-2 mt-2">Información</p>' +
-              '<button id="drawer-about-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">ℹ️ <span>Acerca de la app</span></button>' +
+            '<div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.07);">' +
+              '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2 mt-2" style="color:rgba(240,234,242,0.35);">Información</p>' +
+              '<button id="drawer-about-btn" ' + dBtn + ' ' + dBtnHover + '>ℹ️ <span>Acerca de la app</span></button>' +
             '</div>' +
             (isAdmin
-              ? '<div class="mt-2 border-t border-gray-100 pt-2">' +
-                  '<p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-5 mb-2 mt-2">Administración</p>' +
-                  '<button id="drawer-users-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 text-left">👥 <span>Gestionar usuarios</span></button>' +
+              ? '<div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.07);">' +
+                  '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2 mt-2" style="color:rgba(240,234,242,0.35);">Administración</p>' +
+                  '<button id="drawer-users-btn" ' + dBtn + ' ' + dBtnHover + '>👥 <span>Gestionar usuarios</span></button>' +
                 '</div>'
               : '') +
-            '<div class="mt-2 border-t border-gray-100 pt-2">' +
-              '<button id="drawer-logout-btn" class="w-full flex items-center gap-3 px-5 py-3 text-sm text-gray-500 hover:bg-gray-50 text-left">⎋ <span>Cerrar sesión</span></button>' +
+            '<div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.07);">' +
+              '<button id="drawer-logout-btn" ' + dBtn + ' ' + dBtnHover + ' style="background:transparent;border:none;width:100%;display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1.25rem;font-size:0.875rem;color:rgba(248,113,113,0.75);cursor:pointer;">⎋ <span>Cerrar sesión</span></button>' +
             '</div>' +
           '</nav>' +
-          '<div class="p-5 border-t border-gray-100">' +
-            '<button id="drawer-close" class="w-full py-2.5 rounded-btn border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50">Cerrar</button>' +
+          '<div class="p-5" style="border-top:1px solid rgba(255,255,255,0.07);">' +
+            '<button id="drawer-close" class="w-full py-2.5 rounded-btn text-sm font-medium" style="border:1px solid rgba(255,255,255,0.1);color:rgba(240,234,242,0.6);background:transparent;">Cerrar</button>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -1077,11 +1079,11 @@
     }).join('');
 
     return '' +
-      '<header class="bg-white border-b border-gray-200 sticky top-0 z-40">' +
+      '<header class="sticky top-0 z-40" style="background:#1c1f27;border-bottom:1px solid rgba(255,255,255,0.07);">' +
         '<div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">' +
-          '<div class="flex items-center gap-2"><span class="text-xl">🏆</span><span class="font-bold text-gray-800">Panel Admin</span></div>' +
+          '<div class="flex items-center gap-2"><span class="text-xl">🏆</span><span class="font-bold" style="color:#f0eaf2;">Panel Admin</span></div>' +
           '<div class="flex items-center gap-3">' +
-            '<button id="admin-profile-menu" class="w-9 h-9 rounded-full bg-primary-soft flex items-center justify-center text-sm font-medium text-primary" style="background-size:cover;background-position:center;">☰</button>' +
+            '<button id="admin-profile-menu" class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium" style="background:rgba(216,151,231,0.15);color:#d897e7;background-size:cover;background-position:center;">☰</button>' +
           '</div>' +
         '</div>' +
         '<nav class="max-w-4xl mx-auto px-4 flex gap-1">' + tabs + '</nav>' +
@@ -1195,19 +1197,19 @@
       ? (xp.xp_for_next + ' XP para nivel ' + (xp.level + 1))
       : '¡Nivel máximo alcanzado!';
     return '' +
-      '<div class="bg-white rounded-card p-5 shadow-soft mb-4">' +
+      '<div class="rounded-card p-5 mb-4" style="background:#1c1f27;border:1px solid rgba(255,255,255,0.07);box-shadow:0 4px 24px rgba(0,0,0,0.4);">' +
         '<div class="flex items-center justify-between mb-2">' +
           '<div class="flex items-center gap-2">' +
-            '<span class="inline-flex items-center justify-center w-9 h-9 rounded-full text-white font-bold text-sm" style="background:#6C63FF;">' + xp.level + '</span>' +
-            '<div><p class="text-sm font-bold text-gray-800">' + esc(xp.level_name) + '</p>' +
-            '<p class="text-xs text-gray-400">' + xp.xp_total + ' XP totales</p></div>' +
+            '<span class="inline-flex items-center justify-center w-9 h-9 rounded-full font-bold text-sm" style="background:rgba(216,151,231,0.15);color:#d897e7;">' + xp.level + '</span>' +
+            '<div><p class="text-sm font-bold" style="color:#f0eaf2;">' + esc(xp.level_name) + '</p>' +
+            '<p class="text-xs" style="color:rgba(240,234,242,0.44);">' + xp.xp_total + ' XP totales</p></div>' +
           '</div>' +
-          '<span class="text-sm font-bold text-primary">' + pct + '%</span>' +
+          '<span class="text-sm font-bold" style="color:#d897e7;">' + pct + '%</span>' +
         '</div>' +
-        '<div class="w-full h-3 bg-gray-100 rounded-full overflow-hidden">' +
-          '<div class="h-3 rounded-full transition-all duration-700" style="width:' + pct + '%;background:linear-gradient(90deg,#6C63FF,#9C63FF);"></div>' +
+        '<div class="w-full h-3 rounded-full overflow-hidden" style="background:rgba(255,255,255,0.07);">' +
+          '<div class="h-3 rounded-full" style="width:' + pct + '%;background:linear-gradient(90deg,#6C63FF,#d897e7);transition:width 0.7s;"></div>' +
         '</div>' +
-        '<p class="text-xs text-gray-400 mt-1.5">' + nextLine + '</p>' +
+        '<p class="text-xs mt-1\.5" style="color:rgba(240,234,242,0.44);">' + nextLine + '</p>' +
       '</div>';
   }
 
@@ -1221,28 +1223,28 @@
     var cells = [];
     (data.unlocked || []).forEach(function (a) {
       var rs = RARITY_STYLES[a.rarity] || RARITY_STYLES.common;
-      cells.push('<div class="rounded-card p-3 text-center" style="background:#fff;border:1px solid ' + rs.color + '33;box-shadow:0 2px 10px ' + rs.glow + ';">' +
+      cells.push('<div class="rounded-card p-3 text-center" style="background:#21242d;border:1px solid ' + rs.color + '44;box-shadow:0 2px 10px ' + rs.glow + ';">' +
         '<div class="text-3xl">' + (a.icon || '🏅') + '</div>' +
-        '<p class="text-xs font-semibold mt-1 text-gray-700">' + esc(a.name) + '</p>' +
-        '<p class="text-[10px] mt-0.5" style="color:' + rs.color + ';">' + rs.label + '</p>' +
-        (a.unlocked_at ? '<p class="text-[10px] text-gray-300">' + fmtDate(a.unlocked_at) + '</p>' : '') +
+        '<p class="text-xs font-semibold mt-1" style="color:#f0eaf2;">' + esc(a.name) + '</p>' +
+        '<p class="text-\[10px\] mt-0\.5" style="color:' + rs.color + ';">' + rs.label + '</p>' +
+        (a.unlocked_at ? '<p class="text-\[10px\]" style="color:rgba(240,234,242,0.35);">' + fmtDate(a.unlocked_at) + '</p>' : '') +
       '</div>');
     });
     (data.locked || []).forEach(function (a) {
-      cells.push('<div class="rounded-card p-3 text-center bg-gray-100" title="' + esc(a.hint || '') + '">' +
+      cells.push('<div class="rounded-card p-3 text-center" style="background:#1a1d24;border:1px solid rgba(255,255,255,0.06);" title="' + esc(a.hint || '') + '">' +
         '<div class="text-3xl opacity-25 grayscale">' + (a.icon || '🏅') + '</div>' +
-        '<p class="text-xs text-gray-400 mt-1">' + esc(a.name) + '</p>' +
-        '<p class="text-[10px] text-gray-300">🔒</p>' +
+        '<p class="text-xs mt-1" style="color:rgba(240,234,242,0.44);">' + esc(a.name) + '</p>' +
+        '<p class="text-\[10px\]" style="color:rgba(240,234,242,0.25);">🔒</p>' +
       '</div>');
     });
     var count = (data.unlocked || []).length;
     var total = count + (data.locked || []).length;
-    return '<div class="bg-white rounded-card p-5 shadow-soft mb-4">' +
+    return '<div class="rounded-card p-5 mb-4" style="background:#1c1f27;border:1px solid rgba(255,255,255,0.07);box-shadow:0 4px 24px rgba(0,0,0,0.4);">' +
       '<div class="flex items-center justify-between mb-3">' +
-        '<h3 class="text-sm font-bold text-gray-700">🏆 Logros</h3>' +
-        '<span class="text-xs text-gray-400">' + count + '/' + total + '</span>' +
+        '<h3 class="text-sm font-bold" style="color:#f0eaf2;">🏆 Logros</h3>' +
+        '<span class="text-xs" style="color:rgba(240,234,242,0.44);">' + count + '/' + total + '</span>' +
       '</div>' +
-      '<div class="grid grid-cols-3 gap-2.5">' + cells.join('') + '</div>' +
+      '<div class="grid grid-cols-3 gap-2\.5">' + cells.join('') + '</div>' +
     '</div>';
   }
 
