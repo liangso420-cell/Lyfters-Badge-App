@@ -60,9 +60,9 @@
         app.innerHTML =
           '<section class="device-frame px-4 pt-24 text-center">' +
             '<div class="text-5xl mb-4">🔍</div>' +
-            '<p class="text-base font-semibold text-gray-700">QR no reconocido</p>' +
-            '<p class="text-sm text-gray-400 mt-2">Este enlace no contiene los datos necesarios.</p>' +
-            '<a href="profile.html" class="inline-block mt-6 px-6 py-3 rounded-btn text-white font-semibold text-sm" style="background:#6C63FF;">Ir al inicio</a>' +
+            '<p class="text-base font-semibold text-gray-700">' + U.t('redeem_not_recognized') + '</p>' +
+            '<p class="text-sm text-gray-400 mt-2">' + U.t('redeem_not_recognized_desc') + '</p>' +
+            '<a href="profile.html" class="inline-block mt-6 px-6 py-3 rounded-btn text-white font-semibold text-sm" style="background:#6C63FF;">' + U.t('redeem_go_home') + '</a>' +
           '</section>';
         return;
       }
@@ -79,7 +79,7 @@
         app.innerHTML =
           '<section class="device-frame px-4 pt-24 text-center">' +
             '<div class="text-5xl animate-pulse-badge mb-4">🏅</div>' +
-            '<p class="text-sm text-gray-500 mt-2">Canjeando badge…</p>' +
+            '<p class="text-sm text-gray-500 mt-2">' + U.t('redeem_loading') + '</p>' +
           '</section>';
       }
 
@@ -92,29 +92,29 @@
 
         var title, subtitle, iconColor;
         if (isDup) {
-          title     = '¡Ya tenías este badge!';
-          subtitle  = '"' + U.esc(badge.name) + '" ya estaba en tu colección.';
+          title     = U.t('redeem_already_have');
+          subtitle  = '"' + U.esc(badge.name) + '" ' + U.t('redeem_already_desc');
           iconColor = '#f59e0b';
         } else if (isLast) {
-          title     = '¡Completaste el evento!';
-          subtitle  = '¡Felicidades! Obtuviste todos los badges.';
+          title     = U.t('redeem_completed_event');
+          subtitle  = U.t('redeem_completed_desc');
           iconColor = '#6C63FF';
         } else {
-          title     = '¡Badge obtenido!';
+          title     = U.t('redeem_badge_obtained');
           subtitle  = U.esc(badge.desc || badge.name || '');
           iconColor = '#6C63FF';
         }
 
         var prizeBlock = (isLast && r.prize)
           ? '<div class="mt-5 p-4 rounded-card" style="background:#EEEDFF;">' +
-              '<p class="text-xs uppercase tracking-wide font-semibold text-primary">Premio desbloqueado</p>' +
+              '<p class="text-xs uppercase tracking-wide font-semibold text-primary">' + U.t('redeem_prize_unlocked') + '</p>' +
               '<p class="text-lg font-bold mt-1">' + U.esc(r.prize) + '</p>' +
             '</div>'
           : '';
 
         var progressBlock = (r.progress && !isDup)
           ? '<p class="text-sm mt-3" style="color:#9ca3af;">' +
-              r.progress.obtained + ' de ' + r.progress.total + ' badges' +
+              r.progress.obtained + ' ' + U.t('redeem_of') + ' ' + r.progress.total + ' ' + U.t('redeem_badges') +
             '</p>'
           : '';
 
@@ -126,7 +126,7 @@
               '<p class="text-sm text-gray-500 mt-2">' + subtitle + '</p>' +
               progressBlock +
               prizeBlock +
-              '<button id="redeem-profile" class="mt-6 w-full py-3 rounded-btn text-white font-semibold" style="background:#6C63FF;">Ver mi perfil</button>' +
+              '<button id="redeem-profile" class="mt-6 w-full py-3 rounded-btn text-white font-semibold" style="background:#6C63FF;">' + U.t('redeem_view_profile') + '</button>' +
             '</div>' +
           '</section>';
 
@@ -143,14 +143,14 @@
         var isInactive = lower.includes('inactivo') || lower.includes('no encontrado');
 
         var icon, heading;
-        if (isExpired)       { icon = '🔒'; heading = 'Sesión expirada'; }
-        else if (isInvalid)  { icon = '❌'; heading = 'QR inválido'; }
-        else if (isInactive) { icon = '📭'; heading = 'Evento no disponible'; }
-        else                 { icon = '⚠️'; heading = 'No se pudo canjear'; }
+        if (isExpired)       { icon = '🔒'; heading = U.t('redeem_session_expired'); }
+        else if (isInvalid)  { icon = '❌'; heading = U.t('redeem_invalid_qr'); }
+        else if (isInactive) { icon = '📭'; heading = U.t('redeem_event_unavailable'); }
+        else                 { icon = '⚠️'; heading = U.t('redeem_could_not'); }
 
         var primaryBtn = isExpired
-          ? '<button id="redeem-relogin" class="mt-6 w-full py-3 rounded-btn text-white font-semibold" style="background:#6C63FF;">Iniciar sesión de nuevo</button>'
-          : '<button id="redeem-retry" class="mt-6 w-full py-3 rounded-btn text-white font-semibold" style="background:#6C63FF;">Reintentar</button>';
+          ? '<button id="redeem-relogin" class="mt-6 w-full py-3 rounded-btn text-white font-semibold" style="background:#6C63FF;">' + U.t('redeem_login_again') + '</button>'
+          : '<button id="redeem-retry" class="mt-6 w-full py-3 rounded-btn text-white font-semibold" style="background:#6C63FF;">' + U.t('redeem_retry') + '</button>';
 
         app.innerHTML =
           '<section class="device-frame px-4 pt-12 pb-12">' +
@@ -159,7 +159,7 @@
               '<h2 class="text-xl font-bold text-gray-800">' + heading + '</h2>' +
               '<p class="text-sm text-gray-500 mt-2">' + U.esc(msg) + '</p>' +
               primaryBtn +
-              '<button id="redeem-home" class="mt-3 w-full py-3 rounded-btn font-semibold text-primary" style="background:#EEEDFF;">Ir al inicio</button>' +
+              '<button id="redeem-home" class="mt-3 w-full py-3 rounded-btn font-semibold text-primary" style="background:#EEEDFF;">' + U.t('redeem_go_home') + '</button>' +
             '</div>' +
           '</section>';
 
