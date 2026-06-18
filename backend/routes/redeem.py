@@ -6,9 +6,11 @@ from bson import ObjectId
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
-from db import events, badges, scans
+from db import users, events, badges, scans
 from utils import valid_oid, haversine
 from security.limiter import redeem_limit
+from services.xp import award_xp, compute_level
+from services.achievements import check_and_unlock
 
 redeem_bp = Blueprint("redeem", __name__)
 
@@ -64,6 +66,25 @@ def redeem_badge(event_id, token):
     user_scns  = scans().count_documents({"user_id": user_oid, "event_id": oid_event, "badge_id": {"$exists": True}})
     completado = user_scns >= total_b
 
+    # ── XP y logros ────────────────────────────────────────
+    # Solo se otorga XP / se evalúan logros en scans NUEVOS (no duplicados).
+    if not already:
+        # recién insertado: si ahora tiene 1 scan en el evento, es el primero
+        is_first_scan = (user_scns == 1)
+        is_completion = completado
+        xp_result = award_xp(user_oid, badge, event, is_first_scan, is_completion)
+        new_achievements = check_and_unlock(user_oid, oid_event)
+    else:
+        u = users().find_one({"_id": user_oid}, {"xp_total": 1})
+        xp_total = int((u or {}).get("xp_total", 0))
+        xp_result = {
+            "xp_gained": 0,
+            "xp_total":  xp_total,
+            "level":     compute_level(xp_total),
+            "level_up":  False,
+        }
+        new_achievements = []
+
     return jsonify({
         "status":     "duplicado" if already else "ok",
         "badge": {
@@ -74,4 +95,10 @@ def redeem_badge(event_id, token):
         "completado": completado,
         "premio":     event.get("prize") if completado else None,
         "progreso":   {"obtenidos": user_scns, "total": total_b},
+        # Campos del sistema de XP
+        "xp_gained":             xp_result["xp_gained"],
+        "xp_total":              xp_result["xp_total"],
+        "level":                 xp_result["level"],
+        "level_up":              xp_result["level_up"],
+        "achievements_unlocked": new_achievements,
     }), 200
