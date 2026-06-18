@@ -199,6 +199,10 @@
                     '<input type="text" id="create-badge-name" placeholder="' + U.t('admin_badge_name_placeholder') + '" class="px-3 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
                     '<input type="text" id="create-badge-desc" placeholder="' + U.t('admin_badge_desc_placeholder') + '" class="px-3 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
                   '</div>' +
+                  '<div class="flex items-center gap-4 mb-2">' +
+                    '<input type="number" id="create-badge-xp" placeholder="XP" min="1" max="500" value="10" class="w-24 px-3 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
+                    '<label class="flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" id="create-badge-rare" class="w-4 h-4 accent-primary" /> Raro</label>' +
+                  '</div>' +
                   '<button type="button" id="create-add-badge-btn" class="px-4 py-2 rounded-btn text-sm font-medium border border-primary text-primary hover:bg-primary-soft mb-4">' + U.t('admin_add_badge') + '</button>' +
                 '</div>' +
                 U.primaryButton(U.t('admin_create_btn'), 'type="submit" id="create-btn"') +
@@ -409,13 +413,17 @@
             var badge = {
               name: name,
               desc: document.getElementById('create-badge-desc').value.trim(),
-              emoji: document.getElementById('create-badge-emoji').value.trim() || '🏅'
+              emoji: document.getElementById('create-badge-emoji').value.trim() || '🏅',
+              xp_value: parseInt(document.getElementById('create-badge-xp').value, 10) || 10,
+              is_rare: document.getElementById('create-badge-rare').checked
             };
             createPendingBadges.push(badge);
             document.getElementById('create-badges-preview').innerHTML = createPendingBadges.map(function(b, i) {
               return '<div class="flex items-center gap-3 p-3 rounded-card bg-base">' +
                 '<span class="text-xl">' + (b.emoji || '🏅') + '</span>' +
-                '<span class="text-sm font-medium text-gray-700 flex-1">' + U.esc(b.name) + '</span>' +
+                '<span class="text-sm font-medium text-gray-700 flex-1">' + U.esc(b.name) +
+                  ' <span class="text-xs text-gray-400">· ' + (b.xp_value || 10) + ' XP' + (b.is_rare ? ' · ⭐ raro' : '') + '</span>' +
+                '</span>' +
                 '<button type="button" data-idx="' + i + '" class="remove-badge-btn text-xs text-red-400 hover:text-red-600">✕</button>' +
               '</div>';
             }).join('');
@@ -428,6 +436,8 @@
             document.getElementById('create-badge-name').value = '';
             document.getElementById('create-badge-desc').value = '';
             document.getElementById('create-badge-emoji').value = '';
+            document.getElementById('create-badge-xp').value = '10';
+            document.getElementById('create-badge-rare').checked = false;
           });
 
           var eventSearch = document.getElementById('event-search');
@@ -679,15 +689,37 @@
 
           var badgeItems = blist.length
             ? blist.map(function(b) {
-                return '<div class="flex items-center justify-between p-3 rounded-card bg-white mb-2 shadow-soft">' +
-                  '<div class="flex items-center gap-3 flex-1 min-w-0">' +
-                    '<span class="text-2xl">' + (b.emoji || b.icon || '🏅') + '</span>' +
-                    '<div><p class="font-medium text-sm text-gray-800 truncate">' + U.esc(b.name || b.nombre) + '</p>' +
-                    '<p class="text-xs text-gray-400">' + (b.redeemed || 0) + ' ' + U.t('admin_redeem_count') + '</p></div>' +
+                var bname = b.name || b.nombre || '';
+                var bdesc = b.desc || b.descripcion || '';
+                var bemoji = b.emoji || b.icon || '🏅';
+                var bxp = b.xp_value != null ? b.xp_value : 10;
+                return '<div class="rounded-card bg-white mb-2 shadow-soft overflow-hidden">' +
+                  '<div class="flex items-center justify-between p-3">' +
+                    '<div class="flex items-center gap-3 flex-1 min-w-0">' +
+                      '<span class="text-2xl">' + bemoji + '</span>' +
+                      '<div class="min-w-0"><p class="font-medium text-sm text-gray-800 truncate">' + U.esc(bname) + (b.is_rare ? ' <span class="text-amber-500" title="Raro">⭐</span>' : '') + '</p>' +
+                      '<p class="text-xs text-gray-400">' + (b.redeemed || 0) + ' ' + U.t('admin_redeem_count') + ' · ' + bxp + ' XP</p></div>' +
+                    '</div>' +
+                    '<div class="flex gap-1.5">' +
+                      '<button data-qr-b="' + b.id + '" data-qr-url="' + U.esc(b.redeemUrl || b.redeem_url || '') + '" data-qr-img="' + U.esc(b.qrImage || b.qr_image || '') + '" data-qr-name="' + U.esc(bname) + '" class="badge-qr-btn px-3 py-1.5 rounded-btn text-xs font-medium text-primary border border-primary hover:bg-primary-soft">QR</button>' +
+                      '<button data-edit-b="' + b.id + '" class="badge-edit-btn px-2.5 py-1.5 rounded-btn text-xs text-primary border border-primary hover:bg-primary-soft">✏️</button>' +
+                      '<button data-del-b="' + b.id + '" data-del-eid="' + eid + '" data-del-bname="' + U.esc(bname) + '" class="badge-del-btn px-2.5 py-1.5 rounded-btn text-xs text-red-500 border border-red-300 hover:bg-red-50">🗑</button>' +
+                    '</div>' +
                   '</div>' +
-                  '<div class="flex gap-1.5">' +
-                    '<button data-qr-b="' + b.id + '" data-qr-url="' + U.esc(b.redeemUrl || b.redeem_url || '') + '" data-qr-img="' + U.esc(b.qrImage || b.qr_image || '') + '" data-qr-name="' + U.esc(b.name || b.nombre) + '" class="badge-qr-btn px-3 py-1.5 rounded-btn text-xs font-medium text-primary border border-primary hover:bg-primary-soft">QR</button>' +
-                    '<button data-del-b="' + b.id + '" data-del-eid="' + eid + '" data-del-bname="' + U.esc(b.name || b.nombre) + '" class="badge-del-btn px-2.5 py-1.5 rounded-btn text-xs text-red-500 border border-red-300 hover:bg-red-50">🗑</button>' +
+                  '<div id="badge-edit-' + b.id + '" class="hidden px-3 pb-3 border-t border-gray-100">' +
+                    '<form class="badge-edit-form space-y-2 mt-2" data-bid="' + b.id + '" data-eid="' + eid + '" novalidate>' +
+                      '<div class="grid grid-cols-4 gap-2">' +
+                        '<input name="icon" value="' + U.esc(bemoji) + '" maxlength="4" placeholder="🏅" class="px-2 py-2 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm text-center" />' +
+                        '<input name="name" value="' + U.esc(bname) + '" placeholder="Nombre" class="col-span-3 px-3 py-2 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
+                      '</div>' +
+                      '<input name="description" value="' + U.esc(bdesc) + '" placeholder="Descripción" class="w-full px-3 py-2 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
+                      '<div class="flex items-center gap-4">' +
+                        '<input type="number" name="xp_value" min="1" max="500" value="' + bxp + '" placeholder="XP" class="w-24 px-3 py-2 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
+                        '<label class="flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" name="is_rare" ' + (b.is_rare ? 'checked' : '') + ' class="w-4 h-4 accent-primary" /> Raro</label>' +
+                      '</div>' +
+                      '<div class="flex gap-2"><button type="submit" class="px-4 py-2 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">' + U.t('admin_save') + '</button>' +
+                        '<button type="button" class="badge-edit-cancel px-4 py-2 rounded-btn text-sm font-medium border border-gray-200 text-gray-600">' + U.t('admin_cancel') + '</button></div>' +
+                    '</form>' +
                   '</div>' +
                 '</div>';
               }).join('')
@@ -744,6 +776,45 @@
                 document.getElementById('dl-badge-qr').addEventListener('click', function() {
                   var a = document.createElement('a'); a.href = qrImg; a.download = 'badge-' + name + '.png'; a.click();
                 });
+              }
+            });
+          });
+
+          // Editar badge — abrir/cerrar form inline
+          Array.prototype.forEach.call(contentEl.querySelectorAll('.badge-edit-btn'), function(btn) {
+            btn.addEventListener('click', function() {
+              var form = document.getElementById('badge-edit-' + btn.getAttribute('data-edit-b'));
+              if (form) form.classList.toggle('hidden');
+            });
+          });
+          Array.prototype.forEach.call(contentEl.querySelectorAll('.badge-edit-cancel'), function(btn) {
+            btn.addEventListener('click', function() {
+              var box = btn.closest('[id^="badge-edit-"]');
+              if (box) box.classList.add('hidden');
+            });
+          });
+          Array.prototype.forEach.call(contentEl.querySelectorAll('.badge-edit-form'), function(form) {
+            form.addEventListener('submit', async function(e) {
+              e.preventDefault();
+              var bid = form.getAttribute('data-bid');
+              var beid = form.getAttribute('data-eid');
+              var nameVal = form.elements['name'].value.trim();
+              if (!nameVal) { U.toast('Ingresa un nombre para el badge', 'error'); return; }
+              var saveBtn = form.querySelector('[type="submit"]');
+              saveBtn.disabled = true; saveBtn.textContent = U.t('admin_saving');
+              try {
+                await API.updateBadge(beid, bid, {
+                  name: nameVal,
+                  desc: form.elements['description'].value.trim(),
+                  emoji: form.elements['icon'].value.trim() || '🏅',
+                  xp_value: parseInt(form.elements['xp_value'].value, 10) || 10,
+                  is_rare: form.elements['is_rare'].checked
+                });
+                U.toast('Badge actualizado ✅', 'success');
+                await loadEventDetail(eid);
+              } catch(err) {
+                U.toast(err.message || 'Error', 'error');
+                saveBtn.disabled = false; saveBtn.textContent = U.t('admin_save');
               }
             });
           });

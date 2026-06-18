@@ -393,6 +393,52 @@ def create_badge(event_id):
     }), 201
 
 
+@admin_bp.route("/events/<event_id>/badges/<badge_id>", methods=["PATCH"])
+@jwt_required()
+def update_badge(event_id, badge_id):
+    if not require_admin():
+        return jsonify(error="Acceso denegado"), 403
+
+    oid = valid_oid(badge_id)
+    if not oid:
+        return jsonify(error="ID inválido"), 400
+
+    badge = badges().find_one({"_id": oid})
+    if not badge:
+        return jsonify(error="Badge no encontrado"), 404
+
+    data    = request.get_json() or {}
+    updates = {}
+    if "nombre"      in data: updates["name"]        = sanitize(data["nombre"], max_len=100)
+    if "name"        in data: updates["name"]        = sanitize(data["name"], max_len=100)
+    if "descripcion" in data: updates["description"] = sanitize(data["descripcion"], max_len=500)
+    if "description" in data: updates["description"] = sanitize(data["description"], max_len=500)
+    if "icon"        in data: updates["icon"]        = sanitize(data["icon"] or "🏅", max_len=10)
+
+    if "xp_value" in data:
+        xp_value, err = _parse_int_in_range(data["xp_value"], 1, 500, "xp_value")
+        if err:
+            return jsonify(error=err), 400
+        if xp_value is not None:
+            updates["xp_value"] = xp_value
+    if "is_rare" in data:
+        updates["is_rare"] = bool(data["is_rare"])
+
+    # El nombre no puede quedar vacío si se envió.
+    if "name" in updates and not updates["name"]:
+        return jsonify(error="El nombre del badge es requerido"), 400
+
+    if not updates:
+        return jsonify(error="Nada que actualizar"), 400
+
+    badges().update_one({"_id": oid}, {"$set": updates})
+
+    base_url  = os.getenv("APP_BASE_URL", "http://localhost:5500")
+    updated   = badges().find_one({"_id": oid})
+    canjeados = scans().count_documents({"badge_id": oid})
+    return jsonify(fmt_admin_badge(updated, canjeados=canjeados, base_url=base_url)), 200
+
+
 @admin_bp.route("/events/<event_id>/badges/<badge_id>", methods=["DELETE"])
 @jwt_required()
 def delete_badge(event_id, badge_id):
