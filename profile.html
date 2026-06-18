@@ -272,6 +272,7 @@
             eventSection =
               '<div class="bg-white rounded-card p-8 shadow-soft text-center mb-4">' +
                 '<div class="text-5xl mb-4">🎫</div>' +
+                '<canvas id="duck-surprised" style="width:120px;height:120px;margin:0 auto 8px;display:block;"></canvas>' +
                 '<h3 class="font-bold text-gray-800 mb-2">' + U.t('no_event_title') + '</h3>' +
                 '<p class="text-sm text-gray-400 mb-2">' + U.t('no_event_desc') + '</p>' +
                 '<p class="text-xs text-gray-300 mb-5">' + U.t('no_event_sub') + '</p>' +
@@ -374,6 +375,17 @@
           } else {
             var exploreBtn = document.getElementById('btn-explore');
             if (exploreBtn) exploreBtn.addEventListener('click', function() { window.location.href = 'events.html'; });
+            import('https://cdn.jsdelivr.net/npm/@lottiefiles/dotlottie-web/dist/dotlottie-web.browser.es2022.js').then(function(m) {
+              var canvas = document.getElementById('duck-surprised');
+              if (canvas) {
+                new m.DotLottie({
+                  autoplay: true,
+                  loop: true,
+                  canvas: canvas,
+                  src: 'surprised.lottie'
+                });
+              }
+            });
           }
 
         } catch (err) {
