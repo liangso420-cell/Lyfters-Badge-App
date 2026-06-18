@@ -27,6 +27,15 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 </head>
 <body>
+  <div class="fixed top-4 right-4 z-50">
+    <select id="lang-selector" class="px-3 py-1.5 text-xs rounded-btn border border-gray-200 bg-white text-gray-600 outline-none cursor-pointer shadow-soft">
+      <option value="es">🇪🇸 ES</option>
+      <option value="en">🇬🇧 EN</option>
+      <option value="pt">🇧🇷 PT</option>
+      <option value="fr">🇫🇷 FR</option>
+      <option value="de">🇩🇪 DE</option>
+    </select>
+  </div>
   <main id="app"></main>
   <div id="modal-root"></div>
   <div id="toast-root" class="fixed top-4 left-1/2 -translate-x-1/2 z-[60] flex flex-col gap-2 items-center pointer-events-none"></div>
@@ -39,6 +48,13 @@
       'use strict';
       var API = window.LyfterAPI;
       var U = window.LyfterUtils;
+
+      var langSel = document.getElementById('lang-selector');
+      try { langSel.value = localStorage.getItem('lyfter_lang') || 'es'; } catch(e) {}
+      langSel.addEventListener('change', function() {
+        U.setLang(langSel.value);
+        location.reload();
+      });
 
       var user = API.currentUser();
       if (user) { window.location.replace(user.role === 'admin' ? 'admin-event.html' : 'profile.html'); return; }
