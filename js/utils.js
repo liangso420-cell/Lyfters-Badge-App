@@ -4,6 +4,155 @@
 (function () {
   'use strict';
 
+  var _i18nLang = 'es';
+  var _i18nData = {};
+  try { _i18nLang = localStorage.getItem('lyfter_lang') || 'es'; } catch(e) {}
+
+  var _i18nStrings = {
+    es: {
+      greeting: 'Hola',
+      events_btn: '🎪 Eventos',
+      no_event_title: 'Aún no estás en ningún evento',
+      no_event_desc: 'Escanea el QR de un evento para unirte y empezar a coleccionar badges.',
+      no_event_sub: 'O explora los eventos disponibles para encontrar uno que te interese.',
+      explore_events: '🎪 Explorar eventos',
+      scan_qr: '📷 Escanear QR',
+      active_event: 'Evento activo',
+      your_progress: 'Tu progreso',
+      badges_of: 'badges obtenidos',
+      my_badges: 'Mis badges',
+      leaderboard: 'Clasificación',
+      scan_first: '¡Escanea tu primer QR para empezar!',
+      prize_unlocked: '🎁 Premio desbloqueado',
+      complete_badges: '🎁 Completa los',
+      complete_badges2: 'badges para revelar el',
+      surprise_prize: 'premio sorpresa',
+      congrats: '¡Felicidades,',
+      completed_event: '¡Completaste el evento!',
+      completed_badges_of: 'Completaste todos los badges de',
+      my_badges_obtained: 'Mis badges obtenidos',
+      loading: 'Cargando...',
+      no_data: 'Sin datos todavía.',
+      load_error: 'No se pudo cargar.'
+    },
+    en: {
+      greeting: 'Hello',
+      events_btn: '🎪 Events',
+      no_event_title: "You're not in any event yet",
+      no_event_desc: 'Scan an event QR to join and start collecting badges.',
+      no_event_sub: 'Or explore available events to find one that interests you.',
+      explore_events: '🎪 Explore events',
+      scan_qr: '📷 Scan QR',
+      active_event: 'Active event',
+      your_progress: 'Your progress',
+      badges_of: 'badges obtained',
+      my_badges: 'My badges',
+      leaderboard: 'Leaderboard',
+      scan_first: 'Scan your first QR to get started!',
+      prize_unlocked: '🎁 Prize unlocked',
+      complete_badges: '🎁 Complete',
+      complete_badges2: 'badges to reveal the',
+      surprise_prize: 'surprise prize',
+      congrats: 'Congratulations,',
+      completed_event: 'You completed the event!',
+      completed_badges_of: 'You completed all badges of',
+      my_badges_obtained: 'My obtained badges',
+      loading: 'Loading...',
+      no_data: 'No data yet.',
+      load_error: 'Could not load.'
+    },
+    pt: {
+      greeting: 'Olá',
+      events_btn: '🎪 Eventos',
+      no_event_title: 'Você ainda não está em nenhum evento',
+      no_event_desc: 'Escaneie o QR de um evento para participar e começar a colecionar badges.',
+      no_event_sub: 'Ou explore os eventos disponíveis para encontrar um que te interesse.',
+      explore_events: '🎪 Explorar eventos',
+      scan_qr: '📷 Escanear QR',
+      active_event: 'Evento ativo',
+      your_progress: 'Seu progresso',
+      badges_of: 'badges obtidos',
+      my_badges: 'Meus badges',
+      leaderboard: 'Classificação',
+      scan_first: 'Escaneie seu primeiro QR para começar!',
+      prize_unlocked: '🎁 Prêmio desbloqueado',
+      complete_badges: '🎁 Complete',
+      complete_badges2: 'badges para revelar o',
+      surprise_prize: 'prêmio surpresa',
+      congrats: 'Parabéns,',
+      completed_event: 'Você completou o evento!',
+      completed_badges_of: 'Você completou todos os badges de',
+      my_badges_obtained: 'Meus badges obtidos',
+      loading: 'Carregando...',
+      no_data: 'Sem dados ainda.',
+      load_error: 'Não foi possível carregar.'
+    },
+    fr: {
+      greeting: 'Bonjour',
+      events_btn: '🎪 Événements',
+      no_event_title: "Vous n'êtes encore dans aucun événement",
+      no_event_desc: "Scannez le QR d'un événement pour rejoindre et commencer à collecter des badges.",
+      no_event_sub: 'Ou explorez les événements disponibles pour en trouver un qui vous intéresse.',
+      explore_events: '🎪 Explorer les événements',
+      scan_qr: '📷 Scanner QR',
+      active_event: 'Événement actif',
+      your_progress: 'Votre progression',
+      badges_of: 'badges obtenus',
+      my_badges: 'Mes badges',
+      leaderboard: 'Classement',
+      scan_first: 'Scannez votre premier QR pour commencer!',
+      prize_unlocked: '🎁 Prix débloqué',
+      complete_badges: '🎁 Complétez',
+      complete_badges2: 'badges pour révéler le',
+      surprise_prize: 'prix surprise',
+      congrats: 'Félicitations,',
+      completed_event: "Vous avez complété l'événement!",
+      completed_badges_of: 'Vous avez complété tous les badges de',
+      my_badges_obtained: 'Mes badges obtenus',
+      loading: 'Chargement...',
+      no_data: 'Pas encore de données.',
+      load_error: 'Impossible de charger.'
+    },
+    de: {
+      greeting: 'Hallo',
+      events_btn: '🎪 Events',
+      no_event_title: 'Du bist noch in keinem Event',
+      no_event_desc: 'Scanne den QR-Code eines Events, um beizutreten und Badges zu sammeln.',
+      no_event_sub: 'Oder erkunde verfügbare Events, um eines zu finden, das dich interessiert.',
+      explore_events: '🎪 Events erkunden',
+      scan_qr: '📷 QR scannen',
+      active_event: 'Aktives Event',
+      your_progress: 'Dein Fortschritt',
+      badges_of: 'Badges erhalten',
+      my_badges: 'Meine Badges',
+      leaderboard: 'Rangliste',
+      scan_first: 'Scanne deinen ersten QR-Code um zu beginnen!',
+      prize_unlocked: '🎁 Preis freigeschaltet',
+      complete_badges: '🎁 Schließe',
+      complete_badges2: 'Badges ab, um den',
+      surprise_prize: 'Überraschungspreis zu enthüllen',
+      congrats: 'Glückwunsch,',
+      completed_event: 'Du hast das Event abgeschlossen!',
+      completed_badges_of: 'Du hast alle Badges von abgeschlossen',
+      my_badges_obtained: 'Meine erhaltenen Badges',
+      loading: 'Laden...',
+      no_data: 'Noch keine Daten.',
+      load_error: 'Konnte nicht geladen werden.'
+    }
+  };
+
+  function t(key) {
+    var strings = _i18nStrings[_i18nLang] || _i18nStrings['es'];
+    return strings[key] || _i18nStrings['es'][key] || key;
+  }
+
+  function setLang(lang) {
+    _i18nLang = lang;
+    try { localStorage.setItem('lyfter_lang', lang); } catch(e) {}
+  }
+
+  function getLang() { return _i18nLang; }
+
   var LANGUAGES = {
     'es': 'Español',
     'en': 'English',
@@ -551,9 +700,10 @@
         Array.prototype.forEach.call(document.querySelectorAll('.lang-option'), function(btn) {
           btn.addEventListener('click', function() {
             var lang = btn.getAttribute('data-lang');
-            try { localStorage.setItem('lyfter_lang', lang); } catch(e) {}
+            setLang(lang);
             closeModal();
-            toast('Idioma: ' + LANGUAGES[lang], 'success');
+            toast('Idioma cambiado — recargando...', 'info');
+            setTimeout(function() { location.reload(); }, 800);
           });
         });
       });
@@ -798,7 +948,10 @@
     setActiveId: setActiveId,
     ensureActive: ensureActive,
     getCurrentLang: getCurrentLang,
-    setCurrentLang: setCurrentLang
+    setCurrentLang: setCurrentLang,
+    t: t,
+    setLang: setLang,
+    getLang: getLang
   };
 
   window.lyfterReset = function () {
