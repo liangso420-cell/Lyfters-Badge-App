@@ -338,7 +338,8 @@
         badges: e.badges.map(function (b) {
           return { id: b.id, emoji: b.emoji, name: b.name, desc: b.desc, token: b.token,
             redeemUrl: APP_BASE + 'redeem.html?event=' + e.id + '&token=' + b.token,
-            redeemed: b.redemptions || 0, qrImage: null };
+            redeemed: b.redemptions || 0, qrImage: null,
+            xp_value: b.xp_value != null ? b.xp_value : 10, is_rare: !!b.is_rare };
         })
       };
     },
@@ -394,6 +395,21 @@
       var e = mockEvent(eventId); if (!e) throw new Error('Evento no encontrado');
       e.badges = e.badges.filter(function(b){ return b.id !== badgeId; }); persist();
       return { ok: true };
+    },
+    async updateBadge(eventId, badgeId, data) {
+      var e = mockEvent(eventId); if (!e) throw new Error('Evento no encontrado');
+      var b = e.badges.find(function(x){ return x.id === badgeId; });
+      if (!b) throw new Error('Badge no encontrado');
+      if (data.name != null)     b.name     = data.name.trim();
+      if (data.desc != null)     b.desc     = data.desc.trim();
+      if (data.emoji != null)    b.emoji    = data.emoji.trim() || '🏅';
+      if (data.xp_value != null && !isNaN(data.xp_value)) b.xp_value = data.xp_value;
+      if (data.is_rare != null)  b.is_rare  = !!data.is_rare;
+      persist();
+      return { id: b.id, emoji: b.emoji, name: b.name, desc: b.desc, token: b.token,
+        redeemUrl: APP_BASE + 'redeem.html?event=' + e.id + '&token=' + b.token,
+        redeemed: b.redemptions || 0, qrImage: null,
+        xp_value: b.xp_value != null ? b.xp_value : 10, is_rare: !!b.is_rare };
     },
     async deleteEvent(eventId) {
       mockState.events = mockState.events.filter(function(e) { return e.id !== eventId; });
@@ -542,9 +558,7 @@
           badges_total: mockTotalBadges(u.id), completed: total > 0 && done.length >= total,
           xp_total: xpTotal, level: lvl, level_name: levelName(lvl) };
       }).filter(function (r) { return r.badges_in_event > 0; });
-      ranking.sort(function (a, b) {
-        return (b.badges_in_event - a.badges_in_event) || (b.xp_total - a.xp_total);
-      });
+      ranking.sort(function (a, b) { return b.xp_total - a.xp_total; });
       var myPos = null;
       ranking.forEach(function (r, i) {
         r.position = i + 1;
@@ -715,7 +729,8 @@
         badges: (d.badges || []).map(function (b) {
           return { id: b.id, emoji: b.icon || '🏅', name: b.nombre, desc: b.descripcion,
             token: b.token, redeemUrl: b.redeem_url || (APP_BASE + 'redeem.html?event=' + d.evento.id + '&token=' + b.token),
-            redeemed: b.canjeados || 0, qrImage: b.qr_image || null };
+            redeemed: b.canjeados || 0, qrImage: b.qr_image || null,
+            xp_value: b.xp_value != null ? b.xp_value : 10, is_rare: !!b.is_rare };
         })
       };
     },
@@ -749,6 +764,18 @@
     },
     async deleteBadge(eventId, badgeId) {
       return await apiRequest('DELETE', '/admin/events/' + eventId + '/badges/' + badgeId);
+    },
+    async updateBadge(eventId, badgeId, data) {
+      var body = {};
+      if (data.name != null)     body.nombre      = data.name;
+      if (data.desc != null)     body.descripcion = data.desc;
+      if (data.emoji != null)    body.icon        = data.emoji;
+      if (data.xp_value != null && !isNaN(data.xp_value)) body.xp_value = data.xp_value;
+      if (data.is_rare != null)  body.is_rare     = data.is_rare;
+      var d = await apiRequest('PATCH', '/admin/events/' + eventId + '/badges/' + badgeId, body);
+      return { id: d.id, emoji: d.icon || '🏅', name: d.nombre, desc: d.descripcion,
+        token: d.token, redeemUrl: d.redeem_url || null, redeemed: d.canjeados || 0, qrImage: d.qr_image || null,
+        xp_value: d.xp_value, is_rare: d.is_rare };
     },
     async deleteEvent(eventId) {
       return await apiRequest('DELETE', '/admin/events/' + eventId);
@@ -851,6 +878,7 @@
     addBadge:         impl.addBadge.bind(impl),
     listAdminBadges:  impl.listAdminBadges.bind(impl),
     deleteBadge:      impl.deleteBadge.bind(impl),
+    updateBadge:      impl.updateBadge.bind(impl),
     deleteEvent:      impl.deleteEvent.bind(impl),
     getDashboard:     impl.getDashboard.bind(impl),
     getUsers:         impl.getUsers.bind(impl),

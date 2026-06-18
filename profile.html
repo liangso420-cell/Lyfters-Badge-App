@@ -20,7 +20,7 @@
         },
       },
     };
-  
+
   </script>
   <style>
     @keyframes badge-unlock { 0% { transform: scale(0.5); opacity: 0; } 70% { transform: scale(1.15); } 100% { transform: scale(1); opacity: 1; } }
@@ -114,188 +114,142 @@
           '<text x="60" y="68" text-anchor="middle" font-size="28" fill="#6C63FF">🏅</text>' +
         '</svg>';
 
+      function buildEventRow(entry, currentUserId) {
+        var rank = entry.position;
+        var medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '<span class="text-gray-400 font-bold">' + rank + '</span>';
+        var isSelf = entry.user_id === currentUserId;
+        var lname = entry.level_name || (API.levelName ? API.levelName(entry.level) : ('Nivel ' + entry.level));
+        var completedChip = entry.completed ? ' <span title="Completó el evento">✅</span>' : '';
+        return '<div class="flex items-center gap-3 py-2.5 border-b border-gray-100 last:border-0' + (isSelf ? ' bg-primary-soft/30 -mx-4 px-4 rounded-card' : '') + '">' +
+          '<span class="w-6 text-center text-sm">' + medal + '</span>' +
+          '<div class="flex-1 min-w-0">' +
+            '<p class="text-sm font-medium text-gray-700 truncate">' + U.esc(entry.name) + (isSelf ? ' <span class="text-xs text-primary">(tú)</span>' : '') + completedChip + '</p>' +
+            '<p class="text-[11px] text-gray-400">Nv ' + entry.level + ' · ' + U.esc(lname) + ' · ' + entry.xp_total + ' XP</p>' +
+          '</div>' +
+          '<span class="text-sm font-bold text-primary whitespace-nowrap">' + entry.badges_in_event + ' 🏅</span>' +
+        '</div>';
+      }
+
       async function init() {
         try {
           var events = await API.getJoinedEvents();
-          if (!events.length) {
-            app.innerHTML =
-              '<section class="device-frame px-4 pt-10 pb-28">' +
-                '<div class="bg-white rounded-card p-5 shadow-soft anim-fade mb-4">' +
-                  '<div class="flex items-center justify-between mb-4">' +
-                    '<h2 class="text-lg font-bold text-gray-800">' + U.t('greeting') + ', ' + U.esc(user.name.split(' ')[0]) + ' 👋</h2>' +
-                    '<div class="flex items-center gap-2">' +
-                      '<button id="fab-events-empty" class="px-3 py-1.5 rounded-btn text-xs font-medium text-primary border border-primary hover:bg-primary-soft">' + U.t('events_btn') + '</button>' +
-                      '<button id="profile-menu-btn-empty" class="w-9 h-9 rounded-full bg-gray-100 hover:bg-primary-soft flex items-center justify-center text-lg transition" title="Mi perfil">☰</button>' +
-                    '</div>' +
-                  '</div>' +
-                '</div>' +
-                '<div class="bg-white rounded-card p-8 shadow-soft text-center mb-4">' +
-                  '<div class="text-5xl mb-4">🎫</div>' +
-                  '<h3 class="font-bold text-gray-800 mb-2">' + U.t('no_event_title') + '</h3>' +
-                  '<p class="text-sm text-gray-400 mb-2">' + U.t('no_event_desc') + '</p>' +
-                  '<p class="text-xs text-gray-300 mb-5">' + U.t('no_event_sub') + '</p>' +
-                  '<button id="btn-explore" class="w-full py-3 rounded-btn text-white font-semibold" style="background:#6C63FF;">' + U.t('explore_events') + '</button>' +
-                '</div>' +
-              '</section>' +
-              '<div class="fixed bottom-0 left-0 right-0 flex justify-center pb-6 pointer-events-none z-30">' +
-                '<button id="fab-scan-empty" class="pointer-events-auto px-7 py-4 rounded-full text-white font-semibold shadow-soft flex items-center gap-2 active:scale-95 transition" ' +
-                  'style="background:#6C63FF; box-shadow:0 4px 24px rgba(108,99,255,0.5);">' + U.t('scan_qr') + '</button>' +
-              '</div>';
-            document.getElementById('btn-explore').addEventListener('click', function() { window.location.href = 'events.html'; });
-            document.getElementById('fab-scan-empty').addEventListener('click', function() { window.location.href = 'scan.html'; });
-            document.getElementById('fab-events-empty').addEventListener('click', function() { window.location.href = 'events.html'; });
-            document.getElementById('profile-menu-btn-empty').addEventListener('click', async function() {
-              try {
-                var p = await API.getProfile();
-                U.showDrawer(p.avatar, p.nombre, function(newAvatar) {
-                  var btn = document.getElementById('profile-menu-btn-empty');
-                  if (btn && newAvatar) {
-                    btn.textContent = '';
-                    btn.style.backgroundImage = 'url(' + newAvatar + ')';
-                    btn.style.backgroundSize = 'cover';
-                    btn.style.backgroundPosition = 'center';
-                  }
-                });
-              } catch(e) {
-                U.showDrawer(null, null, null);
-              }
-            });
-            return;
-          }
-
-          var activeId = U.ensureActive(events);
-          var activeEvent = events.find(function(e) { return e.id === activeId; }) || events[0];
-          var detail = await API.getEventDetail(activeId);
           var xpProfile = await API.getXpProfile().catch(function() { return null; });
           var achData   = await API.getAchievements().catch(function() { return null; });
-          var total = detail.total, doneCount = detail.obtained;
-          var pct = total ? Math.round((doneCount / total) * 100) : 0;
-          var complete = detail.complete;
 
-          var eventOptions = events.map(function(e) {
-            return '<option value="' + e.id + '"' + (e.id === activeId ? ' selected' : '') + '>' + U.esc(e.name) + '</option>';
-          }).join('');
+          var firstName = U.esc(user.name.split(' ')[0]);
 
-          /* Badge grid */
-          var grid = '';
-          if (!detail.badges.length) {
-            grid = '<div class="col-span-3 text-center py-6">' + emptySvg +
-              '<p class="text-sm text-gray-400">' + U.t('scan_first') + '</p></div>';
-          } else {
-            grid = detail.badges.map(function(b) {
-              if (b.obtained) {
-                return '<div class="badge-obtained rounded-card p-3 text-center" style="background:#EEEDFF;">' +
-                  '<div class="text-3xl">' + (b.emoji || '🏅') + '</div>' +
-                  '<p class="text-xs font-semibold mt-1 text-gray-700">' + U.esc(b.name) + '</p>' +
-                  '<span class="text-green-500 text-sm">✅</span>' +
-                '</div>';
-              }
-              return '<div class="rounded-card p-3 text-center bg-gray-100">' +
-                '<div class="text-3xl opacity-30">' + (b.emoji || '🏅') + '</div>' +
-                '<p class="text-xs text-gray-400 mt-1">' + U.esc(b.name) + '</p>' +
-                '<span class="text-gray-300 text-sm">🔒</span>' +
-              '</div>';
-            }).join('');
-          }
-
-          function buildLeaderboardRow(entry, rank, currentUserId) {
-            var medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '<span class="text-gray-400 font-bold">' + rank + '</span>';
-            var isSelf = entry.id === currentUserId;
-            var avatarHtml = entry.avatar
-              ? '<img src="' + entry.avatar + '" class="w-8 h-8 rounded-full object-cover border-2 ' + (isSelf ? 'border-primary' : 'border-gray-200') + '" />'
-              : '<div class="w-8 h-8 rounded-full bg-primary-soft flex items-center justify-center text-sm">👤</div>';
-            return '<div class="flex items-center gap-3 py-2.5 border-b border-gray-100 last:border-0' + (isSelf ? ' bg-primary-soft/30 -mx-4 px-4 rounded-card' : '') + '">' +
-              '<span class="w-6 text-center text-sm">' + medal + '</span>' +
-              avatarHtml +
-              '<span class="flex-1 text-sm font-medium text-gray-700">' + U.esc(entry.nombre) + (isSelf ? ' <span class="text-xs text-primary">(tú)</span>' : '') + '</span>' +
-              '<span class="text-sm font-bold text-primary">' + entry.badges + ' 🏅</span>' +
-            '</div>';
-          }
-
-          function buildEventRow(entry, currentUserId) {
-            var rank = entry.position;
-            var medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '<span class="text-gray-400 font-bold">' + rank + '</span>';
-            var isSelf = entry.user_id === currentUserId;
-            var lname = entry.level_name || (API.levelName ? API.levelName(entry.level) : ('Nivel ' + entry.level));
-            var completedChip = entry.completed ? ' <span title="Completó el evento">✅</span>' : '';
-            return '<div class="flex items-center gap-3 py-2.5 border-b border-gray-100 last:border-0' + (isSelf ? ' bg-primary-soft/30 -mx-4 px-4 rounded-card' : '') + '">' +
-              '<span class="w-6 text-center text-sm">' + medal + '</span>' +
-              '<div class="flex-1 min-w-0">' +
-                '<p class="text-sm font-medium text-gray-700 truncate">' + U.esc(entry.name) + (isSelf ? ' <span class="text-xs text-primary">(tú)</span>' : '') + completedChip + '</p>' +
-                '<p class="text-[11px] text-gray-400">Nv ' + entry.level + ' · ' + U.esc(lname) + ' · ' + entry.xp_total + ' XP</p>' +
-              '</div>' +
-              '<span class="text-sm font-bold text-primary whitespace-nowrap">' + entry.badges_in_event + ' 🏅</span>' +
-            '</div>';
-          }
-
-          /* History section */
-          var obtained = detail.badges.filter(function(b){ return b.obtained; });
-          obtained.sort(function(a, b) {
-            var ta = a.scannedAt ? new Date(a.scannedAt).getTime() : 0;
-            var tb = b.scannedAt ? new Date(b.scannedAt).getTime() : 0;
-            return tb - ta;
-          });
-          var historyHtml = '';
-          if (obtained.length) {
-            var histRows = obtained.map(function(b) {
-              return '<div class="flex items-center gap-3 py-2.5 border-b border-gray-100 last:border-0">' +
-                '<span class="text-xl">' + (b.emoji || '🏅') + '</span>' +
-                '<span class="flex-1 text-sm font-medium text-gray-700">' + U.esc(b.name) + '</span>' +
-                (b.scannedAt ? '<span class="text-xs text-gray-400">' + fmtDate(b.scannedAt) + '</span>' : '') +
-              '</div>';
-            }).join('');
-            historyHtml =
-              '<div class="bg-white rounded-card p-5 shadow-soft mt-4">' +
-                '<h3 class="text-sm font-bold text-gray-700 mb-2">' + U.t('my_badges_obtained') + '</h3>' +
-                histRows +
-              '</div>';
-          }
-
-          /* Prize box */
-          var prizeBox = complete
-            ? '<div class="mt-4 p-4 rounded-card" style="background:#EEEDFF;">' +
-                '<p class="text-xs uppercase tracking-wide text-primary font-semibold text-center">' + U.t('prize_unlocked') + '</p>' +
-                '<p class="text-lg font-bold mt-1 text-center">' + U.esc(detail.prizeRevealed || detail.prize) + '</p></div>'
-            : '<div class="mt-4 p-4 rounded-card border border-dashed border-gray-200 text-center text-sm text-gray-500">' +
-                U.t('complete_badges') + ' ' + total + ' ' + U.t('complete_badges2') + ' <span class="font-medium text-gray-700">' + U.t('surprise_prize') + '</span></div>';
-
-          var completedBanner = complete
-            ? '<div class="bg-white rounded-card p-6 text-center mb-4 shadow-soft anim-pop">' +
-                '<div class="text-5xl mb-2">🎉</div>' +
-                '<h3 class="text-lg font-bold text-primary">' + U.t('congrats') + ' ' + U.esc(user.name.split(' ')[0]) + '!</h3>' +
-                '<p class="text-sm text-gray-500 mt-1">' + U.t('completed_badges_of') + ' ' + U.esc(detail.name) + '</p></div>'
-            : '';
-
-          var eventStatusInfo = activeEvent && STATUS_LABELS[activeEvent.status];
-          var eventPhotoHtml = activeEvent && activeEvent.photo
-            ? '<div class="relative w-full mb-4 rounded-card overflow-hidden shadow-soft" style="height:180px;">' +
-                '<img src="' + activeEvent.photo + '" style="width:100%;height:100%;object-fit:cover;" />' +
-                '<div class="absolute inset-0 flex items-end p-4" style="background:linear-gradient(transparent,rgba(0,0,0,0.5));">' +
-                  '<p class="text-white font-bold text-lg">' + U.esc(activeEvent.name) + '</p>' +
+          /* ── Encabezado (siempre visible) ── */
+          var headerCard =
+            '<div class="bg-white rounded-card p-5 shadow-soft anim-fade mb-4">' +
+              '<div class="flex items-center justify-between">' +
+                '<h2 class="text-lg font-bold text-gray-800">' + U.t('greeting') + ', ' + firstName + ' 👋</h2>' +
+                '<div class="flex items-center gap-2">' +
+                  '<button id="fab-events" class="px-3 py-1.5 rounded-btn text-xs font-medium text-primary border border-primary hover:bg-primary-soft">' + U.t('events_btn') + '</button>' +
+                  '<button id="profile-menu-btn" class="w-9 h-9 rounded-full bg-gray-100 hover:bg-primary-soft flex items-center justify-center text-lg transition" title="Mi perfil">☰</button>' +
                 '</div>' +
-                (eventStatusInfo ? '<span class="absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-semibold text-white" style="background:' + eventStatusInfo.color + ';">' + eventStatusInfo.label + '</span>' : '') +
-              '</div>'
-            : '';
+              '</div>' +
+            '</div>';
 
-          var xpBarMarkup = xpProfile ? U.xpBarHtml(xpProfile) : '';
+          /* ── XP, logros y ranking global (siempre visibles) ── */
+          var xpBarMarkup   = xpProfile ? U.xpBarHtml(xpProfile) : '';
           var achGridMarkup = achData ? U.achievementsGridHtml(achData) : '';
           var globalLbButton =
             '<button id="btn-global-lb" class="w-full py-3 rounded-card text-sm font-semibold mb-4 flex items-center justify-center gap-2" ' +
               'style="background:#EEEDFF;color:#6C63FF;">🌍 Ver ranking global</button>';
 
-          app.innerHTML =
-            '<section class="device-frame px-4 pt-10 pb-28">' +
+          /* ── Evento activo y progreso (solo si participa en alguno) ── */
+          var hasEvents    = events.length > 0;
+          var complete     = false;
+          var activeId     = null;
+          var eventSection = '';
+
+          if (hasEvents) {
+            activeId = U.ensureActive(events);
+            var activeEvent = events.find(function(e) { return e.id === activeId; }) || events[0];
+            var detail = await API.getEventDetail(activeId);
+            var total = detail.total, doneCount = detail.obtained;
+            var pct = total ? Math.round((doneCount / total) * 100) : 0;
+            complete = detail.complete;
+
+            var eventOptions = events.map(function(e) {
+              return '<option value="' + e.id + '"' + (e.id === activeId ? ' selected' : '') + '>' + U.esc(e.name) + '</option>';
+            }).join('');
+
+            /* Badge grid */
+            var grid = '';
+            if (!detail.badges.length) {
+              grid = '<div class="col-span-3 text-center py-6">' + emptySvg +
+                '<p class="text-sm text-gray-400">' + U.t('scan_first') + '</p></div>';
+            } else {
+              grid = detail.badges.map(function(b) {
+                if (b.obtained) {
+                  return '<div class="badge-obtained rounded-card p-3 text-center" style="background:#EEEDFF;">' +
+                    '<div class="text-3xl">' + (b.emoji || '🏅') + '</div>' +
+                    '<p class="text-xs font-semibold mt-1 text-gray-700">' + U.esc(b.name) + '</p>' +
+                    '<span class="text-green-500 text-sm">✅</span>' +
+                  '</div>';
+                }
+                return '<div class="rounded-card p-3 text-center bg-gray-100">' +
+                  '<div class="text-3xl opacity-30">' + (b.emoji || '🏅') + '</div>' +
+                  '<p class="text-xs text-gray-400 mt-1">' + U.esc(b.name) + '</p>' +
+                  '<span class="text-gray-300 text-sm">🔒</span>' +
+                '</div>';
+              }).join('');
+            }
+
+            /* History section */
+            var obtained = detail.badges.filter(function(b){ return b.obtained; });
+            obtained.sort(function(a, b) {
+              var ta = a.scannedAt ? new Date(a.scannedAt).getTime() : 0;
+              var tb = b.scannedAt ? new Date(b.scannedAt).getTime() : 0;
+              return tb - ta;
+            });
+            var historyHtml = '';
+            if (obtained.length) {
+              var histRows = obtained.map(function(b) {
+                return '<div class="flex items-center gap-3 py-2.5 border-b border-gray-100 last:border-0">' +
+                  '<span class="text-xl">' + (b.emoji || '🏅') + '</span>' +
+                  '<span class="flex-1 text-sm font-medium text-gray-700">' + U.esc(b.name) + '</span>' +
+                  (b.scannedAt ? '<span class="text-xs text-gray-400">' + fmtDate(b.scannedAt) + '</span>' : '') +
+                '</div>';
+              }).join('');
+              historyHtml =
+                '<div class="bg-white rounded-card p-5 shadow-soft mt-4">' +
+                  '<h3 class="text-sm font-bold text-gray-700 mb-2">' + U.t('my_badges_obtained') + '</h3>' +
+                  histRows +
+                '</div>';
+            }
+
+            /* Prize box */
+            var prizeBox = complete
+              ? '<div class="mt-4 p-4 rounded-card" style="background:#EEEDFF;">' +
+                  '<p class="text-xs uppercase tracking-wide text-primary font-semibold text-center">' + U.t('prize_unlocked') + '</p>' +
+                  '<p class="text-lg font-bold mt-1 text-center">' + U.esc(detail.prizeRevealed || detail.prize) + '</p></div>'
+              : '<div class="mt-4 p-4 rounded-card border border-dashed border-gray-200 text-center text-sm text-gray-500">' +
+                  U.t('complete_badges') + ' ' + total + ' ' + U.t('complete_badges2') + ' <span class="font-medium text-gray-700">' + U.t('surprise_prize') + '</span></div>';
+
+            var completedBanner = complete
+              ? '<div class="bg-white rounded-card p-6 text-center mb-4 shadow-soft anim-pop">' +
+                  '<div class="text-5xl mb-2">🎉</div>' +
+                  '<h3 class="text-lg font-bold text-primary">' + U.t('congrats') + ' ' + firstName + '!</h3>' +
+                  '<p class="text-sm text-gray-500 mt-1">' + U.t('completed_badges_of') + ' ' + U.esc(detail.name) + '</p></div>'
+              : '';
+
+            var eventStatusInfo = activeEvent && STATUS_LABELS[activeEvent.status];
+            var eventPhotoHtml = activeEvent && activeEvent.photo
+              ? '<div class="relative w-full mb-4 rounded-card overflow-hidden shadow-soft" style="height:180px;">' +
+                  '<img src="' + activeEvent.photo + '" style="width:100%;height:100%;object-fit:cover;" />' +
+                  '<div class="absolute inset-0 flex items-end p-4" style="background:linear-gradient(transparent,rgba(0,0,0,0.5));">' +
+                    '<p class="text-white font-bold text-lg">' + U.esc(activeEvent.name) + '</p>' +
+                  '</div>' +
+                  (eventStatusInfo ? '<span class="absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-semibold text-white" style="background:' + eventStatusInfo.color + ';">' + eventStatusInfo.label + '</span>' : '') +
+                '</div>'
+              : '';
+
+            eventSection =
               eventPhotoHtml +
               completedBanner +
-              xpBarMarkup +
               '<div class="bg-white rounded-card p-5 shadow-soft anim-fade mb-4">' +
-                '<div class="flex items-center justify-between mb-4">' +
-                  '<h2 class="text-lg font-bold text-gray-800">' + U.t('greeting') + ', ' + U.esc(user.name.split(' ')[0]) + ' 👋</h2>' +
-                  '<div class="flex items-center gap-2">' +
-                    '<button id="fab-events" class="px-3 py-1.5 rounded-btn text-xs font-medium text-primary border border-primary hover:bg-primary-soft">' + U.t('events_btn') + '</button>' +
-                    '<button id="profile-menu-btn" class="w-9 h-9 rounded-full bg-gray-100 hover:bg-primary-soft flex items-center justify-center text-lg transition" title="Mi perfil">☰</button>' +
-                  '</div>' +
-                '</div>' +
                 '<label class="text-xs font-medium text-gray-500">' + U.t('active_event') + '</label>' +
                 '<select id="profile-event-select" class="w-full mt-1 mb-4 px-4 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm">' + eventOptions + '</select>' +
                 '<div class="flex justify-between items-center mb-1">' +
@@ -313,89 +267,114 @@
                 '<div id="panel-badges"><div class="grid grid-cols-3 gap-2.5">' + grid + '</div>' + prizeBox + '</div>' +
                 '<div id="panel-ranking" style="display:none;"><div class="text-center text-gray-400 text-sm py-4">' + U.t('loading') + '</div></div>' +
               '</div>' +
+              historyHtml;
+          } else {
+            eventSection =
+              '<div class="bg-white rounded-card p-8 shadow-soft text-center mb-4">' +
+                '<div class="text-5xl mb-4">🎫</div>' +
+                '<h3 class="font-bold text-gray-800 mb-2">' + U.t('no_event_title') + '</h3>' +
+                '<p class="text-sm text-gray-400 mb-2">' + U.t('no_event_desc') + '</p>' +
+                '<p class="text-xs text-gray-300 mb-5">' + U.t('no_event_sub') + '</p>' +
+                '<button id="btn-explore" class="w-full py-3 rounded-btn text-white font-semibold" style="background:#6C63FF;">' + U.t('explore_events') + '</button>' +
+              '</div>';
+          }
+
+          app.innerHTML =
+            '<section class="device-frame px-4 pt-10 pb-28">' +
+              headerCard +
+              xpBarMarkup +
               achGridMarkup +
               globalLbButton +
-              historyHtml +
+              eventSection +
             '</section>' +
             '<div class="fixed bottom-0 left-0 right-0 flex justify-center pb-6 pointer-events-none z-30">' +
               '<button id="fab-scan" class="pointer-events-auto px-7 py-4 rounded-full text-white font-semibold shadow-soft flex items-center gap-2 active:scale-95 transition" ' +
                 'style="background:#6C63FF; box-shadow:0 4px 24px rgba(108,99,255,0.5);">' + U.t('scan_qr') + '</button>' +
             '</div>';
-          document.getElementById('tab-badges').addEventListener('click', function() {
-            document.getElementById('panel-badges').style.display = '';
-            document.getElementById('panel-ranking').style.display = 'none';
-            document.getElementById('tab-badges').style.background = '#6C63FF';
-            document.getElementById('tab-badges').style.color = 'white';
-            document.getElementById('tab-ranking').style.background = '';
-            document.getElementById('tab-ranking').className = 'tab-btn flex-1 py-2 rounded-btn text-sm font-medium text-gray-500 bg-gray-100';
-          });
 
-          document.getElementById('tab-ranking').addEventListener('click', async function() {
-            document.getElementById('panel-badges').style.display = 'none';
-            document.getElementById('panel-ranking').style.display = '';
-            document.getElementById('tab-ranking').style.background = '#6C63FF';
-            document.getElementById('tab-ranking').style.color = 'white';
-            document.getElementById('tab-badges').style.background = '';
-            document.getElementById('tab-badges').className = 'tab-btn flex-1 py-2 rounded-btn text-sm font-medium text-gray-500 bg-gray-100';
-            try {
-              var lb = await API.getEventLeaderboard(activeId);
-              var panel = document.getElementById('panel-ranking');
-              var rows = lb.ranking || [];
-              if (!rows.length) {
-                panel.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">' + U.t('no_data') + '</p>';
-              } else {
-                var html = rows.map(function(entry) {
-                  return buildEventRow(entry, user.id);
-                }).join('');
-                // Si el usuario no está en el top visible, mostrar su posición al fondo.
-                var inList = rows.some(function(e){ return e.user_id === user.id; });
-                if (lb.my_position && !inList) {
-                  html += '<div class="border-t-2 border-dashed border-gray-200 my-2"></div>' +
-                    buildEventRow({
-                      position: lb.my_position.position, user_id: user.id, name: (user.name || 'Tú'),
-                      badges_in_event: lb.my_position.badges_in_event, completed: false,
-                      xp_total: lb.my_position.xp_total, level: lb.my_position.level,
-                      level_name: ''
-                    }, user.id);
-                }
-                panel.innerHTML = html;
-              }
-            } catch(e) {
-              document.getElementById('panel-ranking').innerHTML = '<p class="text-sm text-red-400 text-center py-4">' + U.t('load_error') + '</p>';
-            }
-          });
-
-          document.getElementById('profile-menu-btn').addEventListener('click', async function() {
-            try {
-              var p = await API.getProfile();
-              var menuBtn = document.getElementById('profile-menu-btn');
-              U.showDrawer(p.avatar, p.nombre, function(newAvatar) {
-                if (newAvatar && menuBtn) {
-                  menuBtn.textContent = '';
-                  menuBtn.style.backgroundImage = 'url(' + newAvatar + ')';
-                  menuBtn.style.backgroundSize = 'cover';
-                  menuBtn.style.backgroundPosition = 'center';
-                }
-              });
-              if (p.avatar && menuBtn) {
-                menuBtn.textContent = '';
-                menuBtn.style.backgroundImage = 'url(' + p.avatar + ')';
-                menuBtn.style.backgroundSize = 'cover';
-                menuBtn.style.backgroundPosition = 'center';
-              }
-            } catch(e) {
-              U.showDrawer(null, null, null);
-            }
-          });
+          /* ── Handlers siempre presentes ── */
           document.getElementById('fab-scan').addEventListener('click', function() { window.location.href = 'scan.html'; });
           document.getElementById('fab-events').addEventListener('click', function() { window.location.href = 'events.html'; });
           var globalLbBtn = document.getElementById('btn-global-lb');
           if (globalLbBtn) globalLbBtn.addEventListener('click', function() { window.location.href = 'leaderboard.html'; });
 
-          var sel = document.getElementById('profile-event-select');
-          sel.addEventListener('change', function() { U.setActiveId(sel.value); location.reload(); });
+          var profileMenuBtn = document.getElementById('profile-menu-btn');
+          profileMenuBtn.addEventListener('click', async function() {
+            try {
+              var p = await API.getProfile();
+              U.showDrawer(p.avatar, p.nombre, function(newAvatar) {
+                if (newAvatar && profileMenuBtn) {
+                  profileMenuBtn.textContent = '';
+                  profileMenuBtn.style.backgroundImage = 'url(' + newAvatar + ')';
+                  profileMenuBtn.style.backgroundSize = 'cover';
+                  profileMenuBtn.style.backgroundPosition = 'center';
+                }
+              });
+              if (p.avatar && profileMenuBtn) {
+                profileMenuBtn.textContent = '';
+                profileMenuBtn.style.backgroundImage = 'url(' + p.avatar + ')';
+                profileMenuBtn.style.backgroundSize = 'cover';
+                profileMenuBtn.style.backgroundPosition = 'center';
+              }
+            } catch(e) {
+              U.showDrawer(null, null, null);
+            }
+          });
 
-          if (complete) launchConfetti();
+          /* ── Handlers del evento (solo si participa) ── */
+          if (hasEvents) {
+            document.getElementById('tab-badges').addEventListener('click', function() {
+              document.getElementById('panel-badges').style.display = '';
+              document.getElementById('panel-ranking').style.display = 'none';
+              document.getElementById('tab-badges').style.background = '#6C63FF';
+              document.getElementById('tab-badges').style.color = 'white';
+              document.getElementById('tab-ranking').style.background = '';
+              document.getElementById('tab-ranking').className = 'tab-btn flex-1 py-2 rounded-btn text-sm font-medium text-gray-500 bg-gray-100';
+            });
+
+            document.getElementById('tab-ranking').addEventListener('click', async function() {
+              document.getElementById('panel-badges').style.display = 'none';
+              document.getElementById('panel-ranking').style.display = '';
+              document.getElementById('tab-ranking').style.background = '#6C63FF';
+              document.getElementById('tab-ranking').style.color = 'white';
+              document.getElementById('tab-badges').style.background = '';
+              document.getElementById('tab-badges').className = 'tab-btn flex-1 py-2 rounded-btn text-sm font-medium text-gray-500 bg-gray-100';
+              try {
+                var lb = await API.getEventLeaderboard(activeId);
+                var panel = document.getElementById('panel-ranking');
+                var rows = lb.ranking || [];
+                if (!rows.length) {
+                  panel.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">' + U.t('no_data') + '</p>';
+                } else {
+                  var html = rows.map(function(entry) {
+                    return buildEventRow(entry, user.id);
+                  }).join('');
+                  // Si el usuario no está en el top visible, mostrar su posición al fondo.
+                  var inList = rows.some(function(e){ return e.user_id === user.id; });
+                  if (lb.my_position && !inList) {
+                    html += '<div class="border-t-2 border-dashed border-gray-200 my-2"></div>' +
+                      buildEventRow({
+                        position: lb.my_position.position, user_id: user.id, name: (user.name || 'Tú'),
+                        badges_in_event: lb.my_position.badges_in_event, completed: false,
+                        xp_total: lb.my_position.xp_total, level: lb.my_position.level,
+                        level_name: ''
+                      }, user.id);
+                  }
+                  panel.innerHTML = html;
+                }
+              } catch(e) {
+                document.getElementById('panel-ranking').innerHTML = '<p class="text-sm text-red-400 text-center py-4">' + U.t('load_error') + '</p>';
+              }
+            });
+
+            var sel = document.getElementById('profile-event-select');
+            sel.addEventListener('change', function() { U.setActiveId(sel.value); location.reload(); });
+
+            if (complete) launchConfetti();
+          } else {
+            var exploreBtn = document.getElementById('btn-explore');
+            if (exploreBtn) exploreBtn.addEventListener('click', function() { window.location.href = 'events.html'; });
+          }
 
         } catch (err) {
           app.innerHTML = U.errorHtml(err && err.message ? err.message : 'Error inesperado');

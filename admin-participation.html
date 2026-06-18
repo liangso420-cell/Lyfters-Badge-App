@@ -82,10 +82,11 @@
 
       async function init() {
         try {
-          var [events, dash, leaderboard] = await Promise.all([
+          var [events, dash, leaderboard, globalLb] = await Promise.all([
             API.listAdminEvents(),
             API.getDashboard(),
-            API.getLeaderboard()
+            API.getLeaderboard(),
+            API.getGlobalLeaderboard().catch(function() { return { ranking: [] }; })
           ]);
 
           var activeId = U.ensureActive(events);
@@ -113,6 +114,29 @@
               '</tbody></table>'
             : '<p class="text-sm text-gray-400 text-center py-6">Sin datos todavía.</p>';
 
+          var globalRows = (globalLb && globalLb.ranking) || [];
+          var globalLbHtml = globalRows.length
+            ? '<table class="w-full text-sm"><thead><tr class="text-left text-xs text-gray-400 border-b border-gray-100">' +
+                '<th class="py-3 pr-3 w-8">#</th><th class="py-3 pr-3">' + U.t('admin_name_label') + '</th>' +
+                '<th class="py-3 pr-3">Nivel</th><th class="py-3 pr-3 text-right">XP</th>' +
+                '<th class="py-3 pr-3 text-right">🏅</th><th class="py-3 pr-3 text-right">🎪</th><th class="py-3 text-right">🏆</th>' +
+              '</tr></thead><tbody>' +
+              globalRows.map(function(e) {
+                var medal = e.position === 1 ? '🥇' : e.position === 2 ? '🥈' : e.position === 3 ? '🥉' : e.position;
+                var lname = e.level_name || (API.levelName ? API.levelName(e.level) : ('Nivel ' + e.level));
+                return '<tr class="border-b border-gray-100 hover:bg-gray-50/50">' +
+                  '<td class="py-3 pr-3 text-center w-8">' + medal + '</td>' +
+                  '<td class="py-3 pr-3"><span class="text-sm font-medium text-gray-800">' + U.esc(e.name) + '</span></td>' +
+                  '<td class="py-3 pr-3"><span class="text-xs text-gray-500">Nv ' + e.level + ' · ' + U.esc(lname) + '</span></td>' +
+                  '<td class="py-3 pr-3 text-sm font-bold text-primary text-right">' + e.xp_total + '</td>' +
+                  '<td class="py-3 pr-3 text-sm text-gray-600 text-right">' + e.badges_total + '</td>' +
+                  '<td class="py-3 pr-3 text-sm text-gray-600 text-right">' + e.events_participated + '</td>' +
+                  '<td class="py-3 text-sm text-gray-600 text-right">' + e.achievements_count + '</td>' +
+                '</tr>';
+              }).join('') +
+              '</tbody></table>'
+            : '<p class="text-sm text-gray-400 text-center py-6">Sin datos todavía.</p>';
+
           var statsSection =
             '<div class="bg-white rounded-card p-6 shadow-soft mb-6">' +
               '<h3 class="font-bold text-gray-800 mb-4">' + U.t('admin_stats_by_event') + '</h3>' +
@@ -128,6 +152,10 @@
               metrics +
               progreso +
               statsSection +
+              '<div class="bg-white rounded-card p-6 shadow-soft mb-6">' +
+                '<h3 class="font-bold text-gray-800 mb-4">🌍 Ranking global (XP)</h3>' +
+                '<div class="overflow-x-auto">' + globalLbHtml + '</div>' +
+              '</div>' +
               '<div class="bg-white rounded-card p-6 shadow-soft">' +
                 '<h3 class="font-bold text-gray-800 mb-4">' + U.t('admin_leaderboard') + '</h3>' +
                 lbHtml +

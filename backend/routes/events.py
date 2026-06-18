@@ -226,8 +226,8 @@ def event_leaderboard(event_id):
             "_uid":            uid,
         })
 
-    # 5. Ordenar: badges_in_event DESC, desempate por xp_total DESC.
-    entries.sort(key=lambda e: (e["badges_in_event"], e["xp_total"]), reverse=True)
+    # 5. Ordenar únicamente por xp_total DESC.
+    entries.sort(key=lambda e: e["xp_total"], reverse=True)
 
     my_position = None
     me = get_jwt_identity()
