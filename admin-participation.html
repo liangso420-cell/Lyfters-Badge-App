@@ -92,22 +92,22 @@
 
           var metrics =
             '<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">' +
-              metricCard('👥', dash.total_participantes,    'Participantes',     '#6C63FF') +
-              metricCard('🎪', dash.total_eventos,          'Eventos',           '#43D9AD') +
-              metricCard('🏅', dash.total_badges_creados,   'Badges creados',    '#FF8C42') +
-              metricCard('✅', dash.total_badges_canjeados, 'Badges canjeados',  '#16a34a') +
+              metricCard('👥', dash.total_participantes,    U.t('admin_participants'),    '#6C63FF') +
+              metricCard('🎪', dash.total_eventos,          U.t('admin_events'),          '#43D9AD') +
+              metricCard('🏅', dash.total_badges_creados,   U.t('admin_badges_created'),  '#FF8C42') +
+              metricCard('✅', dash.total_badges_canjeados, U.t('admin_badges_redeemed'), '#16a34a') +
             '</div>';
 
           var progreso = dash.progreso_por_evento && dash.progreso_por_evento.length
             ? '<div class="bg-white rounded-card p-6 shadow-soft mb-6">' +
-                '<h3 class="font-bold text-gray-800 mb-4">Progreso por evento</h3>' +
+                '<h3 class="font-bold text-gray-800 mb-4">' + U.t('admin_progress_by_event') + '</h3>' +
                 dash.progreso_por_evento.map(progressBar).join('') +
               '</div>'
             : '';
 
           var lbHtml = leaderboard.length
             ? '<table class="w-full text-sm"><thead><tr class="text-left text-xs text-gray-400 border-b border-gray-100">' +
-                '<th class="py-3 pr-4 w-8">#</th><th class="py-3 pr-4">Usuario</th><th class="py-3 text-right">Badges</th>' +
+                '<th class="py-3 pr-4 w-8">#</th><th class="py-3 pr-4">' + U.t('admin_name_label') + '</th><th class="py-3 text-right">Badges</th>' +
               '</tr></thead><tbody>' +
               leaderboard.map(function(e, i) { return buildLbRow(e, i + 1); }).join('') +
               '</tbody></table>'
@@ -115,9 +115,9 @@
 
           var statsSection =
             '<div class="bg-white rounded-card p-6 shadow-soft mb-6">' +
-              '<h3 class="font-bold text-gray-800 mb-4">📊 Estadísticas por evento</h3>' +
+              '<h3 class="font-bold text-gray-800 mb-4">' + U.t('admin_stats_by_event') + '</h3>' +
               '<select id="stats-event-select" class="w-full px-4 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm mb-4">' +
-                '<option value="">Selecciona un evento...</option>' +
+                '<option value="">' + U.t('admin_select_event') + '</option>' +
                 events.map(function(e) { return '<option value="' + e.id + '">' + U.esc(e.name) + '</option>'; }).join('') +
               '</select>' +
               '<div id="event-stats-content"></div>' +
@@ -129,7 +129,7 @@
               progreso +
               statsSection +
               '<div class="bg-white rounded-card p-6 shadow-soft">' +
-                '<h3 class="font-bold text-gray-800 mb-4">Clasificación</h3>' +
+                '<h3 class="font-bold text-gray-800 mb-4">' + U.t('admin_leaderboard') + '</h3>' +
                 lbHtml +
               '</div>' +
             '</div>';
@@ -142,7 +142,7 @@
               var eid = statsSelect.value;
               var content = document.getElementById('event-stats-content');
               if (!eid) { content.innerHTML = ''; return; }
-              content.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">Cargando estadísticas...</div>';
+              content.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">' + U.t('admin_loading_stats') + '</div>';
               try {
                 var s = await API.getEventStats(eid);
 
@@ -167,7 +167,7 @@
                     '<span class="flex-1 text-sm text-gray-700">' + U.esc(b.nombre) + '</span>' +
                     '<span class="text-sm font-bold text-primary">' + b.count + '</span>' +
                   '</div>';
-                }).join('') || '<p class="text-xs text-gray-400 text-center py-2">Sin datos</p>';
+                }).join('') || '<p class="text-xs text-gray-400 text-center py-2">' + U.t('admin_no_data') + '</p>';
 
                 var topUsersHtml = s.top_usuarios.slice(0,5).map(function(u, i) {
                   var avatarEl = u.avatar
@@ -179,7 +179,7 @@
                     '<span class="flex-1 text-sm text-gray-700">' + U.esc(u.nombre) + '</span>' +
                     '<span class="text-sm font-bold text-primary">' + u.badges + ' 🏅</span>' +
                   '</div>';
-                }).join('') || '<p class="text-xs text-gray-400 text-center py-2">Sin datos</p>';
+                }).join('') || '<p class="text-xs text-gray-400 text-center py-2">' + U.t('admin_no_data') + '</p>';
 
                 var actividadHtml = s.actividad_por_hora.length
                   ? (function() {
@@ -193,22 +193,22 @@
                         '</div>';
                       }).join('');
                     })()
-                  : '<p class="text-xs text-gray-400 text-center py-2">Sin datos de actividad</p>';
+                  : '<p class="text-xs text-gray-400 text-center py-2">' + U.t('admin_no_activity') + '</p>';
 
                 content.innerHTML =
                   '<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">' +
-                    '<div class="bg-base rounded-card p-4 text-center"><p class="text-2xl font-bold text-primary">' + s.participantes_activos + '</p><p class="text-xs text-gray-500 mt-1">Participantes activos</p></div>' +
-                    '<div class="bg-base rounded-card p-4 text-center"><p class="text-2xl font-bold text-green-600">' + s.completaron + '</p><p class="text-xs text-gray-500 mt-1">Completaron evento</p></div>' +
-                    '<div class="bg-base rounded-card p-4 text-center"><p class="text-2xl font-bold text-orange-500">' + s.total_canjeados + '</p><p class="text-xs text-gray-500 mt-1">Badges canjeados</p></div>' +
-                    '<div class="bg-base rounded-card p-4 text-center"><p class="text-2xl font-bold text-purple-600">' + s.pct_completaron + '%</p><p class="text-xs text-gray-500 mt-1">Tasa completación</p></div>' +
+                    '<div class="bg-base rounded-card p-4 text-center"><p class="text-2xl font-bold text-primary">' + s.participantes_activos + '</p><p class="text-xs text-gray-500 mt-1">' + U.t('admin_active_participants') + '</p></div>' +
+                    '<div class="bg-base rounded-card p-4 text-center"><p class="text-2xl font-bold text-green-600">' + s.completaron + '</p><p class="text-xs text-gray-500 mt-1">' + U.t('admin_completed_event') + '</p></div>' +
+                    '<div class="bg-base rounded-card p-4 text-center"><p class="text-2xl font-bold text-orange-500">' + s.total_canjeados + '</p><p class="text-xs text-gray-500 mt-1">' + U.t('admin_badges_redeemed') + '</p></div>' +
+                    '<div class="bg-base rounded-card p-4 text-center"><p class="text-2xl font-bold text-purple-600">' + s.pct_completaron + '%</p><p class="text-xs text-gray-500 mt-1">' + U.t('admin_completion_rate') + '</p></div>' +
                   '</div>' +
                   '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">' +
                     '<div class="bg-base rounded-card p-4">' +
-                      '<p class="text-sm font-semibold text-gray-700 mb-3">📈 Distribución de progreso</p>' +
+                      '<p class="text-sm font-semibold text-gray-700 mb-3">' + U.t('admin_progress_dist') + '</p>' +
                       distBars +
                     '</div>' +
                     '<div class="bg-base rounded-card p-4">' +
-                      '<p class="text-sm font-semibold text-gray-700 mb-3">✅ Finalización</p>' +
+                      '<p class="text-sm font-semibold text-gray-700 mb-3">' + U.t('admin_completion') + '</p>' +
                       '<div class="flex items-center gap-3 mb-2">' +
                         '<div class="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden">' +
                           '<div class="h-4 rounded-full bg-green-500" style="width:' + s.pct_completaron + '%;"></div>' +
@@ -216,24 +216,24 @@
                         '<span class="text-xs text-green-600 font-bold">' + s.pct_completaron + '%</span>' +
                       '</div>' +
                       '<div class="flex justify-between text-xs text-gray-500">' +
-                        '<span>✅ ' + s.completaron + ' completaron</span>' +
-                        '<span>❌ ' + s.no_completaron + ' no completaron</span>' +
+                        '<span>✅ ' + s.completaron + ' ' + U.t('admin_completed') + '</span>' +
+                        '<span>❌ ' + s.no_completaron + ' ' + U.t('admin_not_completed') + '</span>' +
                       '</div>' +
                     '</div>' +
                   '</div>' +
                   '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">' +
                     '<div class="bg-base rounded-card p-4">' +
-                      '<p class="text-sm font-semibold text-gray-700 mb-3">🏆 Badges más obtenidos</p>' +
+                      '<p class="text-sm font-semibold text-gray-700 mb-3">' + U.t('admin_top_badges') + '</p>' +
                       badgeRankHtml +
                     '</div>' +
                     '<div class="bg-base rounded-card p-4">' +
-                      '<p class="text-sm font-semibold text-gray-700 mb-3">👥 Top participantes</p>' +
+                      '<p class="text-sm font-semibold text-gray-700 mb-3">' + U.t('admin_top_users') + '</p>' +
                       topUsersHtml +
                     '</div>' +
                   '</div>' +
                   (s.actividad_por_hora.length
                     ? '<div class="bg-base rounded-card p-4">' +
-                        '<p class="text-sm font-semibold text-gray-700 mb-3">⏰ Actividad por hora</p>' +
+                        '<p class="text-sm font-semibold text-gray-700 mb-3">' + U.t('admin_activity') + '</p>' +
                         '<div class="flex items-end gap-1 h-20">' + actividadHtml + '</div>' +
                       '</div>'
                     : '');
