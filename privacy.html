@@ -5,27 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Política de Privacidad — Lyfter Badge App</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --brand: #6C63FF; --brand-light: #EEEDFF; --brand-dark: #4B44CC;
-      --ink: #1A1A2E; --ink-mid: #4A4A6A; --ink-soft: #7A7A9A;
-      --bg: #FAFAFA; --surface: #FFFFFF; --border: #E8E8F0;
-      --radius: 12px; --radius-sm: 8px;
+      --brand: #d897e7; --brand-light: rgba(216,151,231,0.12); --brand-dark: #b563d4;
+      --ink: #f0eaf2; --ink-mid: rgba(240,234,242,0.70); --ink-soft: rgba(240,234,242,0.44);
+      --bg: #15171d; --surface: #1c1f27; --border: rgba(255,255,255,0.07);
+      --radius: 14px; --radius-sm: 8px;
     }
     html { scroll-behavior: smooth; }
-    body { font-family: 'Poppins', system-ui, sans-serif; background: var(--bg); color: var(--ink); line-height: 1.7; font-size: 15px; }
-    nav { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+    body { font-family: 'Manrope', 'Poppins', system-ui, sans-serif; background: var(--bg); color: var(--ink); line-height: 1.7; font-size: 15px; }
+    nav { position: sticky; top: 0; z-index: 100; background: rgba(28,31,39,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
     .nav-brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; color: var(--ink); text-decoration: none; }
-    .nav-brand span { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; background: var(--brand); border-radius: 8px; font-size: 16px; }
+    .nav-brand span { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; background: rgba(216,151,231,0.2); border-radius: 8px; font-size: 16px; }
     .nav-back { font-size: 13px; color: var(--brand); text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 4px; transition: opacity .15s; }
     .nav-back:hover { opacity: .7; }
-    .hero { background: linear-gradient(135deg, var(--brand-light) 0%, #F0EEFF 100%); padding: 64px 24px 48px; text-align: center; border-bottom: 1px solid var(--border); }
-    .hero-icon { display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: var(--brand); border-radius: 20px; font-size: 30px; margin-bottom: 20px; box-shadow: 0 8px 24px rgba(108,99,255,0.3); }
+    .hero { background: linear-gradient(135deg, rgba(216,151,231,0.1) 0%, rgba(108,99,255,0.08) 100%); padding: 64px 24px 48px; text-align: center; border-bottom: 1px solid var(--border); }
+    .hero-icon { display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: rgba(216,151,231,0.2); border-radius: 20px; font-size: 30px; margin-bottom: 20px; box-shadow: 0 8px 24px rgba(216,151,231,0.2); }
     .hero h1 { font-size: clamp(24px, 5vw, 36px); font-weight: 700; color: var(--ink); margin-bottom: 12px; }
     .hero p { color: var(--ink-mid); max-width: 500px; margin: 0 auto 20px; font-size: 15px; }
     .hero-meta { display: inline-flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 6px 16px; font-size: 12px; color: var(--ink-soft); font-weight: 500; }
-    .hero-meta::before { content: ''; display: inline-block; width: 8px; height: 8px; background: #22C55E; border-radius: 50%; }
+    .hero-meta::before { content: ''; display: inline-block; width: 8px; height: 8px; background: #43D9AD; border-radius: 50%; }
     .page { max-width: 1040px; margin: 0 auto; padding: 48px 24px; display: grid; grid-template-columns: 220px 1fr; gap: 48px; align-items: start; }
     @media (max-width: 768px) { .page { grid-template-columns: 1fr; gap: 32px; } .sidebar { display: none; } }
     .sidebar { position: sticky; top: 72px; }
@@ -43,13 +44,13 @@
     .section ul { list-style: none; margin: 14px 0; display: flex; flex-direction: column; gap: 8px; }
     .section ul li { display: flex; align-items: baseline; gap: 10px; color: var(--ink-mid); font-size: 14px; }
     .section ul li::before { content: ''; display: inline-block; width: 6px; height: 6px; background: var(--brand); border-radius: 50%; flex-shrink: 0; margin-top: 7px; }
-    .highlight-box { background: var(--brand-light); border: 1px solid rgba(108,99,255,0.2); border-radius: var(--radius-sm); padding: 16px 20px; margin: 16px 0; }
-    .highlight-box p { color: var(--brand-dark); font-size: 14px; font-weight: 500; margin: 0; }
+    .highlight-box { background: var(--brand-light); border: 1px solid rgba(216,151,231,0.25); border-radius: var(--radius-sm); padding: 16px 20px; margin: 16px 0; }
+    .highlight-box p { color: var(--brand); font-size: 14px; font-weight: 500; margin: 0; }
     .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 16px 0; }
-    .info-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; }
+    .info-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; }
     .info-card-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-soft); margin-bottom: 6px; }
     .info-card-value { font-size: 14px; font-weight: 500; color: var(--ink); }
-    .contact-card { background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%); border-radius: var(--radius); padding: 32px; text-align: center; color: white; margin-bottom: 20px; }
+    .contact-card { background: linear-gradient(135deg, rgba(108,99,255,0.6) 0%, rgba(181,99,212,0.6) 100%); border: 1px solid rgba(216,151,231,0.25); border-radius: var(--radius); padding: 32px; text-align: center; color: white; margin-bottom: 20px; }
     .contact-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
     .contact-card p { opacity: .85; margin-bottom: 20px; font-size: 14px; }
     .contact-email { display: inline-block; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; padding: 10px 20px; color: white; font-weight: 600; text-decoration: none; font-size: 14px; transition: background .15s; }
@@ -65,7 +66,7 @@
   <nav>
     <a href="index.html" class="nav-brand"><span>🏆</span> Lyfter Badge App</a>
     <a href="index.html" class="nav-back" data-pk="back">← Volver</a>
-    <select id="lang-selector" style="font-size:13px; padding:4px 8px; border:1px solid #E8E8F0; border-radius:8px; color:#4A4A6A; outline:none; cursor:pointer; background:white;">
+    <select id="lang-selector" style="font-size:13px; padding:4px 8px; border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:rgba(240,234,242,0.7); outline:none; cursor:pointer; background:#1c1f27;">
       <option value="es">🇪🇸 ES</option>
       <option value="en">🇬🇧 EN</option>
     </select>
