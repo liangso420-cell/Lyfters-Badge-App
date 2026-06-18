@@ -72,19 +72,19 @@
             '<div class="text-center mb-6">' +
               '<div class="text-4xl mb-2">🏆</div>' +
               '<h2 class="text-2xl font-bold">Lyfter Badge App</h2>' +
-              '<p class="text-gray-400 text-sm mt-1">Escanea, colecciona, gana</p>' +
+              '<p class="text-gray-400 text-sm mt-1">' + U.t('app_tagline') + '</p>' +
             '</div>' +
             '<form id="login-form" class="space-y-4" novalidate>' +
-              U.inputField({ label: 'Email', type: 'email', name: 'email', placeholder: 'tu@correo.com' }) +
-              U.inputField({ label: 'Contraseña', type: 'password', name: 'password', placeholder: '••••••••' }) +
-              U.primaryButton('Entrar', 'type="submit"') +
-              '<div class="divider text-gray-400 text-xs my-2">o continúa con</div>' +
+              U.inputField({ label: U.t('email_label'), type: 'email', name: 'email', placeholder: 'tu@correo.com' }) +
+              U.inputField({ label: U.t('password_label'), type: 'password', name: 'password', placeholder: '••••••••' }) +
+              U.primaryButton(U.t('enter_btn'), 'type="submit"') +
+              '<div class="divider text-gray-400 text-xs my-2">' + U.t('or_continue') + '</div>' +
               '<button type="button" id="btn-google" ' +
                 'class="btn w-full border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-medium gap-2 normal-case">' +
                 '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5" alt="Google" />' +
-                'Continuar con Google' +
+                U.t('continue_google') +
               '</button>' +
-              '<p class="text-center text-sm text-gray-500">¿No tienes cuenta? <a href="register.html" class="text-primary font-medium">Regístrate</a></p>' +
+              '<p class="text-center text-sm text-gray-500">' + U.t('no_account') + ' <a href="register.html" class="text-primary font-medium">' + U.t('sign_up') + '</a></p>' +
               demoHint +
             '</form>' +
           '</div>' +
@@ -98,16 +98,16 @@
         if (!ok) return;
         var btn = form.querySelector('[type="submit"]');
         btn.disabled = true;
-        btn.textContent = 'Cargando...';
+        btn.textContent = U.t('loading');
         try {
           var loggedUser = await API.login(email.value.trim(), pass.value);
-          U.toastNextPage('¡Bienvenido!', 'success');
+          U.toastNextPage(U.t('welcome'), 'success');
           window.location.href = nextUrl || (loggedUser.role === 'admin' ? 'admin-event.html' : 'profile.html');
         } catch (err) {
           U.setFieldError(pass, err.message || 'No se pudo iniciar sesión');
         } finally {
           btn.disabled = false;
-          btn.textContent = 'Entrar';
+          btn.textContent = U.t('enter_btn');
         }
       });
 
@@ -120,7 +120,7 @@
       document.getElementById('btn-google').addEventListener('click', async function () {
         var btn = this;
         btn.disabled = true;
-        btn.textContent = 'Conectando...';
+        btn.textContent = U.t('connecting');
         try {
           var provider = new firebase.auth.GoogleAuthProvider();
           provider.setCustomParameters({ prompt: 'select_account' });
@@ -132,7 +132,7 @@
             name:    result.user.displayName,
             photo:   result.user.photoURL
           });
-          U.toastNextPage('¡Bienvenido con Google! 🎉', 'success');
+          U.toastNextPage(U.t('welcome_google'), 'success');
           window.location.href = nextUrl || (loggedUser.role === 'admin' ? 'admin-event.html' : 'profile.html');
         } catch (err) {
           var mensajes = {
@@ -143,7 +143,7 @@
           U.toast(mensajes[err.code] || err.message || 'No se pudo iniciar con Google', 'error');
         } finally {
           btn.disabled = false;
-          btn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5" alt="Google" /> Continuar con Google';
+          btn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5" alt="Google" /> ' + U.t('continue_google');
         }
       });
     })();
