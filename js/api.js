@@ -27,6 +27,60 @@
   }
 
   /* =========================================================
+     XP / LOGROS — helpers compartidos (mock + presentación)
+     ========================================================= */
+  // Umbrales de nivel — deben coincidir con backend/services/xp.py
+  var LEVELS = [
+    { level: 1, name: 'Explorador',     xp: 0 },
+    { level: 2, name: 'Coleccionista',  xp: 100 },
+    { level: 3, name: 'Maestro badge',  xp: 300 },
+    { level: 4, name: 'Leyenda Lyfter', xp: 600 },
+  ];
+
+  function computeLevel(xpTotal) {
+    var lvl = 1;
+    for (var i = 0; i < LEVELS.length; i++) {
+      if (xpTotal >= LEVELS[i].xp) lvl = LEVELS[i].level; else break;
+    }
+    return lvl;
+  }
+  function levelName(level) {
+    for (var i = 0; i < LEVELS.length; i++) if (LEVELS[i].level === level) return LEVELS[i].name;
+    return LEVELS[0].name;
+  }
+  function levelProgress(xpTotal) {
+    var level = computeLevel(xpTotal);
+    var current = LEVELS.filter(function (l) { return l.level === level; })[0];
+    var next = LEVELS.filter(function (l) { return l.level === level + 1; })[0];
+    if (!next) {
+      return { level: level, level_name: current.name, xp_total: xpTotal,
+        xp_next_level: current.xp, xp_for_next: 0, progress_pct: 100 };
+    }
+    var span = next.xp - current.xp;
+    var gained = xpTotal - current.xp;
+    var pct = span > 0 ? Math.round((gained / span) * 100) : 0;
+    pct = Math.max(0, Math.min(100, pct));
+    return { level: level, level_name: current.name, xp_total: xpTotal,
+      xp_next_level: next.xp, xp_for_next: Math.max(0, next.xp - xpTotal), progress_pct: pct };
+  }
+
+  // Definiciones de logros (espejo del seed) — usadas en modo mock.
+  var ACHIEVEMENT_DEFS = [
+    { slug: 'first_scan',           name: 'Primer paso',    description: 'Escaneaste tu primer badge.',               hint: 'Escaneá tu primer badge.',          icon: '👣', rarity: 'common',    xp_reward: 15 },
+    { slug: 'five_badges',          name: 'Coleccionista',  description: 'Acumulaste 5 badges en total.',             hint: 'Seguí coleccionando badges.',       icon: '🎖️', rarity: 'common',    xp_reward: 15 },
+    { slug: 'twenty_five_badges',   name: 'Adictx',         description: 'Acumulaste 25 badges en total.',            hint: 'Coleccioná muchísimos badges.',     icon: '🔥', rarity: 'rare',      xp_reward: 30 },
+    { slug: 'first_event_complete', name: 'Completista',    description: 'Completaste todos los badges de un evento.', hint: 'Completá todos los badges de un evento.', icon: '✅', rarity: 'rare', xp_reward: 30 },
+    { slug: 'three_completions',    name: 'Perfeccionista', description: 'Completaste 3 eventos distintos.',          hint: 'Completá varios eventos.',          icon: '💯', rarity: 'epic',      xp_reward: 75 },
+    { slug: 'three_events',         name: 'Viajero',        description: 'Participaste en 3 eventos distintos.',      hint: 'Participá en varios eventos.',      icon: '🧳', rarity: 'rare',      xp_reward: 30 },
+    { slug: 'five_events',          name: 'Veterano',       description: 'Participaste en 5 eventos distintos.',      hint: 'Participá en muchos eventos.',      icon: '🎓', rarity: 'epic',      xp_reward: 75 },
+    { slug: 'rare_badge',           name: 'Ojo de halcón',  description: 'Escaneaste un badge raro.',                 hint: 'Encontrá un badge especial.',       icon: '🦅', rarity: 'rare',      xp_reward: 30 },
+    { slug: 'legend',               name: 'Leyenda',        description: 'Alcanzaste el nivel máximo.',               hint: 'Alcanzá el nivel máximo.',          icon: '👑', rarity: 'legendary', xp_reward: 100 },
+  ];
+  function achDef(slug) {
+    return ACHIEVEMENT_DEFS.filter(function (a) { return a.slug === slug; })[0] || null;
+  }
+
+  /* =========================================================
      MOCK (localStorage)
      ========================================================= */
   var STORE_KEY = 'lyfter_badge_state';
@@ -50,7 +104,9 @@
         { id: 'u-admin', name: 'Admin Lyfter',  email: 'admin@lyfter.app',  password: 'admin123',  role: 'admin' },
         { id: 'u-ana',   name: 'Ana Torres',    email: 'ana@lyfter.app',    password: 'ana123',    role: 'participant' },
         { id: 'u-carlos',name: 'Carlos Méndez', email: 'carlos@lyfter.app', password: 'carlos123', role: 'participant' },
-        { id: 'u-lucia', name: 'Lucía Herrera', email: 'lucia@lyfter.app',  password: 'lucia123',  role: 'participant' }
+        { id: 'u-lucia', name: 'Lucía Herrera', email: 'lucia@lyfter.app',  password: 'lucia123',  role: 'participant' },
+        { id: 'u-diego', name: 'Diego Rojas',   email: 'diego@lyfter.app',  password: 'diego123',  role: 'participant' },
+        { id: 'u-sofia', name: 'Sofía Vargas',  email: 'sofia@lyfter.app',  password: 'sofia123',  role: 'participant' }
       ],
       events: [
         { id: 'evt-summit', name: 'Lyfter Summit 2026', description: 'Evento insignia anual de la comunidad Lyfter.',
@@ -61,7 +117,26 @@
       progress: {
         'u-ana':    { 'evt-summit': ['b1', 'b2', 'b3'] },
         'u-carlos': { 'evt-summit': ['b1'] },
-        'u-lucia':  { 'evt-summit': ['b1', 'b2', 'b3', 'b4', 'b5'] }
+        'u-lucia':  { 'evt-summit': ['b1', 'b2', 'b3', 'b4', 'b5'] },
+        'u-diego':  { 'evt-summit': ['b1', 'b2'], 'evt-hack': ['h1'] },
+        'u-sofia':  { 'evt-summit': ['b1', 'b2', 'b3', 'b4'] }
+      },
+      // XP total simulado por usuario (coherente con sus badges).
+      xp: {
+        'u-ana':    185,
+        'u-carlos': 35,
+        'u-lucia':  420,
+        'u-diego':  110,
+        'u-sofia':  240,
+        'u-admin':  0
+      },
+      // Logros desbloqueados por usuario (slugs).
+      userAchievements: {
+        'u-ana':    ['first_scan', 'five_badges'],
+        'u-carlos': ['first_scan'],
+        'u-lucia':  ['first_scan', 'five_badges', 'first_event_complete', 'rare_badge'],
+        'u-diego':  ['first_scan', 'three_events'],
+        'u-sofia':  ['first_scan', 'five_badges']
       },
       _seq: 0
     };
@@ -109,7 +184,23 @@
   function eventDto(e) {
     return { id: e.id, name: e.name, description: e.description, start: e.start, end: e.end,
       prize: e.prize, active: e.active !== false, status: computeMockStatus(e),
-      photo: e.photo || null, access_qr: e.access_qr || null, tags: e.tags || [], location: e.location || '' };
+      photo: e.photo || null, access_qr: e.access_qr || null, tags: e.tags || [], location: e.location || '',
+      xp_first_scan:       e.xp_first_scan != null ? e.xp_first_scan : 5,
+      xp_rare_bonus:       e.xp_rare_bonus != null ? e.xp_rare_bonus : 15,
+      xp_completion_bonus: e.xp_completion_bonus != null ? e.xp_completion_bonus : 50 };
+  }
+
+  // En mock, el primer scan de la sesión siempre desbloquea first_scan (+15 XP).
+  var _mockFirstScanDone = false;
+
+  function mockTotalBadges(userId) {
+    var total = 0;
+    if (mockState.progress[userId]) {
+      Object.keys(mockState.progress[userId]).forEach(function (ev) {
+        total += mockState.progress[userId][ev].length;
+      });
+    }
+    return total;
   }
 
   var Mock = {
@@ -164,26 +255,55 @@
       if (!badge) return { status: 'none', badge: null, complete: true, prize: null, progress: { obtained: done.length, total: e.badges.length } };
 
       var dup = done.indexOf(badge.id) !== -1;
+      var xpGained = 0, unlocked = [], levelUp = false;
+      if (!mockState.xp) mockState.xp = {};
+      if (!mockState.userAchievements) mockState.userAchievements = {};
+      var xpBefore = mockState.xp[userId] || 0;
+
       if (!dup) {
         if (!mockState.progress[userId]) mockState.progress[userId] = {};
         if (!mockState.progress[userId][eventId]) mockState.progress[userId][eventId] = [];
+        var wasFirstInEvent = mockState.progress[userId][eventId].length === 0;
         mockState.progress[userId][eventId].push(badge.id);
         badge.redemptions = (badge.redemptions || 0) + 1;
+
+        // XP base + bonuses simulados
+        xpGained += 10;
+        if (wasFirstInEvent) xpGained += 5;
+
+        // Primer scan de la sesión → desbloquea first_scan (+15)
+        var owned = mockState.userAchievements[userId] || [];
+        if (!_mockFirstScanDone && owned.indexOf('first_scan') === -1) {
+          _mockFirstScanDone = true;
+          owned = owned.concat(['first_scan']);
+          unlocked.push('first_scan');
+          xpGained += 15;
+        }
+        mockState.userAchievements[userId] = owned;
+        mockState.xp[userId] = xpBefore + xpGained;
         persist();
       }
+
       var obtained = redeemedIds(userId, eventId).length;
       var complete = obtained >= e.badges.length;
+      var xpTotal = mockState.xp[userId] || 0;
+      levelUp = computeLevel(xpTotal) > computeLevel(xpBefore);
       return {
         status: dup ? 'duplicate' : 'ok',
         badge: { emoji: badge.emoji, name: badge.name, desc: badge.desc },
         complete: complete, prize: complete ? e.prize : null,
-        progress: { obtained: obtained, total: e.badges.length }
+        progress: { obtained: obtained, total: e.badges.length },
+        xp: { gained: xpGained, total: xpTotal, level: computeLevel(xpTotal), levelUp: levelUp },
+        achievements: unlocked
       };
     },
     async createEvent(data) {
       var e = { id: uid('evt'), name: data.name.trim(), description: (data.description || '').trim(),
         start: data.start, end: data.end, prize: (data.prize || '').trim() || 'Premio sorpresa',
-        active: true, totalParticipants: 0, badges: [] };
+        active: true, totalParticipants: 0, badges: [],
+        xp_first_scan:       (data.xp_first_scan != null && !isNaN(data.xp_first_scan)) ? data.xp_first_scan : 5,
+        xp_rare_bonus:       (data.xp_rare_bonus != null && !isNaN(data.xp_rare_bonus)) ? data.xp_rare_bonus : 15,
+        xp_completion_bonus: (data.xp_completion_bonus != null && !isNaN(data.xp_completion_bonus)) ? data.xp_completion_bonus : 50 };
       mockState.events.push(e); persist();
       return eventDto(e);
     },
@@ -196,15 +316,20 @@
       if (data.fecha_fin !== undefined)   e.end         = data.fecha_fin;
       if (data.activo !== undefined)      e.active      = data.activo;
       if (data.status !== undefined)      e.status      = data.status;
+      if (data.xp_first_scan !== undefined && !isNaN(data.xp_first_scan))             e.xp_first_scan       = data.xp_first_scan;
+      if (data.xp_rare_bonus !== undefined && !isNaN(data.xp_rare_bonus))             e.xp_rare_bonus       = data.xp_rare_bonus;
+      if (data.xp_completion_bonus !== undefined && !isNaN(data.xp_completion_bonus)) e.xp_completion_bonus = data.xp_completion_bonus;
       persist();
       return eventDto(e);
     },
     async addBadge(eventId, data) {
       var e = mockEvent(eventId); if (!e) throw new Error('Evento no encontrado');
       var b = { id: uid('b'), emoji: data.emoji || '🏅', name: data.name.trim(),
-        desc: (data.desc || '').trim() || 'Sin descripción', token: genToken(), redemptions: 0 };
+        desc: (data.desc || '').trim() || 'Sin descripción', token: genToken(), redemptions: 0,
+        xp_value: data.xp_value != null ? data.xp_value : 10, is_rare: !!data.is_rare };
       e.badges.push(b); persist();
-      return { id: b.id, emoji: b.emoji, name: b.name, desc: b.desc, token: b.token, redeemUrl: null, redeemed: 0, qrImage: null };
+      return { id: b.id, emoji: b.emoji, name: b.name, desc: b.desc, token: b.token, redeemUrl: null, redeemed: 0, qrImage: null,
+        xp_value: b.xp_value, is_rare: b.is_rare };
     },
     async listAdminBadges(eventId) {
       var e = mockEvent(eventId); if (!e) throw new Error('Evento no encontrado');
@@ -383,6 +508,73 @@
       result.sort(function(a, b) { return b.badges - a.badges; });
       return result;
     },
+    async getXpProfile() {
+      var sess = getSession();
+      var uid = sess ? sess.user.id : null;
+      var xpTotal = (mockState.xp && uid && mockState.xp[uid]) || 0;
+      return levelProgress(xpTotal);
+    },
+    async getAchievements() {
+      var sess = getSession();
+      var uid = sess ? sess.user.id : null;
+      var owned = (mockState.userAchievements && uid && mockState.userAchievements[uid]) || [];
+      var unlocked = [], locked = [];
+      ACHIEVEMENT_DEFS.forEach(function (a) {
+        if (owned.indexOf(a.slug) !== -1) {
+          unlocked.push({ slug: a.slug, name: a.name, description: a.description, icon: a.icon,
+            rarity: a.rarity, xp_reward: a.xp_reward, unlocked_at: new Date().toISOString() });
+        } else {
+          locked.push({ slug: a.slug, name: a.name, icon: a.icon, rarity: a.rarity, hint: a.hint });
+        }
+      });
+      return { unlocked: unlocked, locked: locked };
+    },
+    async getEventLeaderboard(eventId) {
+      var e = mockEvent(eventId); if (!e) throw new Error('Evento no encontrado');
+      var total = e.badges.length;
+      var sess = getSession();
+      var myId = sess ? sess.user.id : null;
+      var ranking = mockState.users.map(function (u) {
+        var done = redeemedIds(u.id, eventId);
+        var xpTotal = (mockState.xp && mockState.xp[u.id]) || 0;
+        var lvl = computeLevel(xpTotal);
+        return { user_id: u.id, name: u.name, badges_in_event: done.length,
+          badges_total: mockTotalBadges(u.id), completed: total > 0 && done.length >= total,
+          xp_total: xpTotal, level: lvl, level_name: levelName(lvl) };
+      }).filter(function (r) { return r.badges_in_event > 0; });
+      ranking.sort(function (a, b) {
+        return (b.badges_in_event - a.badges_in_event) || (b.xp_total - a.xp_total);
+      });
+      var myPos = null;
+      ranking.forEach(function (r, i) {
+        r.position = i + 1;
+        if (myId && r.user_id === myId) {
+          myPos = { position: r.position, xp_total: r.xp_total, level: r.level, badges_in_event: r.badges_in_event };
+        }
+      });
+      return { ranking: ranking, my_position: myPos };
+    },
+    async getGlobalLeaderboard() {
+      var sess = getSession();
+      var myId = sess ? sess.user.id : null;
+      var ranking = mockState.users.map(function (u) {
+        var xpTotal = (mockState.xp && mockState.xp[u.id]) || 0;
+        var lvl = computeLevel(xpTotal);
+        var evs = mockState.progress[u.id] ? Object.keys(mockState.progress[u.id]).length : 0;
+        var achs = (mockState.userAchievements && mockState.userAchievements[u.id]) ? mockState.userAchievements[u.id].length : 0;
+        return { user_id: u.id, name: u.name, xp_total: xpTotal, level: lvl, level_name: levelName(lvl),
+          badges_total: mockTotalBadges(u.id), events_participated: evs, achievements_count: achs };
+      });
+      ranking.sort(function (a, b) { return b.xp_total - a.xp_total; });
+      var myPos = null;
+      ranking.forEach(function (r, i) {
+        r.position = i + 1;
+        if (myId && r.user_id === myId) {
+          myPos = { position: r.position, xp_total: r.xp_total, level: r.level, badges_total: r.badges_total };
+        }
+      });
+      return { ranking: ranking.slice(0, 50), my_position: myPos };
+    },
     resetDemo() { mockState = seedState(); persist(); }
   };
 
@@ -405,6 +597,9 @@
       access_qr: e.access_qr || null,
       tags: e.tags || [],
       location: e.location || '',
+      xp_first_scan:       e.xp_first_scan,
+      xp_rare_bonus:       e.xp_rare_bonus,
+      xp_completion_bonus: e.xp_completion_bonus,
     };
   }
 
@@ -484,14 +679,20 @@
         status: d.status === 'duplicado' ? 'duplicate' : 'ok',
         badge: d.badge ? { emoji: d.badge.icon || '🏅', name: d.badge.nombre, desc: d.badge.descripcion } : null,
         complete: !!d.completado, prize: d.premio || null,
-        progress: d.progreso ? { obtained: d.progreso.obtenidos, total: d.progreso.total } : null
+        progress: d.progreso ? { obtained: d.progreso.obtenidos, total: d.progreso.total } : null,
+        xp: { gained: d.xp_gained || 0, total: d.xp_total || 0, level: d.level || 1, levelUp: !!d.level_up },
+        achievements: d.achievements_unlocked || []
       };
     },
     async createEvent(data) {
-      var d = await apiRequest('POST', '/admin/event', {
+      var body = {
         nombre: data.name, descripcion: data.description,
         fecha_inicio: data.start, fecha_fin: data.end, premio: data.prize
-      });
+      };
+      if (data.xp_first_scan != null && !isNaN(data.xp_first_scan)) body.xp_first_scan = data.xp_first_scan;
+      if (data.xp_rare_bonus != null && !isNaN(data.xp_rare_bonus)) body.xp_rare_bonus = data.xp_rare_bonus;
+      if (data.xp_completion_bonus != null && !isNaN(data.xp_completion_bonus)) body.xp_completion_bonus = data.xp_completion_bonus;
+      var d = await apiRequest('POST', '/admin/event', body);
       return mapEvent(d);
     },
     async updateEvent(eventId, data) {
@@ -499,11 +700,13 @@
       return mapEvent(d);
     },
     async addBadge(eventId, data) {
-      var d = await apiRequest('POST', '/admin/events/' + eventId + '/badge', {
-        nombre: data.name, descripcion: data.desc, icon: data.emoji || '🏅'
-      });
+      var body = { nombre: data.name, descripcion: data.desc, icon: data.emoji || '🏅' };
+      if (data.xp_value != null) body.xp_value = data.xp_value;
+      if (data.is_rare != null)  body.is_rare = data.is_rare;
+      var d = await apiRequest('POST', '/admin/events/' + eventId + '/badge', body);
       return { id: d.id, emoji: d.icon || '🏅', name: d.nombre, desc: d.descripcion,
-        token: d.token, redeemUrl: null, redeemed: 0, qrImage: d.qr_image || null };
+        token: d.token, redeemUrl: null, redeemed: 0, qrImage: d.qr_image || null,
+        xp_value: d.xp_value, is_rare: d.is_rare };
     },
     async listAdminBadges(eventId) {
       var d = await apiRequest('GET', '/admin/events/' + eventId + '/badges');
@@ -594,6 +797,18 @@
     async getLeaderboard() {
       return await apiRequest('GET', '/leaderboard');
     },
+    async getXpProfile() {
+      return await apiRequest('GET', '/profile/xp');
+    },
+    async getAchievements() {
+      return await apiRequest('GET', '/profile/achievements');
+    },
+    async getEventLeaderboard(eventId) {
+      return await apiRequest('GET', '/leaderboard/' + eventId);
+    },
+    async getGlobalLeaderboard() {
+      return await apiRequest('GET', '/leaderboard/global');
+    },
     resetDemo() { throw new Error('resetDemo no disponible en modo backend'); }
   };
 
@@ -650,6 +865,14 @@
     updateAvatar:     impl.updateAvatar.bind(impl),
     getEventStats:          impl.getEventStats.bind(impl),
     getLeaderboard:         impl.getLeaderboard.bind(impl),
+    getXpProfile:           impl.getXpProfile.bind(impl),
+    getAchievements:        impl.getAchievements.bind(impl),
+    getEventLeaderboard:    impl.getEventLeaderboard.bind(impl),
+    getGlobalLeaderboard:   impl.getGlobalLeaderboard.bind(impl),
+    // Helpers de nivel (mismos umbrales que el backend)
+    computeLevel:           computeLevel,
+    levelName:              levelName,
+    levelProgress:          levelProgress,
     generateEventAccessQr:  impl.generateEventAccessQr.bind(impl),
     updateEventPhoto:       impl.updateEventPhoto.bind(impl),
     joinEvent:              impl.joinEvent.bind(impl),

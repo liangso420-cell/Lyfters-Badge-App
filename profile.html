@@ -166,6 +166,8 @@
           var activeId = U.ensureActive(events);
           var activeEvent = events.find(function(e) { return e.id === activeId; }) || events[0];
           var detail = await API.getEventDetail(activeId);
+          var xpProfile = await API.getXpProfile().catch(function() { return null; });
+          var achData   = await API.getAchievements().catch(function() { return null; });
           var total = detail.total, doneCount = detail.obtained;
           var pct = total ? Math.round((doneCount / total) * 100) : 0;
           var complete = detail.complete;
@@ -207,6 +209,22 @@
               avatarHtml +
               '<span class="flex-1 text-sm font-medium text-gray-700">' + U.esc(entry.nombre) + (isSelf ? ' <span class="text-xs text-primary">(tú)</span>' : '') + '</span>' +
               '<span class="text-sm font-bold text-primary">' + entry.badges + ' 🏅</span>' +
+            '</div>';
+          }
+
+          function buildEventRow(entry, currentUserId) {
+            var rank = entry.position;
+            var medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '<span class="text-gray-400 font-bold">' + rank + '</span>';
+            var isSelf = entry.user_id === currentUserId;
+            var lname = entry.level_name || (API.levelName ? API.levelName(entry.level) : ('Nivel ' + entry.level));
+            var completedChip = entry.completed ? ' <span title="Completó el evento">✅</span>' : '';
+            return '<div class="flex items-center gap-3 py-2.5 border-b border-gray-100 last:border-0' + (isSelf ? ' bg-primary-soft/30 -mx-4 px-4 rounded-card' : '') + '">' +
+              '<span class="w-6 text-center text-sm">' + medal + '</span>' +
+              '<div class="flex-1 min-w-0">' +
+                '<p class="text-sm font-medium text-gray-700 truncate">' + U.esc(entry.name) + (isSelf ? ' <span class="text-xs text-primary">(tú)</span>' : '') + completedChip + '</p>' +
+                '<p class="text-[11px] text-gray-400">Nv ' + entry.level + ' · ' + U.esc(lname) + ' · ' + entry.xp_total + ' XP</p>' +
+              '</div>' +
+              '<span class="text-sm font-bold text-primary whitespace-nowrap">' + entry.badges_in_event + ' 🏅</span>' +
             '</div>';
           }
 
@@ -259,10 +277,17 @@
               '</div>'
             : '';
 
+          var xpBarMarkup = xpProfile ? U.xpBarHtml(xpProfile) : '';
+          var achGridMarkup = achData ? U.achievementsGridHtml(achData) : '';
+          var globalLbButton =
+            '<button id="btn-global-lb" class="w-full py-3 rounded-card text-sm font-semibold mb-4 flex items-center justify-center gap-2" ' +
+              'style="background:#EEEDFF;color:#6C63FF;">🌍 Ver ranking global</button>';
+
           app.innerHTML =
             '<section class="device-frame px-4 pt-10 pb-28">' +
               eventPhotoHtml +
               completedBanner +
+              xpBarMarkup +
               '<div class="bg-white rounded-card p-5 shadow-soft anim-fade mb-4">' +
                 '<div class="flex items-center justify-between mb-4">' +
                   '<h2 class="text-lg font-bold text-gray-800">' + U.t('greeting') + ', ' + U.esc(user.name.split(' ')[0]) + ' 👋</h2>' +
@@ -288,6 +313,8 @@
                 '<div id="panel-badges"><div class="grid grid-cols-3 gap-2.5">' + grid + '</div>' + prizeBox + '</div>' +
                 '<div id="panel-ranking" style="display:none;"><div class="text-center text-gray-400 text-sm py-4">' + U.t('loading') + '</div></div>' +
               '</div>' +
+              achGridMarkup +
+              globalLbButton +
               historyHtml +
             '</section>' +
             '<div class="fixed bottom-0 left-0 right-0 flex justify-center pb-6 pointer-events-none z-30">' +
@@ -311,14 +338,27 @@
             document.getElementById('tab-badges').style.background = '';
             document.getElementById('tab-badges').className = 'tab-btn flex-1 py-2 rounded-btn text-sm font-medium text-gray-500 bg-gray-100';
             try {
-              var lb = await API.getLeaderboard();
+              var lb = await API.getEventLeaderboard(activeId);
               var panel = document.getElementById('panel-ranking');
-              if (!lb.length) {
+              var rows = lb.ranking || [];
+              if (!rows.length) {
                 panel.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">' + U.t('no_data') + '</p>';
               } else {
-                panel.innerHTML = lb.map(function(entry, i) {
-                  return buildLeaderboardRow(entry, i + 1, user.id);
+                var html = rows.map(function(entry) {
+                  return buildEventRow(entry, user.id);
                 }).join('');
+                // Si el usuario no está en el top visible, mostrar su posición al fondo.
+                var inList = rows.some(function(e){ return e.user_id === user.id; });
+                if (lb.my_position && !inList) {
+                  html += '<div class="border-t-2 border-dashed border-gray-200 my-2"></div>' +
+                    buildEventRow({
+                      position: lb.my_position.position, user_id: user.id, name: (user.name || 'Tú'),
+                      badges_in_event: lb.my_position.badges_in_event, completed: false,
+                      xp_total: lb.my_position.xp_total, level: lb.my_position.level,
+                      level_name: ''
+                    }, user.id);
+                }
+                panel.innerHTML = html;
               }
             } catch(e) {
               document.getElementById('panel-ranking').innerHTML = '<p class="text-sm text-red-400 text-center py-4">' + U.t('load_error') + '</p>';
@@ -349,6 +389,8 @@
           });
           document.getElementById('fab-scan').addEventListener('click', function() { window.location.href = 'scan.html'; });
           document.getElementById('fab-events').addEventListener('click', function() { window.location.href = 'events.html'; });
+          var globalLbBtn = document.getElementById('btn-global-lb');
+          if (globalLbBtn) globalLbBtn.addEventListener('click', function() { window.location.href = 'leaderboard.html'; });
 
           var sel = document.getElementById('profile-event-select');
           sel.addEventListener('change', function() { U.setActiveId(sel.value); location.reload(); });
