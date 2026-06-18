@@ -1388,6 +1388,144 @@
     }
   }
 
+  /* ── XP & Logros: feedback visual ── */
+  var RARITY_STYLES = {
+    common:    { color: '#6B7280', label: 'Común',      glow: 'rgba(107,114,128,0.30)' },
+    rare:      { color: '#2563EB', label: 'Raro',       glow: 'rgba(37,99,235,0.35)' },
+    epic:      { color: '#7C3AED', label: 'Épico',      glow: 'rgba(124,58,237,0.40)' },
+    legendary: { color: '#D97706', label: 'Legendario', glow: 'rgba(217,119,6,0.45)' }
+  };
+
+  // Toast flotante "+N XP" (y banner opcional de subida de nivel).
+  // opts = { levelUp:bool, level:int }
+  function showXpGain(amount, opts) {
+    opts = opts || {};
+    var root = document.getElementById('toast-root');
+    if (!root) return;
+    if (opts.levelUp) {
+      var banner = document.createElement('div');
+      banner.className = 'pointer-events-none anim-pop text-white text-base font-bold px-5 py-3 rounded-card shadow-soft';
+      banner.style.background = 'linear-gradient(135deg,#6C63FF,#9C63FF)';
+      var lname = window.LyfterAPI && window.LyfterAPI.levelName ? window.LyfterAPI.levelName(opts.level) : '';
+      banner.textContent = '⬆️ ¡Subiste al nivel ' + opts.level + (lname ? ' · ' + lname : '') + '!';
+      root.appendChild(banner);
+      setTimeout(function () {
+        banner.style.transition = 'opacity .4s'; banner.style.opacity = '0';
+        setTimeout(function () { banner.remove(); }, 400);
+      }, 2600);
+    }
+    if (amount > 0) {
+      var chip = document.createElement('div');
+      chip.className = 'pointer-events-none anim-pop text-white text-lg font-extrabold px-4 py-2 rounded-full shadow-soft';
+      chip.style.background = '#16a34a';
+      chip.textContent = '+' + amount + ' XP';
+      root.appendChild(chip);
+      setTimeout(function () {
+        chip.style.transition = 'transform .5s, opacity .5s';
+        chip.style.transform = 'translateY(-24px)'; chip.style.opacity = '0';
+        setTimeout(function () { chip.remove(); }, 500);
+      }, 1600);
+    }
+  }
+
+  // Muestra un modal por cada logro desbloqueado (tap o 3s para avanzar),
+  // luego invoca onDone. `slugs` es la lista de slugs de redeem.
+  function showAchievementUnlocks(slugs, onDone) {
+    onDone = onDone || function () {};
+    if (!slugs || !slugs.length) { onDone(); return; }
+    window.LyfterAPI.getAchievements().then(function (data) {
+      var bySlug = {};
+      (data.unlocked || []).forEach(function (a) { bySlug[a.slug] = a; });
+      var queue = slugs.map(function (s) { return bySlug[s]; }).filter(Boolean);
+      _showAchievementAt(queue, 0, onDone);
+    }).catch(function () { onDone(); });
+  }
+
+  function _showAchievementAt(queue, i, onDone) {
+    if (i >= queue.length) { onDone(); return; }
+    var a = queue[i];
+    var rs = RARITY_STYLES[a.rarity] || RARITY_STYLES.common;
+    var root = document.getElementById('modal-root');
+    if (!root) { onDone(); return; }
+    var advanced = false;
+    function advance() {
+      if (advanced) return; advanced = true;
+      closeModal();
+      _showAchievementAt(queue, i + 1, onDone);
+    }
+    root.innerHTML =
+      '<div id="ach-overlay" class="fixed inset-0 z-[70] flex items-center justify-center p-6 anim-fade" style="background:rgba(17,24,39,0.8);">' +
+        '<div class="bg-white rounded-card p-8 text-center w-full max-w-xs shadow-soft anim-pop" style="border-top:5px solid ' + rs.color + ';">' +
+          '<p class="text-xs font-semibold uppercase tracking-wide mb-3" style="color:' + rs.color + ';">🏆 ¡Logro desbloqueado!</p>' +
+          '<div class="text-6xl mb-3" style="filter:drop-shadow(0 0 14px ' + rs.glow + ');">' + (a.icon || '🏅') + '</div>' +
+          '<h3 class="text-lg font-bold text-gray-800">' + esc(a.name) + '</h3>' +
+          '<p class="text-sm text-gray-500 mt-1">' + esc(a.description || '') + '</p>' +
+          '<span class="inline-block mt-3 px-3 py-1 rounded-full text-xs font-bold text-white" style="background:' + rs.color + ';">' + rs.label + ' · +' + (a.xp_reward || 0) + ' XP</span>' +
+          '<p class="text-[11px] text-gray-300 mt-4">Tocá para continuar</p>' +
+        '</div>' +
+      '</div>';
+    document.getElementById('ach-overlay').addEventListener('click', advance);
+    setTimeout(advance, 3000);
+  }
+
+  // Markup de la barra de XP (para la vista de perfil). `xp` = respuesta de getXpProfile.
+  function xpBarHtml(xp) {
+    var pct = xp.progress_pct != null ? xp.progress_pct : 0;
+    var nextLine = xp.xp_for_next > 0
+      ? (xp.xp_for_next + ' XP para nivel ' + (xp.level + 1))
+      : '¡Nivel máximo alcanzado!';
+    return '' +
+      '<div class="bg-white rounded-card p-5 shadow-soft mb-4">' +
+        '<div class="flex items-center justify-between mb-2">' +
+          '<div class="flex items-center gap-2">' +
+            '<span class="inline-flex items-center justify-center w-9 h-9 rounded-full text-white font-bold text-sm" style="background:#6C63FF;">' + xp.level + '</span>' +
+            '<div><p class="text-sm font-bold text-gray-800">' + esc(xp.level_name) + '</p>' +
+            '<p class="text-xs text-gray-400">' + xp.xp_total + ' XP totales</p></div>' +
+          '</div>' +
+          '<span class="text-sm font-bold text-primary">' + pct + '%</span>' +
+        '</div>' +
+        '<div class="w-full h-3 bg-gray-100 rounded-full overflow-hidden">' +
+          '<div class="h-3 rounded-full transition-all duration-700" style="width:' + pct + '%;background:linear-gradient(90deg,#6C63FF,#9C63FF);"></div>' +
+        '</div>' +
+        '<p class="text-xs text-gray-400 mt-1.5">' + nextLine + '</p>' +
+      '</div>';
+  }
+
+  // Markup de la grilla de logros. `data` = respuesta de getAchievements.
+  function achievementsGridHtml(data) {
+    function fmtDate(iso) {
+      if (!iso) return '';
+      try { return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }); }
+      catch (e) { return ''; }
+    }
+    var cells = [];
+    (data.unlocked || []).forEach(function (a) {
+      var rs = RARITY_STYLES[a.rarity] || RARITY_STYLES.common;
+      cells.push('<div class="rounded-card p-3 text-center" style="background:#fff;border:1px solid ' + rs.color + '33;box-shadow:0 2px 10px ' + rs.glow + ';">' +
+        '<div class="text-3xl">' + (a.icon || '🏅') + '</div>' +
+        '<p class="text-xs font-semibold mt-1 text-gray-700">' + esc(a.name) + '</p>' +
+        '<p class="text-[10px] mt-0.5" style="color:' + rs.color + ';">' + rs.label + '</p>' +
+        (a.unlocked_at ? '<p class="text-[10px] text-gray-300">' + fmtDate(a.unlocked_at) + '</p>' : '') +
+      '</div>');
+    });
+    (data.locked || []).forEach(function (a) {
+      cells.push('<div class="rounded-card p-3 text-center bg-gray-100" title="' + esc(a.hint || '') + '">' +
+        '<div class="text-3xl opacity-25 grayscale">' + (a.icon || '🏅') + '</div>' +
+        '<p class="text-xs text-gray-400 mt-1">' + esc(a.name) + '</p>' +
+        '<p class="text-[10px] text-gray-300">🔒</p>' +
+      '</div>');
+    });
+    var count = (data.unlocked || []).length;
+    var total = count + (data.locked || []).length;
+    return '<div class="bg-white rounded-card p-5 shadow-soft mb-4">' +
+      '<div class="flex items-center justify-between mb-3">' +
+        '<h3 class="text-sm font-bold text-gray-700">🏆 Logros</h3>' +
+        '<span class="text-xs text-gray-400">' + count + '/' + total + '</span>' +
+      '</div>' +
+      '<div class="grid grid-cols-3 gap-2.5">' + cells.join('') + '</div>' +
+    '</div>';
+  }
+
   /* ── Sesión ── */
   function logout() {
     window.LyfterAPI.logout();
@@ -1422,7 +1560,11 @@
     setCurrentLang: setCurrentLang,
     t: t,
     setLang: setLang,
-    getLang: getLang
+    getLang: getLang,
+    showXpGain: showXpGain,
+    showAchievementUnlocks: showAchievementUnlocks,
+    xpBarHtml: xpBarHtml,
+    achievementsGridHtml: achievementsGridHtml
   };
 
   window.lyfterReset = function () {
