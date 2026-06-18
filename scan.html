@@ -52,6 +52,7 @@
     .corner-br { bottom: 0; right: 0; border-width: 0 3px 3px 0; }
   </style>
   <link rel="stylesheet" href="css/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@lottiefiles/dotlottie-web/dist/dotlottie-web.browser.es2022.js" type="module"></script>
 </head>
 <body>
   <main id="app"></main>
@@ -318,7 +319,8 @@
         modalRoot.innerHTML =
           '<div class="fixed inset-0 z-50 flex items-center justify-center p-6 anim-fade" style="background:rgba(17,24,39,0.75);">' +
             '<div class="bg-white rounded-card p-8 text-center w-full max-w-sm shadow-soft anim-pop">' +
-              '<div class="text-6xl animate-pulse-badge mb-3">' + badgeEmoji + '</div>' +
+              '<canvas id="duck-animation" style="width:150px;height:150px;margin:0 auto 12px;display:block;"></canvas>' +
+              '<div class="text-4xl mb-2">' + badgeEmoji + '</div>' +
               '<h3 class="text-xl font-bold text-primary">' + (isLast ? U.t('completed_event') : U.t('badge_obtained')) + '</h3>' +
               '<p class="text-lg font-semibold mt-1 text-gray-800">' + U.esc(badgeName) + '</p>' +
               '<p class="text-sm text-gray-500 mt-1">' + U.esc(r.badge ? (r.badge.desc || '') : '') + '</p>' +
@@ -344,6 +346,25 @@
             window.location.href = 'profile.html';
           });
         });
+
+        var DotLottie = window.DotLottie;
+        if (typeof DotLottie !== 'undefined') {
+          new DotLottie({
+            autoplay: true,
+            loop: true,
+            canvas: document.getElementById('duck-animation'),
+            src: 'happy.lottie'
+          });
+        } else {
+          import('https://cdn.jsdelivr.net/npm/@lottiefiles/dotlottie-web/dist/dotlottie-web.browser.es2022.js').then(function(m) {
+            new m.DotLottie({
+              autoplay: true,
+              loop: true,
+              canvas: document.getElementById('duck-animation'),
+              src: 'happy.lottie'
+            });
+          });
+        }
 
         document.getElementById('celebrate-share').addEventListener('click', async function() {
           var btn = this;
