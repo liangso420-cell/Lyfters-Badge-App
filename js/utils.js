@@ -168,7 +168,8 @@
       redeem_retry: 'Reintentar',
       redeem_go_home: 'Ir al inicio',
       redeem_not_recognized: 'QR no reconocido',
-      redeem_not_recognized_desc: 'Este enlace no contiene los datos necesarios.'
+      redeem_not_recognized_desc: 'Este enlace no contiene los datos necesarios.',
+      forgot_password: '¿Olvidaste tu contraseña?'
     },
     en: {
       greeting: 'Hello',
@@ -329,7 +330,8 @@
       redeem_retry: 'Retry',
       redeem_go_home: 'Go to home',
       redeem_not_recognized: 'QR not recognized',
-      redeem_not_recognized_desc: 'This link does not contain the necessary data.'
+      redeem_not_recognized_desc: 'This link does not contain the necessary data.',
+      forgot_password: 'Forgot your password?'
     },
     pt: {
       greeting: 'Olá',

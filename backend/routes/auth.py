@@ -1,10 +1,13 @@
 # backend/routes/auth.py — rutas /auth/*
 
+import os
 import re
+import secrets
 from datetime import datetime, timedelta
 from collections import defaultdict
 
 import bcrypt
+import resend
 from bson import ObjectId
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import (
@@ -272,3 +275,82 @@ def google_login():
 
     token = create_access_token(identity=str(user["_id"]))
     return jsonify(token=token, user=fmt_user(user)), 200
+
+
+@auth_bp.route("/forgot-password", methods=["POST"])
+def forgot_password():
+    data = request.get_json() or {}
+    email = sanitize(data.get("email", ""), max_len=254).lower()
+    if not email:
+        return jsonify(error="Email requerido"), 400
+
+    user = users().find_one({"email": email})
+    if not user:
+        return jsonify(ok=True, message="Si el email existe, recibirás un correo"), 200
+
+    reset_token = secrets.token_urlsafe(32)
+    expiry = datetime.utcnow() + timedelta(hours=1)
+
+    users().update_one(
+        {"_id": user["_id"]},
+        {"$set": {"reset_token": reset_token, "reset_token_expiry": expiry}}
+    )
+
+    frontend_url = os.environ.get("FRONTEND_URL", "https://liangso420-cell.github.io/Lyfters-Badge-App")
+    reset_link = frontend_url + "/reset-password.html?token=" + reset_token
+
+    try:
+        resend.Emails.send({
+            "from": "Lyfter Badge App <onboarding@resend.dev>",
+            "to": email,
+            "subject": "Restablecer tu contraseña — Lyfter Badge App",
+            "html": """
+            <div style="font-family:Poppins,sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#f8f9fa;border-radius:16px;">
+                <div style="text-align:center;margin-bottom:24px;">
+                    <span style="font-size:48px;">&#x1F3C6;</span>
+                    <h1 style="color:#1f2937;font-size:24px;margin:8px 0;">Lyfter Badge App</h1>
+                </div>
+                <div style="background:white;border-radius:12px;padding:24px;">
+                    <h2 style="color:#1f2937;font-size:18px;">Restablecer contrase&#xF1;a</h2>
+                    <p style="color:#6b7280;font-size:14px;">Recibimos una solicitud para restablecer tu contrase&#xF1;a. Haz clic en el bot&#xF3;n para continuar:</p>
+                    <div style="text-align:center;margin:24px 0;">
+                        <a href="RESET_LINK_PLACEHOLDER" style="background:#6C63FF;color:white;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;">Restablecer contrase&#xF1;a</a>
+                    </div>
+                    <p style="color:#9ca3af;font-size:12px;">Este enlace expira en 1 hora. Si no solicitaste esto, ignora este correo.</p>
+                </div>
+            </div>
+            """.replace("RESET_LINK_PLACEHOLDER", reset_link)
+        })
+    except Exception as e:
+        print("Error enviando email:", e)
+
+    return jsonify(ok=True, message="Si el email existe, recibirás un correo"), 200
+
+
+@auth_bp.route("/reset-password", methods=["POST"])
+def reset_password():
+    data = request.get_json() or {}
+    reset_token = data.get("token", "")
+    new_password = data.get("password", "")
+
+    if not reset_token or not new_password:
+        return jsonify(error="Token y contraseña requeridos"), 400
+    if len(new_password) < 6:
+        return jsonify(error="La contraseña debe tener mínimo 6 caracteres"), 400
+
+    user = users().find_one({
+        "reset_token": reset_token,
+        "reset_token_expiry": {"$gt": datetime.utcnow()}
+    })
+
+    if not user:
+        return jsonify(error="Token inválido o expirado"), 400
+
+    new_hash = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt()).decode()
+    users().update_one(
+        {"_id": user["_id"]},
+        {"$set": {"password_hash": new_hash},
+         "$unset": {"reset_token": "", "reset_token_expiry": ""}}
+    )
+
+    return jsonify(ok=True, message="Contraseña actualizada correctamente"), 200

@@ -2,6 +2,7 @@
 
 import os
 import re
+import resend
 from datetime import timedelta
 
 from dotenv import load_dotenv
@@ -33,6 +34,7 @@ app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET", "dev_secret_cambia_esto")
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=8)
 
 jwt = JWTManager(app)
+resend.api_key = os.environ.get("RESEND_API_KEY")
 init_indexes()
 
 _env_origins = [

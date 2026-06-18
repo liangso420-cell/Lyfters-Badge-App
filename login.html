@@ -101,6 +101,9 @@
                 U.t('continue_google') +
               '</button>' +
               '<p class="text-center text-sm text-gray-500">' + U.t('no_account') + ' <a href="register.html" class="text-primary font-medium">' + U.t('sign_up') + '</a></p>' +
+              '<p class="text-center text-sm text-gray-400 mt-2">' +
+                '<button type="button" id="forgot-pw-btn" class="text-primary hover:underline text-sm">' + U.t('forgot_password') + '</button>' +
+              '</p>' +
               demoHint +
             '</form>' +
           '</div>' +
@@ -161,6 +164,42 @@
           btn.disabled = false;
           btn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5" alt="Google" /> ' + U.t('continue_google');
         }
+      });
+
+      document.getElementById('forgot-pw-btn').addEventListener('click', function() {
+        var modalRoot = document.getElementById('modal-root');
+        modalRoot.innerHTML =
+          '<div class="fixed inset-0 z-50 flex items-center justify-center p-6 anim-fade" style="background:rgba(17,24,39,0.75);">' +
+            '<div class="bg-white rounded-card p-6 w-full max-w-sm shadow-soft anim-pop">' +
+              '<h3 class="text-lg font-bold text-gray-800 mb-2">🔑 Recuperar contraseña</h3>' +
+              '<p class="text-sm text-gray-400 mb-4">Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña.</p>' +
+              '<input id="forgot-email" type="email" placeholder="tu@correo.com" class="w-full px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm mb-3" />' +
+              '<button id="forgot-send" class="w-full py-2.5 rounded-btn text-white text-sm font-medium mb-2" style="background:#6C63FF;">Enviar enlace</button>' +
+              '<button id="forgot-cancel" class="w-full py-2.5 rounded-btn text-sm font-medium border border-gray-200 text-gray-600">Cancelar</button>' +
+            '</div>' +
+          '</div>';
+
+        document.getElementById('forgot-cancel').addEventListener('click', function() { modalRoot.innerHTML = ''; });
+
+        document.getElementById('forgot-send').addEventListener('click', async function() {
+          var btn = this;
+          var email = document.getElementById('forgot-email').value.trim();
+          if (!email) { U.toast('Ingresa tu email', 'error'); return; }
+          btn.disabled = true; btn.textContent = 'Enviando...';
+          try {
+            var res = await fetch(window.LYFTER_CONFIG.apiBase + '/auth/forgot-password', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: email })
+            });
+            await res.json();
+            modalRoot.innerHTML = '';
+            U.toast('Si el email existe, recibirás un correo en breve 📧', 'success');
+          } catch(err) {
+            U.toast('No se pudo enviar el correo', 'error');
+            btn.disabled = false; btn.textContent = 'Enviar enlace';
+          }
+        });
       });
     })();
   </script>
