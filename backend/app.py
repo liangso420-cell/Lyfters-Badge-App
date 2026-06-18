@@ -6,7 +6,7 @@ import resend
 from datetime import timedelta
 
 from dotenv import load_dotenv
-from flask import Flask, jsonify, redirect
+from flask import Flask, jsonify, redirect, request, make_response
 from flask_cors import CORS
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_jwt_extended import JWTManager
@@ -67,6 +67,24 @@ init_security(app)
 # ──────────────────────────────────────────────
 # INDEX
 # ──────────────────────────────────────────────
+
+@app.route("/auth/forgot-password", methods=["OPTIONS"])
+def forgot_password_options():
+    response = make_response()
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    return response, 200
+
+
+@app.route("/auth/reset-password", methods=["OPTIONS"])
+def reset_password_options():
+    response = make_response()
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    return response, 200
+
 
 @app.route("/", methods=["GET"])
 def index():
