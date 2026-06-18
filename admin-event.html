@@ -199,88 +199,113 @@
               '</div>' +
             '</div>';
 
-          var eventCards = events.length ? events.map(function(e) {
-            var isExpanded = expandedId === e.id;
-            var photoHtml = e.photo
-              ? '<img src="' + e.photo + '" class="w-full h-32 object-cover rounded-card mb-3" />'
-              : '<div class="w-full h-24 rounded-card mb-3 flex items-center justify-center bg-gray-100 text-gray-300 text-sm cursor-pointer hover:bg-gray-200" id="photo-placeholder-' + e.id + '">📷 Agregar foto</div>';
+          var CARD_GRADIENTS = [
+            'linear-gradient(120deg,#d897e7 0%,#e68a8d 60%,#ffcb8a 100%)',
+            'linear-gradient(120deg,#70cfff 0%,#abd194 100%)',
+            'linear-gradient(120deg,#ffcb8a 0%,#e68a8d 100%)',
+            'linear-gradient(120deg,#abd194 0%,#70cfff 100%)',
+          ];
+          var INP = 'width:100%;margin-top:4px;padding:8px 12px;font-size:13px;background:#2e323d;border:1px solid #353a46;border-radius:8px;color:#f4f6f9;outline:none;box-sizing:border-box;font-family:Manrope,sans-serif;';
+          var LBL = 'font-size:12px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;';
 
-            return '<div class="bg-white rounded-card shadow-soft mb-4 overflow-hidden anim-fade">' +
-              '<div class="p-5">' +
-                '<div id="photo-area-' + e.id + '" class="cursor-pointer">' + photoHtml + '</div>' +
-                '<div class="flex items-start justify-between gap-2">' +
-                  '<div class="flex-1 min-w-0 cursor-pointer" data-expand="' + e.id + '">' +
-                    '<div class="flex items-center gap-2 mb-0.5">' +
-                      '<span class="px-2 py-0.5 rounded-full text-xs font-medium border ' + (STATUS_MAP[e.status] ? STATUS_MAP[e.status].color + ' ' + STATUS_MAP[e.status].bg : 'text-gray-500 border-gray-300 bg-gray-50') + '">' + (STATUS_MAP[e.status] ? STATUS_MAP[e.status].label : (e.status || 'draft')) + '</span>' +
-                      '<p class="font-semibold text-gray-800">' + U.esc(e.name) + '</p>' +
-                    '</div>' +
-                    '<p class="text-xs text-gray-400">' + fmtDate(e.start) + ' — ' + fmtDate(e.end) + '</p>' +
-                    (e.prize ? '<p class="text-xs text-gray-500 mt-0.5">🎁 ' + U.esc(e.prize) + '</p>' : '') +
+          var eventCards = events.length ? events.map(function(e, i) {
+            var isExpanded = expandedId === e.id;
+            var statusLabel = STATUS_MAP[e.status] ? STATUS_MAP[e.status].label : (e.status || 'draft');
+            var isActive = e.status === 'active';
+            var grad = CARD_GRADIENTS[i % CARD_GRADIENTS.length];
+            var bgImg = e.photo ? 'background-image:url(' + e.photo + ');background-size:cover;background-position:center;' : '';
+
+            return '<div style="border-radius:16px;overflow:hidden;border:1px solid #2f343f;background:#20242d;margin-bottom:16px;" class="anim-fade">' +
+
+              // Gradient header — click to expand
+              '<div style="position:relative;height:86px;background:' + grad + ';' + bgImg + 'display:flex;align-items:flex-end;padding:12px 16px;cursor:pointer;" data-expand="' + e.id + '">' +
+                '<div style="position:absolute;inset:0;background:radial-gradient(120% 100% at 80% 0%,rgba(255,255,255,0.18),transparent 60%);opacity:.7;pointer-events:none;"></div>' +
+                (e.photo ? '<div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 20%,rgba(0,0,0,0.55));pointer-events:none;"></div>' : '') +
+                '<span style="position:absolute;top:10px;right:12px;font-size:11px;font-weight:700;background:rgba(255,255,255,0.9);padding:4px 11px;border-radius:999px;color:' + (isActive ? '#1a3a1a' : '#3a2a0a') + ';">' + statusLabel + '</span>' +
+                '<span style="position:absolute;top:10px;left:14px;font-size:24px;">🏆</span>' +
+                '<span style="position:relative;font-family:Poppins,sans-serif;font-size:17px;font-weight:700;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,0.4);">' + U.esc(e.name) + '</span>' +
+                // Hidden photo-area for JS compatibility
+                '<div id="photo-area-' + e.id + '" style="position:absolute;inset:0;opacity:0;cursor:pointer;">' +
+                  (e.photo ? '' : '<div id="photo-placeholder-' + e.id + '" style="width:100%;height:100%;"></div>') +
+                '</div>' +
+              '</div>' +
+
+              // Footer row
+              '<div style="padding:14px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-top:1px solid #2f343f;">' +
+                '<span style="font-size:12px;color:#8b93a3;font-family:Manrope,sans-serif;">📅 ' + fmtDate(e.start) + (e.end ? ' — ' + fmtDate(e.end) : '') + '</span>' +
+                (e.prize ? '<span style="font-size:12px;color:#8b93a3;font-family:Manrope,sans-serif;">🎁 ' + U.esc(e.prize) + '</span>' : '') +
+                '<div style="margin-left:auto;display:flex;gap:8px;align-items:center;">' +
+                  '<select data-status-sel="' + e.id + '" class="status-sel" style="height:32px;padding:0 8px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-size:12px;font-weight:600;outline:none;cursor:pointer;font-family:Manrope,sans-serif;">' +
+                    Object.keys(STATUS_MAP).map(function(k) {
+                      return '<option value="' + k + '"' + (e.status === k ? ' selected' : '') + '>' + STATUS_MAP[k].label + '</option>';
+                    }).join('') +
+                  '</select>' +
+                  '<button data-edit="' + e.id + '" class="edit-btn" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid #353a46;background:transparent;color:#cdd2db;font-size:12px;font-weight:600;cursor:pointer;font-family:Manrope,sans-serif;">✏️ Editar</button>' +
+                  '<button data-del="' + e.id + '" data-name="' + U.esc(e.name) + '" class="del-btn" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid rgba(230,138,141,0.40);background:transparent;color:#e68a8d;font-size:12px;font-weight:600;cursor:pointer;font-family:Manrope,sans-serif;">🗑</button>' +
+                '</div>' +
+              '</div>' +
+
+              // Edit form (hidden, all IDs preserved)
+              '<div id="edit-form-' + e.id + '" class="hidden" style="border-top:1px solid #2f343f;padding:20px 16px;">' +
+                '<form class="inline-edit-form" data-eid="' + e.id + '" novalidate style="display:flex;flex-direction:column;gap:12px;">' +
+                  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">' +
+                    '<div><label style="' + LBL + '">' + U.t('admin_name_label') + '</label><input type="text" name="nombre" value="' + U.esc(e.name) + '" style="' + INP + '" /></div>' +
+                    '<div><label style="' + LBL + '">' + U.t('admin_prize_label') + '</label><input type="text" name="premio" value="' + U.esc(e.prize || '') + '" style="' + INP + '" /></div>' +
                   '</div>' +
-                  '<div class="flex gap-1.5 flex-shrink-0">' +
-                    '<select data-status-sel="' + e.id + '" class="status-sel px-2 py-1.5 rounded-btn text-xs font-medium border ' + (STATUS_MAP[e.status] ? STATUS_MAP[e.status].color : 'text-gray-500 border-gray-300') + ' outline-none cursor-pointer">' +
-                      Object.keys(STATUS_MAP).map(function(k) {
-                        return '<option value="' + k + '"' + (e.status === k ? ' selected' : '') + '>' + STATUS_MAP[k].label + '</option>';
+                  '<div><label style="' + LBL + '">' + U.t('admin_description') + '</label><input type="text" name="descripcion" value="' + U.esc(e.description || '') + '" style="' + INP + '" /></div>' +
+                  '<div><label style="' + LBL + '">Ubicación 📍</label><input type="text" name="location" value="' + U.esc(e.location || '') + '" placeholder="Ciudad, País o enlace virtual" style="' + INP + '" /></div>' +
+                  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">' +
+                    '<div><label style="' + LBL + '">Latitud 🌐</label><input type="number" step="any" name="lat" value="' + (e.lat != null ? e.lat : '') + '" placeholder="4.6097" style="' + INP + '" /></div>' +
+                    '<div><label style="' + LBL + '">Longitud 🌐</label><input type="number" step="any" name="lng" value="' + (e.lng != null ? e.lng : '') + '" placeholder="-74.0817" style="' + INP + '" /></div>' +
+                  '</div>' +
+                  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">' +
+                    '<div><label style="' + LBL + '">' + U.t('admin_inicio_label') + '</label><input type="date" name="fecha_inicio" value="' + isoDate(e.start) + '" style="' + INP + '" /></div>' +
+                    '<div><label style="' + LBL + '">' + U.t('admin_fin_label') + '</label><input type="date" name="fecha_fin" value="' + isoDate(e.end) + '" style="' + INP + '" /></div>' +
+                  '</div>' +
+                  '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">' +
+                    '<div><label style="' + LBL + '">Bonus primer badge</label><input type="number" name="xp_first_scan" min="0" max="1000" value="' + (e.xp_first_scan != null ? e.xp_first_scan : 5) + '" style="' + INP + '" /></div>' +
+                    '<div><label style="' + LBL + '">Bonus badge raro</label><input type="number" name="xp_rare_bonus" min="0" max="1000" value="' + (e.xp_rare_bonus != null ? e.xp_rare_bonus : 15) + '" style="' + INP + '" /></div>' +
+                    '<div><label style="' + LBL + '">Bonus completar evento</label><input type="number" name="xp_completion_bonus" min="0" max="1000" value="' + (e.xp_completion_bonus != null ? e.xp_completion_bonus : 50) + '" style="' + INP + '" /></div>' +
+                  '</div>' +
+                  '<div style="border-top:1px solid #2f343f;padding-top:12px;">' +
+                    '<p style="' + LBL + 'margin-bottom:8px;">' + U.t('admin_tags_label') + '</p>' +
+                    '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">' +
+                      TAGS_LIST.map(function(tag) {
+                        var isSel = (e.tags || []).indexOf(tag) !== -1;
+                        return '<button type="button" data-eitag="' + U.esc(tag) + '" ' + (isSel ? 'data-sel="1" ' : '') + 'class="inline-etag-btn" style="padding:4px 10px;border-radius:999px;font-size:12px;font-family:Manrope,sans-serif;border:1px solid ' + (isSel ? '#d897e7;background:rgba(216,151,231,0.2);color:#d897e7' : '#353a46;background:transparent;color:#8b93a3') + ';cursor:pointer;">' + U.esc(tag) + '</button>';
                       }).join('') +
-                    '</select>' +
-                    '<button data-edit="' + e.id + '" class="edit-btn px-2.5 py-1.5 rounded-btn text-xs font-medium text-primary border border-primary hover:bg-primary-soft">✏️</button>' +
-                    '<button data-del="' + e.id + '" data-name="' + U.esc(e.name) + '" class="del-btn px-2.5 py-1.5 rounded-btn text-xs font-medium text-red-500 border border-red-300 hover:bg-red-50">🗑</button>' +
+                    '</div>' +
+                    '<p style="' + LBL + 'margin-bottom:8px;">' + U.t('admin_add_badge_label') + '</p>' +
+                    '<div style="display:flex;gap:8px;">' +
+                      '<input type="text" id="ib-emoji-' + e.id + '" placeholder="🏅" maxlength="4" style="width:52px;padding:8px;background:#2e323d;border:1px solid #353a46;border-radius:8px;color:#f4f6f9;font-size:14px;outline:none;" />' +
+                      '<input type="text" id="ib-name-' + e.id + '" placeholder="' + U.t('admin_badge_name_placeholder') + '" style="flex:1;padding:8px 12px;background:#2e323d;border:1px solid #353a46;border-radius:8px;color:#f4f6f9;font-size:13px;outline:none;font-family:Manrope,sans-serif;" />' +
+                      '<button type="button" id="ib-add-' + e.id + '" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(216,151,231,0.4);background:rgba(216,151,231,0.1);color:#d897e7;font-size:13px;font-weight:600;cursor:pointer;">➕</button>' +
+                    '</div>' +
                   '</div>' +
-                '</div>' +
-                '<div id="edit-form-' + e.id + '" class="hidden mt-4 pt-4 border-t border-gray-100">' +
-                  '<form class="space-y-3 inline-edit-form" data-eid="' + e.id + '" novalidate>' +
-                    '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">' +
-                      '<div><label class="text-xs font-medium text-gray-500">' + U.t('admin_name_label') + '</label><input type="text" name="nombre" value="' + U.esc(e.name) + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
-                      '<div><label class="text-xs font-medium text-gray-500">' + U.t('admin_prize_label') + '</label><input type="text" name="premio" value="' + U.esc(e.prize || '') + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
-                    '</div>' +
-                    '<div><label class="text-xs font-medium text-gray-500">' + U.t('admin_description') + '</label><input type="text" name="descripcion" value="' + U.esc(e.description || '') + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
-                    '<div><label class="text-xs font-medium text-gray-500">Ubicación 📍</label><input type="text" name="location" value="' + U.esc(e.location || '') + '" placeholder="Ciudad, País o enlace virtual" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
-                    '<div class="grid grid-cols-2 gap-3 mt-2">' +
-                      '<div><label class="text-xs font-medium text-gray-500">Latitud 🌐</label><input type="number" step="any" name="lat" value="' + (e.lat != null ? e.lat : '') + '" placeholder="4.6097" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
-                      '<div><label class="text-xs font-medium text-gray-500">Longitud 🌐</label><input type="number" step="any" name="lng" value="' + (e.lng != null ? e.lng : '') + '" placeholder="-74.0817" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
-                    '</div>' +
-                    '<div class="grid grid-cols-2 gap-3">' +
-                      '<div><label class="text-xs font-medium text-gray-500">' + U.t('admin_inicio_label') + '</label><input type="date" name="fecha_inicio" value="' + isoDate(e.start) + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
-                      '<div><label class="text-xs font-medium text-gray-500">' + U.t('admin_fin_label') + '</label><input type="date" name="fecha_fin" value="' + isoDate(e.end) + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
-                    '</div>' +
-                    '<div class="grid grid-cols-3 gap-3 mt-2">' +
-                      '<div><label class="text-xs font-medium text-gray-500">Bonus primer badge</label><input type="number" name="xp_first_scan" min="0" max="1000" value="' + (e.xp_first_scan != null ? e.xp_first_scan : 5) + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
-                      '<div><label class="text-xs font-medium text-gray-500">Bonus badge raro</label><input type="number" name="xp_rare_bonus" min="0" max="1000" value="' + (e.xp_rare_bonus != null ? e.xp_rare_bonus : 15) + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
-                      '<div><label class="text-xs font-medium text-gray-500">Bonus completar evento</label><input type="number" name="xp_completion_bonus" min="0" max="1000" value="' + (e.xp_completion_bonus != null ? e.xp_completion_bonus : 50) + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
-                    '</div>' +
-                    '<div class="mt-3 pt-3 border-t border-gray-100">' +
-                      '<p class="text-xs font-semibold text-gray-600 mb-2">' + U.t('admin_tags_label') + '</p>' +
-                      '<div class="flex flex-wrap gap-1.5 mb-3">' +
-                        TAGS_LIST.map(function(tag) {
-                          var isSel = (e.tags || []).indexOf(tag) !== -1;
-                          return '<button type="button" data-eitag="' + U.esc(tag) + '" ' + (isSel ? 'data-sel="1" ' : '') + 'class="inline-etag-btn px-2.5 py-1 rounded-full text-xs border transition ' +
-                            (isSel ? 'text-white" style="background:#6C63FF;border-color:#6C63FF;"' : 'border-gray-200 text-gray-600"') + '>' +
-                            U.esc(tag) + '</button>';
-                        }).join('') +
-                      '</div>' +
-                      '<p class="text-xs font-semibold text-gray-600 mb-2">' + U.t('admin_add_badge_label') + '</p>' +
-                      '<div class="flex gap-1.5">' +
-                        '<input type="text" id="ib-emoji-' + e.id + '" placeholder="🏅" maxlength="4" class="w-14 px-2 py-1.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-xs" />' +
-                        '<input type="text" id="ib-name-' + e.id + '" placeholder="' + U.t('admin_badge_name_placeholder') + '" class="flex-1 px-2 py-1.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-xs" />' +
-                        '<button type="button" id="ib-add-' + e.id + '" class="px-3 py-1.5 rounded-btn text-xs font-medium border border-primary text-primary hover:bg-primary-soft">➕</button>' +
-                      '</div>' +
-                    '</div>' +
-                    '<div class="flex gap-2 mt-3"><button type="submit" class="px-4 py-2 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">' + U.t('admin_save') + '</button><button type="button" class="cancel-edit px-4 py-2 rounded-btn text-sm font-medium border border-gray-200 text-gray-600">' + U.t('admin_cancel') + '</button></div>' +
-                  '</form>' +
-                '</div>' +
+                  '<div style="display:flex;gap:8px;padding-top:8px;">' +
+                    '<button type="submit" style="padding:10px 18px;border-radius:10px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;cursor:pointer;">' + U.t('admin_save') + '</button>' +
+                    '<button type="button" class="cancel-edit" style="padding:10px 18px;border-radius:10px;border:1px solid #353a46;background:transparent;color:#8b93a3;font-family:Manrope,sans-serif;font-size:14px;font-weight:600;cursor:pointer;">' + U.t('admin_cancel') + '</button>' +
+                  '</div>' +
+                '</form>' +
               '</div>' +
-              '<div id="expanded-' + e.id + '" class="' + (isExpanded ? '' : 'hidden') + ' border-t border-gray-100 bg-gray-50 p-5">' +
-                '<div id="expanded-content-' + e.id + '"><div class="text-center text-gray-400 text-sm py-4">Cargando...</div></div>' +
+
+              // Expanded section
+              '<div id="expanded-' + e.id + '" class="' + (isExpanded ? '' : 'hidden') + '" style="border-top:1px solid #2f343f;background:#1a1d24;padding:20px;">' +
+                '<div id="expanded-content-' + e.id + '"><div style="text-align:center;color:#8b93a3;font-size:13px;font-family:Manrope,sans-serif;padding:16px;">Cargando...</div></div>' +
               '</div>' +
+
             '</div>';
-          }).join('') : '<p class="text-sm text-gray-400 text-center py-6">' + U.t('admin_no_events') + '</p>';
+          }).join('') : '<p style="color:#8b93a3;font-size:14px;font-family:Manrope,sans-serif;text-align:center;padding:24px;">' + U.t('admin_no_events') + '</p>';
 
           var eventListHtml =
-            '<div class="bg-white rounded-card p-6 shadow-soft anim-fade mb-4">' +
-              '<div class="flex items-center justify-between mb-4">' +
-                '<h2 class="text-lg font-bold text-gray-800">' + U.t('admin_events_title') + ' (' + events.length + ')</h2>' +
+            '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:18px;padding:24px 28px;margin-bottom:20px;" class="anim-fade">' +
+              '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">' +
+                '<h2 style="font-family:Poppins,sans-serif;font-size:20px;font-weight:700;color:#f4f6f9;margin:0;">' + U.t('admin_events_title') + ' <span style="font-size:15px;color:#8b93a3;font-weight:500;">(' + events.length + ')</span></h2>' +
               '</div>' +
-              '<input id="event-search" type="text" placeholder="' + U.t('admin_search_placeholder') + '" class="w-full px-4 py-2.5 rounded-btn border border-gray-200 bg-base focus:border-primary outline-none text-sm" />' +
+              '<div style="position:relative;">' +
+                '<span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none;">🔍</span>' +
+                '<input id="event-search" type="text" placeholder="' + U.t('admin_search_placeholder') + '" style="width:100%;height:50px;padding:0 18px 0 44px;background:#2e323d;border:1px solid #353a46;border-radius:13px;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:14px;outline:none;box-sizing:border-box;" />' +
+              '</div>' +
             '</div>' +
             '<div id="events-list">' + eventCards + '</div>';
 
@@ -855,6 +880,17 @@
       }
 
       init();
+    })();
+  </script>
+  <script>
+    (function() {
+      var glow = document.querySelector('[data-scroll-glow]');
+      if (!glow) return;
+      window.addEventListener('scroll', function() {
+        var p = Math.min(window.scrollY / (document.body.scrollHeight - window.innerHeight || 1), 1);
+        glow.style.transform = 'translateY(' + (p * 80) + 'px)';
+        glow.style.opacity = String(0.6 + p * 0.4);
+      }, { passive: true });
     })();
   </script>
 </body>
