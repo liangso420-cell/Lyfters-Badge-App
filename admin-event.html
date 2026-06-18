@@ -78,19 +78,19 @@
               '<div class="flex items-center gap-3 mb-4">' +
                 '<div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-sm">✅</div>' +
                 '<div>' +
-                  '<p class="font-semibold text-gray-800">Evento "' + U.esc(createdEvent.name) + '" creado</p>' +
-                  '<p class="text-xs text-gray-400">Ahora agrega los badges del evento</p>' +
+                  '<p class="font-semibold text-gray-800">' + U.t('admin_event_created') + U.esc(createdEvent.name) + U.t('admin_event_created2') + '</p>' +
+                  '<p class="text-xs text-gray-400">' + U.t('admin_now_add_badges') + '</p>' +
                 '</div>' +
               '</div>' +
               '<form id="quick-badge-form" class="space-y-3" novalidate>' +
                 '<div class="grid grid-cols-1 sm:grid-cols-3 gap-2">' +
-                  '<input type="text" name="emoji" placeholder="Emoji (ej: 🏅)" maxlength="4" class="px-3 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
-                  '<input type="text" name="name" placeholder="Nombre del badge *" class="px-3 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
-                  '<input type="text" name="desc" placeholder="Descripción" class="px-3 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
+                  '<input type="text" name="emoji" placeholder="' + U.t('admin_badge_emoji_placeholder') + '" maxlength="4" class="px-3 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
+                  '<input type="text" name="name" placeholder="' + U.t('admin_badge_name_placeholder') + '" class="px-3 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
+                  '<input type="text" name="desc" placeholder="' + U.t('admin_badge_desc_placeholder') + '" class="px-3 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
                 '</div>' +
                 '<div class="flex gap-2">' +
-                  '<button type="submit" class="px-5 py-2.5 rounded-btn text-white font-medium text-sm" style="background:#6C63FF;">➕ Agregar badge</button>' +
-                  '<button type="button" id="finish-create" class="px-5 py-2.5 rounded-btn text-sm font-medium border border-gray-200 text-gray-600 hover:bg-gray-50">Terminar</button>' +
+                  '<button type="submit" class="px-5 py-2.5 rounded-btn text-white font-medium text-sm" style="background:#6C63FF;">' + U.t('admin_add_badge') + '</button>' +
+                  '<button type="button" id="finish-create" class="px-5 py-2.5 rounded-btn text-sm font-medium border border-gray-200 text-gray-600 hover:bg-gray-50">' + U.t('admin_finish') + '</button>' +
                 '</div>' +
               '</form>' +
               '<div id="quick-badge-list" class="mt-4 space-y-2"></div>' +
@@ -105,7 +105,7 @@
             var nameField = quickForm.elements['name'];
             if (!nameField.value.trim()) { U.toast('Ingresa un nombre para el badge', 'error'); return; }
             var submitBtn = quickForm.querySelector('[type="submit"]');
-            submitBtn.disabled = true; submitBtn.textContent = 'Agregando...';
+            submitBtn.disabled = true; submitBtn.textContent = U.t('admin_adding');
             try {
               var b = await API.addBadge(createdEvent.id, {
                 name: nameField.value.trim(),
@@ -117,13 +117,13 @@
                 return '<div class="flex items-center gap-3 p-3 rounded-card bg-base">' +
                   '<span class="text-xl">' + (badge.emoji || '🏅') + '</span>' +
                   '<span class="text-sm font-medium text-gray-700">' + U.esc(badge.name) + '</span>' +
-                  '<span class="text-xs text-green-500 ml-auto">✅ Agregado</span>' +
+                  '<span class="text-xs text-green-500 ml-auto">' + U.t('admin_added') + '</span>' +
                 '</div>';
               }).join('');
               quickForm.reset();
               U.toast('Badge agregado', 'success');
             } catch(err) { U.toast(err.message || 'Error', 'error'); }
-            submitBtn.disabled = false; submitBtn.textContent = '➕ Agregar badge';
+            submitBtn.disabled = false; submitBtn.textContent = U.t('admin_add_badge');
           });
 
           document.getElementById('finish-create').addEventListener('click', function() {
@@ -140,20 +140,20 @@
 
           var createForm =
             '<div class="bg-white rounded-card p-6 shadow-soft mb-6 anim-fade">' +
-              '<h2 class="text-lg font-bold mb-1 text-gray-800">Crear evento</h2>' +
-              '<p class="text-sm text-gray-400 mb-5">Configura un nuevo evento de badges</p>' +
+              '<h2 class="text-lg font-bold mb-1 text-gray-800">' + U.t('admin_create_event') + '</h2>' +
+              '<p class="text-sm text-gray-400 mb-5">' + U.t('admin_create_event_desc') + '</p>' +
               '<form id="event-form" class="space-y-4" novalidate>' +
-                U.inputField({ label: 'Nombre del evento', name: 'name', placeholder: 'Lyfter Summit 2026' }) +
-                '<div><label class="text-sm font-medium text-gray-600">Descripción</label>' +
-                  '<textarea name="description" rows="2" placeholder="Descripción del evento..." ' +
+                U.inputField({ label: U.t('admin_event_name'), name: 'name', placeholder: 'Lyfter Summit 2026' }) +
+                '<div><label class="text-sm font-medium text-gray-600">' + U.t('admin_description') + '</label>' +
+                  '<textarea name="description" rows="2" placeholder="' + U.t('admin_description_placeholder') + '" ' +
                   'class="w-full mt-1 px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm resize-none"></textarea></div>' +
                 '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">' +
-                  U.inputField({ label: 'Fecha inicio', type: 'date', name: 'start' }) +
-                  U.inputField({ label: 'Fecha fin', type: 'date', name: 'end' }) +
+                  U.inputField({ label: U.t('admin_start_date'), type: 'date', name: 'start' }) +
+                  U.inputField({ label: U.t('admin_end_date'), type: 'date', name: 'end' }) +
                 '</div>' +
-                U.inputField({ label: 'Premio sorpresa 🎁', name: 'prize', placeholder: 'Entrada VIP al after-party' }) +
+                U.inputField({ label: U.t('admin_prize'), name: 'prize', placeholder: 'Entrada VIP al after-party' }) +
                 '<div>' +
-                  '<label class="text-sm font-medium text-gray-600">Ubicación 📍</label>' +
+                  '<label class="text-sm font-medium text-gray-600">' + U.t('admin_location') + '</label>' +
                   '<div class="relative mt-1">' +
                     '<input id="location-search" type="text" placeholder="Busca el lugar del evento en Costa Rica..." ' +
                       'class="w-full px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none" />' +
@@ -169,24 +169,24 @@
                   '<input type="hidden" name="lng" id="lng-value" />' +
                 '</div>' +
                 '<div class="pt-2 border-t border-gray-100">' +
-                  '<p class="text-sm font-semibold text-gray-700 mb-2 mt-4">🏷️ Tags del evento</p>' +
-                  '<p class="text-xs text-gray-400 mb-3">Ayudan a recomendar este evento a usuarios interesados</p>' +
+                  '<p class="text-sm font-semibold text-gray-700 mb-2 mt-4">' + U.t('admin_tags_title') + '</p>' +
+                  '<p class="text-xs text-gray-400 mb-3">' + U.t('admin_tags_desc') + '</p>' +
                   '<div id="create-tags-container" class="flex flex-wrap gap-2 mb-4">' +
                     TAGS_LIST.map(function(tag) {
                       return '<button type="button" data-ctag="' + U.esc(tag) + '" class="ctag-btn px-3 py-1.5 rounded-full text-xs border border-gray-200 text-gray-600 hover:border-primary hover:text-primary transition">' + U.esc(tag) + '</button>';
                     }).join('') +
                   '</div>' +
-                  '<p class="text-sm font-semibold text-gray-700 mb-2">➕ Badges del evento</p>' +
-                  '<p class="text-xs text-gray-400 mb-3">Agrega los badges que los participantes podrán ganar</p>' +
+                  '<p class="text-sm font-semibold text-gray-700 mb-2">' + U.t('admin_badges_title') + '</p>' +
+                  '<p class="text-xs text-gray-400 mb-3">' + U.t('admin_badges_desc') + '</p>' +
                   '<div id="create-badges-preview" class="space-y-2 mb-3"></div>' +
                   '<div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">' +
-                    '<input type="text" id="create-badge-emoji" placeholder="Emoji (ej: 🏅)" maxlength="4" class="px-3 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
-                    '<input type="text" id="create-badge-name" placeholder="Nombre del badge *" class="px-3 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
-                    '<input type="text" id="create-badge-desc" placeholder="Descripción" class="px-3 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
+                    '<input type="text" id="create-badge-emoji" placeholder="' + U.t('admin_badge_emoji_placeholder') + '" maxlength="4" class="px-3 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
+                    '<input type="text" id="create-badge-name" placeholder="' + U.t('admin_badge_name_placeholder') + '" class="px-3 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
+                    '<input type="text" id="create-badge-desc" placeholder="' + U.t('admin_badge_desc_placeholder') + '" class="px-3 py-2.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
                   '</div>' +
-                  '<button type="button" id="create-add-badge-btn" class="px-4 py-2 rounded-btn text-sm font-medium border border-primary text-primary hover:bg-primary-soft mb-4">➕ Agregar badge</button>' +
+                  '<button type="button" id="create-add-badge-btn" class="px-4 py-2 rounded-btn text-sm font-medium border border-primary text-primary hover:bg-primary-soft mb-4">' + U.t('admin_add_badge') + '</button>' +
                 '</div>' +
-                U.primaryButton('Crear evento', 'type="submit" id="create-btn"') +
+                U.primaryButton(U.t('admin_create_btn'), 'type="submit" id="create-btn"') +
               '</form>' +
             '</div>';
 
@@ -221,21 +221,21 @@
                 '<div id="edit-form-' + e.id + '" class="hidden mt-4 pt-4 border-t border-gray-100">' +
                   '<form class="space-y-3 inline-edit-form" data-eid="' + e.id + '" novalidate>' +
                     '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">' +
-                      '<div><label class="text-xs font-medium text-gray-500">Nombre</label><input type="text" name="nombre" value="' + U.esc(e.name) + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
-                      '<div><label class="text-xs font-medium text-gray-500">Premio</label><input type="text" name="premio" value="' + U.esc(e.prize || '') + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
+                      '<div><label class="text-xs font-medium text-gray-500">' + U.t('admin_name_label') + '</label><input type="text" name="nombre" value="' + U.esc(e.name) + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
+                      '<div><label class="text-xs font-medium text-gray-500">' + U.t('admin_prize_label') + '</label><input type="text" name="premio" value="' + U.esc(e.prize || '') + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
                     '</div>' +
-                    '<div><label class="text-xs font-medium text-gray-500">Descripción</label><input type="text" name="descripcion" value="' + U.esc(e.description || '') + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
+                    '<div><label class="text-xs font-medium text-gray-500">' + U.t('admin_description') + '</label><input type="text" name="descripcion" value="' + U.esc(e.description || '') + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
                     '<div><label class="text-xs font-medium text-gray-500">Ubicación 📍</label><input type="text" name="location" value="' + U.esc(e.location || '') + '" placeholder="Ciudad, País o enlace virtual" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
                     '<div class="grid grid-cols-2 gap-3 mt-2">' +
                       '<div><label class="text-xs font-medium text-gray-500">Latitud 🌐</label><input type="number" step="any" name="lat" value="' + (e.lat != null ? e.lat : '') + '" placeholder="4.6097" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
                       '<div><label class="text-xs font-medium text-gray-500">Longitud 🌐</label><input type="number" step="any" name="lng" value="' + (e.lng != null ? e.lng : '') + '" placeholder="-74.0817" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
                     '</div>' +
                     '<div class="grid grid-cols-2 gap-3">' +
-                      '<div><label class="text-xs font-medium text-gray-500">Inicio</label><input type="date" name="fecha_inicio" value="' + isoDate(e.start) + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
-                      '<div><label class="text-xs font-medium text-gray-500">Fin</label><input type="date" name="fecha_fin" value="' + isoDate(e.end) + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
+                      '<div><label class="text-xs font-medium text-gray-500">' + U.t('admin_inicio_label') + '</label><input type="date" name="fecha_inicio" value="' + isoDate(e.start) + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
+                      '<div><label class="text-xs font-medium text-gray-500">' + U.t('admin_fin_label') + '</label><input type="date" name="fecha_fin" value="' + isoDate(e.end) + '" class="w-full mt-1 px-3 py-2 text-sm bg-white rounded-btn border border-gray-200 focus:border-primary outline-none" /></div>' +
                     '</div>' +
                     '<div class="mt-3 pt-3 border-t border-gray-100">' +
-                      '<p class="text-xs font-semibold text-gray-600 mb-2">🏷️ Tags</p>' +
+                      '<p class="text-xs font-semibold text-gray-600 mb-2">' + U.t('admin_tags_label') + '</p>' +
                       '<div class="flex flex-wrap gap-1.5 mb-3">' +
                         TAGS_LIST.map(function(tag) {
                           var isSel = (e.tags || []).indexOf(tag) !== -1;
@@ -244,14 +244,14 @@
                             U.esc(tag) + '</button>';
                         }).join('') +
                       '</div>' +
-                      '<p class="text-xs font-semibold text-gray-600 mb-2">➕ Agregar badge</p>' +
+                      '<p class="text-xs font-semibold text-gray-600 mb-2">' + U.t('admin_add_badge_label') + '</p>' +
                       '<div class="flex gap-1.5">' +
                         '<input type="text" id="ib-emoji-' + e.id + '" placeholder="🏅" maxlength="4" class="w-14 px-2 py-1.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-xs" />' +
-                        '<input type="text" id="ib-name-' + e.id + '" placeholder="Nombre del badge *" class="flex-1 px-2 py-1.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-xs" />' +
+                        '<input type="text" id="ib-name-' + e.id + '" placeholder="' + U.t('admin_badge_name_placeholder') + '" class="flex-1 px-2 py-1.5 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-xs" />' +
                         '<button type="button" id="ib-add-' + e.id + '" class="px-3 py-1.5 rounded-btn text-xs font-medium border border-primary text-primary hover:bg-primary-soft">➕</button>' +
                       '</div>' +
                     '</div>' +
-                    '<div class="flex gap-2 mt-3"><button type="submit" class="px-4 py-2 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">Guardar</button><button type="button" class="cancel-edit px-4 py-2 rounded-btn text-sm font-medium border border-gray-200 text-gray-600">Cancelar</button></div>' +
+                    '<div class="flex gap-2 mt-3"><button type="submit" class="px-4 py-2 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">' + U.t('admin_save') + '</button><button type="button" class="cancel-edit px-4 py-2 rounded-btn text-sm font-medium border border-gray-200 text-gray-600">' + U.t('admin_cancel') + '</button></div>' +
                   '</form>' +
                 '</div>' +
               '</div>' +
@@ -259,14 +259,14 @@
                 '<div id="expanded-content-' + e.id + '"><div class="text-center text-gray-400 text-sm py-4">Cargando...</div></div>' +
               '</div>' +
             '</div>';
-          }).join('') : '<p class="text-sm text-gray-400 text-center py-6">No hay eventos. Crea el primero arriba.</p>';
+          }).join('') : '<p class="text-sm text-gray-400 text-center py-6">' + U.t('admin_no_events') + '</p>';
 
           var eventListHtml =
             '<div class="bg-white rounded-card p-6 shadow-soft anim-fade mb-4">' +
               '<div class="flex items-center justify-between mb-4">' +
-                '<h2 class="text-lg font-bold text-gray-800">Eventos (' + events.length + ')</h2>' +
+                '<h2 class="text-lg font-bold text-gray-800">' + U.t('admin_events_title') + ' (' + events.length + ')</h2>' +
               '</div>' +
-              '<input id="event-search" type="text" placeholder="🔍 Buscar evento..." class="w-full px-4 py-2.5 rounded-btn border border-gray-200 bg-base focus:border-primary outline-none text-sm" />' +
+              '<input id="event-search" type="text" placeholder="' + U.t('admin_search_placeholder') + '" class="w-full px-4 py-2.5 rounded-btn border border-gray-200 bg-base focus:border-primary outline-none text-sm" />' +
             '</div>' +
             '<div id="events-list">' + eventCards + '</div>';
 
@@ -547,7 +547,7 @@
             form.addEventListener('submit', async function(e) {
               e.preventDefault();
               var saveBtn = form.querySelector('[type="submit"]');
-              saveBtn.disabled = true; saveBtn.textContent = 'Guardando...';
+              saveBtn.disabled = true; saveBtn.textContent = U.t('admin_saving');
               try {
                 var saves = [API.updateEvent(eid, {
                   nombre: form.elements['nombre'].value.trim(),
@@ -563,7 +563,7 @@
                 if (!isNaN(elat) && !isNaN(elng)) saves.push(API.updateEventCoordinates(eid, elat, elng));
                 await Promise.all(saves);
                 U.toast('Evento actualizado ✅', 'success'); init();
-              } catch(err) { U.toast(err.message || 'Error', 'error'); saveBtn.disabled = false; saveBtn.textContent = 'Guardar'; }
+              } catch(err) { U.toast(err.message || 'Error', 'error'); saveBtn.disabled = false; saveBtn.textContent = U.t('admin_save'); }
             });
           });
 
@@ -591,7 +591,7 @@
             ok = U.setFieldError(createFormEl.end, createFormEl.end.value ? '' : 'Selecciona fecha de fin') && ok;
             if (!ok) return;
             var btn = document.getElementById('create-btn');
-            btn.disabled = true; btn.textContent = 'Creando...';
+            btn.disabled = true; btn.textContent = U.t('admin_creating');
             try {
               var created = await API.createEvent({
                 name: nameField.value.trim(),
@@ -616,7 +616,7 @@
               expandedId = created.id;
               U.toast('Evento creado ✅', 'success');
               init();
-            } catch(err) { U.toast(err.message || 'Error', 'error'); btn.disabled = false; btn.textContent = 'Crear evento'; }
+            } catch(err) { U.toast(err.message || 'Error', 'error'); btn.disabled = false; btn.textContent = U.t('admin_create_btn'); }
           });
 
           // Re-expandir si había uno expandido
@@ -641,13 +641,13 @@
           var blist = data.badges;
 
           var accessQrHtml = '<div class="mb-5 p-4 rounded-card bg-white shadow-soft">' +
-            '<p class="text-sm font-semibold text-gray-700 mb-2">🔑 QR de acceso al evento</p>' +
-            '<p class="text-xs text-gray-400 mb-3">Los usuarios escanean este QR para unirse al evento</p>' +
+            '<p class="text-sm font-semibold text-gray-700 mb-2">' + U.t('admin_access_qr') + '</p>' +
+            '<p class="text-xs text-gray-400 mb-3">' + U.t('admin_access_qr_desc') + '</p>' +
             '<div id="access-qr-area-' + eid + '" class="text-center">' +
               (data.event.access_qr
                 ? '<img src="' + data.event.access_qr + '" class="w-32 h-32 mx-auto mb-2" />' +
-                  '<button id="dl-access-qr-' + eid + '" class="px-4 py-2 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">⬇️ Descargar</button>'
-                : '<button id="gen-access-qr-' + eid + '" class="px-4 py-2 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">Generar QR de acceso</button>') +
+                  '<button id="dl-access-qr-' + eid + '" class="px-4 py-2 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">' + U.t('admin_download') + '</button>'
+                : '<button id="gen-access-qr-' + eid + '" class="px-4 py-2 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;"' + U.t('admin_generate_qr') + '</button>') +
             '</div>' +
           '</div>';
 
@@ -657,7 +657,7 @@
                   '<div class="flex items-center gap-3 flex-1 min-w-0">' +
                     '<span class="text-2xl">' + (b.emoji || b.icon || '🏅') + '</span>' +
                     '<div><p class="font-medium text-sm text-gray-800 truncate">' + U.esc(b.name || b.nombre) + '</p>' +
-                    '<p class="text-xs text-gray-400">' + (b.redeemed || 0) + ' canjes</p></div>' +
+                    '<p class="text-xs text-gray-400">' + (b.redeemed || 0) + ' ' + U.t('admin_redeem_count') + '</p></div>' +
                   '</div>' +
                   '<div class="flex gap-1.5">' +
                     '<button data-qr-b="' + b.id + '" data-qr-url="' + U.esc(b.redeemUrl || b.redeem_url || '') + '" data-qr-img="' + U.esc(b.qrImage || b.qr_image || '') + '" data-qr-name="' + U.esc(b.name || b.nombre) + '" class="badge-qr-btn px-3 py-1.5 rounded-btn text-xs font-medium text-primary border border-primary hover:bg-primary-soft">QR</button>' +
@@ -665,7 +665,7 @@
                   '</div>' +
                 '</div>';
               }).join('')
-            : '<p class="text-sm text-gray-400 text-center py-4">Sin badges. Agrega el primero abajo.</p>';
+            : '<p class="text-sm text-gray-400 text-center py-4">' + U.t('admin_no_badges') + '</p>';
 
           contentEl.innerHTML =
             accessQrHtml +
@@ -679,17 +679,17 @@
           var genBtn = document.getElementById('gen-access-qr-' + eid);
           if (genBtn) {
             genBtn.addEventListener('click', async function() {
-              genBtn.disabled = true; genBtn.textContent = 'Generando...';
+              genBtn.disabled = true; genBtn.textContent = U.t('admin_generating');
               try {
                 var r = await API.generateEventAccessQr(eid);
                 var area = document.getElementById('access-qr-area-' + eid);
                 area.innerHTML = '<img src="' + r.access_qr + '" class="w-32 h-32 mx-auto mb-2" />' +
-                  '<button id="dl-access-qr-' + eid + '" class="px-4 py-2 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">⬇️ Descargar</button>';
+                  '<button id="dl-access-qr-' + eid + '" class="px-4 py-2 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">' + U.t('admin_download') + '</button>';
                 document.getElementById('dl-access-qr-' + eid).addEventListener('click', function() {
                   var a = document.createElement('a');
                   a.href = r.access_qr; a.download = 'acceso-evento.png'; a.click();
                 });
-              } catch(err) { U.toast(err.message || 'Error', 'error'); genBtn.disabled = false; genBtn.textContent = 'Generar QR de acceso'; }
+              } catch(err) { U.toast(err.message || 'Error', 'error'); genBtn.disabled = false; genBtn.textContent = U.t('admin_generate_qr'); }
             });
           }
 
@@ -713,7 +713,7 @@
                 preview.innerHTML = '<div class="mt-3 p-4 rounded-card text-center" style="background:#EEEDFF;">' +
                   '<p class="text-xs font-semibold text-primary mb-2">QR — ' + U.esc(name) + '</p>' +
                   '<img src="' + qrImg + '" class="w-32 h-32 mx-auto mb-2" />' +
-                  '<button id="dl-badge-qr" class="px-4 py-2 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">⬇️ Descargar</button>' +
+                  '<button id="dl-badge-qr" class="px-4 py-2 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">' + U.t('admin_download') + '</button>' +
                 '</div>';
                 document.getElementById('dl-badge-qr').addEventListener('click', function() {
                   var a = document.createElement('a'); a.href = qrImg; a.download = 'badge-' + name + '.png'; a.click();
