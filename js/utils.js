@@ -441,7 +441,7 @@
   /* ── HTML de estado ── */
   function loadingHtml() {
     return '<div class="device-frame px-4 pt-24 text-center text-gray-400">' +
-      '<div class="text-3xl animate-pulse-badge"><img src="logo-lyfter.jpeg" alt="Lyfter" style="width:40px;height:40px;object-fit:contain;border-radius:8px;" /></div><p class="mt-3 text-sm">Cargando…</p></div>';
+      '<div class="text-3xl animate-pulse-badge"><img src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" style="width:40px;height:40px;object-fit:contain;border-radius:8px;" /></div><p class="mt-3 text-sm">Cargando…</p></div>';
   }
   function errorHtml(msg) {
     return '<div class="device-frame px-4 pt-24 text-center">' +
@@ -911,7 +911,7 @@
           '<div class="px-5 py-4">' +
             '<button id="drawer-about-back" class="text-xs text-primary mb-4 flex items-center gap-1">← Volver</button>' +
             '<div class="text-center py-4">' +
-              '<div class="text-4xl mb-3"><img src="logo-lyfter.jpeg" alt="Lyfter" style="width:48px;height:48px;object-fit:contain;border-radius:10px;" /></div>' +
+              '<div class="text-4xl mb-3"><img src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" style="width:48px;height:48px;object-fit:contain;border-radius:10px;" /></div>' +
               '<p class="font-bold text-gray-800 text-lg">Lyfter Badge App</p>' +
               '<p class="text-xs text-gray-400 mt-1">Versión 1.0.0</p>' +
               '<p class="text-xs text-gray-400 mt-3">Escanea, colecciona y gana badges en eventos</p>' +
@@ -1083,7 +1083,7 @@
     var sidebar =
       '<aside style="position:fixed;top:0;left:0;bottom:0;width:248px;background:#1a1d24;border-right:1px solid #262a33;display:flex;flex-direction:column;padding:26px 18px;z-index:20;overflow-y:auto;">' +
         '<div style="display:flex;align-items:center;gap:10px;padding:0 8px 26px;">' +
-          '<img src="logo-lyfter.jpeg" alt="Lyfter" style="width:28px;height:28px;object-fit:contain;border-radius:6px;vertical-align:middle;display:inline-block;" />' +
+          '<img src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" style="width:28px;height:28px;object-fit:contain;border-radius:6px;vertical-align:middle;display:inline-block;" />' +
           '<span style="font-family:Poppins,sans-serif;font-size:20px;font-weight:700;color:#f4f6f9;letter-spacing:-0.01em;">Lyfter</span>' +
         '</div>' +
         '<div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#5a6172;font-weight:700;padding:6px 12px 10px;">Admin</div>' +
