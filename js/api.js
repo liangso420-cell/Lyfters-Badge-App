@@ -834,7 +834,7 @@
         primer_paso:    'assets/icons/achievements/primer-paso.png',
         coleccionista:  'assets/icons/achievements/coleccionista.png',
         vertigo:        'assets/icons/achievements/vertigo.png',
-        completista:    'assets/icons/achievements/perfeccionista.png',
+        completista:    'assets/icons/achievements/Completista.png',
         perfeccionista: 'assets/icons/achievements/perfeccionista.png',
         viajero:        'assets/icons/achievements/viajero.png',
         veterano:       'assets/icons/achievements/veterano.png',
