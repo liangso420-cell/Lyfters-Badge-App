@@ -1097,6 +1097,7 @@
         '<nav style="display:flex;flex-direction:column;gap:4px;">' +
           navItem('event',         '', 'Eventos',    'admin-event.html') +
           navItem('participation', '', 'Dashboard',   'admin-participation.html') +
+          navItem('leaderboard',   '<img src="assets/icons/ui/icono-participantes.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;opacity:0.85;" />', 'Leaderboard', 'admin-leaderboard.html') +
         '</nav>' +
         eventBlock +
         '<div style="margin-top:auto;padding-top:22px;">' +
