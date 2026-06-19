@@ -609,7 +609,7 @@
               '</div>' +
               '<div class="border-t border-gray-100">' +
                 '<button id="acc-photo-btn" class="w-full flex items-center justify-between px-5 py-3.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">' +
-                  '<span>📷 Foto de perfil</span><span class="text-gray-300">›</span>' +
+                  '<img src="assets/icons/ui/icono-añadir-imagen.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:6px;"><span>Foto de perfil</span><span class="text-gray-300">›</span>' +
                 '</button>' +
                 '<button id="acc-name-btn" class="w-full flex items-center justify-between px-5 py-3.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">' +
                   '<div class="text-left"><p class="text-sm text-gray-700">Nombre</p><p class="text-xs text-gray-400">' + esc(p.nombre || '') + '</p></div><span class="text-gray-300">›</span>' +
@@ -621,12 +621,12 @@
                   '<span>Contraseña</span><span class="text-gray-300">›</span>' +
                 '</button>' +
                 '<button id="acc-interests-btn" class="w-full flex items-center justify-between px-5 py-3.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">' +
-                  '<div class="text-left"><p class="text-sm text-gray-700">🎯 Mis intereses</p><p class="text-xs text-gray-400">' + (p.interests && p.interests.length ? p.interests.slice(0,2).join(', ') + (p.interests.length > 2 ? '...' : '') : 'Sin configurar') + '</p></div><span class="text-gray-300">›</span>' +
+                  '<div class="text-left"><p class="text-sm text-gray-700">Mis intereses</p><p class="text-xs text-gray-400">' + (p.interests && p.interests.length ? p.interests.slice(0,2).join(', ') + (p.interests.length > 2 ? '...' : '') : 'Sin configurar') + '</p></div><span class="text-gray-300">›</span>' +
                 '</button>' +
               '</div>' +
               '<div class="border-t border-gray-100 mt-4">' +
                 '<button id="acc-delete-btn" class="w-full flex items-center justify-between px-5 py-3.5 text-sm text-red-500 hover:bg-red-50">' +
-                  '<span>🗑 Eliminar cuenta</span><span class="text-red-300">›</span>' +
+                  '<img src="assets/icons/ui/icono-basura-blanco.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:6px;">Eliminar cuenta<span class="text-red-300">›</span>' +
                 '</button>' +
               '</div>' +
             '</div>';
@@ -954,35 +954,34 @@
           }).catch(function() { showDrawer(null, null, onAvatarSave, true); });
         });
 
-        window.LyfterAPI.getUsers().then(function(usersList) {
-          var listEl = document.getElementById('drawer-users-list');
-          if (!listEl) return;
-          if (!usersList || !usersList.length) {
-            listEl.innerHTML = '<p class="text-sm text-gray-400">Sin usuarios.</p>';
-            return;
-          }
-          var currentUser = window.LyfterAPI.currentUser();
-          listEl.innerHTML = usersList.map(function(u) {
-            var isSelf = currentUser && u.id === currentUser.id;
-            var isAdminUser = u.rol === 'admin';
-            var btnLabel = isAdminUser ? '→ Participante' : '→ Admin';
-            var nextRol = isAdminUser ? 'participant' : 'admin';
-            return '<div class="flex items-center justify-between py-2.5 border-b border-gray-100 last:border-0">' +
-              '<div class="flex-1 min-w-0 mr-2">' +
-                '<p class="text-sm font-medium text-gray-800 truncate">' + esc(u.nombre) + (isSelf ? ' <span class="text-xs text-gray-400">(tú)</span>' : '') + '</p>' +
-                '<p class="text-xs text-gray-400 truncate">' + esc(u.email) + '</p>' +
-              '</div>' +
-              '<button data-uid="' + u.id + '" data-rol="' + nextRol + '" data-nombre="' + esc(u.nombre) + '"' +
-                (isSelf ? ' disabled' : '') +
-                ' class="role-drawer-btn flex-shrink-0 px-2 py-1 rounded-btn text-xs font-medium border ' +
-                (isAdminUser ? 'text-purple-600 border-purple-300' : 'text-gray-500 border-gray-200') +
-                (isSelf ? ' opacity-40 cursor-not-allowed' : ' hover:bg-gray-50') + '">' +
-                btnLabel +
-              '</button>' +
-            '</div>';
-          }).join('');
+        var PAGE_SIZE = 10;
+        var _usersCache = null;
+        var _usersPage = 0;
+        var _usersFiltered = null;
 
-          Array.prototype.forEach.call(listEl.querySelectorAll('.role-drawer-btn'), function(btn) {
+        function makeUserRow(u, currentUser) {
+          var isSelf = currentUser && u.id === currentUser.id;
+          var isAdminUser = u.rol === 'admin';
+          var btnLabel = isAdminUser ? '→ Participante' : '→ Admin';
+          var nextRol = isAdminUser ? 'participant' : 'admin';
+          return '<div class="flex items-center justify-between py-2.5 border-b border-gray-100 last:border-0">' +
+            '<img src="assets/icons/ui/icono-perfil.png" style="width:32px;height:32px;object-fit:contain;border-radius:50%;margin-right:8px;flex-shrink:0;" />' +
+            '<div class="flex-1 min-w-0 mr-2">' +
+              '<p class="text-sm font-medium text-gray-800 truncate">' + esc(u.nombre) + (isSelf ? ' <span class="text-xs text-gray-400">(tú)</span>' : '') + '</p>' +
+              '<p class="text-xs text-gray-400 truncate">' + esc(u.email) + '</p>' +
+            '</div>' +
+            '<button data-uid="' + u.id + '" data-rol="' + nextRol + '" data-nombre="' + esc(u.nombre) + '"' +
+              (isSelf ? ' disabled' : '') +
+              ' class="role-drawer-btn flex-shrink-0 px-2 py-1 rounded-btn text-xs font-medium border ' +
+              (isAdminUser ? 'text-purple-600 border-purple-300' : 'text-gray-500 border-gray-200') +
+              (isSelf ? ' opacity-40 cursor-not-allowed' : ' hover:bg-gray-50') + '">' +
+              btnLabel +
+            '</button>' +
+          '</div>';
+        }
+
+        function bindRoleButtons(container) {
+          Array.prototype.forEach.call(container.querySelectorAll('.role-drawer-btn'), function(btn) {
             btn.addEventListener('click', async function() {
               var uid = btn.getAttribute('data-uid');
               var rol = btn.getAttribute('data-rol');
@@ -1000,6 +999,50 @@
               }
             });
           });
+        }
+
+        function renderUsersList(users) {
+          var listEl = document.getElementById('drawer-users-list');
+          if (!listEl) return;
+          var currentUser = window.LyfterAPI.currentUser();
+          _usersFiltered = users;
+          _usersPage = 0;
+          var page = users.slice(0, PAGE_SIZE);
+          listEl.innerHTML = page.map(function(u) { return makeUserRow(u, currentUser); }).join('');
+          _usersPage = 1;
+          bindRoleButtons(listEl);
+        }
+
+        function loadUsersPage() {
+          var listEl = document.getElementById('drawer-users-list');
+          if (!listEl || !_usersFiltered) return;
+          var start = _usersPage * PAGE_SIZE;
+          if (start >= _usersFiltered.length) return;
+          var currentUser = window.LyfterAPI.currentUser();
+          var page = _usersFiltered.slice(start, start + PAGE_SIZE);
+          var html = page.map(function(u) { return makeUserRow(u, currentUser); }).join('');
+          listEl.insertAdjacentHTML('beforeend', html);
+          _usersPage++;
+          bindRoleButtons(listEl);
+        }
+
+        window.LyfterAPI.getUsers().then(function(usersList) {
+          var listEl = document.getElementById('drawer-users-list');
+          if (!listEl) return;
+          if (!usersList || !usersList.length) {
+            listEl.innerHTML = '<p class="text-sm text-gray-400">Sin usuarios.</p>';
+            return;
+          }
+          _usersCache = usersList;
+          renderUsersList(usersList);
+
+          listEl.style.maxHeight = '320px';
+          listEl.style.overflowY = 'auto';
+          listEl.addEventListener('scroll', function() {
+            if (listEl.scrollTop + listEl.clientHeight >= listEl.scrollHeight - 50) {
+              loadUsersPage();
+            }
+          });
 
           var searchInput = document.getElementById('drawer-users-search');
           if (searchInput) {
@@ -1010,50 +1053,14 @@
                     return u.nombre.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
                   })
                 : usersList;
-              var listEl = document.getElementById('drawer-users-list');
-              if (!listEl) return;
-              var currentUser = window.LyfterAPI.currentUser();
+              var listEl2 = document.getElementById('drawer-users-list');
+              if (!listEl2) return;
               if (!filtered.length) {
-                listEl.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">Sin resultados.</p>';
+                listEl2.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">Sin resultados.</p>';
+                _usersFiltered = [];
                 return;
               }
-              listEl.innerHTML = filtered.map(function(u) {
-                var isSelf = currentUser && u.id === currentUser.id;
-                var isAdminUser = u.rol === 'admin';
-                var btnLabel = isAdminUser ? '→ Participante' : '→ Admin';
-                var nextRol = isAdminUser ? 'participant' : 'admin';
-                return '<div class="flex items-center justify-between py-2.5 border-b border-gray-100 last:border-0">' +
-                  '<div class="flex-1 min-w-0 mr-2">' +
-                    '<p class="text-sm font-medium text-gray-800 truncate">' + esc(u.nombre) + (isSelf ? ' <span class="text-xs text-gray-400">(tú)</span>' : '') + '</p>' +
-                    '<p class="text-xs text-gray-400 truncate">' + esc(u.email) + '</p>' +
-                  '</div>' +
-                  '<button data-uid="' + u.id + '" data-rol="' + nextRol + '" data-nombre="' + esc(u.nombre) + '"' +
-                    (isSelf ? ' disabled' : '') +
-                    ' class="role-drawer-btn flex-shrink-0 px-2 py-1 rounded-btn text-xs font-medium border ' +
-                    (isAdminUser ? 'text-purple-600 border-purple-300' : 'text-gray-500 border-gray-200') +
-                    (isSelf ? ' opacity-40 cursor-not-allowed' : ' hover:bg-gray-50') + '">' +
-                    btnLabel +
-                  '</button>' +
-                '</div>';
-              }).join('');
-              Array.prototype.forEach.call(listEl.querySelectorAll('.role-drawer-btn'), function(btn) {
-                btn.addEventListener('click', async function() {
-                  var uid = btn.getAttribute('data-uid');
-                  var rol = btn.getAttribute('data-rol');
-                  var nombre = btn.getAttribute('data-nombre');
-                  var rolLabel = rol === 'admin' ? 'Admin' : 'Participante';
-                  btn.disabled = true; btn.textContent = '...';
-                  try {
-                    await window.LyfterAPI.changeUserRole(uid, rol);
-                    toast('Rol de ' + nombre + ' cambiado a ' + rolLabel, 'success');
-                    usersBtn.click();
-                  } catch(err) {
-                    toast(err.message || 'No se pudo cambiar el rol', 'error');
-                    btn.disabled = false;
-                    btn.textContent = rol === 'admin' ? '→ Participante' : '→ Admin';
-                  }
-                });
-              });
+              renderUsersList(filtered);
             });
           }
         }).catch(function(err) {
