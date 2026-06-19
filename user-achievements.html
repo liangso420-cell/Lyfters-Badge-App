@@ -40,10 +40,33 @@
         '</div>';
       }
 
+      function achievementCard(a, unlocked) {
+        var rarityColors = {
+          common:    { border: '#353a46', glow: 'transparent' },
+          rare:      { border: '#22c55e', glow: 'rgba(34,197,94,0.1)' },
+          epic:      { border: '#7c3aed', glow: 'rgba(124,58,237,0.1)' },
+          legendary: { border: '#eab308', glow: 'rgba(234,179,8,0.15)' }
+        };
+        var rc = rarityColors[a.rarity] || rarityColors.common;
+        var rarityLabels = { common: 'Común', rare: 'Raro', epic: 'Épico', legendary: 'Legendario' };
+
+        return '<div style="background:' + (unlocked ? rc.glow : '#1a1d24') + ';border:1px solid ' + (unlocked ? rc.border : '#2f343f') + ';border-radius:16px;padding:20px;text-align:center;transition:transform 0.2s;"' +
+          (unlocked ? ' onmouseover="this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.transform=\'none\'"' : '') + '>' +
+          '<div style="width:80px;height:80px;margin:0 auto 12px;' + (unlocked ? '' : 'filter:grayscale(1);opacity:0.3;') + '">' +
+            '<img src="' + U.esc(a.icon) + '" style="width:100%;height:100%;object-fit:contain;" onerror="this.style.display=\'none\';this.parentNode.innerHTML=\'<span style=&quot;font-size:40px;line-height:80px;display:block;&quot;>🏅</span>\'" />' +
+          '</div>' +
+          '<p style="font-family:Poppins,sans-serif;font-size:14px;font-weight:700;color:' + (unlocked ? '#f4f6f9' : '#4a5060') + ';margin:0 0 4px;">' + U.esc(a.name) + '</p>' +
+          '<p style="font-family:Manrope,sans-serif;font-size:11px;color:' + (unlocked ? '#8b93a3' : '#3a3f4a') + ';margin:0 0 8px;">' + U.esc(a.description || a.hint || '') + '</p>' +
+          (unlocked
+            ? '<span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:999px;color:white;background:' + rc.border + ';">' + (rarityLabels[a.rarity] || 'Común') + ' · +' + (a.xp_reward || 0) + ' XP</span>'
+            : '<span style="font-size:10px;color:#3a3f4a;font-family:Manrope,sans-serif;">🔒 Bloqueado</span>') +
+        '</div>';
+      }
+
       async function init() {
         try {
-          var profile  = await API.getProfile();
-          var achData  = await API.getAchievements().catch(function() { return null; });
+          var profile   = await API.getProfile();
+          var achData   = await API.getAchievements().catch(function() { return null; });
           var xpProfile = await API.getXpProfile().catch(function() { return null; });
 
           var avatarHtml = profile.avatar
@@ -51,7 +74,34 @@
             : '<img src="assets/icons/ui/icono-perfil.png" style="width:40px;height:40px;border-radius:50%;object-fit:contain;background:#2e323d;padding:6px;">';
 
           var xpBarHtml = xpProfile ? U.xpBarHtml(xpProfile) : '';
-          var achHtml   = achData   ? U.achievementsGridHtml(achData) : '<p style="color:#8b93a3;font-family:Manrope,sans-serif;text-align:center;padding:32px;">No hay logros disponibles.</p>';
+
+          var achHtml = '';
+          if (!achData) {
+            achHtml = '<p style="color:#8b93a3;font-family:Manrope,sans-serif;text-align:center;padding:32px;">No hay logros disponibles.</p>';
+          } else {
+            var unlocked = achData.unlocked || [];
+            var locked   = achData.locked   || [];
+
+            if (unlocked.length) {
+              achHtml +=
+                '<h3 style="font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#f4f6f9;margin:0 0 14px;">Desbloqueados (' + unlocked.length + ')</h3>' +
+                '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:28px;">' +
+                  unlocked.map(function(a) { return achievementCard(a, true); }).join('') +
+                '</div>';
+            }
+
+            if (locked.length) {
+              achHtml +=
+                '<h3 style="font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#4a5060;margin:0 0 14px;">Bloqueados (' + locked.length + ')</h3>' +
+                '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;">' +
+                  locked.map(function(a) { return achievementCard(a, false); }).join('') +
+                '</div>';
+            }
+
+            if (!unlocked.length && !locked.length) {
+              achHtml = '<p style="color:#8b93a3;font-family:Manrope,sans-serif;text-align:center;padding:32px;">No hay logros disponibles.</p>';
+            }
+          }
 
           var inner =
             '<div style="min-height:100vh;background:#13151b;padding:20px 16px 40px;">' +
@@ -61,6 +111,7 @@
               '</div>' +
               navHtml() +
               xpBarHtml +
+              (xpBarHtml ? '<div style="margin-bottom:24px;"></div>' : '') +
               achHtml +
             '</div>';
 

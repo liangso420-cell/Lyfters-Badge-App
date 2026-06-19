@@ -60,12 +60,13 @@ def get_achievements():
             })
         else:
             locked.append({
-                "slug":   ach.get("slug"),
-                "name":   ach.get("name"),
-                "icon":   ach.get("icon"),
-                "rarity": ach.get("rarity"),
-                # Pista genérica, sin revelar la condición exacta.
-                "hint":   ach.get("hint", "Seguí participando para desbloquearlo."),
+                "slug":        ach.get("slug"),
+                "name":        ach.get("name"),
+                "description": ach.get("description"),
+                "icon":        ach.get("icon"),
+                "rarity":      ach.get("rarity"),
+                "xp_reward":   ach.get("xp_reward"),
+                "hint":        ach.get("hint", "Seguí participando para desbloquearlo."),
             })
 
     return jsonify({"unlocked": unlocked, "locked": locked}), 200
