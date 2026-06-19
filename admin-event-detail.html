@@ -197,6 +197,10 @@
                       '<input type="text" id="ib-name" placeholder="Nombre del badge" style="width:100%;padding:10px 12px;background:#2e323d;border:1px solid #353a46;border-radius:8px;color:#f4f6f9;font-size:13px;outline:none;box-sizing:border-box;font-family:Manrope,sans-serif;" />' +
                     '</div>' +
                   '</div>' +
+                  '<div style="margin-top:10px;">' +
+                    '<label style="font-size:11px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;display:block;margin-bottom:6px;">XP</label>' +
+                    '<input type="number" id="ib-xp-' + eid + '" min="1" max="500" value="10" style="width:120px;padding:10px 12px;background:#2e323d;border:1px solid #353a46;border-radius:8px;color:#f4f6f9;font-size:13px;outline:none;" />' +
+                  '</div>' +
                   '<div>' +
                     '<label style="font-size:11px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;display:block;margin-bottom:6px;">RAREZA</label>' +
                     '<div style="display:flex;gap:8px;">' +
@@ -471,7 +475,8 @@
                   emoji: ibSelectedIcon ? null : '🏅',
                   icon_url: ibSelectedIcon || null,
                   rarity: ibSelectedRarity,
-                  is_rare: ibSelectedRarity !== 'normal'
+                  is_rare: ibSelectedRarity !== 'normal',
+                  xp_value: parseInt(document.getElementById('ib-xp-' + eid).value, 10) || 10
                 });
                 U.toast('Badge agregado ✅', 'success');
                 init();
