@@ -443,6 +443,13 @@
     return '<div class="device-frame px-4 pt-24 text-center text-gray-400">' +
       '<div class="text-3xl animate-pulse-badge"><img src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" style="width:40px;height:40px;object-fit:contain;border-radius:8px;" /></div><p class="mt-3 text-sm">Cargando…</p></div>';
   }
+  function hideLoading() {
+    var ls = document.getElementById('loading-screen');
+    if (!ls) return;
+    ls.style.opacity = '0';
+    ls.style.pointerEvents = 'none';
+    setTimeout(function() { ls.style.display = 'none'; }, 400);
+  }
   function errorHtml(msg) {
     return '<div class="device-frame px-4 pt-24 text-center">' +
       '<div class="text-3xl mb-2">⚠️</div>' +
@@ -1360,7 +1367,8 @@
     showXpGain: showXpGain,
     showAchievementUnlocks: showAchievementUnlocks,
     xpBarHtml: xpBarHtml,
-    achievementsGridHtml: achievementsGridHtml
+    achievementsGridHtml: achievementsGridHtml,
+    hideLoading: hideLoading
   };
 
   window.lyfterReset = function () {

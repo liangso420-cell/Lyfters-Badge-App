@@ -34,7 +34,6 @@
       if (user.role === 'admin') { window.location.replace('admin-event.html'); return; }
 
       var app = document.getElementById('app');
-      app.innerHTML = U.loadingHtml();
 
       function navHtml() {
         return '<div style="display:flex;gap:4px;margin-bottom:24px;background:#1c1f27;border:1px solid #2f343f;border-radius:12px;padding:4px;">' +
