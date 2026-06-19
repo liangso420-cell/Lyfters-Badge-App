@@ -520,20 +520,24 @@ td, th { vertical-align: middle; }
   top: 20px;
   left: 20px;
   z-index: 100;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
   border: none;
   background: rgba(21, 23, 29, 0.75);
   color: #f4f6f9;
-  font-size: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
 }
+#btn-exit-scan i {
+  font-size: 18px;
+}
 #btn-exit-scan:active {
-  transform: scale(0.93);
+  transform: scale(0.95);
 }
