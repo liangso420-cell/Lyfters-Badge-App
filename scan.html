@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
   <style>
     @keyframes scan-sweep {
@@ -46,7 +47,10 @@
     <div class="loader"></div>
     <span>Cargando...</span>
   </div>
-  <button id="btn-exit-scan" onclick="history.back()">✕</button>
+  <button id="btn-exit-scan" onclick="history.back()">
+    <i class="ti ti-arrow-left"></i>
+    <span>Salir</span>
+  </button>
   <main id="app"></main>
   <div id="modal-root"></div>
   <div id="toast-root" class="fixed top-4 left-1/2 -translate-x-1/2 z-[60] flex flex-col gap-2 items-center pointer-events-none"></div>
