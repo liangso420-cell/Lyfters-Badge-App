@@ -667,7 +667,7 @@
             modalRoot.innerHTML =
               '<div class="fixed inset-0 z-50 flex items-center justify-center p-6 anim-fade" style="background:rgba(17,24,39,0.75);">' +
                 '<div class="bg-white rounded-card p-6 w-full max-w-sm shadow-soft anim-pop">' +
-                  '<p class="text-sm font-semibold text-gray-700 mb-3">✏️ Cambiar nombre</p>' +
+                  '<p class="text-sm font-semibold text-gray-700 mb-3"><img src="assets/icons/ui/icono-editar.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:4px;">Cambiar nombre</p>' +
                   '<input id="inline-name-input" type="text" value="' + esc(currentName) + '" class="w-full px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm mb-4" />' +
                   '<div class="flex gap-3 justify-end">' +
                     '<button id="inline-cancel" class="px-5 py-2.5 rounded-btn border border-gray-200 text-sm font-medium text-gray-600">Cancelar</button>' +

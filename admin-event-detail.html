@@ -22,6 +22,18 @@
       'use strict';
 
       var TAGS_LIST = ['Desarrollo Web','Mobile','Inteligencia Artificial','Data Science','Ciberseguridad','DevOps','Cloud','Blockchain','UX/UI','Product Management','Emprendimiento','Marketing Digital','Diseño','Videojuegos','Robótica','Fintech','Educación Tech','Open Source','Backend','Frontend'];
+      var IB_BADGE_ICONS = [
+        { file: 'api.png', label: 'API' },
+        { file: 'codificacion.png', label: 'Código' },
+        { file: 'computacion-en-la-nube.png', label: 'Nube' },
+        { file: 'diseno.png', label: 'Diseño' },
+        { file: 'error.png', label: 'Error' },
+        { file: 'javascript.png', label: 'JavaScript' },
+        { file: 'mundial.png', label: 'Web' },
+        { file: 'proteccion-de-archivos.png', label: 'Seguridad' },
+        { file: 'sitio-web.png', label: 'Sitio Web' },
+        { file: 'vinculo-de-retroceso.png', label: 'Backend' },
+      ];
       var STATUS_MAP = {
         draft:     { label: 'Borrador' },
         pending:   { label: 'Pendiente aprobación' },
@@ -112,17 +124,21 @@
                 var bdesc  = b.desc || b.descripcion || '';
                 var bemoji = b.emoji || b.icon || '🏅';
                 var bxp    = b.xp_value != null ? b.xp_value : 10;
+                var bRarity = b.rarity || (b.is_rare ? 'rare' : 'normal');
+                var bBg = bRarity === 'ultra_rare' ? 'rgba(234,179,8,0.1)' : bRarity === 'rare' ? 'rgba(34,197,94,0.1)' : '#20242d';
+                var bBorder = bRarity === 'ultra_rare' ? '#eab308' : bRarity === 'rare' ? '#22c55e' : '#2f343f';
+                var bRarityLabel = bRarity === 'ultra_rare' ? '<span style="font-size:10px;color:#eab308;font-weight:700;margin-left:6px;">ULTRA</span>' : bRarity === 'rare' ? '<span style="font-size:10px;color:#22c55e;font-weight:700;margin-left:6px;">RARO</span>' : '';
                 return (
-                  '<div style="border-radius:12px;border:1px solid ' + (b.is_rare ? '#5a4a10' : '#2f343f') + ';background:' + (b.is_rare ? '#1e1a08' : '#20242d') + ';overflow:hidden;margin-bottom:10px;">' +
+                  '<div style="border-radius:12px;border:1px solid ' + bBorder + ';background:' + bBg + ';overflow:hidden;margin-bottom:10px;">' +
                     '<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;">' +
                       '<span style="font-size:26px;">' + bemoji + '</span>' +
                       '<div style="flex:1;min-width:0;">' +
-                        '<p style="font-family:Manrope,sans-serif;font-size:14px;font-weight:700;color:#f4f6f9;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + U.esc(bname) + (b.is_rare ? ' <span style="color:#f5c842;" title="Badge raro">⭐</span>' : '') + '</p>' +
+                        '<p style="font-family:Manrope,sans-serif;font-size:14px;font-weight:700;color:#f4f6f9;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + U.esc(bname) + bRarityLabel + '</p>' +
                         '<p style="font-size:11px;color:#8b93a3;font-family:Manrope,sans-serif;margin:2px 0 0;">' + (b.redeemed || 0) + ' canjes · ' + bxp + ' XP</p>' +
                       '</div>' +
                       '<div style="display:flex;gap:6px;flex-shrink:0;">' +
                         '<button data-qr-b="' + b.id + '" data-qr-img="' + U.esc(b.qrImage || b.qr_image || '') + '" data-qr-name="' + U.esc(bname) + '" class="badge-qr-btn" style="height:30px;padding:0 10px;border-radius:8px;border:1px solid rgba(112,207,255,0.4);background:rgba(112,207,255,0.08);color:#70cfff;font-size:12px;font-weight:600;cursor:pointer;font-family:Manrope,sans-serif;">QR</button>' +
-                        '<button data-edit-b="' + b.id + '" class="badge-edit-btn" style="height:30px;padding:0 10px;border-radius:8px;border:1px solid #353a46;background:transparent;color:#cdd2db;font-size:12px;cursor:pointer;">✏️</button>' +
+                        '<button data-edit-b="' + b.id + '" class="badge-edit-btn" style="height:30px;padding:0 10px;border-radius:8px;border:1px solid #353a46;background:transparent;color:#cdd2db;font-size:12px;cursor:pointer;"><img src="assets/icons/ui/icono-editar.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;"></button>' +
                         '<button data-del-b="' + b.id + '" data-del-bname="' + U.esc(bname) + '" class="badge-del-btn" style="height:30px;padding:0 10px;border-radius:8px;border:1px solid rgba(230,138,141,0.4);background:transparent;cursor:pointer;"><img src="assets/icons/ui/icono-basura-blanco.png" alt="Eliminar" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;display:inline-block;filter:invert(60%) sepia(1) saturate(3) hue-rotate(300deg);" /></button>' +
                       '</div>' +
                     '</div>' +
@@ -159,11 +175,31 @@
               badgeItems +
               // Add badge inline form
               '<div style="border-top:1px solid #2f343f;margin-top:10px;padding-top:16px;">' +
-                '<p style="font-size:12px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;margin:0 0 10px;">Agregar badge</p>' +
-                '<div style="display:flex;gap:8px;">' +
-                  '<input type="text" id="ib-emoji" placeholder="🏅" maxlength="4" style="width:52px;padding:8px;background:#2e323d;border:1px solid #353a46;border-radius:8px;color:#f4f6f9;font-size:14px;outline:none;text-align:center;" />' +
-                  '<input type="text" id="ib-name" placeholder="Nombre del badge" style="flex:1;padding:8px 12px;background:#2e323d;border:1px solid #353a46;border-radius:8px;color:#f4f6f9;font-size:13px;outline:none;font-family:Manrope,sans-serif;" />' +
-                  '<button id="ib-add" style="padding:8px 14px;border-radius:8px;border:1px solid rgba(216,151,231,0.4);background:rgba(216,151,231,0.1);color:#d897e7;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">+ Agregar</button>' +
+                '<p style="font-size:12px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;margin:0 0 12px;">Agregar badge</p>' +
+                '<div style="background:#20242d;border:1px solid #2f343f;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;">' +
+                  '<div style="display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;">' +
+                    '<div>' +
+                      '<label style="font-size:11px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;display:block;margin-bottom:6px;">ICONO</label>' +
+                      '<button type="button" id="ib-icon-btn" style="width:52px;height:52px;border-radius:10px;border:1px solid #353a46;background:#2e323d;cursor:pointer;display:flex;align-items:center;justify-content:center;">' +
+                        '<div id="ib-icon-preview" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;">' +
+                          '<span style="color:#8b93a3;font-size:22px;">+</span>' +
+                        '</div>' +
+                      '</button>' +
+                    '</div>' +
+                    '<div>' +
+                      '<label style="font-size:11px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;display:block;margin-bottom:6px;">NOMBRE *</label>' +
+                      '<input type="text" id="ib-name" placeholder="Nombre del badge" style="width:100%;padding:10px 12px;background:#2e323d;border:1px solid #353a46;border-radius:8px;color:#f4f6f9;font-size:13px;outline:none;box-sizing:border-box;font-family:Manrope,sans-serif;" />' +
+                    '</div>' +
+                  '</div>' +
+                  '<div>' +
+                    '<label style="font-size:11px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;display:block;margin-bottom:6px;">RAREZA</label>' +
+                    '<div style="display:flex;gap:8px;">' +
+                      '<button type="button" data-ibrarity="normal" class="ib-rarity-btn" style="flex:1;padding:8px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-size:12px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;">Normal</button>' +
+                      '<button type="button" data-ibrarity="rare" class="ib-rarity-btn" style="flex:1;padding:8px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-size:12px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;">Raro</button>' +
+                      '<button type="button" data-ibrarity="ultra_rare" class="ib-rarity-btn" style="flex:1;padding:8px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-size:12px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;">Ultra Raro</button>' +
+                    '</div>' +
+                  '</div>' +
+                  '<button id="ib-add" style="width:100%;padding:10px;border-radius:10px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;cursor:pointer;">+ Agregar</button>' +
                 '</div>' +
               '</div>' +
             '</div>';
@@ -178,7 +214,7 @@
           var editCard =
             '<div style="' + CARD + '">' +
               '<button id="edit-toggle" style="display:flex;align-items:center;justify-content:space-between;width:100%;background:transparent;border:none;cursor:pointer;padding:0;margin-bottom:0;">' +
-                '<p style="font-family:Poppins,sans-serif;font-size:15px;font-weight:700;color:#f4f6f9;margin:0;">✏️ Editar evento</p>' +
+                '<p style="font-family:Poppins,sans-serif;font-size:15px;font-weight:700;color:#f4f6f9;margin:0;"><img src="assets/icons/ui/icono-editar.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:6px;">Editar evento</p>' +
                 '<span id="edit-chevron" style="font-size:18px;color:#8b93a3;">▸</span>' +
               '</button>' +
               '<div id="edit-body" style="display:none;margin-top:18px;">' +
@@ -356,6 +392,65 @@
           });
 
           // ── Badges: agregar inline ──
+          var ibSelectedIcon = null;
+          var ibSelectedRarity = 'normal';
+
+          var IB_RARITY_COLORS = {
+            normal:     { border: '#353a46', bg: '#2e323d', color: '#f4f6f9' },
+            rare:       { border: '#22c55e', bg: 'rgba(34,197,94,0.15)', color: '#22c55e' },
+            ultra_rare: { border: '#eab308', bg: 'rgba(234,179,8,0.15)', color: '#eab308' }
+          };
+
+          Array.prototype.forEach.call(document.querySelectorAll('.ib-rarity-btn'), function(btn) {
+            btn.addEventListener('click', function() {
+              ibSelectedRarity = btn.getAttribute('data-ibrarity');
+              Array.prototype.forEach.call(document.querySelectorAll('.ib-rarity-btn'), function(b) {
+                b.style.border = '1px solid #353a46';
+                b.style.background = '#2e323d';
+                b.style.color = '#f4f6f9';
+              });
+              var rc = IB_RARITY_COLORS[ibSelectedRarity];
+              btn.style.border = '1px solid ' + rc.border;
+              btn.style.background = rc.bg;
+              btn.style.color = rc.color;
+            });
+          });
+
+          var ibIconBtn = document.getElementById('ib-icon-btn');
+          if (ibIconBtn) {
+            ibIconBtn.addEventListener('click', function() {
+              var modalRoot = document.getElementById('modal-root');
+              modalRoot.innerHTML =
+                '<div class="fixed inset-0 z-50 flex items-center justify-center p-6" style="background:rgba(0,0,0,0.75);" id="ib-icon-overlay">' +
+                  '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:16px;padding:24px;width:100%;max-width:420px;">' +
+                    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">' +
+                      '<p style="font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#f4f6f9;margin:0;">Selecciona un icono</p>' +
+                      '<button id="close-ib-icon" style="background:transparent;border:none;color:#8b93a3;font-size:20px;cursor:pointer;line-height:1;">✕</button>' +
+                    '</div>' +
+                    '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">' +
+                      IB_BADGE_ICONS.map(function(icon) {
+                        return '<button type="button" data-ibicon="assets/icons/badges/' + icon.file + '" class="ib-icon-option" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:10px;border:1px solid #353a46;background:#2e323d;cursor:pointer;">' +
+                          '<img src="assets/icons/badges/' + icon.file + '" style="width:36px;height:36px;object-fit:contain;" />' +
+                          '<span style="font-size:10px;color:#8b93a3;font-family:Manrope,sans-serif;text-align:center;">' + icon.label + '</span>' +
+                        '</button>';
+                      }).join('') +
+                    '</div>' +
+                  '</div>' +
+                '</div>';
+              document.getElementById('close-ib-icon').addEventListener('click', function() { modalRoot.innerHTML = ''; });
+              document.getElementById('ib-icon-overlay').addEventListener('click', function(ev) {
+                if (ev.target === this) modalRoot.innerHTML = '';
+              });
+              Array.prototype.forEach.call(document.querySelectorAll('.ib-icon-option'), function(btn) {
+                btn.addEventListener('click', function() {
+                  ibSelectedIcon = btn.getAttribute('data-ibicon');
+                  document.getElementById('ib-icon-preview').innerHTML = '<img src="' + ibSelectedIcon + '" style="width:36px;height:36px;object-fit:contain;" />';
+                  modalRoot.innerHTML = '';
+                });
+              });
+            });
+          }
+
           var ibAdd = document.getElementById('ib-add');
           if (ibAdd) {
             ibAdd.addEventListener('click', async function() {
@@ -364,11 +459,13 @@
               if (!name) { U.toast('Ingresa un nombre para el badge', 'error'); return; }
               ibAdd.disabled = true;
               try {
-                var emojiInput = document.getElementById('ib-emoji');
                 await API.addBadge(eid, {
                   name: name,
                   desc: '',
-                  emoji: (emojiInput ? emojiInput.value.trim() : '') || '🏅'
+                  emoji: ibSelectedIcon ? null : '🏅',
+                  icon_url: ibSelectedIcon || null,
+                  rarity: ibSelectedRarity,
+                  is_rare: ibSelectedRarity !== 'normal'
                 });
                 U.toast('Badge agregado ✅', 'success');
                 init();

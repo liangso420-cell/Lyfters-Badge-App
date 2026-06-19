@@ -125,33 +125,44 @@
                 '<div id="create-tags-container" style="display:flex;flex-wrap:wrap;gap:6px;">' + tagsHtml + '</div>' +
               '</div>' +
 
-              '<div style="border-top:1px solid #2f343f;padding-top:16px;">' +
-                '<p style="font-family:Poppins,sans-serif;font-size:14px;font-weight:700;color:#f4f6f9;margin:0 0 6px;">🏅 Badges</p>' +
-                '<p style="font-size:12px;color:#8b93a3;font-family:Manrope,sans-serif;margin:0 0 10px;">Agrega los badges que los asistentes podrán coleccionar</p>' +
-                '<div id="create-badges-preview" style="margin-bottom:12px;display:flex;flex-direction:column;gap:6px;"></div>' +
-                '<div style="margin-bottom:12px;">' +
-                  '<label style="font-size:12px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;">Icono del badge</label>' +
-                  '<div style="display:flex;align-items:center;gap:10px;margin-top:6px;">' +
-                    '<div id="selected-icon-preview" style="width:48px;height:48px;border-radius:10px;border:1px solid #353a46;background:#2e323d;display:flex;align-items:center;justify-content:center;">' +
-                      '<span style="color:#8b93a3;font-size:20px;">🏅</span>' +
+              '<div style="margin-top:24px;border-top:1px solid #2f343f;padding-top:20px;">' +
+                '<h3 style="font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#f4f6f9;margin:0 0 16px;">Badges del Evento</h3>' +
+                '<div id="create-badges-preview" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;"></div>' +
+                '<div style="background:#20242d;border:1px solid #2f343f;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px;">' +
+                  '<div style="display:grid;grid-template-columns:auto 1fr 1fr;gap:10px;align-items:start;">' +
+                    '<div>' +
+                      '<label style="font-size:11px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;display:block;margin-bottom:6px;">ICONO</label>' +
+                      '<button type="button" id="open-icon-picker" style="width:52px;height:52px;border-radius:10px;border:1px solid #353a46;background:#2e323d;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Elegir icono">' +
+                        '<div id="selected-icon-preview" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;">' +
+                          '<span style="color:#8b93a3;font-size:22px;">+</span>' +
+                        '</div>' +
+                      '</button>' +
                     '</div>' +
-                    '<button type="button" id="open-icon-picker" style="padding:8px 16px;border-radius:10px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-size:13px;cursor:pointer;font-family:Manrope,sans-serif;">Elegir icono</button>' +
+                    '<div>' +
+                      '<label style="font-size:11px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;display:block;margin-bottom:6px;">NOMBRE *</label>' +
+                      '<input type="text" id="create-badge-name" placeholder="Nombre del badge" style="width:100%;padding:10px 12px;background:#2e323d;border:1px solid #353a46;border-radius:8px;color:#f4f6f9;font-size:13px;outline:none;box-sizing:border-box;font-family:Manrope,sans-serif;" />' +
+                    '</div>' +
+                    '<div>' +
+                      '<label style="font-size:11px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;display:block;margin-bottom:6px;">DESCRIPCIÓN</label>' +
+                      '<input type="text" id="create-badge-desc" placeholder="Descripción opcional" style="width:100%;padding:10px 12px;background:#2e323d;border:1px solid #353a46;border-radius:8px;color:#f4f6f9;font-size:13px;outline:none;box-sizing:border-box;font-family:Manrope,sans-serif;" />' +
+                    '</div>' +
                   '</div>' +
-                '</div>' +
-                '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">' +
-                  '<input type="text" id="create-badge-name" placeholder="Nombre del badge" style="' + INP + '" />' +
-                  '<input type="text" id="create-badge-desc" placeholder="Descripción" style="' + INP + '" />' +
-                '</div>' +
-                '<div style="display:flex;align-items:flex-end;gap:16px;margin-bottom:10px;">' +
-                  '<div>' +
-                    '<label style="' + LBL + '">XP por escanear</label>' +
-                    '<input type="number" id="create-badge-xp" value="10" min="1" max="500" style="' + INP + 'width:90px;" />' +
+                  '<div style="display:grid;grid-template-columns:120px 1fr;gap:10px;align-items:start;">' +
+                    '<div>' +
+                      '<label style="font-size:11px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;display:block;margin-bottom:6px;">XP</label>' +
+                      '<input type="number" id="create-badge-xp" min="1" max="500" value="10" style="width:100%;padding:10px 12px;background:#2e323d;border:1px solid #353a46;border-radius:8px;color:#f4f6f9;font-size:13px;outline:none;box-sizing:border-box;" />' +
+                    '</div>' +
+                    '<div>' +
+                      '<label style="font-size:11px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;display:block;margin-bottom:6px;">RAREZA</label>' +
+                      '<div style="display:flex;gap:8px;">' +
+                        '<button type="button" data-rarity="normal" class="rarity-btn" style="flex:1;padding:10px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-size:12px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;">Normal</button>' +
+                        '<button type="button" data-rarity="rare" class="rarity-btn" style="flex:1;padding:10px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-size:12px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;">Raro</button>' +
+                        '<button type="button" data-rarity="ultra_rare" class="rarity-btn" style="flex:1;padding:10px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-size:12px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;">Ultra Raro</button>' +
+                      '</div>' +
+                    '</div>' +
                   '</div>' +
-                  '<label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#f4f6f9;font-family:Manrope,sans-serif;padding-bottom:2px;cursor:pointer;">' +
-                    '<input type="checkbox" id="create-badge-rare" style="width:15px;height:15px;" /> Badge raro' +
-                  '</label>' +
+                  '<button type="button" id="create-add-badge-btn" style="width:100%;padding:12px;border-radius:10px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;cursor:pointer;">+ Agregar badge</button>' +
                 '</div>' +
-                '<button type="button" id="create-add-badge-btn" style="padding:8px 16px;border-radius:10px;border:1px solid rgba(216,151,231,0.4);background:rgba(216,151,231,0.1);color:#d897e7;font-size:13px;font-weight:600;cursor:pointer;font-family:Manrope,sans-serif;">+ Agregar badge</button>' +
               '</div>' +
 
               '<button type="submit" id="create-btn" style="width:100%;height:50px;border-radius:13px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:16px;font-weight:700;cursor:pointer;margin-top:6px;">Crear evento</button>' +
@@ -278,48 +289,47 @@
         });
       }
 
-      function renderBadgePreview() {
-        var preview = document.getElementById('create-badges-preview');
-        if (!preview) return;
-        if (!createPendingBadges.length) { preview.innerHTML = ''; return; }
-        preview.innerHTML = createPendingBadges.map(function(b, i) {
-          return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:' + (b.is_rare ? '#2a2310' : '#20242d') + ';border:1px solid ' + (b.is_rare ? '#5a4a10' : '#2f343f') + ';">' +
-            '<span style="font-size:20px;">' + (b.icon_url ? '<img src="' + b.icon_url + '" style="width:28px;height:28px;object-fit:contain;" />' : (b.emoji || '🏅')) + '</span>' +
-            '<span style="font-size:13px;font-family:Manrope,sans-serif;color:#f4f6f9;flex:1;">' + U.esc(b.name) +
-              ' <span style="color:#8b93a3;font-size:11px;">· ' + (b.xp_value || 10) + ' XP' + (b.is_rare ? ' · ⭐ raro' : '') + '</span>' +
-            '</span>' +
-            '<button type="button" data-idx="' + i + '" class="remove-badge-btn" style="font-size:12px;color:#e68a8d;background:transparent;border:none;cursor:pointer;padding:2px 6px;">✕</button>' +
-          '</div>';
-        }).join('');
-        Array.prototype.forEach.call(preview.querySelectorAll('.remove-badge-btn'), function(rbtn) {
-          rbtn.addEventListener('click', function() {
-            createPendingBadges.splice(parseInt(rbtn.getAttribute('data-idx')), 1);
-            renderBadgePreview();
+      function initBadgeForm() {
+        var selectedRarity = 'normal';
+        var selectedBadgeIcon = null;
+
+        var RARITY_COLORS = {
+          normal:     { border: '#353a46', bg: '#2e323d', color: '#f4f6f9' },
+          rare:       { border: '#22c55e', bg: 'rgba(34,197,94,0.15)', color: '#22c55e' },
+          ultra_rare: { border: '#eab308', bg: 'rgba(234,179,8,0.15)', color: '#eab308' }
+        };
+
+        Array.prototype.forEach.call(document.querySelectorAll('.rarity-btn'), function(btn) {
+          btn.addEventListener('click', function() {
+            selectedRarity = btn.getAttribute('data-rarity');
+            Array.prototype.forEach.call(document.querySelectorAll('.rarity-btn'), function(b) {
+              b.style.border = '1px solid #353a46';
+              b.style.background = '#2e323d';
+              b.style.color = '#f4f6f9';
+            });
+            var rc = RARITY_COLORS[selectedRarity];
+            btn.style.border = '1px solid ' + rc.border;
+            btn.style.background = rc.bg;
+            btn.style.color = rc.color;
           });
         });
-      }
 
-      function initBadgeForm() {
         document.getElementById('open-icon-picker').addEventListener('click', function() {
           var modalRoot = document.getElementById('modal-root');
           modalRoot.innerHTML =
-            '<div class="fixed inset-0 z-50 flex items-center justify-center p-6" style="background:rgba(0,0,0,0.7);" id="icon-picker-overlay">' +
-              '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:16px;padding:24px;width:100%;max-width:400px;">' +
+            '<div class="fixed inset-0 z-50 flex items-center justify-center p-6" style="background:rgba(0,0,0,0.75);" id="icon-picker-overlay">' +
+              '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:16px;padding:24px;width:100%;max-width:420px;">' +
                 '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">' +
                   '<p style="font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#f4f6f9;margin:0;">Selecciona un icono</p>' +
-                  '<button id="close-icon-picker" style="background:transparent;border:none;color:#8b93a3;font-size:20px;cursor:pointer;">✕</button>' +
+                  '<button id="close-icon-picker" style="background:transparent;border:none;color:#8b93a3;font-size:20px;cursor:pointer;line-height:1;">✕</button>' +
                 '</div>' +
                 '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">' +
                   BADGE_ICONS.map(function(icon) {
-                    return '<button type="button" data-icon="' + icon.file + '" class="icon-option" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:10px;border:1px solid #353a46;background:#2e323d;cursor:pointer;transition:border-color 0.15s;" onmouseover="this.style.borderColor=\'#d897e7\'" onmouseout="this.style.borderColor=\'#353a46\'">' +
-                      '<img src="' + icon.file + '" style="width:36px;height:36px;object-fit:contain;" />' +
+                    return '<button type="button" data-icon="assets/icons/badges/' + icon.file + '" class="icon-option" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:10px;border:1px solid #353a46;background:#2e323d;cursor:pointer;">' +
+                      '<img src="assets/icons/badges/' + icon.file + '" style="width:36px;height:36px;object-fit:contain;" />' +
                       '<span style="font-size:10px;color:#8b93a3;font-family:Manrope,sans-serif;text-align:center;">' + icon.label + '</span>' +
                     '</button>';
                   }).join('') +
-                  '<button type="button" id="use-emoji-option" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:10px;border:1px solid #353a46;background:#2e323d;cursor:pointer;">' +
-                    '<span style="font-size:32px;">😀</span>' +
-                    '<span style="font-size:10px;color:#8b93a3;font-family:Manrope,sans-serif;">Emoji</span>' +
-                  '</button>' +
                 '</div>' +
               '</div>' +
             '</div>';
@@ -331,46 +341,66 @@
 
           Array.prototype.forEach.call(document.querySelectorAll('.icon-option'), function(btn) {
             btn.addEventListener('click', function() {
-              var iconFile = btn.getAttribute('data-icon');
-              selectedBadgeIcon = '' + iconFile;
-              var preview = document.getElementById('selected-icon-preview');
-              preview.innerHTML = '<img src="' + selectedBadgeIcon + '" style="width:36px;height:36px;object-fit:contain;" />';
+              selectedBadgeIcon = btn.getAttribute('data-icon');
+              document.getElementById('selected-icon-preview').innerHTML = '<img src="' + selectedBadgeIcon + '" style="width:36px;height:36px;object-fit:contain;" />';
               modalRoot.innerHTML = '';
             });
           });
-
-          document.getElementById('use-emoji-option').addEventListener('click', function() {
-            modalRoot.innerHTML = '';
-            var emoji = prompt('Ingresa un emoji:');
-            if (emoji) {
-              selectedBadgeIcon = null;
-              var preview = document.getElementById('selected-icon-preview');
-              preview.innerHTML = '<span style="font-size:28px;">' + emoji + '</span>';
-            }
-          });
         });
+
+        var rarityColors = {
+          normal:     { bg: '#20242d', border: '#2f343f', label: 'Normal',     labelColor: '#8b93a3' },
+          rare:       { bg: 'rgba(34,197,94,0.1)',  border: '#22c55e', label: 'Raro',      labelColor: '#22c55e' },
+          ultra_rare: { bg: 'rgba(234,179,8,0.1)', border: '#eab308', label: 'Ultra Raro', labelColor: '#eab308' }
+        };
 
         document.getElementById('create-add-badge-btn').addEventListener('click', function() {
           var name = document.getElementById('create-badge-name').value.trim();
           if (!name) { U.toast('Ingresa un nombre para el badge', 'error'); return; }
-          var previewEl = document.getElementById('selected-icon-preview');
-          var spanEl = previewEl ? previewEl.querySelector('span') : null;
-          var currentEmoji = spanEl ? spanEl.textContent.trim() : '🏅';
-          createPendingBadges.push({
+
+          var badge = {
             name: name,
             desc: document.getElementById('create-badge-desc').value.trim(),
-            emoji: selectedBadgeIcon ? null : (currentEmoji || '🏅'),
             icon_url: selectedBadgeIcon || null,
+            emoji: selectedBadgeIcon ? null : '🏅',
             xp_value: parseInt(document.getElementById('create-badge-xp').value, 10) || 10,
-            is_rare: document.getElementById('create-badge-rare').checked
+            rarity: selectedRarity,
+            is_rare: selectedRarity !== 'normal'
+          };
+          createPendingBadges.push(badge);
+
+          document.getElementById('create-badges-preview').innerHTML = createPendingBadges.map(function(b, i) {
+            var brc = rarityColors[b.rarity] || rarityColors.normal;
+            return '<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;border:1px solid ' + brc.border + ';background:' + brc.bg + ';">' +
+              '<div style="width:36px;height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">' +
+                (b.icon_url ? '<img src="' + b.icon_url + '" style="width:32px;height:32px;object-fit:contain;" />' : '<span style="font-size:24px;">🏅</span>') +
+              '</div>' +
+              '<div style="flex:1;min-width:0;">' +
+                '<p style="font-family:Poppins,sans-serif;font-size:13px;font-weight:600;color:#f4f6f9;margin:0;">' + U.esc(b.name) + '</p>' +
+                '<p style="font-size:11px;color:#8b93a3;margin:2px 0 0;font-family:Manrope,sans-serif;">' + b.xp_value + ' XP · <span style="color:' + brc.labelColor + ';">' + brc.label + '</span></p>' +
+              '</div>' +
+              '<button type="button" data-idx="' + i + '" class="remove-badge-btn" style="background:transparent;border:none;color:#e68a8d;font-size:16px;cursor:pointer;padding:4px;">✕</button>' +
+            '</div>';
+          }).join('');
+
+          Array.prototype.forEach.call(document.querySelectorAll('.remove-badge-btn'), function(rbtn) {
+            rbtn.addEventListener('click', function() {
+              createPendingBadges.splice(parseInt(rbtn.getAttribute('data-idx')), 1);
+              rbtn.closest('[class="remove-badge-btn"]') || rbtn.parentElement.parentElement.remove();
+            });
           });
+
           document.getElementById('create-badge-name').value = '';
           document.getElementById('create-badge-desc').value = '';
-          selectedBadgeIcon = null;
-          if (previewEl) previewEl.innerHTML = '<span style="color:#8b93a3;font-size:20px;">🏅</span>';
           document.getElementById('create-badge-xp').value = '10';
-          document.getElementById('create-badge-rare').checked = false;
-          renderBadgePreview();
+          selectedBadgeIcon = null;
+          selectedRarity = 'normal';
+          document.getElementById('selected-icon-preview').innerHTML = '<span style="color:#8b93a3;font-size:22px;">+</span>';
+          Array.prototype.forEach.call(document.querySelectorAll('.rarity-btn'), function(b) {
+            b.style.border = '1px solid #353a46';
+            b.style.background = '#2e323d';
+            b.style.color = '#f4f6f9';
+          });
         });
       }
 
