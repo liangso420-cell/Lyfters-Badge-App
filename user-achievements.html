@@ -61,7 +61,7 @@
           '<p style="font-family:Manrope,sans-serif;font-size:11px;color:' + (unlocked ? '#8b93a3' : '#3a3f4a') + ';margin:0 0 8px;">' + U.esc(a.description || a.hint || '') + '</p>' +
           (unlocked
             ? '<span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:999px;color:white;background:' + rc.border + ';">' + (rarityLabels[a.rarity] || 'Común') + ' · +' + (a.xp_reward || 0) + ' XP</span>'
-            : '<span style="font-size:10px;color:#3a3f4a;font-family:Manrope,sans-serif;">🔒 Bloqueado</span>') +
+            : '<span style="font-size:10px;color:#3a3f4a;font-family:Manrope,sans-serif;"><img src="assets/icons/ui/icono-candado.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:4px;"> Bloqueado</span>') +
         '</div>';
       }
 
