@@ -166,6 +166,12 @@
                 '<h1 class="text-xl font-bold text-gray-800 flex-1">' + U.t('explore_events_title') + '</h1>' +
                 '<button id="global-lb-btn" class="px-3 py-1.5 rounded-btn text-xs font-medium text-primary border border-primary hover:bg-primary-soft">🌍 Ranking</button>' +
               '</div>' +
+              '<div style="position:relative;margin-bottom:20px;">' +
+                '<input id="events-search" type="text" placeholder="Buscar por nombre o tag..." ' +
+                'style="width:100%;padding:12px 16px 12px 44px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#f4f6f9;font-size:14px;outline:none;box-sizing:border-box;" />' +
+                '<span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;">🔍</span>' +
+              '</div>' +
+              '<div id="active-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;"></div>' +
               recommendedSection +
               allSection +
               emptyHtml +
@@ -186,6 +192,51 @@
               showEventModal(eventData);
             });
           });
+
+          var eventsSearch = document.getElementById('events-search');
+          if (eventsSearch) {
+            eventsSearch.addEventListener('input', function() {
+              var q = eventsSearch.value.trim().toLowerCase();
+
+              Array.prototype.forEach.call(document.querySelectorAll('[data-eid]'), function(card) {
+                if (!q) { card.style.display = ''; return; }
+                var eid = card.getAttribute('data-eid');
+                var eventData = allEvents.concat(recommended).find(function(e) { return e.id === eid; });
+                if (!eventData) { card.style.display = ''; return; }
+                var name = eventData.name.toLowerCase();
+                var tags = (eventData.tags || []).join(' ').toLowerCase();
+                var match = name.includes(q) || tags.includes(q);
+                card.style.display = match ? '' : 'none';
+              });
+
+              var activeTags = document.getElementById('active-tags');
+              if (activeTags && q.length > 1) {
+                var matchingTags = [];
+                allEvents.concat(recommended).forEach(function(e) {
+                  (e.tags || []).forEach(function(tag) {
+                    if (tag.toLowerCase().includes(q) && matchingTags.indexOf(tag) === -1) {
+                      matchingTags.push(tag);
+                    }
+                  });
+                });
+                activeTags.innerHTML = matchingTags.slice(0, 8).map(function(tag) {
+                  return '<button class="tag-filter-btn" data-tag="' + U.esc(tag) + '" ' +
+                    'style="padding:4px 12px;border-radius:999px;border:1px solid #6C63FF;background:rgba(108,99,255,0.15);color:#6C63FF;font-size:12px;cursor:pointer;">' +
+                    U.esc(tag) + '</button>';
+                }).join('');
+
+                Array.prototype.forEach.call(activeTags.querySelectorAll('.tag-filter-btn'), function(btn) {
+                  btn.addEventListener('click', function() {
+                    eventsSearch.value = btn.getAttribute('data-tag');
+                    eventsSearch.dispatchEvent(new Event('input'));
+                    activeTags.innerHTML = '';
+                  });
+                });
+              } else if (activeTags) {
+                activeTags.innerHTML = '';
+              }
+            });
+          }
 
         } catch(err) {
           app.innerHTML = U.errorHtml(err && err.message ? err.message : 'Error inesperado');

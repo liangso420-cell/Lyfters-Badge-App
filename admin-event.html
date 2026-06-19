@@ -89,8 +89,15 @@
                   '<button data-enter="' + e.id + '" class="enter-btn" style="height:32px;padding:0 14px;border-radius:8px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-size:12px;font-weight:700;cursor:pointer;font-family:Poppins,sans-serif;">Entrar →</button>' +
                   '<button data-del="' + e.id + '" data-name="' + U.esc(e.name) + '" class="del-btn" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid rgba(230,138,141,0.4);background:transparent;color:#e68a8d;font-size:12px;cursor:pointer;"><img src="assets/icons/ui/icono-basura-blanco.png" alt="Eliminar" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;display:inline-block;filter:invert(60%) sepia(1) saturate(3) hue-rotate(300deg);" /></button>' +
                 '</div>' +
-              '</div>' +
-            '</div>';
+              (e.tags && e.tags.length
+                ? '<div style="width:100%;display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">' +
+                    e.tags.map(function(tag) {
+                      return '<span style="font-size:10px;padding:2px 8px;border-radius:999px;border:1px solid #353a46;color:#8b93a3;font-family:Manrope,sans-serif;">' + U.esc(tag) + '</span>';
+                    }).join('') +
+                  '</div>'
+                : '') +
+            '</div>' +
+          '</div>';
           }).join('') : '<p style="color:#8b93a3;font-size:14px;text-align:center;padding:40px;">No hay eventos. Crea el primero con el botón + New</p>';
 
           var inner =
@@ -112,9 +119,14 @@
             eventSearch.addEventListener('input', function() {
               var q = eventSearch.value.trim().toLowerCase();
               Array.prototype.forEach.call(document.querySelectorAll('#events-list > div'), function(card) {
-                var name = card.querySelector('p');
-                if (!name) return;
-                card.style.display = (!q || name.textContent.toLowerCase().includes(q)) ? '' : 'none';
+                if (!q) { card.style.display = ''; return; }
+                var nameEl = card.querySelector('p');
+                var name = nameEl ? nameEl.textContent.toLowerCase() : '';
+                var eid = card.querySelector('[data-enter]') ? card.querySelector('[data-enter]').getAttribute('data-enter') : null;
+                var eventData = eid ? events.find(function(e) { return e.id === eid; }) : null;
+                var tags = eventData ? (eventData.tags || []).join(' ').toLowerCase() : '';
+                var match = name.includes(q) || tags.includes(q);
+                card.style.display = match ? '' : 'none';
               });
             });
           }
