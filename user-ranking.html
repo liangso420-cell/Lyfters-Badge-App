@@ -80,37 +80,119 @@
 
       async function init() {
         try {
-          var profile     = await API.getProfile();
-          var leaderboard = await API.getLeaderboard().catch(function() { return []; });
+          var [leaderboard, xpLeaderboard] = await Promise.all([
+            API.getLeaderboard(),
+            API.getXpLeaderboard()
+          ]);
+          var top8 = leaderboard.slice(0, 8);
+          var top8xp = xpLeaderboard.slice(0, 8);
 
-          var avatarHtml = profile.avatar
-            ? '<img src="' + U.esc(profile.avatar) + '" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid rgba(216,151,231,0.5);">'
-            : '<img src="assets/icons/ui/icono-perfil.png" style="width:40px;height:40px;border-radius:50%;object-fit:contain;background:#2e323d;padding:6px;">';
+          function buildBadgeTable(data) {
+            if (!data.length) return '<p style="color:#8b93a3;text-align:center;padding:32px;font-family:Manrope,sans-serif;">Sin datos todavía.</p>';
+            return '<table style="width:100%;border-collapse:collapse;">' +
+              '<thead><tr style="border-bottom:1px solid #2f343f;">' +
+                '<th style="padding:12px 8px;text-align:left;font-family:Manrope,sans-serif;font-size:11px;font-weight:700;color:#8b93a3;">#</th>' +
+                '<th style="padding:12px 8px;text-align:left;font-family:Manrope,sans-serif;font-size:11px;font-weight:700;color:#8b93a3;">Usuario</th>' +
+                '<th style="padding:12px 8px;text-align:right;font-family:Manrope,sans-serif;font-size:11px;font-weight:700;color:#8b93a3;">Badges</th>' +
+              '</tr></thead><tbody>' +
+              data.map(function(entry, i) {
+                var medals = ['🥇','🥈','🥉'];
+                var rank = medals[i] || (i+1);
+                var avatarHtml = entry.avatar
+                  ? '<img src="' + entry.avatar + '" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">'
+                  : '<img src="assets/icons/ui/icono-perfil.png" style="width:36px;height:36px;border-radius:50%;object-fit:contain;background:#2e323d;padding:4px;">';
+                var isMe = user && entry.id === user.id;
+                return '<tr style="border-bottom:1px solid #2f343f;' + (i < 3 ? 'background:rgba(216,151,231,0.04);' : '') + (isMe ? 'background:rgba(108,99,255,0.08);' : '') + '">' +
+                  '<td style="padding:14px 8px;font-size:18px;">' + rank + '</td>' +
+                  '<td style="padding:14px 8px;"><div style="display:flex;align-items:center;gap:10px;">' + avatarHtml +
+                    '<p style="font-family:Poppins,sans-serif;font-size:14px;font-weight:600;color:#f4f6f9;margin:0;">' + U.esc(entry.nombre) + (isMe ? ' <span style="font-size:11px;color:#d897e7;">(tú)</span>' : '') + '</p>' +
+                  '</div></td>' +
+                  '<td style="padding:14px 8px;text-align:right;font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#d897e7;">' + entry.badges + '</td>' +
+                '</tr>';
+              }).join('') + '</tbody></table>';
+          }
+
+          function buildXpTable(data) {
+            if (!data.length) return '<p style="color:#8b93a3;text-align:center;padding:32px;font-family:Manrope,sans-serif;">Sin datos todavía.</p>';
+            return '<table style="width:100%;border-collapse:collapse;">' +
+              '<thead><tr style="border-bottom:1px solid #2f343f;">' +
+                '<th style="padding:12px 8px;text-align:left;font-family:Manrope,sans-serif;font-size:11px;font-weight:700;color:#8b93a3;">#</th>' +
+                '<th style="padding:12px 8px;text-align:left;font-family:Manrope,sans-serif;font-size:11px;font-weight:700;color:#8b93a3;">Usuario</th>' +
+                '<th style="padding:12px 8px;text-align:center;font-family:Manrope,sans-serif;font-size:11px;font-weight:700;color:#8b93a3;">Nivel</th>' +
+                '<th style="padding:12px 8px;text-align:right;font-family:Manrope,sans-serif;font-size:11px;font-weight:700;color:#8b93a3;">XP Total</th>' +
+              '</tr></thead><tbody>' +
+              data.map(function(entry, i) {
+                var medals = ['🥇','🥈','🥉'];
+                var rank = medals[i] || (i+1);
+                var avatarHtml = entry.avatar
+                  ? '<img src="' + entry.avatar + '" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">'
+                  : '<img src="assets/icons/ui/icono-perfil.png" style="width:36px;height:36px;border-radius:50%;object-fit:contain;background:#2e323d;padding:4px;">';
+                var isMe = user && entry.id === user.id;
+                return '<tr style="border-bottom:1px solid #2f343f;' + (i < 3 ? 'background:rgba(216,151,231,0.04);' : '') + (isMe ? 'background:rgba(108,99,255,0.08);' : '') + '">' +
+                  '<td style="padding:14px 8px;font-size:18px;">' + rank + '</td>' +
+                  '<td style="padding:14px 8px;"><div style="display:flex;align-items:center;gap:10px;">' + avatarHtml +
+                    '<p style="font-family:Poppins,sans-serif;font-size:14px;font-weight:600;color:#f4f6f9;margin:0;">' + U.esc(entry.nombre) + (isMe ? ' <span style="font-size:11px;color:#d897e7;">(tú)</span>' : '') + '</p>' +
+                  '</div></td>' +
+                  '<td style="padding:14px 8px;text-align:center;">' +
+                    '<span style="font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:rgba(216,151,231,0.15);color:#d897e7;">Lv. ' + (entry.level || 1) + '</span>' +
+                  '</td>' +
+                  '<td style="padding:14px 8px;text-align:right;font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#d897e7;">' + (entry.xp || 0) + ' XP</td>' +
+                '</tr>';
+              }).join('') + '</tbody></table>';
+          }
 
           var inner =
-            '<div style="min-height:100vh;background:#13151b;padding:20px 16px 40px;">' +
-              '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">' +
-                '<h2 style="font-family:Poppins,sans-serif;font-size:22px;font-weight:700;color:#f4f6f9;margin:0;">Ranking Global</h2>' +
-                '<button id="profile-menu-btn" style="background:transparent;border:none;cursor:pointer;padding:0;">' + avatarHtml + '</button>' +
+            '<div style="display:flex;gap:4px;margin-bottom:24px;background:#1c1f27;border:1px solid #2f343f;border-radius:12px;padding:4px;">' +
+              '<button class="nav-tab" data-page="explore" style="flex:1;padding:8px 4px;border-radius:8px;border:none;cursor:pointer;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;background:transparent;color:#8b93a3;">Explorar</button>' +
+              '<button class="nav-tab" data-page="my-events" style="flex:1;padding:8px 4px;border-radius:8px;border:none;cursor:pointer;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;background:transparent;color:#8b93a3;">Mis Eventos</button>' +
+              '<button class="nav-tab" data-page="scan" style="flex:1;padding:8px 4px;border-radius:8px;border:none;cursor:pointer;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;background:transparent;color:#8b93a3;">Escanear</button>' +
+              '<button class="nav-tab" data-page="achievements" style="flex:1;padding:8px 4px;border-radius:8px;border:none;cursor:pointer;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;background:transparent;color:#8b93a3;">Logros</button>' +
+              '<button class="nav-tab active-tab" data-page="ranking" style="flex:1;padding:8px 4px;border-radius:8px;border:none;cursor:pointer;font-family:Manrope,sans-serif;font-size:12px;font-weight:700;background:linear-gradient(135deg,rgba(216,151,231,0.3),rgba(230,138,141,0.2));color:#f4f6f9;">Ranking</button>' +
+            '</div>' +
+            '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:18px;overflow:hidden;">' +
+              '<div style="display:flex;border-bottom:1px solid #2f343f;">' +
+                '<button id="tab-leaderboard" style="flex:1;padding:16px;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;border:none;cursor:pointer;background:linear-gradient(90deg,rgba(216,151,231,0.18),rgba(230,138,141,0.10));color:#f4f6f9;border-bottom:2px solid #d897e7;">Leaderboard</button>' +
+                '<button id="tab-ranking" style="flex:1;padding:16px;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;border:none;cursor:pointer;background:transparent;color:#8b93a3;border-bottom:2px solid transparent;">Ranking Global</button>' +
               '</div>' +
-              navHtml() +
-              '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:18px;overflow:hidden;">' +
-                '<div style="padding:20px 20px 0;">' +
-                  '<p style="font-family:Manrope,sans-serif;font-size:13px;color:#8b93a3;margin:0 0 16px;">Top participantes por badges obtenidos</p>' +
-                '</div>' +
-                '<div style="padding:0 12px 12px;">' +
-                  buildTable(leaderboard, user.id) +
-                '</div>' +
+              '<div style="padding:20px;">' +
+                '<div id="panel-leaderboard">' + buildBadgeTable(top8) + '</div>' +
+                '<div id="panel-ranking" style="display:none;">' + buildXpTable(top8xp) + '</div>' +
               '</div>' +
             '</div>';
 
           app.innerHTML = inner;
 
-          document.getElementById('profile-menu-btn').addEventListener('click', async function() {
-            try {
-              var p = await API.getProfile();
-              U.showDrawer(p.avatar, p.nombre, null, false);
-            } catch(e) { U.showDrawer(null, null, null, false); }
+          Array.prototype.forEach.call(document.querySelectorAll('.nav-tab'), function(tab) {
+            tab.addEventListener('click', function() {
+              var page = tab.getAttribute('data-page');
+              if (page === 'ranking') return;
+              if (page === 'explore') window.location.href = 'profile.html';
+              if (page === 'my-events') window.location.href = 'user-events.html';
+              if (page === 'scan') window.location.href = 'scan.html';
+              if (page === 'achievements') window.location.href = 'user-achievements.html';
+            });
+          });
+
+          document.getElementById('tab-leaderboard').addEventListener('click', function() {
+            document.getElementById('panel-leaderboard').style.display = '';
+            document.getElementById('panel-ranking').style.display = 'none';
+            this.style.background = 'linear-gradient(90deg,rgba(216,151,231,0.18),rgba(230,138,141,0.10))';
+            this.style.color = '#f4f6f9';
+            this.style.borderBottom = '2px solid #d897e7';
+            document.getElementById('tab-ranking').style.background = 'transparent';
+            document.getElementById('tab-ranking').style.color = '#8b93a3';
+            document.getElementById('tab-ranking').style.borderBottom = '2px solid transparent';
+          });
+
+          document.getElementById('tab-ranking').addEventListener('click', function() {
+            document.getElementById('panel-ranking').style.display = '';
+            document.getElementById('panel-leaderboard').style.display = 'none';
+            this.style.background = 'linear-gradient(90deg,rgba(216,151,231,0.18),rgba(230,138,141,0.10))';
+            this.style.color = '#f4f6f9';
+            this.style.borderBottom = '2px solid #d897e7';
+            document.getElementById('tab-leaderboard').style.background = 'transparent';
+            document.getElementById('tab-leaderboard').style.color = '#8b93a3';
+            document.getElementById('tab-leaderboard').style.borderBottom = '2px solid transparent';
           });
 
         } catch(err) {
@@ -118,7 +200,6 @@
           var retry = document.getElementById('err-retry');
           if (retry) retry.addEventListener('click', init);
         }
-        window.scrollTo(0, 0);
       }
 
       init();
