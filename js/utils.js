@@ -1083,7 +1083,6 @@
     var sidebar =
       '<aside style="position:fixed;top:0;left:0;bottom:0;width:248px;background:#1a1d24;border-right:1px solid #262a33;display:flex;flex-direction:column;padding:26px 18px;z-index:20;overflow-y:auto;">' +
         '<div style="display:flex;align-items:center;gap:10px;padding:0 8px 26px;">' +
-          '<span style="font-size:28px;">🏆</span>' +
           '<span style="font-family:Poppins,sans-serif;font-size:20px;font-weight:700;color:#f4f6f9;letter-spacing:-0.01em;">Lyfter</span>' +
         '</div>' +
         '<div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#5a6172;font-weight:700;padding:6px 12px 10px;">Admin</div>' +
