@@ -53,7 +53,9 @@
         return '<div style="background:' + (unlocked ? rc.glow : '#1a1d24') + ';border:1px solid ' + (unlocked ? rc.border : '#2f343f') + ';border-radius:16px;padding:20px;text-align:center;transition:transform 0.2s;"' +
           (unlocked ? ' onmouseover="this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.transform=\'none\'"' : '') + '>' +
           '<div style="width:80px;height:80px;margin:0 auto 12px;' + (unlocked ? '' : 'filter:grayscale(1);opacity:0.3;') + '">' +
-            '<img src="' + U.esc(a.icon) + '" style="width:100%;height:100%;object-fit:contain;" onerror="this.style.display=\'none\';this.parentNode.innerHTML=\'<span style=&quot;font-size:40px;line-height:80px;display:block;&quot;>🏅</span>\'" />' +
+            (a.img
+              ? '<img src="' + U.esc(a.img) + '" style="width:100%;height:100%;object-fit:contain;" onerror="this.style.display=\'none\';this.parentNode.innerHTML=\'<span style=&quot;font-size:40px;line-height:80px;display:block;&quot;>' + a.icon + '</span>\'" />'
+              : '<span style="font-size:40px;line-height:80px;display:block;">' + a.icon + '</span>') +
           '</div>' +
           '<p style="font-family:Poppins,sans-serif;font-size:14px;font-weight:700;color:' + (unlocked ? '#f4f6f9' : '#4a5060') + ';margin:0 0 4px;">' + U.esc(a.name) + '</p>' +
           '<p style="font-family:Manrope,sans-serif;font-size:11px;color:' + (unlocked ? '#8b93a3' : '#3a3f4a') + ';margin:0 0 8px;">' + U.esc(a.description || a.hint || '') + '</p>' +

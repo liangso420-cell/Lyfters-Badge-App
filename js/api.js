@@ -66,15 +66,15 @@
 
   // Definiciones de logros (espejo del seed) — usadas en modo mock.
   var ACHIEVEMENT_DEFS = [
-    { slug: 'first_scan',           name: 'Primer paso',    description: 'Escaneaste tu primer badge.',               hint: 'Escaneá tu primer badge.',          icon: '👣', rarity: 'common',    xp_reward: 15 },
-    { slug: 'five_badges',          name: 'Coleccionista',  description: 'Acumulaste 5 badges en total.',             hint: 'Seguí coleccionando badges.',       icon: '🎖️', rarity: 'common',    xp_reward: 15 },
-    { slug: 'twenty_five_badges',   name: 'Adictx',         description: 'Acumulaste 25 badges en total.',            hint: 'Coleccioná muchísimos badges.',     icon: '🔥', rarity: 'rare',      xp_reward: 30 },
-    { slug: 'first_event_complete', name: 'Completista',    description: 'Completaste todos los badges de un evento.', hint: 'Completá todos los badges de un evento.', icon: '✅', rarity: 'rare', xp_reward: 30 },
-    { slug: 'three_completions',    name: 'Perfeccionista', description: 'Completaste 3 eventos distintos.',          hint: 'Completá varios eventos.',          icon: '💯', rarity: 'epic',      xp_reward: 75 },
-    { slug: 'three_events',         name: 'Viajero',        description: 'Participaste en 3 eventos distintos.',      hint: 'Participá en varios eventos.',      icon: '🧳', rarity: 'rare',      xp_reward: 30 },
-    { slug: 'five_events',          name: 'Veterano',       description: 'Participaste en 5 eventos distintos.',      hint: 'Participá en muchos eventos.',      icon: '🎓', rarity: 'epic',      xp_reward: 75 },
-    { slug: 'rare_badge',           name: 'Ojo de halcón',  description: 'Escaneaste un badge raro.',                 hint: 'Encontrá un badge especial.',       icon: '🦅', rarity: 'rare',      xp_reward: 30 },
-    { slug: 'legend',               name: 'Leyenda',        description: 'Alcanzaste el nivel máximo.',               hint: 'Alcanzá el nivel máximo.',          icon: '👑', rarity: 'legendary', xp_reward: 100 },
+    { slug: 'first_scan',           name: 'Primer paso',    description: 'Escaneaste tu primer badge.',               hint: 'Escaneá tu primer badge.',          icon: '👣', img: 'assets/icons/achievements/primer-paso.png',    rarity: 'common',    xp_reward: 15 },
+    { slug: 'five_badges',          name: 'Coleccionista',  description: 'Acumulaste 5 badges en total.',             hint: 'Seguí coleccionando badges.',       icon: '🎖️', img: 'assets/icons/achievements/coleccionista.png',  rarity: 'common',    xp_reward: 15 },
+    { slug: 'twenty_five_badges',   name: 'Adictx',         description: 'Acumulaste 25 badges en total.',            hint: 'Coleccioná muchísimos badges.',     icon: '🔥',                                                rarity: 'rare',      xp_reward: 30 },
+    { slug: 'first_event_complete', name: 'Completista',    description: 'Completaste todos los badges de un evento.', hint: 'Completá todos los badges de un evento.', icon: '✅',                                           rarity: 'rare',      xp_reward: 30 },
+    { slug: 'three_completions',    name: 'Perfeccionista', description: 'Completaste 3 eventos distintos.',          hint: 'Completá varios eventos.',          icon: '💯', img: 'assets/icons/achievements/perfeccionista.png', rarity: 'epic',      xp_reward: 75 },
+    { slug: 'three_events',         name: 'Viajero',        description: 'Participaste en 3 eventos distintos.',      hint: 'Participá en varios eventos.',      icon: '🧳', img: 'assets/icons/achievements/viajero.png',        rarity: 'rare',      xp_reward: 30 },
+    { slug: 'five_events',          name: 'Veterano',       description: 'Participaste en 5 eventos distintos.',      hint: 'Participá en muchos eventos.',      icon: '🎓', img: 'assets/icons/achievements/veterano.png',       rarity: 'epic',      xp_reward: 75 },
+    { slug: 'rare_badge',           name: 'Ojo de halcón',  description: 'Escaneaste un badge raro.',                 hint: 'Encontrá un badge especial.',       icon: '🦅', img: 'assets/icons/achievements/ojo-de-halcon.png', rarity: 'rare',      xp_reward: 30 },
+    { slug: 'legend',               name: 'Leyenda',        description: 'Alcanzaste el nivel máximo.',               hint: 'Alcanzá el nivel máximo.',          icon: '👑', img: 'assets/icons/achievements/leyenda.png',        rarity: 'legendary', xp_reward: 100 },
   ];
   function achDef(slug) {
     return ACHIEVEMENT_DEFS.filter(function (a) { return a.slug === slug; })[0] || null;
@@ -537,10 +537,10 @@
       var unlocked = [], locked = [];
       ACHIEVEMENT_DEFS.forEach(function (a) {
         if (owned.indexOf(a.slug) !== -1) {
-          unlocked.push({ slug: a.slug, name: a.name, description: a.description, icon: a.icon,
+          unlocked.push({ slug: a.slug, name: a.name, description: a.description, icon: a.icon, img: a.img || null,
             rarity: a.rarity, xp_reward: a.xp_reward, unlocked_at: new Date().toISOString() });
         } else {
-          locked.push({ slug: a.slug, name: a.name, icon: a.icon, rarity: a.rarity, hint: a.hint });
+          locked.push({ slug: a.slug, name: a.name, icon: a.icon, img: a.img || null, rarity: a.rarity, hint: a.hint });
         }
       });
       return { unlocked: unlocked, locked: locked };
@@ -829,7 +829,14 @@
       return await apiRequest('GET', '/profile/xp');
     },
     async getAchievements() {
-      return await apiRequest('GET', '/profile/achievements');
+      var data = await apiRequest('GET', '/profile/achievements');
+      function enrich(list) {
+        return (list || []).map(function(a) {
+          var def = achDef(a.slug);
+          return (def && def.img) ? Object.assign({}, a, { img: def.img }) : a;
+        });
+      }
+      return { unlocked: enrich(data.unlocked), locked: enrich(data.locked) };
     },
     async getEventLeaderboard(eventId) {
       return await apiRequest('GET', '/leaderboard/' + eventId);
