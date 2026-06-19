@@ -693,7 +693,7 @@
           document.getElementById('drawer-account-back').addEventListener('click', goBack);
 
           // Foto
-          document.getElementById('account-avatar-img').addEventListener('click', function() {
+          function pickAvatar() {
             var input = document.createElement('input');
             input.type = 'file'; input.accept = 'image/*';
             input.onchange = function() {
@@ -712,7 +712,10 @@
               reader.readAsDataURL(file);
             };
             input.click();
-          });
+          }
+          document.getElementById('account-avatar-img').addEventListener('click', pickAvatar);
+          var photoBtn = document.getElementById('acc-photo-btn');
+          if (photoBtn) photoBtn.addEventListener('click', pickAvatar);
 
           // Nombre
           document.getElementById('acc-name-btn').addEventListener('click', function() {
@@ -961,7 +964,7 @@
           '<div class="px-5 py-4">' +
             '<button id="drawer-about-back" class="text-xs text-primary mb-4 flex items-center gap-1">← Volver</button>' +
             '<div class="text-center py-4">' +
-              '<div class="text-4xl mb-3"><img src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" style="width:48px;height:48px;object-fit:contain;border-radius:10px;" /></div>' +
+              '<img src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" style="width:80px;height:80px;object-fit:contain;border-radius:16px;display:block;margin:0 auto 12px;" />' +
               '<p class="font-bold text-gray-800 text-lg">Lyfter Badge App</p>' +
               '<p class="text-xs text-gray-400 mt-1">Versión 1.0.0</p>' +
               '<p class="text-xs text-gray-400 mt-3">Escanea, colecciona y gana badges en eventos</p>' +
