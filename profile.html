@@ -96,22 +96,21 @@
         '<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" class="w-24 h-24 mx-auto mb-4 opacity-30">' +
           '<circle cx="60" cy="60" r="50" fill="#EEEDFF" stroke="#6C63FF" stroke-width="3"/>' +
           '<circle cx="60" cy="60" r="30" fill="none" stroke="#6C63FF" stroke-width="2" stroke-dasharray="6 3"/>' +
-          '<text x="60" y="68" text-anchor="middle" font-size="28" fill="#6C63FF">🏅</text>' +
         '</svg>';
 
       function buildEventRow(entry, currentUserId) {
         var rank = entry.position;
-        var medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '<span class="text-gray-400 font-bold">' + rank + '</span>';
+        var medal = '<span class="text-gray-400 font-bold">' + rank + '</span>';
         var isSelf = entry.user_id === currentUserId;
         var lname = entry.level_name || (API.levelName ? API.levelName(entry.level) : ('Nivel ' + entry.level));
-        var completedChip = entry.completed ? ' <span title="Completó el evento">✅</span>' : '';
+        var completedChip = entry.completed ? ' <span title="Completó el evento" style="color:#16a34a;font-size:11px;font-weight:700;">✓</span>' : '';
         return '<div class="flex items-center gap-3 py-2.5 border-b border-gray-100 last:border-0' + (isSelf ? ' bg-primary-soft/30 -mx-4 px-4 rounded-card' : '') + '">' +
           '<span class="w-6 text-center text-sm">' + medal + '</span>' +
           '<div class="flex-1 min-w-0">' +
             '<p class="text-sm font-medium text-gray-700 truncate">' + U.esc(entry.name) + (isSelf ? ' <span class="text-xs text-primary">(tú)</span>' : '') + completedChip + '</p>' +
             '<p class="text-[11px] text-gray-400">Nv ' + entry.level + ' · ' + U.esc(lname) + ' · ' + entry.xp_total + ' XP</p>' +
           '</div>' +
-          '<span class="text-sm font-bold text-primary whitespace-nowrap">' + entry.badges_in_event + ' 🏅</span>' +
+          '<span class="text-sm font-bold text-primary whitespace-nowrap">' + entry.badges_in_event + '</span>' +
         '</div>';
       }
 
@@ -126,8 +125,12 @@
           /* ── Encabezado (siempre visible) ── */
           var headerCard =
             '<div class="bg-white rounded-card p-5 shadow-soft anim-fade mb-4">' +
+              '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">' +
+                '<img src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" style="width:32px;height:32px;object-fit:contain;border-radius:7px;" />' +
+                '<span style="font-family:Poppins,sans-serif;font-size:14px;font-weight:700;color:#1a1d25;">Lyfter Badge App</span>' +
+              '</div>' +
               '<div class="flex items-center justify-between">' +
-                '<h2 class="text-lg font-bold text-gray-800">' + U.t('greeting') + ', ' + firstName + ' 👋</h2>' +
+                '<h2 class="text-lg font-bold text-gray-800">' + U.t('greeting') + ', ' + firstName + '</h2>' +
                 '<div class="flex items-center gap-2">' +
                   '<button id="fab-events" class="px-3 py-1.5 rounded-btn text-xs font-medium text-primary border border-primary hover:bg-primary-soft">' + U.t('events_btn') + '</button>' +
                   '<button id="profile-menu-btn" class="w-9 h-9 rounded-full bg-gray-100 hover:bg-primary-soft flex items-center justify-center text-lg transition" title="Mi perfil">☰</button>' +
@@ -140,7 +143,7 @@
           var achGridMarkup = achData ? U.achievementsGridHtml(achData) : '';
           var globalLbButton =
             '<button id="btn-global-lb" class="w-full py-3 rounded-card text-sm font-semibold mb-4 flex items-center justify-center gap-2" ' +
-              'style="background:#EEEDFF;color:#6C63FF;">🌍 Ver ranking global</button>';
+              'style="background:#EEEDFF;color:#6C63FF;">Ver ranking global</button>';
 
           /* ── Evento activo y progreso (solo si participa en alguno) ── */
           var hasEvents    = events.length > 0;
@@ -171,13 +174,13 @@
                   return '<div class="badge-obtained rounded-card p-3 text-center" style="background:#EEEDFF;">' +
                     '<div class="text-3xl">' + (b.emoji || '🏅') + '</div>' +
                     '<p class="text-xs font-semibold mt-1 text-gray-700">' + U.esc(b.name) + '</p>' +
-                    '<span class="text-green-500 text-sm">✅</span>' +
+                    '<span class="text-green-500 text-sm font-bold">✓</span>' +
                   '</div>';
                 }
                 return '<div class="rounded-card p-3 text-center bg-gray-100">' +
                   '<div class="text-3xl opacity-30">' + (b.emoji || '🏅') + '</div>' +
                   '<p class="text-xs text-gray-400 mt-1">' + U.esc(b.name) + '</p>' +
-                  '<span class="text-gray-300 text-sm">🔒</span>' +
+                  '' +
                 '</div>';
               }).join('');
             }
@@ -215,7 +218,7 @@
 
             var completedBanner = complete
               ? '<div class="bg-white rounded-card p-6 text-center mb-4 shadow-soft anim-pop">' +
-                  '<div class="text-5xl mb-2">🎉</div>' +
+                  '' +
                   '<h3 class="text-lg font-bold text-primary">' + U.t('congrats') + ' ' + firstName + '!</h3>' +
                   '<p class="text-sm text-gray-500 mt-1">' + U.t('completed_badges_of') + ' ' + U.esc(detail.name) + '</p></div>'
               : '';
@@ -256,7 +259,7 @@
           } else {
             eventSection =
               '<div class="bg-white rounded-card p-8 shadow-soft text-center mb-4">' +
-                '<div class="text-5xl mb-4">🎫</div>' +
+                '' +
                 '<canvas id="duck-surprised" style="width:120px;height:120px;margin:0 auto 8px;display:block;"></canvas>' +
                 '<h3 class="font-bold text-gray-800 mb-2">' + U.t('no_event_title') + '</h3>' +
                 '<p class="text-sm text-gray-400 mb-2">' + U.t('no_event_desc') + '</p>' +
