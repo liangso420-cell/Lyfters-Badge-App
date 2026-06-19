@@ -471,3 +471,7 @@ td, th { vertical-align: middle; }
 /* ── Leaflet z-index fix ── */
 .leaflet-container { z-index: 1 !important; }
 #modal-root        { z-index: 9999 !important; }
+
+/* ── Stars canvas: content layers above fixed canvas (z-index:0) ── */
+#app        { position: relative; z-index: 1; }
+#toast-root { position: relative; z-index: 60; }
