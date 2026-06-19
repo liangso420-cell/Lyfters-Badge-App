@@ -16,6 +16,11 @@
   <script>emailjs.init('mPuA_uCE-0FS1U3Tm');</script>
 </head>
 <body>
+  <div id="loading-screen">
+    <img src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" />
+    <div class="loader"></div>
+    <span>Cargando...</span>
+  </div>
   <div class="fixed top-4 right-4 z-50">
     <select id="lang-selector" class="px-3 py-1\.5 text-xs rounded-btn outline-none cursor-pointer" style="background:#1c1f27;border:1px solid rgba(255,255,255,0.1);color:rgba(240,234,242,0.7);">
       <option value="es">ES</option>
@@ -233,6 +238,13 @@
         glow.style.opacity = String(0.6 + p * 0.4);
       }, { passive: true });
     })();
+  </script>
+  <script>
+    window.addEventListener('load', () => {
+      const ls = document.getElementById('loading-screen');
+      ls.style.opacity = '0';
+      ls.style.pointerEvents = 'none';
+    });
   </script>
 </body>
 </html>
