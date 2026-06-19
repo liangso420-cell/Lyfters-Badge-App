@@ -10,6 +10,11 @@
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
+  <div id="loading-screen">
+    <img src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" />
+    <div class="loader"></div>
+    <span>Cargando...</span>
+  </div>
   <main id="app"></main>
   <div id="modal-root"></div>
   <div id="toast-root" class="fixed top-4 left-1/2 -translate-x-1/2 z-[60] flex flex-col gap-2 items-center pointer-events-none"></div>
@@ -60,7 +65,6 @@
       if (!eid) { window.location.replace('admin-event.html'); return; }
 
       var app = document.getElementById('app');
-      app.innerHTML = U.loadingHtml();
       U.showPendingToast();
 
       var INP = 'width:100%;margin-top:4px;padding:8px 12px;font-size:13px;background:#2e323d;border:1px solid #353a46;border-radius:8px;color:#f4f6f9;outline:none;box-sizing:border-box;font-family:Manrope,sans-serif;';
@@ -271,6 +275,7 @@
 
           app.innerHTML = U.adminShell('event', inner, [], null);
           U.mountAdminShell();
+          U.hideLoading();
 
           // ── Cambiar foto ──
           var photoBtn = document.getElementById('photo-btn');
@@ -584,12 +589,14 @@
 
         } catch(err) {
           app.innerHTML = U.errorHtml(err && err.message ? err.message : 'Error inesperado');
+          U.hideLoading();
           var retry = document.getElementById('err-retry');
           if (retry) retry.addEventListener('click', init);
         }
         window.scrollTo(0, 0);
       }
 
+      setTimeout(U.hideLoading, 6000);
       init();
     })();
   </script>

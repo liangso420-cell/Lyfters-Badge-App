@@ -12,6 +12,11 @@
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
+  <div id="loading-screen">
+    <img src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" />
+    <div class="loader"></div>
+    <span>Cargando...</span>
+  </div>
   <main id="app"></main>
   <div id="modal-root"></div>
   <div id="toast-root" class="fixed top-4 left-1/2 -translate-x-1/2 z-[60] flex flex-col gap-2 items-center pointer-events-none"></div>
@@ -174,6 +179,7 @@
       function renderPage() {
         app.innerHTML = U.adminShell('event', buildInner(), [], null);
         U.mountAdminShell();
+        U.hideLoading();
         initLocationPicker();
         initTagButtons();
         initBadgeForm();
@@ -456,6 +462,7 @@
         });
       }
 
+      setTimeout(U.hideLoading, 6000);
       renderPage();
     })();
   </script>
