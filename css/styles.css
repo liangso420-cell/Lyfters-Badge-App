@@ -128,9 +128,18 @@ select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
   padding: 0.625rem 1rem; border-radius: var(--r-btn);
   font-weight: 600; font-size: 0.875rem; cursor: pointer;
   border: 1px solid var(--border-s); background: var(--surface); color: var(--text-1);
-  transition: background .15s, opacity .15s;
+  transition: background .20s ease, opacity .20s ease, transform .20s ease, box-shadow .20s ease;
 }
-.btn:hover { background: var(--raised); }
+.btn:hover {
+  background: var(--raised);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(216,151,231,0.22), 0 2px 8px rgba(0,0,0,0.35);
+}
+.btn:active {
+  transform: translateY(0) scale(0.97);
+  box-shadow: none;
+  transition-duration: .08s;
+}
 .btn.w-full { width: 100%; }
 
 .divider {
@@ -540,4 +549,30 @@ td, th { vertical-align: middle; }
 }
 #btn-exit-scan:active {
   transform: scale(0.95);
+}
+
+/* ── Global button hover animations ── */
+button:not(:disabled):not(.no-hover) {
+  transition: transform .20s ease, box-shadow .20s ease, filter .20s ease, background .20s ease;
+}
+button:not(:disabled):not(.no-hover):hover {
+  transform: translateY(-1px);
+  filter: brightness(1.10);
+}
+button:not(:disabled):not(.no-hover):active {
+  transform: scale(0.96) translateY(0);
+  filter: brightness(0.97);
+  transition-duration: .08s;
+}
+
+/* ── Card & list-item lift on hover ── */
+.card-soft,
+.frame-card {
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+.card-soft:hover,
+.frame-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px rgba(216,151,231,0.14), 0 4px 16px rgba(0,0,0,0.40);
+  border-color: rgba(216,151,231,0.25);
 }

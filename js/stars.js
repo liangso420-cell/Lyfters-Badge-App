@@ -31,7 +31,7 @@
   var W, H;
   var mouse = { x: -9999, y: -9999, active: false };
   var COLORS = ['255,255,255', '216,151,231', '112,207,255', '171,209,148', '255,203,138'];
-  var COUNT  = 130;
+  var COUNT  = 180;
   var stars  = [];
   var bursts = [];
   var shoots = [];
@@ -49,9 +49,9 @@
       x:  Math.random() * W,
       y:  Math.random() * H,
       ox: 0, oy: 0,
-      r:  0.4 + Math.random() * 1.3,
-      vx: (Math.random() - 0.5) * 0.14,
-      vy: (Math.random() - 0.5) * 0.14,
+      r:  0.7 + Math.random() * 1.6,
+      vx: (Math.random() < 0.5 ? -1 : 1) * (0.12 + Math.random() * 0.32),
+      vy: (Math.random() < 0.5 ? -1 : 1) * (0.08 + Math.random() * 0.22),
       twSpeed: 0.004 + Math.random() * 0.014,
       twPhase: Math.random() * Math.PI * 2,
       color: c
@@ -120,7 +120,7 @@
         var mdy = my - mouse.y;
         var mDist = Math.sqrt(mdx*mdx + mdy*mdy);
         var boost = mDist < 200 ? (1 - mDist / 200) * 0.4 : 0;
-        var alpha = (1 - Math.sqrt(d2) / 120) * (0.07 + boost);
+        var alpha = (1 - Math.sqrt(d2) / 120) * (0.16 + boost);
         ctx.beginPath();
         ctx.moveTo(sa.x, sa.y);
         ctx.lineTo(sb.x, sb.y);
@@ -152,13 +152,13 @@
 
       var drawX = s.x + s.ox;
       var drawY = s.y + s.oy;
-      var twinkle = 0.25 + 0.55 * ((Math.sin(t * s.twSpeed + s.twPhase) + 1) * 0.5);
-      var alpha   = twinkle + proximity * 0.3;
-      var radius  = s.r + proximity * 1.8;
+      var twinkle = 0.5 + 0.5 * ((Math.sin(t * s.twSpeed + s.twPhase) + 1) * 0.5);
+      var alpha   = twinkle + proximity * 0.45;
+      var radius  = s.r + proximity * 2.2;
 
-      if (proximity > 0.15) {
-        ctx.shadowColor = 'rgba(' + s.color + ',0.8)';
-        ctx.shadowBlur  = radius * 5;
+      if (proximity > 0.05) {
+        ctx.shadowColor = 'rgba(' + s.color + ',0.85)';
+        ctx.shadowBlur  = radius * 9;
       }
       ctx.globalAlpha = Math.min(1, alpha);
       ctx.fillStyle   = 'rgba(' + s.color + ',1)';

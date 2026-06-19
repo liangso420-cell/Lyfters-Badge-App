@@ -33,8 +33,8 @@
       x:  Math.random() * W,
       y:  Math.random() * H,
       r:  1.2 + Math.random() * 2.2,
-      vx: (Math.random() - 0.5) * 0.35,
-      vy: (Math.random() - 0.5) * 0.35,
+      vx: (Math.random() - 0.5) * 0.55,
+      vy: (Math.random() - 0.5) * 0.55,
       color: ORB_COLORS[Math.floor(Math.random() * ORB_COLORS.length)]
     };
   }
@@ -59,7 +59,7 @@
         var dy  = ob.y - oa.y;
         var d2  = dx*dx + dy*dy;
         if (d2 > 8100) continue;
-        var alpha = (1 - Math.sqrt(d2) / 90) * 0.09;
+        var alpha = (1 - Math.sqrt(d2) / 90) * 0.18;
         ctx.beginPath();
         ctx.moveTo(oa.x, oa.y);
         ctx.lineTo(ob.x, ob.y);
@@ -91,7 +91,7 @@
       if (o.y > H) { o.y = H; o.vy *= -1; }
       ctx.beginPath();
       ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
-      ctx.fillStyle = o.color + '0.14)';
+      ctx.fillStyle = o.color + '0.28)';
       ctx.fill();
     }
 
@@ -100,7 +100,7 @@
       for (var ti = 0; ti < trail.length; ti++) {
         var tp  = trail[ti];
         var pct = ti / (trail.length - 1);       // 0 = oldest, 1 = newest
-        var ta  = pct * pct * 0.55;
+        var ta  = pct * pct * 0.80;
         var tr  = 1 + pct * 4;
         ctx.beginPath();
         ctx.arc(tp.x, tp.y, tr, 0, Math.PI * 2);
@@ -113,8 +113,8 @@
     if (mouse.active) {
       var pulse = 25 + 10 * Math.sin(t * 0.07);
       var grad  = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, pulse);
-      grad.addColorStop(0,   'rgba(216,151,231,0.22)');
-      grad.addColorStop(0.5, 'rgba(112,207,255,0.08)');
+      grad.addColorStop(0,   'rgba(216,151,231,0.32)');
+      grad.addColorStop(0.5, 'rgba(112,207,255,0.13)');
       grad.addColorStop(1,   'rgba(216,151,231,0)');
       ctx.beginPath();
       ctx.arc(mouse.x, mouse.y, pulse, 0, Math.PI * 2);
