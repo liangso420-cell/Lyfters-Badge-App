@@ -831,15 +831,15 @@
     async getAchievements() {
       var data = await apiRequest('GET', '/profile/achievements');
       var IMG_BY_SLUG = {
-        primer_paso:    'assets/icons/achievements/primer-paso.png',
-        coleccionista:  'assets/icons/achievements/coleccionista.png',
-        vertigo:        'assets/icons/achievements/vertigo.png',
-        completista:    'assets/icons/achievements/Completista.png',
-        perfeccionista: 'assets/icons/achievements/perfeccionista.png',
-        viajero:        'assets/icons/achievements/viajero.png',
-        veterano:       'assets/icons/achievements/veterano.png',
-        ojo_halcon:     'assets/icons/achievements/ojo-de-halcon.png',
-        leyenda:        'assets/icons/achievements/leyenda.png',
+        first_scan:           'assets/icons/achievements/primer-paso.png',
+        five_badges:          'assets/icons/achievements/coleccionista.png',
+        twenty_five_badges:   'assets/icons/achievements/vertigo.png',
+        first_event_complete: 'assets/icons/achievements/Completista.png',
+        three_completions:    'assets/icons/achievements/perfeccionista.png',
+        three_events:         'assets/icons/achievements/viajero.png',
+        five_events:          'assets/icons/achievements/veterano.png',
+        rare_badge:           'assets/icons/achievements/ojo-de-halcon.png',
+        legend:               'assets/icons/achievements/leyenda.png',
       };
       function enrich(list) {
         return (list || []).map(function(a) {
