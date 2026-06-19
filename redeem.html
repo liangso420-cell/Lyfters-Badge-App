@@ -67,11 +67,11 @@
 
       /* ── 4. Estado de carga ── */
       function showLoading() {
-        app.innerHTML =
-          '<section class="device-frame px-4 pt-24 text-center">' +
-            '<div class="text-5xl animate-pulse-badge mb-4">🏅</div>' +
-            '<p class="text-sm text-gray-500 mt-2">' + U.t('redeem_loading') + '</p>' +
-          '</section>';
+        var ls = document.getElementById('loading-screen');
+        if (!ls) return;
+        ls.style.display = 'flex';
+        ls.style.opacity = '1';
+        ls.style.pointerEvents = '';
       }
 
       /* ── 5. Estado éxito ── */
@@ -292,6 +292,7 @@
       async function doRedeem() {
         try {
           var result = await API.redeem(params.eventId, params.token);
+          U.hideLoading();
           showSuccess(result);
         } catch (err) {
           var msg = (err && err.message) ? err.message : 'Error inesperado';
@@ -300,6 +301,7 @@
             window.location.href = 'login.html?next=' + encodeURIComponent(window.location.pathname + window.location.search + window.location.hash);
             return;
           }
+          U.hideLoading();
           showError(msg);
         }
       }

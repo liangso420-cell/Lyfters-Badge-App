@@ -34,7 +34,6 @@
       if (user.role === 'admin') { window.location.replace('admin-event.html'); return; }
 
       var app = document.getElementById('app');
-      app.innerHTML = U.loadingHtml();
 
       function fmtDate(iso) {
         if (!iso) return '';
