@@ -1149,6 +1149,7 @@
           '<img src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" style="width:28px;height:28px;object-fit:contain;border-radius:6px;vertical-align:middle;display:inline-block;" />' +
           '<span style="font-family:Poppins,sans-serif;font-size:20px;font-weight:700;color:#f4f6f9;letter-spacing:-0.01em;">Lyfter</span>' +
         '</div>' +
+        '<a href="landing.html" style="display:block;font-size:12px;color:#8b93a3;text-decoration:none;padding:4px 8px;border-radius:8px;margin-bottom:12px;transition:color .15s;" onmouseover="this.style.color=\'#d897e7\'" onmouseout="this.style.color=\'#8b93a3\'">← Inicio</a>' +
         '<div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#5a6172;font-weight:700;padding:6px 12px 10px;">Admin</div>' +
         '<nav style="display:flex;flex-direction:column;gap:4px;">' +
           navItem('event',         '', 'Eventos',    'admin-event.html') +

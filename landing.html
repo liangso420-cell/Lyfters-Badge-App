@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="es" style="scroll-behavior:smooth;">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lyfter Badge App — Colecciona badges, gana premios</title>
+  <meta name="description" content="Asiste a eventos, escanea códigos QR, colecciona badges digitales y gana premios sorpresa. La plataforma de gamificación para eventos presenciales." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    :root {
+      --bg:       #15171d;
+      --surface:  #1a1d24;
+      --card:     #1c1f27;
+      --border:   #2f343f;
+      --bs:       #262a33;
+      --input:    #2e323d;
+      --t1:       #f4f6f9;
+      --t2:       #cdd2db;
+      --t3:       #8b93a3;
+      --t4:       #6f7686;
+      --lila:     #d897e7;
+      --rosa:     #e68a8d;
+      --azul:     #70cfff;
+      --verde:    #abd194;
+      --amber:    #ffcb8a;
+      --cta:      linear-gradient(180deg,#ec9799,#e68a8d);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--t1);
+      font-family: 'Manrope', system-ui, sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ── CURSOR PERSONALIZADO ── */
+    .cursor-dot {
+      position: fixed;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--lila);
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%,-50%);
+      transition: transform .1s, width .2s, height .2s, opacity .2s;
+      box-shadow: 0 0 10px rgba(216,151,231,0.8);
+    }
+    .cursor-ring {
+      position: fixed;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 1px solid rgba(216,151,231,0.5);
+      pointer-events: none;
+      z-index: 9998;
+      transform: translate(-50%,-50%);
+      transition: transform .12s ease, width .2s, height .2s, border-color .2s;
+    }
+
+    /* ── CANVAS PARTÍCULAS ── */
+    #particleCanvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── NAVBAR ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 48px;
+      height: 68px;
+      background: rgba(21,23,29,0.80);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(216,151,231,0.12);
+      transition: background .3s;
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .nav-logo-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg,#d897e7,#e68a8d);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .nav-logo-text {
+      font-family: 'Poppins', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--t1);
+      letter-spacing: -0.01em;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 36px;
+    }
+    .nav-links a {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--t3);
+      text-decoration: none;
+      transition: color .15s;
+    }
+    .nav-links a:hover { color: var(--t1); }
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .nav-btn-outline {
+      height: 40px;
+      padding: 0 20px;
+      border-radius: 999px;
+      border: 1px solid rgba(216,151,231,0.40);
+      background: transparent;
+      color: var(--lila);
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      transition: all .15s;
+    }
+    .nav-btn-outline:hover {
+      background: rgba(216,151,231,0.10);
+      border-color: var(--lila);
+    }
+    .nav-btn-cta {
+      height: 40px;
+      padding: 0 22px;
+      border-radius: 999px;
+      border: none;
+      background: var(--cta);
+      color: #3a1f20;
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      box-shadow: 0 4px 16px rgba(230,138,141,0.30);
+      transition: opacity .15s, transform .1s;
+    }
+    .nav-btn-cta:hover { opacity: .9; transform: translateY(-1px); }
+
+    /* ── SECTIONS ── */
+    section { position: relative; z-index: 1; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(216,151,231,0.12);
+      border: 1px solid rgba(216,151,231,0.30);
+      border-radius: 999px;
+      padding: 6px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--lila);
+      margin-bottom: 28px;
+      animation: fadeUp .6s ease both;
+    }
+    .hero-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: clamp(44px, 7vw, 88px);
+      font-weight: 900;
+      line-height: 1.06;
+      letter-spacing: -0.03em;
+      color: var(--t1);
+      margin-bottom: 24px;
+      animation: fadeUp .6s .1s ease both;
+    }
+    .hero-title .grad {
+      background: linear-gradient(90deg, #d897e7, #e68a8d, #70cfff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-sub {
+      font-size: clamp(16px, 2vw, 20px);
+      color: var(--t3);
+      max-width: 560px;
+      line-height: 1.65;
+      margin-bottom: 44px;
+      animation: fadeUp .6s .2s ease both;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+      animation: fadeUp .6s .3s ease both;
+    }
+    .btn-hero-cta {
+      height: 56px;
+      padding: 0 34px;
+      border-radius: 999px;
+      border: none;
+      background: var(--cta);
+      color: #3a1f20;
+      font-family: 'Poppins', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 12px 28px rgba(230,138,141,0.35);
+      transition: transform .15s, box-shadow .15s;
+    }
+    .btn-hero-cta:hover { transform: translateY(-2px); box-shadow: 0 16px 36px rgba(230,138,141,0.45); }
+    .btn-hero-outline {
+      height: 56px;
+      padding: 0 32px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--t2);
+      font-family: 'Poppins', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: border-color .15s, color .15s, background .15s;
+    }
+    .btn-hero-outline:hover { border-color: var(--lila); color: var(--lila); background: rgba(216,151,231,0.06); }
+
+    .hero-scroll {
+      margin-top: 72px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: var(--t4);
+      font-size: 12px;
+      animation: fadeUp .6s .5s ease both;
+    }
+    .hero-scroll-line {
+      width: 1px; height: 48px;
+      background: linear-gradient(to bottom, var(--lila), transparent);
+      animation: scrollLine 2s ease-in-out infinite;
+    }
+    @keyframes scrollLine { 0%,100%{transform:scaleY(1);opacity:.6} 50%{transform:scaleY(1.3);opacity:1} }
+
+    /* ── HOW IT WORKS ── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--lila);
+      text-align: center;
+      margin-bottom: 14px;
+    }
+    .section-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 700;
+      text-align: center;
+      color: var(--t1);
+      letter-spacing: -0.02em;
+      margin-bottom: 14px;
+    }
+    .section-sub {
+      text-align: center;
+      color: var(--t3);
+      font-size: 16px;
+      max-width: 500px;
+      margin: 0 auto 64px;
+      line-height: 1.6;
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .step-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px 26px;
+      position: relative;
+      transition: border-color .2s, transform .2s, box-shadow .2s;
+    }
+    .step-card:hover {
+      border-color: rgba(216,151,231,0.40);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 48px rgba(0,0,0,0.30);
+    }
+    .step-num {
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--lila);
+      margin-bottom: 16px;
+      opacity: .7;
+    }
+    .step-icon {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+      margin-bottom: 18px;
+    }
+    .step-icon.lila  { background: rgba(216,151,231,0.15); }
+    .step-icon.rosa  { background: rgba(230,138,141,0.15); }
+    .step-icon.azul  { background: rgba(112,207,255,0.15); }
+    .step-icon.verde { background: rgba(171,209,148,0.15); }
+    .step-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--t1);
+      margin-bottom: 10px;
+    }
+    .step-desc {
+      font-size: 14px;
+      color: var(--t3);
+      line-height: 1.65;
+    }
+
+    /* ── FEATURES ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .feature-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      transition: border-color .2s, transform .2s;
+    }
+    .feature-card:hover {
+      border-color: rgba(216,151,231,0.35);
+      transform: translateY(-3px);
+    }
+    .feature-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      background: rgba(216,151,231,0.12);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      margin-bottom: 16px;
+    }
+    .feature-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--t1);
+      margin-bottom: 8px;
+    }
+    .feature-desc {
+      font-size: 14px;
+      color: var(--t3);
+      line-height: 1.65;
+    }
+
+    /* ── STATS ── */
+    .stats-row {
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      max-width: 800px;
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+    .stat-item {
+      flex: 1;
+      padding: 40px 24px;
+      text-align: center;
+      border-right: 1px solid var(--border);
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-num {
+      font-family: 'Poppins', sans-serif;
+      font-size: 40px;
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--lila), var(--rosa));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .stat-label {
+      font-size: 14px;
+      color: var(--t3);
+      font-weight: 600;
+    }
+
+    /* ── CTA SECTION ── */
+    .cta-section {
+      max-width: 700px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .cta-card {
+      background: linear-gradient(135deg, rgba(216,151,231,0.12) 0%, rgba(230,138,141,0.08) 50%, rgba(112,207,255,0.08) 100%);
+      border: 1px solid rgba(216,151,231,0.25);
+      border-radius: 28px;
+      padding: 64px 48px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-glow {
+      position: absolute;
+      top: -80px; left: 50%;
+      transform: translateX(-50%);
+      width: 400px; height: 200px;
+      background: radial-gradient(ellipse, rgba(216,151,231,0.20), transparent 70%);
+      pointer-events: none;
+    }
+    .cta-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: clamp(28px, 4vw, 40px);
+      font-weight: 800;
+      color: var(--t1);
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+    }
+    .cta-desc {
+      font-size: 16px;
+      color: var(--t3);
+      margin-bottom: 36px;
+      line-height: 1.65;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 40px 24px;
+      border-top: 1px solid var(--bs);
+      color: var(--t4);
+      font-size: 13px;
+      position: relative;
+      z-index: 1;
+    }
+    footer a {
+      color: var(--lila);
+      text-decoration: none;
+      margin: 0 12px;
+    }
+    footer a:hover { text-decoration: underline; }
+
+    /* ── CONTAINER ── */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 100px 24px;
+    }
+
+    /* ── ANIMACIONES ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: none; }
+    }
+    .reveal {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity .65s ease, transform .65s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      .stat-num { font-size: 28px; }
+      .stat-item { padding: 28px 14px; }
+      .cta-card { padding: 40px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Cursor personalizado -->
+  <div class="cursor-dot" id="cursor-dot"></div>
+  <div class="cursor-ring" id="cursor-ring"></div>
+
+  <!-- Canvas de partículas -->
+  <canvas id="particleCanvas"></canvas>
+
+  <!-- NAVBAR -->
+  <nav id="main-nav">
+    <a href="landing.html" class="nav-logo">
+      <div class="nav-logo-icon">🏆</div>
+      <span class="nav-logo-text">Lyfter</span>
+    </a>
+    <div class="nav-links">
+      <a href="#como-funciona">Cómo funciona</a>
+      <a href="#features">Funcionalidades</a>
+      <a href="#para-quien">¿Para quién?</a>
+    </div>
+    <div class="nav-actions" id="nav-actions">
+      <!-- Se llena por JS según si hay sesión -->
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero" id="hero">
+    <div class="hero-badge">✨ La plataforma de gamificación para eventos</div>
+    <h1 class="hero-title">
+      Escanea, colecciona<br><span class="grad">y gana premios</span>
+    </h1>
+    <p class="hero-sub">
+      Asistí a eventos presenciales, escaneá códigos QR para obtener badges digitales
+      y desbloqueá premios sorpresa al completar tu colección.
+    </p>
+    <div class="hero-actions" id="hero-actions">
+      <!-- Se llena por JS -->
+    </div>
+    <div class="hero-scroll">
+      <div class="hero-scroll-line"></div>
+      <span>Scrollea para explorar</span>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section>
+    <div class="container" style="padding-top:0;padding-bottom:80px;">
+      <div class="stats-row reveal">
+        <div class="stat-item">
+          <div class="stat-num">100%</div>
+          <div class="stat-label">Sin papel — todo digital</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">QR</div>
+          <div class="stat-label">Códigos únicos por badge</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">🎁</div>
+          <div class="stat-label">Premio sorpresa al completar</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">Real</div>
+          <div class="stat-label">Tiempo real, sin recargas</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CÓMO FUNCIONA -->
+  <section id="como-funciona">
+    <div class="container">
+      <div class="section-label reveal">Cómo funciona</div>
+      <h2 class="section-title reveal">Simple, divertido y efectivo</h2>
+      <p class="section-sub reveal">Cuatro pasos para transformar cualquier evento en una experiencia memorable.</p>
+      <div class="steps-grid">
+        <div class="step-card reveal">
+          <div class="step-num">01</div>
+          <div class="step-icon lila">🎟️</div>
+          <div class="step-title">El admin crea el evento</div>
+          <p class="step-desc">Configura el nombre, fechas, badges disponibles y el premio sorpresa que se revelará al final.</p>
+        </div>
+        <div class="step-card reveal">
+          <div class="step-num">02</div>
+          <div class="step-icon rosa">🖨️</div>
+          <div class="step-title">Se generan los QRs</div>
+          <p class="step-desc">Cada badge tiene un código QR único. Se imprimen y distribuyen en el evento de forma física.</p>
+        </div>
+        <div class="step-card reveal">
+          <div class="step-num">03</div>
+          <div class="step-icon azul">📱</div>
+          <div class="step-title">Los participantes escanean</div>
+          <p class="step-desc">Con la cámara del celular, los asistentes escanean los QRs directamente desde la app.</p>
+        </div>
+        <div class="step-card reveal">
+          <div class="step-num">04</div>
+          <div class="step-icon verde">🎁</div>
+          <div class="step-title">¡Premio desbloqueado!</div>
+          <p class="step-desc">Al completar todos los badges, se revela el premio sorpresa y el participante gana.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="container">
+      <div class="section-label reveal">Funcionalidades</div>
+      <h2 class="section-title reveal">Todo lo que necesitás</h2>
+      <p class="section-sub reveal">Una plataforma completa para organizadores y participantes.</p>
+      <div class="features-grid">
+        <div class="feature-card reveal">
+          <div class="feature-icon">📊</div>
+          <div class="feature-title">Dashboard en tiempo real</div>
+          <p class="feature-desc">Los admins ven métricas de participación, badges canjeados y progreso de cada asistente en tiempo real.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">📷</div>
+          <div class="feature-title">Scanner QR nativo</div>
+          <p class="feature-desc">Acceso directo a la cámara del dispositivo para escanear QRs sin apps externas. Funciona en mobile y desktop.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">🏅</div>
+          <div class="feature-title">Badges personalizados</div>
+          <p class="feature-desc">Cada badge tiene nombre, descripción e ícono personalizado. Los QRs se generan automáticamente.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">👥</div>
+          <div class="feature-title">Gestión de usuarios</div>
+          <p class="feature-desc">Asignación de roles, cambio de permisos y monitoreo de la actividad de cada participante.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">🔗</div>
+          <div class="feature-title">Compartir en LinkedIn</div>
+          <p class="feature-desc">Al obtener un badge, los participantes pueden compartir su logro directamente en LinkedIn e Instagram.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">🔒</div>
+          <div class="feature-title">Seguro y confiable</div>
+          <p class="feature-desc">Autenticación JWT, contraseñas hasheadas con bcrypt, y comunicación 100% sobre HTTPS.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PARA QUIÉN -->
+  <section id="para-quien">
+    <div class="container">
+      <div class="section-label reveal">¿Para quién?</div>
+      <h2 class="section-title reveal">Ideal para cualquier evento presencial</h2>
+      <p class="section-sub reveal">Desde bootcamps hasta conferencias corporativas.</p>
+      <div class="steps-grid">
+        <div class="step-card reveal" style="border-color:rgba(112,207,255,0.20);">
+          <div class="step-icon azul">🎓</div>
+          <div class="step-title">Bootcamps y cursos</div>
+          <p class="step-desc">Premiá la asistencia y participación de tus estudiantes en cada módulo del programa.</p>
+        </div>
+        <div class="step-card reveal" style="border-color:rgba(216,151,231,0.20);">
+          <div class="step-icon lila">🏢</div>
+          <div class="step-title">Eventos corporativos</div>
+          <p class="step-desc">Gamificá conferencias, hackathons y actividades de team building con badges digitales.</p>
+        </div>
+        <div class="step-card reveal" style="border-color:rgba(171,209,148,0.20);">
+          <div class="step-icon verde">🎪</div>
+          <div class="step-title">Ferias y exposiciones</div>
+          <p class="step-desc">Incentivá a los visitantes a recorrer todos los stands con una mecánica de colección.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA FINAL -->
+  <section>
+    <div class="container">
+      <div class="cta-section reveal">
+        <div class="cta-card">
+          <div class="cta-glow"></div>
+          <h2 class="cta-title">¿Listo para empezar?</h2>
+          <p class="cta-desc">Creá tu cuenta gratis y llevá la gamificación a tu próximo evento.</p>
+          <div id="cta-actions" style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;">
+            <!-- Se llena por JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <p style="margin-bottom:12px;">
+      <a href="privacy.html">Política de Privacidad</a>
+      <a href="terms.html">Términos y Condiciones</a>
+    </p>
+    <p>© 2026 Lyfter Team · Hecho con ❤️ para eventos increíbles</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+  (function() {
+
+    // ── 1. Nav y acciones según sesión ──
+    var user = null;
+    try {
+      user = window.LyfterAPI ? window.LyfterAPI.currentUser() : null;
+    } catch(e) {}
+
+    var navActions   = document.getElementById('nav-actions');
+    var heroActions  = document.getElementById('hero-actions');
+    var ctaActions   = document.getElementById('cta-actions');
+
+    if (user) {
+      // Sesión activa → botón "Ir a mi perfil"
+      var dest = user.role === 'admin' ? 'admin-event.html' : 'profile.html';
+      var btnPerfil = '<a href="' + dest + '" class="nav-btn-cta">Ir a mi perfil →</a>';
+      if (navActions)  navActions.innerHTML  = btnPerfil;
+      if (heroActions) heroActions.innerHTML =
+        '<a href="' + dest + '" class="btn-hero-cta">Ir a mi perfil →</a>';
+      if (ctaActions)  ctaActions.innerHTML  =
+        '<a href="' + dest + '" class="btn-hero-cta">Ir a mi perfil →</a>';
+    } else {
+      // Sin sesión → login + registro
+      var authBtns =
+        '<a href="login.html"    class="nav-btn-outline">Iniciar sesión</a>' +
+        '<a href="register.html" class="nav-btn-cta">Crear cuenta gratis</a>';
+      if (navActions) navActions.innerHTML = authBtns;
+      if (heroActions) heroActions.innerHTML =
+        '<a href="register.html" class="btn-hero-cta">✨ Crear cuenta gratis</a>' +
+        '<a href="login.html"    class="btn-hero-outline">Iniciar sesión</a>';
+      if (ctaActions) ctaActions.innerHTML =
+        '<a href="register.html" class="btn-hero-cta" style="font-size:16px;padding:0 36px;height:56px;">Crear cuenta gratis</a>' +
+        '<a href="login.html"    class="btn-hero-outline" style="font-size:16px;padding:0 32px;height:56px;">Iniciar sesión</a>';
+    }
+
+    // ── 2. Cursor personalizado ──
+    var dot  = document.getElementById('cursor-dot');
+    var ring = document.getElementById('cursor-ring');
+    var mx = -100, my = -100, rx = -100, ry = -100;
+    document.addEventListener('mousemove', function(e) { mx = e.clientX; my = e.clientY; });
+    (function animCursor() {
+      rx += (mx - rx) * 0.14;
+      ry += (my - ry) * 0.14;
+      if (dot)  { dot.style.left  = mx + 'px'; dot.style.top  = my + 'px'; }
+      if (ring) { ring.style.left = rx + 'px'; ring.style.top = ry + 'px'; }
+      requestAnimationFrame(animCursor);
+    })();
+    document.addEventListener('mouseleave', function() {
+      if (dot)  { dot.style.opacity  = '0'; }
+      if (ring) { ring.style.opacity = '0'; }
+    });
+    document.addEventListener('mouseenter', function() {
+      if (dot)  { dot.style.opacity  = '1'; }
+      if (ring) { ring.style.opacity = '1'; }
+    });
+
+    // ── 3. Canvas de partículas ──
+    var canvas = document.getElementById('particleCanvas');
+    var ctx    = canvas.getContext('2d');
+    var W, H, particles = [], mouse = { x: -9999, y: -9999 };
+    var PALETTE = [
+      [216,151,231],
+      [112,207,255],
+      [230,138,141],
+      [171,209,148],
+      [255,255,255],
+    ];
+
+    function resize() {
+      W = canvas.width  = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+
+    function Particle() { this.reset(); }
+    Particle.prototype.reset = function() {
+      this.x  = Math.random() * W;
+      this.y  = Math.random() * H;
+      this.r  = Math.random() * 1.6 + 0.3;
+      this.base = this.r;
+      this.vx = (Math.random() < 0.5 ? -1 : 1) * (0.10 + Math.random() * 0.28);
+      this.vy = (Math.random() < 0.5 ? -1 : 1) * (0.07 + Math.random() * 0.20);
+      this.a  = Math.random() * 0.6 + 0.15;
+      this.phase = Math.random() * Math.PI * 2;
+      this.speed = Math.random() * 0.008 + 0.003;
+      this.rgb = PALETTE[Math.floor(Math.random() * PALETTE.length)];
+      this.connected = Math.random() > 0.7;
+    };
+    Particle.prototype.update = function(t) {
+      this.x += this.vx;
+      this.y += this.vy;
+      if (this.x < -20) this.x = W + 20;
+      if (this.x > W + 20) this.x = -20;
+      if (this.y < -20) this.y = H + 20;
+      if (this.y > H + 20) this.y = -20;
+      this.a = 0.25 + 0.50 * Math.abs(Math.sin(t * this.speed + this.phase));
+      var dx = this.x - mouse.x, dy = this.y - mouse.y;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 120) {
+        var f = (120 - dist) / 120;
+        this.r = this.base + f * 2.8;
+        this.a = Math.min(1, this.a + f * 0.6);
+        this.x += (dx / dist) * f * 0.8;
+        this.y += (dy / dist) * f * 0.8;
+      } else {
+        this.r += (this.base - this.r) * 0.06;
+      }
+    };
+    Particle.prototype.draw = function() {
+      ctx.save();
+      ctx.globalAlpha = this.a;
+      ctx.fillStyle = 'rgb(' + this.rgb.join(',') + ')';
+      ctx.shadowColor = 'rgba(' + this.rgb.join(',') + ',0.7)';
+      ctx.shadowBlur = this.r * 4;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    };
+
+    function drawConnections() {
+      var connected = particles.filter(function(p) { return p.connected; });
+      for (var i = 0; i < connected.length; i++) {
+        for (var j = i + 1; j < connected.length; j++) {
+          var dx = connected[i].x - connected[j].x;
+          if (Math.abs(dx) > 140) continue;
+          var dy = connected[i].y - connected[j].y;
+          var d = Math.sqrt(dx*dx + dy*dy);
+          if (d < 140) {
+            ctx.save();
+            ctx.globalAlpha = (1 - d/140) * 0.14;
+            ctx.strokeStyle = 'rgba(216,151,231,1)';
+            ctx.lineWidth = 0.6;
+            ctx.beginPath();
+            ctx.moveTo(connected[i].x, connected[i].y);
+            ctx.lineTo(connected[j].x, connected[j].y);
+            ctx.stroke();
+            ctx.restore();
+          }
+        }
+      }
+    }
+
+    function init() {
+      resize();
+      particles = [];
+      var count = Math.min(180, Math.floor(W * H / 6000));
+      for (var i = 0; i < count; i++) particles.push(new Particle());
+    }
+
+    var t = 0;
+    function loop() {
+      ctx.clearRect(0, 0, W, H);
+      t++;
+      drawConnections();
+      for (var i = 0; i < particles.length; i++) {
+        particles[i].update(t);
+        particles[i].draw();
+      }
+      requestAnimationFrame(loop);
+    }
+
+    window.addEventListener('resize', function() { init(); });
+    window.addEventListener('mousemove', function(e) { mouse.x = e.clientX; mouse.y = e.clientY; });
+    window.addEventListener('mouseleave', function() { mouse.x = -9999; mouse.y = -9999; });
+    window.addEventListener('touchmove', function(e) {
+      if (e.touches[0]) { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; }
+    }, { passive: true });
+
+    init();
+    loop();
+
+    // ── 4. Reveal al scroll ──
+    var reveals = document.querySelectorAll('.reveal');
+    var io = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    reveals.forEach(function(el) { io.observe(el); });
+
+    // ── 5. Fondo reactivo al scroll ──
+    var tints = [
+      'rgba(216,151,231,0.07)',
+      'rgba(112,207,255,0.07)',
+      'rgba(171,209,148,0.07)',
+      'rgba(230,138,141,0.07)'
+    ];
+    function onScroll() {
+      var d = document.documentElement;
+      var max = d.scrollHeight - d.clientHeight || 1;
+      var p = Math.min(1, d.scrollTop / max);
+      var i = Math.min(Math.floor(p * (tints.length-1)), tints.length-2);
+      var a = 0.04 + p * 0.09;
+      var c = tints[i].replace('0.07', a.toFixed(3));
+      document.body.style.backgroundImage = 'radial-gradient(ellipse at ' + (20 + p*60) + '% ' + (10 + p*80) + '%, ' + c + ', transparent 60%)';
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    // ── 6. Navbar: sombra al hacer scroll ──
+    window.addEventListener('scroll', function() {
+      var nav = document.getElementById('main-nav');
+      if (nav) {
+        nav.style.background = window.scrollY > 40
+          ? 'rgba(21,23,29,0.95)'
+          : 'rgba(21,23,29,0.80)';
+      }
+    }, { passive: true });
+
+  })();
+  </script>
+</body>
+</html>
