@@ -41,7 +41,7 @@
 
   function seedOrbs() {
     orbs = [];
-    for (var i = 0; i < 30; i++) orbs.push(mkOrb());
+    for (var i = 0; i < 12; i++) orbs.push(mkOrb());
   }
 
   // ── Draw ──────────────────────────────────────────────────────────────────
