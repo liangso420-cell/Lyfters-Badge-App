@@ -83,11 +83,11 @@
                 '<div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 20%,rgba(0,0,0,0.65));pointer-events:none;"></div>' +
                 '<span style="position:absolute;top:14px;right:16px;font-size:11px;font-weight:700;background:rgba(255,255,255,0.9);padding:4px 12px;border-radius:999px;color:#3a1f20;">' + statusLabel + '</span>' +
                 '<div id="photo-btn" style="position:absolute;top:14px;left:16px;cursor:pointer;title:Cambiar foto;">' +
-                  '<span style="font-size:20px;background:rgba(0,0,0,0.45);border-radius:8px;padding:4px 8px;">📷</span>' +
+                  '<span style="font-size:11px;font-weight:700;background:rgba(0,0,0,0.5);border-radius:8px;padding:4px 8px;color:#fff;font-family:Manrope,sans-serif;">Foto</span>' +
                 '</div>' +
                 '<div style="position:absolute;bottom:14px;left:20px;right:20px;">' +
                   '<p style="font-family:Poppins,sans-serif;font-size:22px;font-weight:700;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,0.5);margin:0;">' + U.esc(ev.name) + '</p>' +
-                  '<p style="font-size:13px;color:rgba(255,255,255,0.8);font-family:Manrope,sans-serif;margin:4px 0 0;">📅 ' + fmtDate(ev.start) + (ev.end ? ' — ' + fmtDate(ev.end) : '') + (ev.prize ? '  🎁 ' + U.esc(ev.prize) : '') + '</p>' +
+                  '<p style="font-size:13px;color:rgba(255,255,255,0.8);font-family:Manrope,sans-serif;margin:4px 0 0;">' + fmtDate(ev.start) + (ev.end ? ' — ' + fmtDate(ev.end) : '') + (ev.prize ? '  🎁 ' + U.esc(ev.prize) : '') + '</p>' +
                 '</div>' +
               '</div>' +
             '</div>';
@@ -123,7 +123,7 @@
                       '<div style="display:flex;gap:6px;flex-shrink:0;">' +
                         '<button data-qr-b="' + b.id + '" data-qr-img="' + U.esc(b.qrImage || b.qr_image || '') + '" data-qr-name="' + U.esc(bname) + '" class="badge-qr-btn" style="height:30px;padding:0 10px;border-radius:8px;border:1px solid rgba(112,207,255,0.4);background:rgba(112,207,255,0.08);color:#70cfff;font-size:12px;font-weight:600;cursor:pointer;font-family:Manrope,sans-serif;">QR</button>' +
                         '<button data-edit-b="' + b.id + '" class="badge-edit-btn" style="height:30px;padding:0 10px;border-radius:8px;border:1px solid #353a46;background:transparent;color:#cdd2db;font-size:12px;cursor:pointer;">✏️</button>' +
-                        '<button data-del-b="' + b.id + '" data-del-bname="' + U.esc(bname) + '" class="badge-del-btn" style="height:30px;padding:0 10px;border-radius:8px;border:1px solid rgba(230,138,141,0.4);background:transparent;color:#e68a8d;font-size:12px;cursor:pointer;">🗑</button>' +
+                        '<button data-del-b="' + b.id + '" data-del-bname="' + U.esc(bname) + '" class="badge-del-btn" style="height:30px;padding:0 10px;border-radius:8px;border:1px solid rgba(230,138,141,0.4);background:transparent;color:#e68a8d;font-size:12px;cursor:pointer;font-family:Manrope,sans-serif;">Del</button>' +
                       '</div>' +
                     '</div>' +
                     // Inline edit form
