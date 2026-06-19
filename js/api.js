@@ -831,7 +831,17 @@
       return await apiRequest('GET', '/leaderboard');
     },
     async getXpLeaderboard() {
-      return await apiRequest('GET', '/admin/leaderboard/xp');
+      var data = await apiRequest('GET', '/leaderboard/global');
+      var ranking = Array.isArray(data) ? data : (data.ranking || []);
+      return ranking.slice(0, 8).map(function(u) {
+        return {
+          id:     u.user_id || u.id || '',
+          nombre: u.name || u.nombre || '',
+          avatar: u.avatar || null,
+          xp:     u.xp_total || u.xp || 0,
+          level:  u.level || 1
+        };
+      });
     },
     async getXpProfile() {
       return await apiRequest('GET', '/profile/xp');
