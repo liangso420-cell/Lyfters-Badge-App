@@ -67,7 +67,7 @@
           '</div>' +
 
           '<div style="' + CARD + '">' +
-            '<p style="font-family:Poppins,sans-serif;font-size:15px;font-weight:700;color:#f4f6f9;margin:0 0 18px;">📋 Información general</p>' +
+            '<p style="font-family:Poppins,sans-serif;font-size:15px;font-weight:700;color:#f4f6f9;margin:0 0 18px;">Información general</p>' +
             '<form id="event-form" novalidate style="display:flex;flex-direction:column;gap:14px;">' +
 
               '<div>' +
@@ -111,7 +111,7 @@
               '</div>' +
 
               '<div style="border-top:1px solid #2f343f;padding-top:16px;">' +
-                '<p style="font-family:Poppins,sans-serif;font-size:14px;font-weight:700;color:#f4f6f9;margin:0 0 12px;">⚡ Bonus de XP</p>' +
+                '<p style="font-family:Poppins,sans-serif;font-size:14px;font-weight:700;color:#f4f6f9;margin:0 0 12px;">Bonus de XP</p>' +
                 '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">' +
                   '<div><label style="' + LBL + '">Bonus primer badge</label><input type="number" name="xp_first_scan" min="0" max="1000" value="5" style="' + INP + '" /></div>' +
                   '<div><label style="' + LBL + '">Bonus badge raro</label><input type="number" name="xp_rare_bonus" min="0" max="1000" value="15" style="' + INP + '" /></div>' +
@@ -314,6 +314,13 @@
           });
         });
 
+        var defaultRarityBtn = document.querySelector('.rarity-btn[data-rarity="normal"]');
+        if (defaultRarityBtn) {
+          defaultRarityBtn.style.border = '1px solid #f4f6f9';
+          defaultRarityBtn.style.background = 'rgba(244,246,249,0.1)';
+          defaultRarityBtn.style.color = '#f4f6f9';
+        }
+
         document.getElementById('open-icon-picker').addEventListener('click', function() {
           var modalRoot = document.getElementById('modal-root');
           modalRoot.innerHTML =
@@ -325,8 +332,8 @@
                 '</div>' +
                 '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">' +
                   BADGE_ICONS.map(function(icon) {
-                    return '<button type="button" data-icon="assets/icons/badges/' + icon.file + '" class="icon-option" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:10px;border:1px solid #353a46;background:#2e323d;cursor:pointer;">' +
-                      '<img src="assets/icons/badges/' + icon.file + '" style="width:36px;height:36px;object-fit:contain;" />' +
+                    return '<button type="button" data-icon="' + icon.file + '" class="icon-option" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:10px;border:1px solid #353a46;background:#2e323d;cursor:pointer;">' +
+                      '<img src="' + icon.file + '" style="width:36px;height:36px;object-fit:contain;" />' +
                       '<span style="font-size:10px;color:#8b93a3;font-family:Manrope,sans-serif;text-align:center;">' + icon.label + '</span>' +
                     '</button>';
                   }).join('') +
