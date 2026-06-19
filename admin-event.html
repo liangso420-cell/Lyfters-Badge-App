@@ -74,11 +74,11 @@
                   '<p style="font-family:Poppins,sans-serif;font-size:17px;font-weight:700;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,0.5);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + U.esc(e.name) + '</p>' +
                 '</div>' +
                 '<div id="photo-area-' + e.id + '" style="position:absolute;top:12px;left:14px;cursor:pointer;" title="Cambiar foto">' +
-                  '<span style="font-size:11px;font-weight:700;background:rgba(0,0,0,0.5);border-radius:8px;padding:4px 8px;color:#fff;font-family:Manrope,sans-serif;">Foto</span>' +
+                  '<span style="background:rgba(0,0,0,0.45);border-radius:8px;padding:5px 7px;line-height:0;display:inline-block;"><img src="anadir-imagen.png" alt="Foto" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;display:inline-block;" /></span>' +
                 '</div>' +
               '</div>' +
               '<div style="padding:14px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
-                '<span style="font-size:12px;color:#8b93a3;font-family:Manrope,sans-serif;">' + fmtDate(e.start) + (e.end ? ' — ' + fmtDate(e.end) : '') + '</span>' +
+                '<span style="font-size:12px;color:#8b93a3;font-family:Manrope,sans-serif;display:inline-flex;align-items:center;gap:4px;"><img src="calendario.png" alt="" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;display:inline-block;" />' + fmtDate(e.start) + (e.end ? ' — ' + fmtDate(e.end) : '') + '</span>' +
                 (e.prize ? '<span style="font-size:12px;color:#8b93a3;font-family:Manrope,sans-serif;">🎁 ' + U.esc(e.prize) + '</span>' : '') +
                 '<div style="margin-left:auto;display:flex;gap:8px;align-items:center;">' +
                   '<select data-status-sel="' + e.id + '" class="status-sel" style="height:32px;padding:0 8px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-size:12px;outline:none;cursor:pointer;">' +
@@ -87,7 +87,7 @@
                     }).join('') +
                   '</select>' +
                   '<button data-enter="' + e.id + '" class="enter-btn" style="height:32px;padding:0 14px;border-radius:8px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-size:12px;font-weight:700;cursor:pointer;font-family:Poppins,sans-serif;">Entrar →</button>' +
-                  '<button data-del="' + e.id + '" data-name="' + U.esc(e.name) + '" class="del-btn" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid rgba(230,138,141,0.4);background:transparent;color:#e68a8d;font-size:12px;cursor:pointer;font-family:Manrope,sans-serif;">Del</button>' +
+                  '<button data-del="' + e.id + '" data-name="' + U.esc(e.name) + '" class="del-btn" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid rgba(230,138,141,0.4);background:transparent;color:#e68a8d;font-size:12px;cursor:pointer;"><img src="icono-basura.png" alt="Eliminar" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;display:inline-block;filter:invert(60%) sepia(1) saturate(3) hue-rotate(300deg);" /></button>' +
                 '</div>' +
               '</div>' +
             '</div>';
@@ -96,7 +96,8 @@
           var inner =
             '<div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">' +
               '<div style="position:relative;flex:1;">' +
-                '<input id="event-search" type="text" placeholder="Buscar evento..." style="width:100%;height:50px;padding:0 18px;background:#2e323d;border:1px solid #353a46;border-radius:13px;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:14px;outline:none;box-sizing:border-box;" />' +
+                '<span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);pointer-events:none;line-height:0;"><img src="lupa.png" alt="Buscar" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;display:inline-block;opacity:0.5;" /></span>' +
+                '<input id="event-search" type="text" placeholder="Buscar evento..." style="width:100%;height:50px;padding:0 18px 0 42px;background:#2e323d;border:1px solid #353a46;border-radius:13px;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:14px;outline:none;box-sizing:border-box;" />' +
               '</div>' +
               '<button id="btn-new-event" style="height:50px;padding:0 22px;border-radius:13px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:8px;">+ New</button>' +
             '</div>' +
