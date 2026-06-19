@@ -10,6 +10,11 @@
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
+  <div id="loading-screen">
+    <img src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" />
+    <div class="loader"></div>
+    <span>Cargando...</span>
+  </div>
   <main id="app"></main>
   <div id="modal-root"></div>
   <div id="toast-root" class="fixed top-4 left-1/2 -translate-x-1/2 z-[60] flex flex-col gap-2 items-center pointer-events-none"></div>
@@ -27,7 +32,6 @@
       if (!user) { window.location.replace('login.html?next=' + encodeURIComponent(window.location.pathname)); return; }
 
       var app = document.getElementById('app');
-      app.innerHTML = U.loadingHtml();
 
       var currentTab = 'global';
 
@@ -93,6 +97,7 @@
           '<div id="lb-list" class="bg-white rounded-card p-5 shadow-soft"><div class="text-center text-gray-400 text-sm py-4">' + U.t('loading') + '</div></div>' +
           '</section>';
         mountTabs();
+        U.hideLoading();
         var listBox = document.getElementById('lb-list');
         try {
           if (currentTab === 'global') {
@@ -132,8 +137,16 @@
         window.scrollTo(0, 0);
       }
 
+      setTimeout(U.hideLoading, 6000);
       render();
     })();
+  </script>
+  <script>
+    window.addEventListener('load', () => {
+      const ls = document.getElementById('loading-screen');
+      ls.style.opacity = '0';
+      ls.style.pointerEvents = 'none';
+    });
   </script>
 </body>
 </html>

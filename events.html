@@ -10,6 +10,11 @@
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
+  <div id="loading-screen">
+    <img src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" />
+    <div class="loader"></div>
+    <span>Cargando...</span>
+  </div>
   <main id="app"></main>
   <div id="modal-root"></div>
   <div id="toast-root" class="fixed top-4 left-1/2 -translate-x-1/2 z-[60] flex flex-col gap-2 items-center pointer-events-none"></div>
@@ -27,7 +32,6 @@
       if (user.role === 'admin') { window.location.replace('admin-event.html'); return; }
 
       var app = document.getElementById('app');
-      app.innerHTML = U.loadingHtml();
 
       function fmtDate(iso) {
         if (!iso) return '';
@@ -180,6 +184,7 @@
               '<button id="fab-scan" class="pointer-events-auto px-7 py-4 rounded-full text-white font-semibold shadow-soft flex items-center gap-2 active:scale-95 transition" ' +
                 'style="background:#6C63FF; box-shadow:0 4px 24px rgba(108,99,255,0.5);">' + U.t('scan_qr') + '</button>' +
             '</div>';
+          U.hideLoading();
           document.getElementById('back-btn').addEventListener('click', function() { window.location.href = 'profile.html'; });
           document.getElementById('fab-scan').addEventListener('click', function() { window.location.href = 'scan.html'; });
           document.getElementById('global-lb-btn').addEventListener('click', function() { window.location.href = 'leaderboard.html'; });
@@ -240,13 +245,22 @@
 
         } catch(err) {
           app.innerHTML = U.errorHtml(err && err.message ? err.message : 'Error inesperado');
+          U.hideLoading();
           var retry = document.getElementById('err-retry');
           if (retry) retry.addEventListener('click', init);
         }
       }
 
+      setTimeout(U.hideLoading, 6000);
       init();
     })();
+  </script>
+  <script>
+    window.addEventListener('load', () => {
+      const ls = document.getElementById('loading-screen');
+      ls.style.opacity = '0';
+      ls.style.pointerEvents = 'none';
+    });
   </script>
 </body>
 </html>
