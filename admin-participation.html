@@ -10,6 +10,11 @@
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
+  <div id="loading-screen">
+    <img src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" />
+    <div class="loader"></div>
+    <span>Cargando...</span>
+  </div>
   <main id="app"></main>
   <div id="modal-root"></div>
   <div id="toast-root" class="fixed top-4 left-1/2 -translate-x-1/2 z-[60] flex flex-col gap-2 items-center pointer-events-none"></div>
@@ -28,7 +33,6 @@
       if (user.role !== 'admin') { window.location.replace('profile.html'); return; }
 
       var app = document.getElementById('app');
-      app.innerHTML = U.loadingHtml();
 
       function metricCard(iconPath, value, label, color) {
         return '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:16px;padding:20px;display:flex;align-items:center;gap:16px;">' +
@@ -99,6 +103,7 @@
 
           app.innerHTML = U.adminShell('participation', inner, events, activeId);
           U.mountAdminShell();
+          U.hideLoading();
 
           var progressSearch = document.getElementById('progress-search');
           if (progressSearch) {
@@ -123,12 +128,14 @@
 
         } catch(err) {
           app.innerHTML = U.errorHtml(err && err.message ? err.message : 'Error inesperado');
+          U.hideLoading();
           var retry = document.getElementById('err-retry');
           if (retry) retry.addEventListener('click', init);
         }
         window.scrollTo(0, 0);
       }
 
+      setTimeout(U.hideLoading, 6000);
       init();
     })();
   </script>

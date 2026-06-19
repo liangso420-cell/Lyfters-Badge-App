@@ -9,6 +9,11 @@
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
+  <div id="loading-screen">
+    <img src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" />
+    <div class="loader"></div>
+    <span>Cargando...</span>
+  </div>
   <main id="app"></main>
   <div id="modal-root"></div>
   <div id="toast-root" style="position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;"></div>
@@ -26,7 +31,6 @@
       if (user.role !== 'admin') { window.location.replace('profile.html'); return; }
 
       var app = document.getElementById('app');
-      app.innerHTML = U.loadingHtml();
 
       async function init() {
         try {
@@ -127,6 +131,7 @@
 
           app.innerHTML = U.adminShell('leaderboard', inner, events, activeId);
           U.mountAdminShell();
+          U.hideLoading();
 
           document.getElementById('tab-leaderboard').addEventListener('click', function() {
             document.getElementById('panel-leaderboard').style.display = '';
@@ -152,11 +157,13 @@
 
         } catch(err) {
           app.innerHTML = U.errorHtml(err && err.message ? err.message : 'Error inesperado');
+          U.hideLoading();
           var retry = document.getElementById('err-retry');
           if (retry) retry.addEventListener('click', init);
         }
       }
 
+      setTimeout(U.hideLoading, 6000);
       init();
     })();
   </script>
