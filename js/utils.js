@@ -582,6 +582,61 @@
       setTimeout(closeModal, 250);
     }
 
+    function restoreDrawerNav() {
+      var panel = document.getElementById('drawer-panel');
+      if (!panel) return;
+      var nav = panel.querySelector('nav');
+      if (!nav) return;
+      window.LyfterAPI.getProfile().then(function(p2) {
+        nav.innerHTML =
+          '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2" style="color:rgba(240,234,242,0.35);">Configuración</p>' +
+          '<button id="drawer-account-btn-2" ' + dBtn + ' ' + dBtnHover + ' style="background:transparent;border:none;width:100%;display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1.25rem;font-size:0.875rem;color:rgba(240,234,242,0.75);cursor:pointer;">' +
+            '<div class="flex items-center gap-3">' +
+              (p2.avatar ? '<img src="' + p2.avatar + '" class="w-8 h-8 rounded-full object-cover" />' : '<div class="w-8 h-8 rounded-full flex items-center justify-center text-sm" style="background:rgba(216,151,231,0.15);"><img src="assets/icons/ui/icono-perfil.png" style="width:18px;height:18px;object-fit:contain;"></div>') +
+              '<span>Centro de cuenta</span>' +
+            '</div>' +
+            '<span style="color:rgba(240,234,242,0.25);">›</span>' +
+          '</button>' +
+          '<div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.07);">' +
+            '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2 mt-2" style="color:rgba(240,234,242,0.35);">Privacidad</p>' +
+            '<button id="drawer-privacy-btn-2" ' + dBtn + ' ' + dBtnHover + '><img src="assets/icons/ui/icono-perfil.png" style="width:18px;height:18px;object-fit:contain;margin-right:4px;"> <span>Configuración de privacidad</span></button>' +
+          '</div>' +
+          '<div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.07);">' +
+            '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2 mt-2" style="color:rgba(240,234,242,0.35);">Apariencia</p>' +
+            '<button id="drawer-lang-btn-2" ' + dBtn + ' ' + dBtnHover + '><img src="assets/icons/ui/icono-traduccion.png" style="width:18px;height:18px;object-fit:contain;margin-right:4px;"> <span>Idioma</span></button>' +
+          '</div>' +
+          '<div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.07);">' +
+            '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2 mt-2" style="color:rgba(240,234,242,0.35);">Información</p>' +
+            '<button id="drawer-about-btn-2" ' + dBtn + ' ' + dBtnHover + '><img src="assets/icons/ui/icono-acerca.png" style="width:18px;height:18px;object-fit:contain;margin-right:4px;"> <span>Acerca de la app</span></button>' +
+          '</div>' +
+          (isAdmin ? '<div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.07);">' +
+            '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2 mt-2" style="color:rgba(240,234,242,0.35);">Administración</p>' +
+            '<button id="drawer-users-btn-2" ' + dBtn + ' ' + dBtnHover + '><img src="assets/icons/ui/icono-usuarios.png" style="width:18px;height:18px;object-fit:contain;margin-right:4px;"> <span>Gestionar usuarios</span></button>' +
+          '</div>' : '') +
+          '<div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.07);">' +
+            '<button id="drawer-logout-btn-2" ' + dBtn + ' ' + dBtnHover + ' style="color:rgba(248,113,113,0.75);">⎋ <span>Cerrar sesión</span></button>' +
+          '</div>';
+
+        var ab2 = document.getElementById('drawer-account-btn-2');
+        if (ab2) ab2.addEventListener('click', function() { accountBtn.click(); });
+        var pb2 = document.getElementById('drawer-privacy-btn-2');
+        if (pb2) pb2.addEventListener('click', function() { privacyBtn && privacyBtn.click(); });
+        var lb2 = document.getElementById('drawer-lang-btn-2');
+        if (lb2) lb2.addEventListener('click', function() { langBtn && langBtn.click(); });
+        var ab2b = document.getElementById('drawer-about-btn-2');
+        if (ab2b) ab2b.addEventListener('click', function() { aboutBtn && aboutBtn.click(); });
+        var ub2 = document.getElementById('drawer-users-btn-2');
+        if (ub2) ub2.addEventListener('click', function() { usersBtn && usersBtn.click(); });
+        var lb2b = document.getElementById('drawer-logout-btn-2');
+        if (lb2b) lb2b.addEventListener('click', function() {
+          showConfirm('¿Cerrar sesión?', function() { logout(); }, null, { confirmLabel: 'Cerrar sesión', danger: false });
+        });
+      }).catch(function() {
+        closeModal();
+        showDrawer(avatarUrl, userName, onAvatarSave, isAdmin);
+      });
+    }
+
     document.getElementById('drawer-close').addEventListener('click', closeDrawer);
     document.getElementById('drawer-overlay').addEventListener('click', function(e) {
       if (e.target === this) closeDrawer();
@@ -632,8 +687,7 @@
             '</div>';
 
           function goBack() {
-            closeModal();
-            window.LyfterAPI.getProfile().then(function(p2) { showDrawer(p2.avatar, p2.nombre, onAvatarSave, isAdmin); }).catch(function() { showDrawer(null, null, onAvatarSave, isAdmin); });
+            restoreDrawerNav();
           }
 
           document.getElementById('drawer-account-back').addEventListener('click', goBack);
@@ -824,8 +878,7 @@
               '<button id="drawer-privacy-save" class="w-full mt-5 py-2.5 rounded-btn text-white text-sm font-medium" style="background:#6C63FF;">Guardar</button>' +
             '</div>';
           document.getElementById('drawer-privacy-back').addEventListener('click', function() {
-            closeModal();
-            window.LyfterAPI.getProfile().then(function(p2) { showDrawer(p2.avatar, p2.nombre, onAvatarSave, isAdmin); }).catch(function() { showDrawer(null, null, onAvatarSave, isAdmin); });
+            restoreDrawerNav();
           });
           document.getElementById('drawer-privacy-save').addEventListener('click', async function() {
             var btn = this;
@@ -884,10 +937,7 @@
           '</div>';
 
         document.getElementById('drawer-lang-back').addEventListener('click', function() {
-          closeModal();
-          window.LyfterAPI.getProfile().then(function(p) {
-            showDrawer(p.avatar, p.nombre, onAvatarSave, isAdmin);
-          }).catch(function() { showDrawer(null, null, onAvatarSave, isAdmin); });
+          restoreDrawerNav();
         });
 
         Array.prototype.forEach.call(document.querySelectorAll('.lang-option'), function(btn) {
@@ -922,8 +972,7 @@
             '</div>' +
           '</div>';
         document.getElementById('drawer-about-back').addEventListener('click', function() {
-          closeModal();
-          window.LyfterAPI.getProfile().then(function(p) { showDrawer(p.avatar, p.nombre, onAvatarSave, isAdmin); }).catch(function() { showDrawer(null, null, onAvatarSave, isAdmin); });
+          restoreDrawerNav();
         });
       });
     }
@@ -948,10 +997,7 @@
         '</div>';
 
         document.getElementById('drawer-users-back').addEventListener('click', function() {
-          closeModal();
-          window.LyfterAPI.getProfile().then(function(p) {
-            showDrawer(p.avatar, p.nombre, onAvatarSave, true);
-          }).catch(function() { showDrawer(null, null, onAvatarSave, true); });
+          restoreDrawerNav();
         });
 
         var PAGE_SIZE = 10;
