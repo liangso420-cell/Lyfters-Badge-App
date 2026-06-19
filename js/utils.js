@@ -539,27 +539,27 @@
             '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2" style="color:rgba(240,234,242,0.35);">Configuración</p>' +
             '<button id="drawer-account-btn" ' + dBtn + ' ' + dBtnHover + ' style="background:transparent;border:none;width:100%;display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1.25rem;font-size:0.875rem;color:rgba(240,234,242,0.75);cursor:pointer;">' +
               '<div class="flex items-center gap-3">' +
-                (avatarUrl ? '<img src="' + avatarUrl + '" class="w-8 h-8 rounded-full object-cover" />' : '<div class="w-8 h-8 rounded-full flex items-center justify-center" style="background:rgba(216,151,231,0.15);"><img src="assets/icons/ui/icono-perfil.png" alt="perfil" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;" /></div>') +
+                (avatarUrl ? '<img src="' + avatarUrl + '" class="w-8 h-8 rounded-full object-cover" />' : '<img src="assets/icons/ui/icono-perfil.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:4px;">') +
                 '<span>Centro de cuenta</span>' +
               '</div>' +
               '<span style="color:rgba(240,234,242,0.25);">›</span>' +
             '</button>' +
             '<div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.07);">' +
               '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2 mt-2" style="color:rgba(240,234,242,0.35);">Privacidad</p>' +
-              '<button id="drawer-privacy-btn" ' + dBtn + ' ' + dBtnHover + '><span>Configuración de privacidad</span></button>' +
+              '<button id="drawer-privacy-btn" ' + dBtn + ' ' + dBtnHover + '><img src="assets/icons/ui/icono-perfil.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:4px;"><span>Configuración de privacidad</span></button>' +
             '</div>' +
             '<div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.07);">' +
               '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2 mt-2" style="color:rgba(240,234,242,0.35);">Apariencia</p>' +
-              '<button id="drawer-lang-btn" ' + dBtn + ' ' + dBtnHover + '><img src="assets/icons/ui/icono-traduccion.png" alt="idioma" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;" /> <span>Idioma</span></button>' +
+              '<button id="drawer-lang-btn" ' + dBtn + ' ' + dBtnHover + '><img src="assets/icons/ui/icono-traduccion.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:4px;"> <span>Idioma</span></button>' +
             '</div>' +
             '<div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.07);">' +
               '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2 mt-2" style="color:rgba(240,234,242,0.35);">Información</p>' +
-              '<button id="drawer-about-btn" ' + dBtn + ' ' + dBtnHover + '><img src="assets/icons/ui/icono-acerca.png" alt="acerca" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;" /> <span>Acerca de la app</span></button>' +
+              '<button id="drawer-about-btn" ' + dBtn + ' ' + dBtnHover + '><img src="assets/icons/ui/icono-acerca.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:4px;"> <span>Acerca de la app</span></button>' +
             '</div>' +
             (isAdmin
               ? '<div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.07);">' +
                   '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2 mt-2" style="color:rgba(240,234,242,0.35);">Administración</p>' +
-                  '<button id="drawer-users-btn" ' + dBtn + ' ' + dBtnHover + '><img src="assets/icons/ui/icono-usuarios.png" alt="usuarios" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;" /> <span>Gestionar usuarios</span></button>' +
+                  '<button id="drawer-users-btn" ' + dBtn + ' ' + dBtnHover + '><img src="assets/icons/ui/icono-usuarios.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:4px;"> <span>Gestionar usuarios</span></button>' +
                 '</div>'
               : '') +
             '<div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.07);">' +
