@@ -589,6 +589,11 @@
       });
       return { ranking: ranking.slice(0, 50), my_position: myPos };
     },
+    async getXpLeaderboard() {
+      return mockState.users.slice(0, 8).map(function(u) {
+        return { id: u.id, nombre: u.name, avatar: u.avatar || null, xp: u.xp_total || 0, level: u.level || 1 };
+      }).sort(function(a, b) { return b.xp - a.xp; });
+    },
     resetDemo() { mockState = seedState(); persist(); }
   };
 
@@ -825,6 +830,9 @@
     async getLeaderboard() {
       return await apiRequest('GET', '/leaderboard');
     },
+    async getXpLeaderboard() {
+      return await apiRequest('GET', '/admin/leaderboard/xp');
+    },
     async getXpProfile() {
       return await apiRequest('GET', '/profile/xp');
     },
@@ -912,6 +920,7 @@
     updateAvatar:     impl.updateAvatar.bind(impl),
     getEventStats:          impl.getEventStats.bind(impl),
     getLeaderboard:         impl.getLeaderboard.bind(impl),
+    getXpLeaderboard:       impl.getXpLeaderboard.bind(impl),
     getXpProfile:           impl.getXpProfile.bind(impl),
     getAchievements:        impl.getAchievements.bind(impl),
     getEventLeaderboard:    impl.getEventLeaderboard.bind(impl),

@@ -30,9 +30,10 @@
 
       async function init() {
         try {
-          var [events, leaderboard] = await Promise.all([
+          var [events, leaderboard, xpLeaderboard] = await Promise.all([
             API.listAdminEvents(),
-            API.getLeaderboard()
+            API.getLeaderboard(),
+            API.getXpLeaderboard()
           ]);
           var activeId = U.ensureActive(events);
           var top8 = leaderboard.slice(0, 8);
@@ -73,6 +74,43 @@
             '</table>';
           }
 
+          function buildXpTable(data) {
+            if (!data.length) return '<p style="color:#8b93a3;text-align:center;padding:32px;font-family:Manrope,sans-serif;">Sin datos todavía.</p>';
+            return '<table style="width:100%;border-collapse:collapse;">' +
+              '<thead>' +
+                '<tr style="border-bottom:1px solid #2f343f;">' +
+                  '<th style="padding:12px 8px;text-align:left;font-family:Manrope,sans-serif;font-size:11px;font-weight:700;color:#8b93a3;letter-spacing:.1em;">#</th>' +
+                  '<th style="padding:12px 8px;text-align:left;font-family:Manrope,sans-serif;font-size:11px;font-weight:700;color:#8b93a3;letter-spacing:.1em;">Usuario</th>' +
+                  '<th style="padding:12px 8px;text-align:center;font-family:Manrope,sans-serif;font-size:11px;font-weight:700;color:#8b93a3;letter-spacing:.1em;">Nivel</th>' +
+                  '<th style="padding:12px 8px;text-align:right;font-family:Manrope,sans-serif;font-size:11px;font-weight:700;color:#8b93a3;letter-spacing:.1em;">XP Total</th>' +
+                '</tr>' +
+              '</thead>' +
+              '<tbody>' +
+                data.map(function(entry, i) {
+                  var medals = ['🥇','🥈','🥉'];
+                  var rank = medals[i] || '<span style="color:#8b93a3;font-weight:700;">' + (i+1) + '</span>';
+                  var avatarHtml = entry.avatar
+                    ? '<img src="' + entry.avatar + '" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:1px solid #2f343f;">'
+                    : '<img src="assets/icons/ui/icono-perfil.png" style="width:36px;height:36px;border-radius:50%;object-fit:contain;background:#2e323d;padding:4px;">';
+                  var isTop3 = i < 3;
+                  return '<tr style="border-bottom:1px solid #2f343f;' + (isTop3 ? 'background:rgba(216,151,231,0.04);' : '') + '">' +
+                    '<td style="padding:14px 8px;font-size:18px;text-align:left;">' + rank + '</td>' +
+                    '<td style="padding:14px 8px;">' +
+                      '<div style="display:flex;align-items:center;gap:10px;">' +
+                        avatarHtml +
+                        '<p style="font-family:Poppins,sans-serif;font-size:14px;font-weight:600;color:#f4f6f9;margin:0;">' + U.esc(entry.nombre) + '</p>' +
+                      '</div>' +
+                    '</td>' +
+                    '<td style="padding:14px 8px;text-align:center;">' +
+                      '<span style="font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:rgba(216,151,231,0.15);color:#d897e7;">Lv. ' + (entry.level || 1) + '</span>' +
+                    '</td>' +
+                    '<td style="padding:14px 8px;text-align:right;font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#d897e7;">' + (entry.xp || 0) + ' XP</td>' +
+                  '</tr>';
+                }).join('') +
+              '</tbody>' +
+            '</table>';
+          }
+
           var inner =
             '<div class="anim-fade">' +
               '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:18px;overflow:hidden;">' +
@@ -82,7 +120,7 @@
                 '</div>' +
                 '<div style="padding:24px;">' +
                   '<div id="panel-leaderboard">' + buildTable(top8) + '</div>' +
-                  '<div id="panel-ranking" style="display:none;">' + buildTable(top8) + '</div>' +
+                  '<div id="panel-ranking" style="display:none;">' + buildXpTable(xpLeaderboard) + '</div>' +
                 '</div>' +
               '</div>' +
             '</div>';
