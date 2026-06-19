@@ -31,7 +31,7 @@
   var W, H;
   var mouse = { x: -9999, y: -9999, active: false };
   var COLORS = ['255,255,255', '216,151,231', '112,207,255', '171,209,148', '255,203,138'];
-  var COUNT  = 180;
+  var COUNT  = 80;
   var stars  = [];
   var bursts = [];
   var shoots = [];
