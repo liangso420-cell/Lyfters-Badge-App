@@ -11,11 +11,11 @@
   var _i18nStrings = {
     es: {
       greeting: 'Hola',
-      events_btn: '🎪 Eventos',
+      events_btn: 'Eventos',
       no_event_title: 'Aún no estás en ningún evento',
       no_event_desc: 'Escanea el QR de un evento para unirte y empezar a coleccionar badges.',
       no_event_sub: 'O explora los eventos disponibles para encontrar uno que te interese.',
-      explore_events: '🎪 Explorar eventos',
+      explore_events: 'Explorar eventos',
       scan_qr: '📷 Escanear QR',
       active_event: 'Evento activo',
       your_progress: 'Tu progreso',
@@ -23,8 +23,8 @@
       my_badges: 'Mis badges',
       leaderboard: 'Clasificación',
       scan_first: '¡Escanea tu primer QR para empezar!',
-      prize_unlocked: '🎁 Premio desbloqueado',
-      complete_badges: '🎁 Completa los',
+      prize_unlocked: 'Premio desbloqueado',
+      complete_badges: 'Completa los',
       complete_badges2: 'badges para revelar el',
       surprise_prize: 'premio sorpresa',
       congrats: '¡Felicidades,',
@@ -58,9 +58,9 @@
       account_created: '¡Cuenta creada! 🎉',
       explore_events_title: 'Explorar eventos',
       recommended_for_you: '✨ Recomendados para ti',
-      all_events: '🎪 Todos los eventos',
+      all_events: 'Todos los eventos',
       no_events_available: 'No hay eventos disponibles por ahora.',
-      how_to_participate: '🔑 ¿Cómo participar?',
+      how_to_participate: '¿Cómo participar?',
       how_to_participate_desc: 'Escanea el QR del evento para unirte y empezar a coleccionar badges.',
       close: 'Cerrar',
       recommended_badge: '✨ Recomendado',
@@ -89,9 +89,9 @@
       admin_description_placeholder: 'Descripción del evento...',
       admin_start_date: 'Fecha inicio',
       admin_end_date: 'Fecha fin',
-      admin_prize: 'Premio sorpresa 🎁',
-      admin_location: 'Ubicación 📍',
-      admin_tags_title: '🏷️ Tags del evento',
+      admin_prize: 'Premio sorpresa',
+      admin_location: 'Ubicación',
+      admin_tags_title: 'Tags del evento',
       admin_tags_desc: 'Ayudan a recomendar este evento a usuarios interesados',
       admin_badges_title: '➕ Badges del evento',
       admin_badges_desc: 'Agrega los badges que los participantes podrán ganar',
@@ -105,7 +105,7 @@
       admin_save: 'Guardar',
       admin_saving: 'Guardando...',
       admin_cancel: 'Cancelar',
-      admin_access_qr: '🔑 QR de acceso al evento',
+      admin_access_qr: 'QR de acceso al evento',
       admin_access_qr_desc: 'Los usuarios escanean este QR para unirse al evento',
       admin_generate_qr: 'Generar QR de acceso',
       admin_generating: 'Generando...',
@@ -121,15 +121,15 @@
       admin_badges_redeemed: 'Badges canjeados',
       admin_progress_by_event: 'Progreso por evento',
       admin_leaderboard: 'Clasificación',
-      admin_stats_by_event: '📊 Estadísticas por evento',
+      admin_stats_by_event: 'Estadísticas por evento',
       admin_select_event: 'Selecciona un evento...',
       admin_loading_stats: 'Cargando estadísticas...',
       admin_active_participants: 'Participantes activos',
       admin_completed_event: 'Completaron evento',
       admin_completion_rate: 'Tasa completación',
-      admin_progress_dist: '📈 Distribución de progreso',
-      admin_completion: '✅ Finalización',
-      admin_top_badges: '🏆 Badges más obtenidos',
+      admin_progress_dist: 'Distribución de progreso',
+      admin_completion: 'Finalización',
+      admin_top_badges: 'Badges más obtenidos',
       admin_top_users: '👥 Top participantes',
       admin_activity: '⏰ Actividad por hora',
       admin_no_data: 'Sin datos',
@@ -140,7 +140,7 @@
       admin_prize_label: 'Premio',
       admin_inicio_label: 'Inicio',
       admin_fin_label: 'Fin',
-      admin_tags_label: '🏷️ Tags',
+      admin_tags_label: 'Tags',
       admin_add_badge_label: '➕ Agregar badge',
       admin_event_created: 'Evento "',
       admin_event_created2: '" creado',
@@ -149,7 +149,7 @@
       admin_badge_desc_placeholder: 'Descripción',
       admin_badge_emoji_placeholder: 'Emoji (ej: 🏅)',
       admin_redeem_count: 'canjes',
-      admin_added: '✅ Agregado',
+      admin_added: 'Agregado',
       redeem_loading: 'Canjeando badge…',
       redeem_already_have: '¡Ya tenías este badge!',
       redeem_already_desc: 'ya estaba en tu colección.',
@@ -173,11 +173,11 @@
     },
     en: {
       greeting: 'Hello',
-      events_btn: '🎪 Events',
+      events_btn: 'Events',
       no_event_title: "You're not in any event yet",
       no_event_desc: 'Scan an event QR to join and start collecting badges.',
       no_event_sub: 'Or explore available events to find one that interests you.',
-      explore_events: '🎪 Explore events',
+      explore_events: 'Explore events',
       scan_qr: '📷 Scan QR',
       active_event: 'Active event',
       your_progress: 'Your progress',
@@ -185,8 +185,8 @@
       my_badges: 'My badges',
       leaderboard: 'Leaderboard',
       scan_first: 'Scan your first QR to get started!',
-      prize_unlocked: '🎁 Prize unlocked',
-      complete_badges: '🎁 Complete',
+      prize_unlocked: 'Prize unlocked',
+      complete_badges: 'Complete',
       complete_badges2: 'badges to reveal the',
       surprise_prize: 'surprise prize',
       congrats: 'Congratulations,',
@@ -220,9 +220,9 @@
       account_created: 'Account created! 🎉',
       explore_events_title: 'Explore events',
       recommended_for_you: '✨ Recommended for you',
-      all_events: '🎪 All events',
+      all_events: 'All events',
       no_events_available: 'No events available right now.',
-      how_to_participate: '🔑 How to participate?',
+      how_to_participate: 'How to participate?',
       how_to_participate_desc: 'Scan the event QR to join and start collecting badges.',
       close: 'Close',
       recommended_badge: '✨ Recommended',
@@ -251,9 +251,9 @@
       admin_description_placeholder: 'Event description...',
       admin_start_date: 'Start date',
       admin_end_date: 'End date',
-      admin_prize: 'Surprise prize 🎁',
-      admin_location: 'Location 📍',
-      admin_tags_title: '🏷️ Event tags',
+      admin_prize: 'Surprise prize',
+      admin_location: 'Location',
+      admin_tags_title: 'Event tags',
       admin_tags_desc: 'Help recommend this event to interested users',
       admin_badges_title: '➕ Event badges',
       admin_badges_desc: 'Add the badges participants can earn',
@@ -267,7 +267,7 @@
       admin_save: 'Save',
       admin_saving: 'Saving...',
       admin_cancel: 'Cancel',
-      admin_access_qr: '🔑 Event access QR',
+      admin_access_qr: 'Event access QR',
       admin_access_qr_desc: 'Users scan this QR to join the event',
       admin_generate_qr: 'Generate access QR',
       admin_generating: 'Generating...',
@@ -283,15 +283,15 @@
       admin_badges_redeemed: 'Badges redeemed',
       admin_progress_by_event: 'Progress by event',
       admin_leaderboard: 'Leaderboard',
-      admin_stats_by_event: '📊 Statistics by event',
+      admin_stats_by_event: 'Statistics by event',
       admin_select_event: 'Select an event...',
       admin_loading_stats: 'Loading statistics...',
       admin_active_participants: 'Active participants',
       admin_completed_event: 'Completed event',
       admin_completion_rate: 'Completion rate',
-      admin_progress_dist: '📈 Progress distribution',
-      admin_completion: '✅ Completion',
-      admin_top_badges: '🏆 Most obtained badges',
+      admin_progress_dist: 'Progress distribution',
+      admin_completion: 'Completion',
+      admin_top_badges: 'Most obtained badges',
       admin_top_users: '👥 Top participants',
       admin_activity: '⏰ Activity by hour',
       admin_no_data: 'No data',
@@ -302,7 +302,7 @@
       admin_prize_label: 'Prize',
       admin_inicio_label: 'Start',
       admin_fin_label: 'End',
-      admin_tags_label: '🏷️ Tags',
+      admin_tags_label: 'Tags',
       admin_add_badge_label: '➕ Add badge',
       admin_event_created: 'Event "',
       admin_event_created2: '" created',
@@ -311,7 +311,7 @@
       admin_badge_desc_placeholder: 'Description',
       admin_badge_emoji_placeholder: 'Emoji (e.g. 🏅)',
       admin_redeem_count: 'redemptions',
-      admin_added: '✅ Added',
+      admin_added: 'Added',
       redeem_loading: 'Redeeming badge…',
       redeem_already_have: 'You already had this badge!',
       redeem_already_desc: 'was already in your collection.',
@@ -546,7 +546,7 @@
             '</button>' +
             '<div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.07);">' +
               '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2 mt-2" style="color:rgba(240,234,242,0.35);">Privacidad</p>' +
-              '<button id="drawer-privacy-btn" ' + dBtn + ' ' + dBtnHover + '>🔒 <span>Configuración de privacidad</span></button>' +
+              '<button id="drawer-privacy-btn" ' + dBtn + ' ' + dBtnHover + '><span>Configuración de privacidad</span></button>' +
             '</div>' +
             '<div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.07);">' +
               '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2 mt-2" style="color:rgba(240,234,242,0.35);">Apariencia</p>' +
@@ -618,7 +618,7 @@
                   '<div class="text-left"><p class="text-sm text-gray-700">Email</p><p class="text-xs text-gray-400">' + esc(p.email || '') + '</p></div><span class="text-gray-300">›</span>' +
                 '</button>' +
                 '<button id="acc-pw-btn" class="w-full flex items-center justify-between px-5 py-3.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">' +
-                  '<span>🔑 Contraseña</span><span class="text-gray-300">›</span>' +
+                  '<span>Contraseña</span><span class="text-gray-300">›</span>' +
                 '</button>' +
                 '<button id="acc-interests-btn" class="w-full flex items-center justify-between px-5 py-3.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">' +
                   '<div class="text-left"><p class="text-sm text-gray-700">🎯 Mis intereses</p><p class="text-xs text-gray-400">' + (p.interests && p.interests.length ? p.interests.slice(0,2).join(', ') + (p.interests.length > 2 ? '...' : '') : 'Sin configurar') + '</p></div><span class="text-gray-300">›</span>' +
@@ -726,7 +726,7 @@
             modalRoot.innerHTML =
               '<div class="fixed inset-0 z-50 flex items-center justify-center p-6 anim-fade" style="background:rgba(17,24,39,0.75);">' +
                 '<div class="bg-white rounded-card p-6 w-full max-w-sm shadow-soft anim-pop">' +
-                  '<p class="text-sm font-semibold text-gray-700 mb-3">🔑 Cambiar contraseña</p>' +
+                  '<p class="text-sm font-semibold text-gray-700 mb-3">Cambiar contraseña</p>' +
                   '<div class="space-y-3 mb-4">' +
                     '<input id="inline-pw-current" type="password" placeholder="Contraseña actual" class="w-full px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
                     '<input id="inline-pw-new" type="password" placeholder="Nueva contraseña (mín. 6)" class="w-full px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm" />' +
@@ -810,7 +810,7 @@
           nav.innerHTML =
             '<div class="px-5 py-4">' +
               '<button id="drawer-privacy-back" class="text-xs text-primary mb-4 flex items-center gap-1">← Volver</button>' +
-              '<p class="text-sm font-semibold text-gray-700 mb-4">🔒 Privacidad</p>' +
+              '<p class="text-sm font-semibold text-gray-700 mb-4">Privacidad</p>' +
               '<div class="space-y-4">' +
                 '<div class="flex items-center justify-between">' +
                   '<div><p class="text-sm text-gray-700">Aparecer en clasificación</p><p class="text-xs text-gray-400">Otros usuarios pueden verte en el ranking</p></div>' +
@@ -1088,8 +1088,8 @@
         '</div>' +
         '<div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#5a6172;font-weight:700;padding:6px 12px 10px;">Admin</div>' +
         '<nav style="display:flex;flex-direction:column;gap:4px;">' +
-          navItem('event',         '🎟️', 'Eventos',    'admin-event.html') +
-          navItem('participation', '📊', 'Dashboard',   'admin-participation.html') +
+          navItem('event',         '', 'Eventos',    'admin-event.html') +
+          navItem('participation', '', 'Dashboard',   'admin-participation.html') +
         '</nav>' +
         eventBlock +
         '<div style="margin-top:auto;padding-top:22px;">' +
@@ -1198,7 +1198,7 @@
     root.innerHTML =
       '<div id="ach-overlay" class="fixed inset-0 z-[70] flex items-center justify-center p-6 anim-fade" style="background:rgba(17,24,39,0.8);">' +
         '<div class="bg-white rounded-card p-8 text-center w-full max-w-xs shadow-soft anim-pop" style="border-top:5px solid ' + rs.color + ';">' +
-          '<p class="text-xs font-semibold uppercase tracking-wide mb-3" style="color:' + rs.color + ';">🏆 ¡Logro desbloqueado!</p>' +
+          '<p class="text-xs font-semibold uppercase tracking-wide mb-3" style="color:' + rs.color + ';">¡Logro desbloqueado!</p>' +
           '<div class="text-6xl mb-3" style="filter:drop-shadow(0 0 14px ' + rs.glow + ');">' + (a.icon || '🏅') + '</div>' +
           '<h3 class="text-lg font-bold text-gray-800">' + esc(a.name) + '</h3>' +
           '<p class="text-sm text-gray-500 mt-1">' + esc(a.description || '') + '</p>' +
@@ -1254,14 +1254,14 @@
       cells.push('<div class="rounded-card p-3 text-center" style="background:#1a1d24;border:1px solid rgba(255,255,255,0.06);" title="' + esc(a.hint || '') + '">' +
         '<div class="text-3xl opacity-25 grayscale">' + (a.icon || '🏅') + '</div>' +
         '<p class="text-xs mt-1" style="color:rgba(240,234,242,0.44);">' + esc(a.name) + '</p>' +
-        '<p class="text-\[10px\]" style="color:rgba(240,234,242,0.25);">🔒</p>' +
+        '<p class="text-\[10px\]" style="color:rgba(240,234,242,0.25);"></p>' +
       '</div>');
     });
     var count = (data.unlocked || []).length;
     var total = count + (data.locked || []).length;
     return '<div class="rounded-card p-5 mb-4" style="background:#1c1f27;border:1px solid rgba(255,255,255,0.07);box-shadow:0 4px 24px rgba(0,0,0,0.4);">' +
       '<div class="flex items-center justify-between mb-3">' +
-        '<h3 class="text-sm font-bold" style="color:#f0eaf2;">🏆 Logros</h3>' +
+        '<h3 class="text-sm font-bold" style="color:#f0eaf2;">Logros</h3>' +
         '<span class="text-xs" style="color:rgba(240,234,242,0.44);">' + count + '/' + total + '</span>' +
       '</div>' +
       '<div class="grid grid-cols-3 gap-2\.5">' + cells.join('') + '</div>' +
