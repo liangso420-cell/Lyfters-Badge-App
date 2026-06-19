@@ -464,6 +464,7 @@
               var name = nameInput ? nameInput.value.trim() : '';
               if (!name) { U.toast('Ingresa un nombre para el badge', 'error'); return; }
               ibAdd.disabled = true;
+              console.log('DEBUG badge data:', { name: name, icon_url: ibSelectedIcon, rarity: ibSelectedRarity });
               try {
                 await API.addBadge(eid, {
                   name: name,
