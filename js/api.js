@@ -830,10 +830,21 @@
     },
     async getAchievements() {
       var data = await apiRequest('GET', '/profile/achievements');
+      var IMG_BY_SLUG = {
+        primer_paso:    'assets/icons/achievements/primer-paso.png',
+        coleccionista:  'assets/icons/achievements/coleccionista.png',
+        vertigo:        'assets/icons/achievements/vertigo.png',
+        completista:    'assets/icons/achievements/perfeccionista.png',
+        perfeccionista: 'assets/icons/achievements/perfeccionista.png',
+        viajero:        'assets/icons/achievements/viajero.png',
+        veterano:       'assets/icons/achievements/veterano.png',
+        ojo_halcon:     'assets/icons/achievements/ojo-de-halcon.png',
+        leyenda:        'assets/icons/achievements/leyenda.png',
+      };
       function enrich(list) {
         return (list || []).map(function(a) {
-          var def = achDef(a.slug);
-          return (def && def.img) ? Object.assign({}, a, { img: def.img }) : a;
+          var img = IMG_BY_SLUG[a.slug];
+          return img ? Object.assign({}, a, { img: img }) : a;
         });
       }
       return { unlocked: enrich(data.unlocked), locked: enrich(data.locked) };
