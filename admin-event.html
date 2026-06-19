@@ -96,7 +96,7 @@
               (e.tags && e.tags.length
                 ? '<div style="width:100%;display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">' +
                     e.tags.map(function(tag) {
-                      return '<span style="font-size:10px;padding:2px 8px;border-radius:999px;border:1px solid #353a46;color:#8b93a3;font-family:Manrope,sans-serif;">' + U.esc(tag) + '</span>';
+                      return '<span data-tag="' + U.esc(tag) + '" style="font-size:10px;padding:2px 8px;border-radius:999px;border:1px solid #353a46;color:#8b93a3;font-family:Manrope,sans-serif;cursor:pointer;" title="Filtrar por este tag">' + U.esc(tag) + '</span>';
                     }).join('') +
                   '</div>'
                 : '') +
@@ -119,22 +119,34 @@
           U.hideLoading();
 
           // Buscador
-          var eventSearch = document.getElementById('event-search');
-          if (eventSearch) {
-            eventSearch.addEventListener('input', function() {
-              var q = eventSearch.value.trim().toLowerCase();
-              Array.prototype.forEach.call(document.querySelectorAll('#events-list > div'), function(card) {
-                if (!q) { card.style.display = ''; return; }
-                var nameEl = card.querySelector('p');
-                var name = nameEl ? nameEl.textContent.toLowerCase() : '';
-                var eid = card.querySelector('[data-enter]') ? card.querySelector('[data-enter]').getAttribute('data-enter') : null;
-                var eventData = eid ? events.find(function(e) { return e.id === eid; }) : null;
-                var tags = eventData ? (eventData.tags || []).join(' ').toLowerCase() : '';
-                var match = name.includes(q) || tags.includes(q);
-                card.style.display = match ? '' : 'none';
-              });
+          function applySearch(q) {
+            q = (q || '').trim().toLowerCase();
+            Array.prototype.forEach.call(document.querySelectorAll('#events-list > div'), function(card) {
+              if (!q) { card.style.display = ''; return; }
+              var nameEl = card.querySelector('p');
+              var name = nameEl ? nameEl.textContent.toLowerCase() : '';
+              var eid = card.querySelector('[data-enter]') ? card.querySelector('[data-enter]').getAttribute('data-enter') : null;
+              var eventData = eid ? events.find(function(e) { return e.id === eid; }) : null;
+              var eventTags = eventData ? (Array.isArray(eventData.tags) ? eventData.tags : []) : [];
+              var matchesTags = eventTags.some(function(t) { return t.toLowerCase().includes(q); });
+              card.style.display = (name.includes(q) || matchesTags) ? '' : 'none';
             });
           }
+
+          var eventSearch = document.getElementById('event-search');
+          if (eventSearch) {
+            eventSearch.addEventListener('input', function() { applySearch(eventSearch.value); });
+          }
+
+          // Chips de tags clicables
+          Array.prototype.forEach.call(document.querySelectorAll('#events-list [data-tag]'), function(chip) {
+            chip.addEventListener('click', function() {
+              if (eventSearch) {
+                eventSearch.value = chip.getAttribute('data-tag');
+                applySearch(eventSearch.value);
+              }
+            });
+          });
 
           // Botón New
           document.getElementById('btn-new-event').addEventListener('click', function() {
