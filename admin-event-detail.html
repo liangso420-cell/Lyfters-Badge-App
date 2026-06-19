@@ -123,10 +123,8 @@
                 var bname  = b.name || b.nombre || '';
                 var bdesc  = b.desc || b.descripcion || '';
                 var iconHtml = b.icon_url
-                  ? '<img src="' + U.esc(b.icon_url) + '" style="width:32px;height:32px;object-fit:contain;" />'
-                  : (b.emoji && b.emoji !== '🏅'
-                    ? '<span style="font-size:24px;">' + b.emoji + '</span>'
-                    : '<img src="assets/icons/ui/icono-badges-creados.png" style="width:32px;height:32px;object-fit:contain;" />');
+                  ? '<img src="' + U.esc(b.icon_url) + '" style="width:32px;height:32px;object-fit:contain;">'
+                  : '<img src="assets/icons/ui/icono-badges-creados.png" style="width:32px;height:32px;object-fit:contain;filter:brightness(0) invert(1);">';
                 var bxp    = b.xp_value != null ? b.xp_value : 10;
                 var bRarity = b.rarity || (b.is_rare ? 'rare' : 'normal');
                 var bBg = bRarity === 'ultra_rare' ? 'rgba(234,179,8,0.1)' : bRarity === 'rare' ? 'rgba(34,197,94,0.1)' : '#20242d';

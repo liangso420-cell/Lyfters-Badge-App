@@ -122,6 +122,7 @@ def fmt_admin_badge(doc, canjeados=0, base_url=""):
     return {
         "id":          str(doc["_id"]),
         "icon":        doc.get("icon", "🏅"),
+        "icon_url":    doc.get("icon_url", None),
         "nombre":      doc.get("name", ""),
         "descripcion": doc.get("description", ""),
         "token":       token,

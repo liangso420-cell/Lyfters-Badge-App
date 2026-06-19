@@ -350,6 +350,7 @@ def create_badge(event_id):
     nombre      = sanitize(data.get("nombre")      or data.get("name")        or "", max_len=100)
     descripcion = sanitize(data.get("descripcion") or data.get("description") or "", max_len=500)
     icon        = sanitize(data.get("icon") or "🏅", max_len=10)
+    icon_url    = data.get("icon_url") or None
 
     if not nombre:
         return jsonify(error="El nombre del badge es requerido"), 400
@@ -371,6 +372,7 @@ def create_badge(event_id):
             "name":        nombre,
             "description": descripcion,
             "icon":        icon,
+            "icon_url":    icon_url,
             "token":       token,
             "qr_base64":   qr_b64,
             "xp_value":    xp_value if xp_value is not None else 10,
@@ -384,6 +386,7 @@ def create_badge(event_id):
     return jsonify({
         "id":          str(new_badge["_id"]),
         "icon":        new_badge.get("icon", "🏅"),
+        "icon_url":    new_badge.get("icon_url", None),
         "nombre":      new_badge.get("name", ""),
         "descripcion": new_badge.get("description", ""),
         "token":       new_badge.get("token", ""),

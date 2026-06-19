@@ -324,11 +324,11 @@
     },
     async addBadge(eventId, data) {
       var e = mockEvent(eventId); if (!e) throw new Error('Evento no encontrado');
-      var b = { id: uid('b'), emoji: data.emoji || '🏅', name: data.name.trim(),
+      var b = { id: uid('b'), emoji: data.emoji || '🏅', icon_url: data.icon_url || null, name: data.name.trim(),
         desc: (data.desc || '').trim() || 'Sin descripción', token: genToken(), redemptions: 0,
         xp_value: data.xp_value != null ? data.xp_value : 10, is_rare: !!data.is_rare };
       e.badges.push(b); persist();
-      return { id: b.id, emoji: b.emoji, name: b.name, desc: b.desc, token: b.token, redeemUrl: null, redeemed: 0, qrImage: null,
+      return { id: b.id, emoji: b.emoji, icon_url: b.icon_url, name: b.name, desc: b.desc, token: b.token, redeemUrl: null, redeemed: 0, qrImage: null,
         xp_value: b.xp_value, is_rare: b.is_rare };
     },
     async listAdminBadges(eventId) {
@@ -336,7 +336,7 @@
       return {
         event: { id: e.id, name: e.name, totalParticipants: e.totalParticipants, access_qr: e.access_qr || null, photo: e.photo || null },
         badges: e.badges.map(function (b) {
-          return { id: b.id, emoji: b.emoji, name: b.name, desc: b.desc, token: b.token,
+          return { id: b.id, emoji: b.emoji, icon_url: b.icon_url || null, name: b.name, desc: b.desc, token: b.token,
             redeemUrl: APP_BASE + 'redeem.html?event=' + e.id + '&token=' + b.token,
             redeemed: b.redemptions || 0, qrImage: null,
             xp_value: b.xp_value != null ? b.xp_value : 10, is_rare: !!b.is_rare };
@@ -717,8 +717,9 @@
       var body = { nombre: data.name, descripcion: data.desc, icon: data.emoji || '🏅' };
       if (data.xp_value != null) body.xp_value = data.xp_value;
       if (data.is_rare != null)  body.is_rare = data.is_rare;
+      if (data.icon_url)         body.icon_url = data.icon_url;
       var d = await apiRequest('POST', '/admin/events/' + eventId + '/badge', body);
-      return { id: d.id, emoji: d.icon || '🏅', name: d.nombre, desc: d.descripcion,
+      return { id: d.id, emoji: d.icon || '🏅', icon_url: d.icon_url || null, name: d.nombre, desc: d.descripcion,
         token: d.token, redeemUrl: null, redeemed: 0, qrImage: d.qr_image || null,
         xp_value: d.xp_value, is_rare: d.is_rare };
     },
@@ -727,7 +728,7 @@
       return {
         event: { id: d.evento.id, name: d.evento.nombre, totalParticipants: undefined, access_qr: d.evento.access_qr || null, photo: d.evento.photo || null },
         badges: (d.badges || []).map(function (b) {
-          return { id: b.id, emoji: b.icon || '🏅', name: b.nombre, desc: b.descripcion,
+          return { id: b.id, emoji: b.icon || '🏅', icon_url: b.icon_url || null, name: b.nombre, desc: b.descripcion,
             token: b.token, redeemUrl: b.redeem_url || (APP_BASE + 'redeem.html?event=' + d.evento.id + '&token=' + b.token),
             redeemed: b.canjeados || 0, qrImage: b.qr_image || null,
             xp_value: b.xp_value != null ? b.xp_value : 10, is_rare: !!b.is_rare };
