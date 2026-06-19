@@ -16,7 +16,7 @@
       no_event_desc: 'Escanea el QR de un evento para unirte y empezar a coleccionar badges.',
       no_event_sub: 'O explora los eventos disponibles para encontrar uno que te interese.',
       explore_events: 'Explorar eventos',
-      scan_qr: '📷 Escanear QR',
+      scan_qr: 'Escanear QR',
       active_event: 'Evento activo',
       your_progress: 'Tu progreso',
       badges_of: 'badges obtenidos',
@@ -178,7 +178,7 @@
       no_event_desc: 'Scan an event QR to join and start collecting badges.',
       no_event_sub: 'Or explore available events to find one that interests you.',
       explore_events: 'Explore events',
-      scan_qr: '📷 Scan QR',
+      scan_qr: 'Scan QR',
       active_event: 'Active event',
       your_progress: 'Your progress',
       badges_of: 'badges obtained',
@@ -521,7 +521,7 @@
     var root = document.getElementById('modal-root');
     var avatarHtml = avatarUrl
       ? '<img src="' + avatarUrl + '" class="w-16 h-16 rounded-full object-cover" style="border:2px solid rgba(216,151,231,0.5);" />'
-      : '<div class="w-16 h-16 rounded-full flex items-center justify-center text-3xl" style="background:rgba(216,151,231,0.15);">👤</div>';
+      : '<div class="w-16 h-16 rounded-full flex items-center justify-center" style="background:rgba(216,151,231,0.15);"><img src="assets/icons/ui/icono-perfil.png" alt="perfil" style="width:32px;height:32px;object-fit:contain;vertical-align:middle;" /></div>';
     var dBtn = 'style="background:transparent;border:none;width:100%;display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1.25rem;font-size:0.875rem;color:rgba(240,234,242,0.75);text-align:left;cursor:pointer;transition:background 0.15s;"';
     var dBtnHover = 'onmouseover="this.style.background=\'rgba(255,255,255,0.04)\'" onmouseout="this.style.background=\'transparent\'"';
 
@@ -539,7 +539,7 @@
             '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2" style="color:rgba(240,234,242,0.35);">Configuración</p>' +
             '<button id="drawer-account-btn" ' + dBtn + ' ' + dBtnHover + ' style="background:transparent;border:none;width:100%;display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1.25rem;font-size:0.875rem;color:rgba(240,234,242,0.75);cursor:pointer;">' +
               '<div class="flex items-center gap-3">' +
-                (avatarUrl ? '<img src="' + avatarUrl + '" class="w-8 h-8 rounded-full object-cover" />' : '<div class="w-8 h-8 rounded-full flex items-center justify-center text-sm" style="background:rgba(216,151,231,0.15);">👤</div>') +
+                (avatarUrl ? '<img src="' + avatarUrl + '" class="w-8 h-8 rounded-full object-cover" />' : '<div class="w-8 h-8 rounded-full flex items-center justify-center" style="background:rgba(216,151,231,0.15);"><img src="assets/icons/ui/icono-perfil.png" alt="perfil" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;" /></div>') +
                 '<span>Centro de cuenta</span>' +
               '</div>' +
               '<span style="color:rgba(240,234,242,0.25);">›</span>' +
@@ -550,16 +550,16 @@
             '</div>' +
             '<div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.07);">' +
               '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2 mt-2" style="color:rgba(240,234,242,0.35);">Apariencia</p>' +
-              '<button id="drawer-lang-btn" ' + dBtn + ' ' + dBtnHover + '>🌐 <span>Idioma</span></button>' +
+              '<button id="drawer-lang-btn" ' + dBtn + ' ' + dBtnHover + '><img src="assets/icons/ui/icono-traduccion.png" alt="idioma" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;" /> <span>Idioma</span></button>' +
             '</div>' +
             '<div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.07);">' +
               '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2 mt-2" style="color:rgba(240,234,242,0.35);">Información</p>' +
-              '<button id="drawer-about-btn" ' + dBtn + ' ' + dBtnHover + '>ℹ️ <span>Acerca de la app</span></button>' +
+              '<button id="drawer-about-btn" ' + dBtn + ' ' + dBtnHover + '><img src="assets/icons/ui/icono-acerca.png" alt="acerca" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;" /> <span>Acerca de la app</span></button>' +
             '</div>' +
             (isAdmin
               ? '<div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.07);">' +
                   '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2 mt-2" style="color:rgba(240,234,242,0.35);">Administración</p>' +
-                  '<button id="drawer-users-btn" ' + dBtn + ' ' + dBtnHover + '>👥 <span>Gestionar usuarios</span></button>' +
+                  '<button id="drawer-users-btn" ' + dBtn + ' ' + dBtnHover + '><img src="assets/icons/ui/icono-usuarios.png" alt="usuarios" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;" /> <span>Gestionar usuarios</span></button>' +
                 '</div>'
               : '') +
             '<div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.07);">' +
@@ -595,7 +595,7 @@
         window.LyfterAPI.getProfile().then(function(p) {
           var avatarEl = p.avatar
             ? '<img src="' + p.avatar + '" class="w-20 h-20 rounded-full object-cover border-2 border-gray-100 cursor-pointer" id="account-avatar-img" />'
-            : '<div class="w-20 h-20 rounded-full bg-primary-soft flex items-center justify-center text-4xl cursor-pointer" id="account-avatar-img">👤</div>';
+            : '<div class="w-20 h-20 rounded-full bg-primary-soft flex items-center justify-center cursor-pointer" id="account-avatar-img"><img src="assets/icons/ui/icono-perfil.png" alt="perfil" style="width:40px;height:40px;object-fit:contain;vertical-align:middle;" /></div>';
 
           nav.innerHTML =
             '<div class="py-4">' +
@@ -870,7 +870,7 @@
         nav.innerHTML =
           '<div class="px-5 py-4">' +
             '<button id="drawer-lang-back" class="text-xs text-primary mb-4 flex items-center gap-1">← Volver</button>' +
-            '<p class="text-sm font-semibold text-gray-700 mb-3">🌐 Idioma</p>' +
+            '<p class="text-sm font-semibold text-gray-700 mb-3">Idioma</p>' +
             '<div class="space-y-1">' +
               Object.keys(LANGUAGES).map(function(code) {
                 var isSelected = currentLang === code;

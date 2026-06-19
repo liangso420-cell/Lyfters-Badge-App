@@ -79,7 +79,7 @@
               '</div>' +
               '<div style="padding:14px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
                 '<span style="font-size:12px;color:#8b93a3;font-family:Manrope,sans-serif;display:inline-flex;align-items:center;gap:4px;"><img src="assets/icons/ui/icono-calendario-blanco.png" alt="" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;display:inline-block;" />' + fmtDate(e.start) + (e.end ? ' — ' + fmtDate(e.end) : '') + '</span>' +
-                (e.prize ? '<span style="font-size:12px;color:#8b93a3;font-family:Manrope,sans-serif;">🎁 ' + U.esc(e.prize) + '</span>' : '') +
+                (e.prize ? '<span style="font-size:12px;color:#8b93a3;font-family:Manrope,sans-serif;">' + U.esc(e.prize) + '</span>' : '') +
                 '<div style="margin-left:auto;display:flex;gap:8px;align-items:center;">' +
                   '<select data-status-sel="' + e.id + '" class="status-sel" style="height:32px;padding:0 8px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-size:12px;outline:none;cursor:pointer;">' +
                     Object.keys(STATUS_MAP).map(function(k) {
