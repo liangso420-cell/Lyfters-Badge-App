@@ -1101,8 +1101,7 @@
         '</nav>' +
         eventBlock +
         '<div style="margin-top:auto;padding-top:22px;">' +
-          '<button id="admin-profile-menu" style="width:100%;height:44px;border-radius:12px;border:1px solid #353a46;background:transparent;color:#aab1bf;font-family:Poppins,sans-serif;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;">☰ Mi perfil</button>' +
-          '<button id="admin-logout" style="width:100%;height:44px;border-radius:12px;border:1px solid #353a46;background:transparent;color:#aab1bf;font-family:Poppins,sans-serif;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">↩ Salir</button>' +
+          '<button id="admin-profile-menu" style="width:100%;height:44px;border-radius:12px;border:1px solid #353a46;background:transparent;color:#aab1bf;font-family:Poppins,sans-serif;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">☰ Mi perfil</button>' +
         '</div>' +
       '</aside>';
 
@@ -1134,8 +1133,6 @@
         }
       });
     }
-    var out = document.getElementById('admin-logout');
-    if (out) out.addEventListener('click', logout);
   }
 
   /* ── XP & Logros: feedback visual ── */
