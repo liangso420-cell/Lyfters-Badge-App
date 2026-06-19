@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mis Eventos — Lyfter Badge App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <main id="app"></main>
+  <div id="modal-root"></div>
+  <div id="toast-root" class="fixed top-4 left-1/2 -translate-x-1/2 z-[60] flex flex-col gap-2 items-center pointer-events-none"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      var API = window.LyfterAPI;
+      var U   = window.LyfterUtils;
+
+      var user = API.currentUser();
+      if (!user) { window.location.replace('login.html?next=' + encodeURIComponent(window.location.pathname + window.location.search)); return; }
+      if (user.role === 'admin') { window.location.replace('admin-event.html'); return; }
+
+      var app = document.getElementById('app');
+      app.innerHTML = U.loadingHtml();
+
+      function fmtDate(iso) {
+        if (!iso) return '';
+        try { return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }); }
+        catch(e) { return ''; }
+      }
+
+      function navHtml() {
+        return '<div style="display:flex;gap:4px;margin-bottom:24px;background:#1c1f27;border:1px solid #2f343f;border-radius:12px;padding:4px;">' +
+          '<a href="profile.html" style="flex:1;padding:8px 4px;border-radius:8px;text-decoration:none;text-align:center;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;background:transparent;color:#8b93a3;">Explorar</a>' +
+          '<a href="user-events.html" style="flex:1;padding:8px 4px;border-radius:8px;text-decoration:none;text-align:center;font-family:Manrope,sans-serif;font-size:12px;font-weight:700;background:linear-gradient(135deg,rgba(216,151,231,0.3),rgba(230,138,141,0.2));color:#f4f6f9;">Mis Eventos</a>' +
+          '<a href="scan.html" style="flex:1;padding:8px 4px;border-radius:8px;text-decoration:none;text-align:center;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;background:transparent;color:#8b93a3;">Escanear</a>' +
+          '<a href="user-achievements.html" style="flex:1;padding:8px 4px;border-radius:8px;text-decoration:none;text-align:center;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;background:transparent;color:#8b93a3;">Logros</a>' +
+          '<a href="user-ranking.html" style="flex:1;padding:8px 4px;border-radius:8px;text-decoration:none;text-align:center;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;background:transparent;color:#8b93a3;">Ranking</a>' +
+        '</div>';
+      }
+
+      async function init() {
+        try {
+          var profile = await API.getProfile();
+          var events  = await API.getJoinedEvents();
+
+          var avatarHtml = profile.avatar
+            ? '<img src="' + U.esc(profile.avatar) + '" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid rgba(216,151,231,0.5);">'
+            : '<img src="assets/icons/ui/icono-perfil.png" style="width:40px;height:40px;border-radius:50%;object-fit:contain;background:#2e323d;padding:6px;">';
+
+          var detailsHtml = '';
+          if (!events.length) {
+            detailsHtml =
+              '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:16px;padding:40px 20px;text-align:center;">' +
+                '<img src="assets/icons/ui/icono-evento.png" style="width:48px;height:48px;object-fit:contain;opacity:0.3;margin-bottom:12px;">' +
+                '<p style="font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#f4f6f9;margin:0 0 8px;">Aún no te has unido a ningún evento</p>' +
+                '<p style="font-family:Manrope,sans-serif;font-size:13px;color:#8b93a3;margin:0 0 20px;">Explora los eventos disponibles y escanea un QR para participar.</p>' +
+                '<a href="profile.html" style="display:inline-block;padding:12px 24px;border-radius:12px;background:linear-gradient(135deg,#d897e7,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;text-decoration:none;">Explorar eventos</a>' +
+              '</div>';
+          } else {
+            var cards = await Promise.all(events.map(async function(ev) {
+              var detail = await API.getEventDetail(ev.id).catch(function() { return { total: 0, obtained: 0, badges: [], complete: false }; });
+              var total = detail.total || 0;
+              var done  = detail.obtained || detail.doneCount || 0;
+              var pct   = total ? Math.round((done / total) * 100) : 0;
+
+              var statusColors = { upcoming: '#3b82f6', open: '#16a34a', ongoing: '#6C63FF', closed: '#d97706', postponed: '#9333ea' };
+              var statusLabels = { upcoming: 'Próximo', open: 'Abierto', ongoing: 'En curso', closed: 'Registro cerrado', postponed: 'Pospuesto' };
+              var statusColor = statusColors[ev.status] || '#6C63FF';
+              var statusLabel = statusLabels[ev.status] || (ev.status || '');
+
+              var badgesHtml = (detail.badges || []).slice(0, 6).map(function(b) {
+                var iconHtml = b.icon_url
+                  ? '<img src="' + U.esc(b.icon_url) + '" style="width:28px;height:28px;object-fit:contain;">'
+                  : '<img src="assets/icons/ui/icono-badges-creados.png" style="width:28px;height:28px;object-fit:contain;filter:brightness(0) invert(1);opacity:0.6;">';
+                return '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;opacity:' + (b.obtained ? '1' : '0.35') + ';">' +
+                  iconHtml +
+                  (b.obtained ? '<span style="font-size:9px;color:#16a34a;font-weight:700;">✓</span>' : '<span style="font-size:9px;color:#8b93a3;">-</span>') +
+                '</div>';
+              }).join('');
+
+              var completeBadge = detail.complete
+                ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:rgba(22,163,74,0.2);color:#16a34a;">Completado</span>'
+                : '';
+
+              var photoTop = ev.photo
+                ? '<div style="height:120px;overflow:hidden;border-radius:16px 16px 0 0;"><img src="' + U.esc(ev.photo) + '" style="width:100%;height:100%;object-fit:cover;"></div>'
+                : '<div style="height:120px;border-radius:16px 16px 0 0;background:linear-gradient(120deg,#d897e7,#e68a8d,#ffcb8a);display:flex;align-items:center;justify-content:center;"><img src="assets/icons/ui/icono-evento.png" style="width:40px;height:40px;object-fit:contain;filter:brightness(0) invert(1);opacity:0.7;"></div>';
+
+              return '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:16px;overflow:hidden;margin-bottom:16px;">' +
+                photoTop +
+                '<div style="padding:16px;">' +
+                  '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
+                    '<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;color:white;background:' + statusColor + ';">' + statusLabel + '</span>' +
+                    completeBadge +
+                  '</div>' +
+                  '<h3 style="font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#f4f6f9;margin:0 0 4px;">' + U.esc(ev.name) + '</h3>' +
+                  '<p style="font-family:Manrope,sans-serif;font-size:12px;color:#8b93a3;margin:0 0 14px;">📅 ' + fmtDate(ev.start) + (ev.end ? ' — ' + fmtDate(ev.end) : '') + '</p>' +
+                  '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">' +
+                    '<span style="font-family:Manrope,sans-serif;font-size:13px;font-weight:600;color:#f4f6f9;">Tu progreso</span>' +
+                    '<span style="font-family:Poppins,sans-serif;font-size:13px;font-weight:700;color:#d897e7;">' + pct + '%</span>' +
+                  '</div>' +
+                  '<div style="width:100%;height:8px;background:#2e323d;border-radius:999px;overflow:hidden;margin-bottom:6px;">' +
+                    '<div style="height:8px;border-radius:999px;background:linear-gradient(90deg,#d897e7,#e68a8d);width:' + pct + '%;transition:width .7s;"></div>' +
+                  '</div>' +
+                  '<p style="font-family:Manrope,sans-serif;font-size:11px;color:#8b93a3;margin:0 0 14px;">' + done + ' de ' + total + ' badges obtenidos</p>' +
+                  (badgesHtml ? '<div style="display:flex;gap:12px;flex-wrap:wrap;">' + badgesHtml + '</div>' : '') +
+                '</div>' +
+              '</div>';
+            }));
+            detailsHtml = cards.join('');
+          }
+
+          var inner =
+            '<div style="min-height:100vh;background:#13151b;padding:20px 16px 40px;">' +
+              '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">' +
+                '<h2 style="font-family:Poppins,sans-serif;font-size:22px;font-weight:700;color:#f4f6f9;margin:0;">Mis Eventos</h2>' +
+                '<button id="profile-menu-btn" style="background:transparent;border:none;cursor:pointer;padding:0;">' + avatarHtml + '</button>' +
+              '</div>' +
+              navHtml() +
+              detailsHtml +
+            '</div>';
+
+          app.innerHTML = inner;
+
+          document.getElementById('profile-menu-btn').addEventListener('click', async function() {
+            try {
+              var p = await API.getProfile();
+              U.showDrawer(p.avatar, p.nombre, null, false);
+            } catch(e) { U.showDrawer(null, null, null, false); }
+          });
+
+        } catch(err) {
+          app.innerHTML = U.errorHtml(err && err.message ? err.message : 'Error inesperado');
+          var retry = document.getElementById('err-retry');
+          if (retry) retry.addEventListener('click', init);
+        }
+        window.scrollTo(0, 0);
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>
