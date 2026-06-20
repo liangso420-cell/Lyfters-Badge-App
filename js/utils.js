@@ -1144,7 +1144,7 @@
     var eventBlock = '';
 
     var sidebar =
-      '<aside style="position:fixed;top:0;left:0;bottom:0;width:248px;background:#1a1d24;border-right:1px solid #262a33;display:flex;flex-direction:column;padding:26px 18px;z-index:20;overflow-y:auto;">' +
+      '<aside id="admin-sidebar" style="position:fixed;top:0;left:0;bottom:0;width:248px;background:#1a1d24;border-right:1px solid #262a33;display:flex;flex-direction:column;padding:26px 18px;z-index:20;overflow-y:auto;">' +
         '<div style="display:flex;align-items:center;gap:10px;padding:0 8px 26px;">' +
           '<img src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" style="width:28px;height:28px;object-fit:contain;border-radius:6px;vertical-align:middle;display:inline-block;" />' +
           '<span style="font-family:Poppins,sans-serif;font-size:20px;font-weight:700;color:#f4f6f9;letter-spacing:-0.01em;">Lyfter</span>' +
@@ -1166,7 +1166,7 @@
       '<div style="position:fixed;top:-200px;right:-120px;width:900px;height:620px;pointer-events:none;z-index:0;background:radial-gradient(44% 60% at 30% 30%,rgba(216,151,231,0.16),transparent 70%),radial-gradient(44% 60% at 76% 40%,rgba(112,207,255,0.12),transparent 70%);"></div>';
 
     var main =
-      '<main style="margin-left:248px;min-height:100vh;position:relative;z-index:1;padding:34px 44px 70px;background:#15171d;">' +
+      '<main id="admin-main" style="margin-left:248px;min-height:100vh;position:relative;z-index:1;padding:34px 44px 70px;background:#15171d;">' +
         innerHtml +
       '</main>';
 
@@ -1261,7 +1261,7 @@
       '<div id="ach-overlay" class="fixed inset-0 z-[70] flex items-center justify-center p-6 anim-fade" style="background:rgba(17,24,39,0.8);">' +
         '<div class="bg-white rounded-card p-8 text-center w-full max-w-xs shadow-soft anim-pop" style="border-top:5px solid ' + rs.color + ';">' +
           '<p class="text-xs font-semibold uppercase tracking-wide mb-3" style="color:' + rs.color + ';">¡Logro desbloqueado!</p>' +
-          '<div class="text-6xl mb-3" style="filter:drop-shadow(0 0 14px ' + rs.glow + ');">' + (a.icon || '🏅') + '</div>' +
+          '<div class="mb-3" style="filter:drop-shadow(0 0 14px ' + rs.glow + ');"><img src="' + (a.icon || 'assets/icons/achievements/primer-paso.png') + '" style="width:80px;height:80px;object-fit:contain;" /></div>' +
           '<h3 class="text-lg font-bold text-gray-800">' + esc(a.name) + '</h3>' +
           '<p class="text-sm text-gray-500 mt-1">' + esc(a.description || '') + '</p>' +
           '<span class="inline-block mt-3 px-3 py-1 rounded-full text-xs font-bold text-white" style="background:' + rs.color + ';">' + rs.label + ' · +' + (a.xp_reward || 0) + ' XP</span>' +
@@ -1306,7 +1306,7 @@
     (data.unlocked || []).forEach(function (a) {
       var rs = RARITY_STYLES[a.rarity] || RARITY_STYLES.common;
       cells.push('<div class="rounded-card p-3 text-center" style="background:#21242d;border:1px solid ' + rs.color + '44;box-shadow:0 2px 10px ' + rs.glow + ';">' +
-        '<div class="text-3xl">' + (a.icon || '🏅') + '</div>' +
+        '<div><img src="' + (a.icon || 'assets/icons/achievements/primer-paso.png') + '" style="width:48px;height:48px;object-fit:contain;" /></div>' +
         '<p class="text-xs font-semibold mt-1" style="color:#f0eaf2;">' + esc(a.name) + '</p>' +
         '<p class="text-\[10px\] mt-0\.5" style="color:' + rs.color + ';">' + rs.label + '</p>' +
         (a.unlocked_at ? '<p class="text-\[10px\]" style="color:rgba(240,234,242,0.35);">' + fmtDate(a.unlocked_at) + '</p>' : '') +
@@ -1314,7 +1314,7 @@
     });
     (data.locked || []).forEach(function (a) {
       cells.push('<div class="rounded-card p-3 text-center" style="background:#1a1d24;border:1px solid rgba(255,255,255,0.06);" title="' + esc(a.hint || '') + '">' +
-        '<div class="text-3xl opacity-25 grayscale">' + (a.icon || '🏅') + '</div>' +
+        '<div style="opacity:0.25;filter:grayscale(1);"><img src="' + (a.icon || 'assets/icons/achievements/primer-paso.png') + '" style="width:48px;height:48px;object-fit:contain;" /></div>' +
         '<p class="text-xs mt-1" style="color:rgba(240,234,242,0.44);">' + esc(a.name) + '</p>' +
         '<p class="text-\[10px\]" style="color:rgba(240,234,242,0.25);"></p>' +
       '</div>');

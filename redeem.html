@@ -79,7 +79,9 @@
         var isDup  = r.status === 'duplicate';
         var isLast = r.complete && !isDup;
         var badge  = r.badge || {};
-        var icon   = badge.emoji || '🏅';
+        var icon = badge.icon_url
+          ? '<img src="' + badge.icon_url + '" style="width:80px;height:80px;object-fit:contain;">'
+          : (badge.emoji || '🏅');
         var user   = API.currentUser() || {};
         var userName = user.name ? user.name.split(' ')[0] : '';
 
