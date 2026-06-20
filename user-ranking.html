@@ -123,7 +123,7 @@
               '<thead><tr style="border-bottom:1px solid #2f343f;">' +
                 '<th style="padding:12px 8px;text-align:left;font-family:Manrope,sans-serif;font-size:11px;font-weight:700;color:#8b93a3;">#</th>' +
                 '<th style="padding:12px 8px;text-align:left;font-family:Manrope,sans-serif;font-size:11px;font-weight:700;color:#8b93a3;">Usuario</th>' +
-                '<th style="padding:12px 8px;text-align:center;font-family:Manrope,sans-serif;font-size:11px;font-weight:700;color:#8b93a3;">Nivel</th>' +
+                '<th style="padding:12px 8px;text-align:center;font-family:Manrope,sans-serif;font-size:11px;font-weight:700;color:#8b93a3;width:64px;">Nivel</th>' +
                 '<th style="padding:12px 8px;text-align:right;font-family:Manrope,sans-serif;font-size:11px;font-weight:700;color:#8b93a3;">XP Total</th>' +
               '</tr></thead><tbody>' +
               data.map(function(entry, i) {
@@ -139,7 +139,7 @@
                     '<p style="font-family:Poppins,sans-serif;font-size:14px;font-weight:600;color:#f4f6f9;margin:0;">' + U.esc(entry.nombre) + (isMe ? ' <span style="font-size:11px;color:#d897e7;">(tú)</span>' : '') + '</p>' +
                   '</div></td>' +
                   '<td style="padding:14px 8px;text-align:center;">' +
-                    '<span style="font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:rgba(216,151,231,0.15);color:#d897e7;">Lv. ' + (entry.level || 1) + '</span>' +
+                    '<span style="display:inline-block;font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:rgba(216,151,231,0.15);color:#d897e7;white-space:nowrap;min-width:44px;text-align:center;">Lv.' + (entry.level || 1) + '</span>' +
                   '</td>' +
                   '<td style="padding:14px 8px;text-align:right;font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#d897e7;">' + (entry.xp || 0) + ' XP</td>' +
                 '</tr>';
@@ -159,7 +159,7 @@
                 '<button id="tab-leaderboard" style="flex:1;padding:16px;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;border:none;cursor:pointer;background:linear-gradient(90deg,rgba(216,151,231,0.18),rgba(230,138,141,0.10));color:#f4f6f9;border-bottom:2px solid #d897e7;">Leaderboard</button>' +
                 '<button id="tab-ranking" style="flex:1;padding:16px;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;border:none;cursor:pointer;background:transparent;color:#8b93a3;border-bottom:2px solid transparent;">Ranking Global</button>' +
               '</div>' +
-              '<div style="padding:20px;">' +
+              '<div style="padding:20px;overflow-x:auto;-webkit-overflow-scrolling:touch;">' +
                 '<div id="panel-leaderboard">' + buildBadgeTable(top8) + '</div>' +
                 '<div id="panel-ranking" style="display:none;">' + buildXpTable(top8xp) + '</div>' +
               '</div>' +
