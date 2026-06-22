@@ -1160,8 +1160,8 @@
     var sidebar =
       '<aside id="admin-sidebar" style="position:fixed;top:0;left:0;bottom:0;width:248px;background:#1a1d24;border-right:1px solid #262a33;display:flex;flex-direction:column;padding:26px 18px;z-index:20;overflow-y:auto;">' +
         '<div style="display:flex;align-items:center;gap:10px;padding:0 8px 26px;">' +
-          '<img src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" style="width:28px;height:28px;object-fit:contain;border-radius:6px;vertical-align:middle;display:inline-block;" />' +
-          '<span style="font-family:Poppins,sans-serif;font-size:20px;font-weight:700;color:#f4f6f9;letter-spacing:-0.01em;">Lyfter</span>' +
+          '<img id="admin-sidebar-logo" src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" style="width:28px;height:28px;object-fit:contain;border-radius:6px;vertical-align:middle;display:inline-block;transition:opacity .2s;" />' +
+          '<span id="admin-sidebar-ws-name" style="font-family:Poppins,sans-serif;font-size:20px;font-weight:700;color:#f4f6f9;letter-spacing:-0.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px;">Lyfter</span>' +
         '</div>' +
         '<a href="landing.html" style="display:block;font-size:12px;color:#8b93a3;text-decoration:none;padding:4px 8px;border-radius:8px;margin-bottom:12px;transition:color .15s;" onmouseover="this.style.color=\'#d897e7\'" onmouseout="this.style.color=\'#8b93a3\'">← Inicio</a>' +
         '<div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#5a6172;font-weight:700;padding:6px 12px 10px;">Admin</div>' +
@@ -1212,6 +1212,31 @@
         }
       });
     }
+
+    // Async: update sidebar logo + name with current workspace branding
+    (async function() {
+      try {
+        var res = await fetch(window.LyfterAPI.base + '/workspaces/mine', {
+          headers: window.LyfterAPI.authHeaders()
+        });
+        if (!res.ok) return;
+        var ws = await res.json();
+        var logoEl = document.getElementById('admin-sidebar-logo');
+        var nameEl = document.getElementById('admin-sidebar-ws-name');
+        if (ws && ws.logo_url && logoEl) {
+          logoEl.style.opacity = '0';
+          logoEl.onload = function() { logoEl.style.opacity = '1'; };
+          logoEl.src = ws.logo_url;
+          logoEl.style.borderRadius = '0';
+          logoEl.style.width  = 'auto';
+          logoEl.style.height = '32px';
+          logoEl.style.maxWidth = '44px';
+        }
+        if (ws && ws.name && nameEl) {
+          nameEl.textContent = ws.name;
+        }
+      } catch(e) {}
+    })();
   }
 
   /* ── XP & Logros: feedback visual ── */

@@ -208,7 +208,7 @@
 
     function joinSectionHtml() {
       return '<div class="ws-join-section">' +
-        '<div class="ws-join-title">🔑 Unirse con código de invitación</div>' +
+        '<div class="ws-join-title" style="display:flex;align-items:center;gap:8px;"><img src="assets/icons/ui/icono-candado.png" style="width:15px;height:15px;object-fit:contain;opacity:.8;" /> Unirse con código de invitación</div>' +
         '<div class="ws-join-sub">Si tenés un código de 8 caracteres, ingresalo para unirte a un workspace.</div>' +
         '<div class="ws-join-row">' +
           '<input id="code-input" class="ws-code-input" maxlength="8" placeholder="Ej: ABC12345" autocomplete="off" />' +
@@ -257,7 +257,7 @@
     function render(wsData, members, allWs) {
       var html = '';
 
-      html += '<div style="display:flex;align-items:center;gap:14px;margin-bottom:36px;">' +
+      html += '<div style="display:flex;align-items:center;gap:14px;margin-bottom:' + (isGod ? '24px' : '36px') + ';">' +
         '<img src="assets/icons/ui/icono-usuarios.png" style="width:40px;height:40px;object-fit:contain;opacity:.85;" />' +
         '<div>' +
           '<h1 class="ws-heading" style="margin-bottom:2px;">Mis Workspaces</h1>' +
@@ -265,17 +265,39 @@
         '</div>' +
       '</div>';
 
+      // God admin: prominent platform panel card
+      if (isGod) {
+        html +=
+          '<a href="workspace.html" style="display:flex;align-items:center;gap:18px;background:linear-gradient(135deg,rgba(255,200,80,0.08),rgba(216,151,231,0.05));border:1px solid rgba(255,200,80,0.3);border-radius:20px;padding:22px 28px;margin-bottom:28px;text-decoration:none;transition:border-color .2s,box-shadow .2s;" ' +
+            'onmouseover="this.style.borderColor=\'rgba(255,200,80,0.55)\';this.style.boxShadow=\'0 8px 28px rgba(255,200,80,0.1)\';" ' +
+            'onmouseout="this.style.borderColor=\'rgba(255,200,80,0.3)\';this.style.boxShadow=\'none\';">' +
+            '<div style="width:52px;height:52px;border-radius:14px;background:rgba(255,200,80,0.12);border:1px solid rgba(255,200,80,0.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+              '<img src="assets/icons/ui/icono-acerca.png" style="width:26px;height:26px;object-fit:contain;opacity:.9;" />' +
+            '</div>' +
+            '<div style="flex:1;">' +
+              '<div style="font-family:Poppins,sans-serif;font-size:17px;font-weight:700;color:#ffc850;margin-bottom:4px;">Panel de plataforma</div>' +
+              '<div style="font-size:13px;color:#8b93a3;">Gestionar usuarios, workspaces, permisos y herramientas god admin</div>' +
+            '</div>' +
+            '<div style="font-size:22px;color:rgba(255,200,80,0.5);">→</div>' +
+          '</a>';
+      }
+
       if (isGod && allWs.length > 1) {
         // God admin: grid de workspaces
         html += '<p style="font-size:13px;font-weight:700;color:#8b93a3;letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px;">Todos los workspaces</p>';
         html += '<div class="ws-grid">';
         allWs.forEach(function(w) {
           html += '<div class="ws-grid-card" onclick="enterWorkspace(\'' + w.id + '\')">' +
-            '<div class="ws-grid-name">' + U.esc(w.name) + (w.active === false ? ' <span style="font-size:10px;color:#e68a8d;">(Suspendido)</span>' : '') + '</div>' +
+            '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">' +
+              (w.logo_url
+                ? '<img src="' + w.logo_url + '" style="width:32px;height:32px;object-fit:contain;flex-shrink:0;" />'
+                : '<img src="assets/icons/ui/icono-usuarios.png" style="width:24px;height:24px;object-fit:contain;opacity:.6;flex-shrink:0;" />') +
+              '<div class="ws-grid-name" style="margin-bottom:0;">' + U.esc(w.name) + (w.active === false ? ' <span style="font-size:10px;color:#e68a8d;">(Suspendido)</span>' : '') + '</div>' +
+            '</div>' +
             '<div class="ws-grid-slug">/' + U.esc(w.slug||'') + planBadge(w.plan) + '</div>' +
             '<div class="ws-grid-meta">' +
               '<span><span class="ws-grid-active-dot"></span>' + (w.member_count||0) + ' miembros</span>' +
-              '<span>🎟 ' + (w.event_count||0) + ' eventos</span>' +
+              '<span><img src="assets/icons/ui/icono-evento.png" style="width:11px;height:11px;object-fit:contain;opacity:.7;vertical-align:middle;margin-right:3px;" />' + (w.event_count||0) + ' eventos</span>' +
             '</div>' +
           '</div>';
         });
@@ -288,9 +310,12 @@
 
       if (wsData) {
         var myRole = wsData.my_role || (isGod ? 'god_admin' : user.role);
+        var cardIconHtml = wsData.logo_url
+          ? '<img src="' + wsData.logo_url + '" style="width:46px;height:46px;object-fit:contain;" />'
+          : '<img src="assets/icons/ui/icono-usuarios.png" style="width:30px;height:30px;object-fit:contain;opacity:.85;" />';
         html += '<div class="ws-card-main" onclick="enterPanel()">' +
           '<div class="ws-card-main-top">' +
-            '<div class="ws-card-main-icon">🏢</div>' +
+            '<div class="ws-card-main-icon" style="' + (wsData.logo_url ? 'background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.08);' : '') + '">' + cardIconHtml + '</div>' +
             '<div class="ws-card-main-info">' +
               '<div class="ws-card-main-name">' + U.esc(wsData.name||'') + '</div>' +
               '<div class="ws-card-main-slug">/' + U.esc(wsData.slug||'') + planBadge(wsData.plan) + '</div>' +
@@ -305,12 +330,12 @@
           '</div>' +
           '<div class="ws-card-actions">' +
             '<button class="btn-enter" onclick="event.stopPropagation();enterPanel();">Entrar al panel →</button>' +
-            '<a href="workspace.html" class="btn-manage" onclick="event.stopPropagation();">⚙️ Gestionar workspace</a>' +
+            '<a href="workspace.html" class="btn-manage" onclick="event.stopPropagation();"><img src="assets/icons/ui/icono-editar.png" style="width:14px;height:14px;object-fit:contain;opacity:.8;" /> Gestionar workspace</a>' +
           '</div>' +
         '</div>';
       } else {
         html += '<div class="ws-empty">' +
-          '<div class="ws-empty-icon">🏢</div>' +
+          '<div class="ws-empty-icon"><img src="assets/icons/ui/icono-usuarios.png" style="width:56px;height:56px;object-fit:contain;opacity:.4;" /></div>' +
           '<p class="ws-empty-text">No estás en ningún workspace todavía</p>' +
           '<p class="ws-empty-sub">Ingresá un código de invitación para unirte, o creá uno nuevo.</p>' +
         '</div>';
@@ -331,38 +356,107 @@
 
     function createWsFormHtml(isGod) {
       return '<div style="background:#1a1d24;border:1px solid #262a33;border-radius:20px;padding:28px 30px;margin-top:24px;">' +
-        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:' + (isGod ? '18px' : '10px') + ';">' +
-          '<span style="font-size:20px;">🏗️</span>' +
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:' + (isGod ? '20px' : '12px') + ';">' +
+          '<div style="width:36px;height:36px;border-radius:10px;background:rgba(216,151,231,0.1);border:1px solid rgba(216,151,231,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+            '<img src="assets/icons/ui/icono-usuarios.png" style="width:20px;height:20px;object-fit:contain;opacity:.8;" />' +
+          '</div>' +
           '<div>' +
             '<div style="font-family:Poppins,sans-serif;font-size:15px;font-weight:700;color:#f4f6f9;">Crear nuevo workspace</div>' +
             (!isGod ? '<div style="font-size:12px;color:#8b93a3;margin-top:2px;">Necesitás un código de creación emitido por god_admin.</div>' : '') +
           '</div>' +
         '</div>' +
 
-        '<div style="display:flex;flex-direction:column;gap:12px;">' +
+        '<div style="display:flex;flex-direction:column;gap:14px;">' +
 
           '<div>' +
-            '<label style="display:block;font-size:12px;font-weight:600;color:#8b93a3;margin-bottom:6px;letter-spacing:.04em;">NOMBRE DEL WORKSPACE</label>' +
+            '<label style="display:block;font-size:11px;font-weight:700;color:#8b93a3;margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase;">Nombre del workspace</label>' +
             '<input id="new-ws-name" type="text" placeholder="Ej: Mi organización" autocomplete="off" ' +
-              'style="width:100%;height:50px;border-radius:12px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:15px;padding:0 16px;outline:none;box-sizing:border-box;" />' +
+              'style="width:100%;height:50px;border-radius:12px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:15px;padding:0 16px;outline:none;box-sizing:border-box;transition:border-color .15s;" ' +
+              'onfocus="this.style.borderColor=\'#d897e7\'" onblur="this.style.borderColor=\'#353a46\'" />' +
+          '</div>' +
+
+          '<div>' +
+            '<label style="display:block;font-size:11px;font-weight:700;color:#8b93a3;margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase;">Logo del workspace <span style="color:#5a6172;font-weight:400;text-transform:none;letter-spacing:0;">(opcional)</span></label>' +
+            '<div id="logo-upload-zone" ' +
+              'style="border:2px dashed #2e323d;border-radius:14px;padding:22px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;" ' +
+              'onclick="document.getElementById(\'new-ws-logo-file\').click()" ' +
+              'ondragover="event.preventDefault();this.style.borderColor=\'#d897e7\';this.style.background=\'rgba(216,151,231,0.05)\';" ' +
+              'ondragleave="this.style.borderColor=\'#2e323d\';this.style.background=\'transparent\';" ' +
+              'ondrop="handleLogoDrop(event)">' +
+              '<div id="logo-preview-area">' +
+                '<img src="assets/icons/ui/icono-añadir-imagen.png" style="width:26px;height:26px;object-fit:contain;opacity:.4;margin-bottom:10px;" />' +
+                '<div style="font-size:13px;color:#8b93a3;font-weight:500;">Clic para subir o arrastrá el archivo</div>' +
+                '<div style="font-size:11px;color:#5a6172;margin-top:5px;">PNG · SVG · WebP · JPG &nbsp;·&nbsp; máx 512 KB &nbsp;·&nbsp; fondo transparente recomendado</div>' +
+              '</div>' +
+            '</div>' +
+            '<input id="new-ws-logo-file" type="file" accept="image/png,image/svg+xml,image/webp,image/jpeg" style="display:none;" onchange="handleLogoFile(this)" />' +
           '</div>' +
 
           (!isGod ?
             '<div>' +
-              '<label style="display:block;font-size:12px;font-weight:600;color:#ffc850;margin-bottom:6px;letter-spacing:.04em;">CÓDIGO DE CREACIÓN <span style="color:#8b93a3;font-weight:400;">(generado por god_admin)</span></label>' +
+              '<label style="display:block;font-size:11px;font-weight:700;color:#ffc850;margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase;">Código de creación <span style="color:#8b93a3;font-weight:400;text-transform:none;letter-spacing:0;">(generado por god_admin)</span></label>' +
               '<input id="new-ws-code" type="text" maxlength="10" placeholder="XXXXXXXXXX" autocomplete="off" ' +
-                'style="width:100%;height:50px;border-radius:12px;border:1px solid rgba(255,200,80,0.35);background:#2e323d;color:#ffc850;font-family:JetBrains Mono,monospace;font-size:18px;padding:0 16px;outline:none;letter-spacing:.18em;text-transform:uppercase;box-sizing:border-box;" />' +
+                'style="width:100%;height:50px;border-radius:12px;border:1px solid rgba(255,200,80,0.3);background:#2e323d;color:#ffc850;font-family:JetBrains Mono,monospace;font-size:18px;padding:0 16px;outline:none;letter-spacing:.18em;text-transform:uppercase;box-sizing:border-box;transition:border-color .15s;" ' +
+                'onfocus="this.style.borderColor=\'rgba(255,200,80,0.6)\'" onblur="this.style.borderColor=\'rgba(255,200,80,0.3)\'" />' +
             '</div>'
           : '') +
 
           '<button id="btn-confirm-create" ' +
-            'style="height:50px;border-radius:12px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;">' +
+            'style="height:50px;border-radius:12px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:2px;box-shadow:0 4px 16px rgba(230,138,141,0.25);">' +
             'Crear workspace' +
           '</button>' +
 
         '</div>' +
       '</div>';
     }
+
+    var _wsLogoDataUrl = null;
+
+    window.handleLogoFile = function(input) {
+      var file = input.files[0];
+      if (!file) return;
+      if (file.size > 512 * 1024) { toast('El logo no puede superar 512 KB', 'error'); input.value = ''; return; }
+      var validTypes = ['image/png', 'image/svg+xml', 'image/webp', 'image/jpeg', 'image/jpg'];
+      if (validTypes.indexOf(file.type) === -1) { toast('Formato no válido. Usá PNG, SVG, WebP o JPG', 'error'); input.value = ''; return; }
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        _wsLogoDataUrl = e.target.result;
+        var preview = document.getElementById('logo-preview-area');
+        if (preview) {
+          preview.innerHTML =
+            '<img src="' + e.target.result + '" style="max-width:90px;max-height:54px;object-fit:contain;margin-bottom:10px;border-radius:4px;" />' +
+            '<div style="font-size:12px;color:#cdd2db;font-weight:600;">' + U.esc(file.name) + '</div>' +
+            '<div style="font-size:11px;color:#8b93a3;margin-top:2px;">' + (file.size/1024).toFixed(0) + ' KB</div>' +
+            '<button onclick="clearLogoUpload(event)" style="margin-top:8px;font-size:11px;color:#e68a8d;background:rgba(230,138,141,0.1);border:1px solid rgba(230,138,141,0.2);border-radius:6px;cursor:pointer;padding:3px 10px;">Quitar</button>';
+          var zone = document.getElementById('logo-upload-zone');
+          if (zone) zone.style.borderColor = '#d897e7';
+        }
+      };
+      reader.readAsDataURL(file);
+    };
+
+    window.handleLogoDrop = function(event) {
+      event.preventDefault();
+      var zone = document.getElementById('logo-upload-zone');
+      if (zone) { zone.style.borderColor = '#2e323d'; zone.style.background = 'transparent'; }
+      if (event.dataTransfer && event.dataTransfer.files.length) {
+        window.handleLogoFile({ files: event.dataTransfer.files, value: '' });
+      }
+    };
+
+    window.clearLogoUpload = function(e) {
+      if (e) e.stopPropagation();
+      _wsLogoDataUrl = null;
+      var zone    = document.getElementById('logo-upload-zone');
+      var preview = document.getElementById('logo-preview-area');
+      var fi      = document.getElementById('new-ws-logo-file');
+      if (zone)    zone.style.borderColor = '#2e323d';
+      if (fi)      fi.value = '';
+      if (preview) preview.innerHTML =
+        '<img src="assets/icons/ui/icono-añadir-imagen.png" style="width:26px;height:26px;object-fit:contain;opacity:.4;margin-bottom:10px;" />' +
+        '<div style="font-size:13px;color:#8b93a3;font-weight:500;">Clic para subir o arrastrá el archivo</div>' +
+        '<div style="font-size:11px;color:#5a6172;margin-top:5px;">PNG · SVG · WebP · JPG &nbsp;·&nbsp; máx 512 KB &nbsp;·&nbsp; fondo transparente recomendado</div>';
+    };
 
     function bindCreateWorkspace() {
       var confirmBtn = document.getElementById('btn-confirm-create');
@@ -372,6 +466,7 @@
         if (!name || name.length < 2) { toast('El nombre debe tener al menos 2 caracteres', 'error'); return; }
         var codeInp = document.getElementById('new-ws-code');
         var body = { name: name };
+        if (_wsLogoDataUrl) body.logo_url = _wsLogoDataUrl;
         if (codeInp) {
           var code = codeInp.value.trim().toUpperCase();
           if (!code) { toast('Ingresá el código de creación', 'error'); return; }
@@ -380,6 +475,7 @@
         confirmBtn.disabled = true; confirmBtn.textContent = 'Creando...';
         try {
           await apiFetch('/workspaces/', { method: 'POST', body: JSON.stringify(body) });
+          _wsLogoDataUrl = null;
           toast('Workspace "' + name + '" creado', 'success');
           setTimeout(function() { load(); }, 800);
         } catch(e) {
