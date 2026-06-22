@@ -135,12 +135,40 @@
       window.location.replace('profile.html'); return;
     }
 
-    // Mostrar chip de usuario
+    // Menú de cuenta en el header
     var initials = (user.name || '?').split(' ').map(function(w){ return w[0]||''; }).join('').slice(0,2).toUpperCase();
-    document.getElementById('user-chip').innerHTML =
+    var chip = document.getElementById('user-chip');
+    chip.style.cursor = 'pointer';
+    chip.innerHTML =
       '<div class="ws-user-avatar">' + initials + '</div>' +
       '<span class="ws-user-name">' + U.esc(user.name || user.email || '') + '</span>' +
-      '<span class="ws-user-role">' + user.role + '</span>';
+      '<span class="ws-user-role">' + user.role + '</span>' +
+      '<span style="font-size:11px;color:#6f7686;margin-left:2px;">▾</span>';
+
+    // Dropdown del menú de cuenta
+    var acctMenu = document.createElement('div');
+    acctMenu.id = 'acct-menu';
+    acctMenu.style.cssText = 'display:none;position:fixed;top:64px;right:20px;z-index:200;background:#1c1f27;border:1px solid #2f343f;border-radius:14px;padding:8px;min-width:200px;box-shadow:0 12px 40px rgba(0,0,0,0.5);';
+    acctMenu.innerHTML =
+      '<div style="padding:12px 14px 10px;border-bottom:1px solid #262a33;margin-bottom:6px;">' +
+        '<div style="font-size:13px;font-weight:700;color:#f4f6f9;">' + U.esc(user.name || '') + '</div>' +
+        '<div style="font-size:11px;color:#8b93a3;margin-top:2px;">' + U.esc(user.email || '') + '</div>' +
+      '</div>' +
+      '<a href="workspace.html" style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:8px;color:#cdd2db;text-decoration:none;font-size:13px;font-weight:600;" onmouseover="this.style.background=\'#262a33\'" onmouseout="this.style.background=\'\'">⚙️ Gestionar workspace</a>' +
+      '<button onclick="doLogout()" style="width:100%;display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:8px;background:transparent;border:none;color:#e68a8d;font-size:13px;font-weight:600;cursor:pointer;text-align:left;" onmouseover="this.style.background=\'rgba(230,138,141,0.1)\'" onmouseout="this.style.background=\'\'">🚪 Cerrar sesión</button>';
+    document.body.appendChild(acctMenu);
+
+    chip.addEventListener('click', function(e) {
+      e.stopPropagation();
+      acctMenu.style.display = acctMenu.style.display === 'none' ? 'block' : 'none';
+    });
+    document.addEventListener('click', function() { acctMenu.style.display = 'none'; });
+
+    window.doLogout = function() {
+      API.logout ? API.logout() : (function(){ try { localStorage.removeItem('lyfter_session'); } catch(e){} })();
+      try { sessionStorage.clear(); } catch(e) {}
+      window.location.replace('login.html');
+    };
 
     var isGod = user.role === 'god_admin';
     var main  = document.getElementById('main-content');
@@ -307,8 +335,8 @@
         '</div>';
       }
 
-      // Join by code
-      html += joinSectionHtml();
+      // Join by code (god_admin tiene acceso a todos los workspaces directamente)
+      if (!isGod) html += joinSectionHtml();
 
       // Create workspace (solo admins con permiso)
       if (['admin','superadmin','god_admin'].indexOf(user.role) !== -1) {

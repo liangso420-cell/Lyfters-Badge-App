@@ -220,27 +220,49 @@ def list_members(ws_id):
     return jsonify(result)
 
 
+_ROLE_RANK = {"participant": 1, "admin": 2, "superadmin": 3, "god_admin": 4}
+
+
 # ── PATCH /workspaces/<ws_id>/members/<uid> ───────────────────
 @ws_bp.route("/<ws_id>/members/<uid>", methods=["PATCH"])
 @jwt_required()
 def update_member_role(ws_id, uid):
-    claims = get_jwt()
-    caller = ObjectId(get_jwt_identity())
-    oid    = ObjectId(ws_id)
-    target = ObjectId(uid)
+    claims      = get_jwt()
+    caller_uid  = ObjectId(get_jwt_identity())
+    caller_role = claims.get("role", "")
+    oid         = ObjectId(ws_id)
+    target_uid  = ObjectId(uid)
 
-    if claims.get("role") != "god_admin":
-        member = workspace_members().find_one({"workspace_id": oid, "user_id": caller})
-        if not member or member["role"] != "superadmin":
+    if caller_role != "god_admin":
+        caller_member = workspace_members().find_one({"workspace_id": oid, "user_id": caller_uid})
+        if not caller_member or caller_member["role"] not in ("superadmin", "admin"):
             return jsonify(error="No autorizado"), 403
+        caller_ws_role = caller_member["role"]
+    else:
+        caller_ws_role = "god_admin"
+
+    # No se puede modificar a alguien de igual o mayor rango
+    target_member = workspace_members().find_one({"workspace_id": oid, "user_id": target_uid})
+    if not target_member:
+        return jsonify(error="Miembro no encontrado"), 404
+
+    target_rank = _ROLE_RANK.get(target_member["role"], 0)
+    caller_rank = _ROLE_RANK.get(caller_ws_role, 0)
+    if target_rank >= caller_rank:
+        return jsonify(error="No podés modificar a un usuario con igual o mayor rango que el tuyo"), 403
 
     data     = request.get_json() or {}
     new_role = data.get("role")
-    if new_role not in ("admin", "participant", "superadmin"):
-        return jsonify(error="Rol inválido"), 400
+    allowed  = ("admin", "participant", "superadmin") if caller_ws_role == "god_admin" else ("participant",) if caller_ws_role == "admin" else ("admin", "participant")
+    if new_role not in allowed:
+        return jsonify(error=f"No tenés permiso para asignar el rol '{new_role}'"), 403
+
+    # Tampoco puede asignar un rango mayor o igual al suyo
+    if _ROLE_RANK.get(new_role, 0) >= caller_rank:
+        return jsonify(error="No podés asignar un rol mayor o igual al tuyo"), 403
 
     workspace_members().update_one(
-        {"workspace_id": oid, "user_id": target},
+        {"workspace_id": oid, "user_id": target_uid},
         {"$set": {"role": new_role}}
     )
     return jsonify(mensaje="Rol actualizado")
@@ -250,17 +272,28 @@ def update_member_role(ws_id, uid):
 @ws_bp.route("/<ws_id>/members/<uid>", methods=["DELETE"])
 @jwt_required()
 def remove_member(ws_id, uid):
-    claims = get_jwt()
-    caller = ObjectId(get_jwt_identity())
-    oid    = ObjectId(ws_id)
-    target = ObjectId(uid)
+    claims      = get_jwt()
+    caller_uid  = ObjectId(get_jwt_identity())
+    caller_role = claims.get("role", "")
+    oid         = ObjectId(ws_id)
+    target_uid  = ObjectId(uid)
 
-    if claims.get("role") != "god_admin":
-        member = workspace_members().find_one({"workspace_id": oid, "user_id": caller})
-        if not member or member["role"] != "superadmin":
+    if caller_role != "god_admin":
+        caller_member = workspace_members().find_one({"workspace_id": oid, "user_id": caller_uid})
+        if not caller_member or caller_member["role"] not in ("superadmin",):
             return jsonify(error="No autorizado"), 403
+        caller_ws_role = caller_member["role"]
+    else:
+        caller_ws_role = "god_admin"
 
-    workspace_members().delete_one({"workspace_id": oid, "user_id": target})
+    target_member = workspace_members().find_one({"workspace_id": oid, "user_id": target_uid})
+    if target_member:
+        target_rank = _ROLE_RANK.get(target_member["role"], 0)
+        caller_rank = _ROLE_RANK.get(caller_ws_role, 0)
+        if target_rank >= caller_rank:
+            return jsonify(error="No podés remover a un usuario con igual o mayor rango"), 403
+
+    workspace_members().delete_one({"workspace_id": oid, "user_id": target_uid})
     return jsonify(mensaje="Miembro removido")
 
 

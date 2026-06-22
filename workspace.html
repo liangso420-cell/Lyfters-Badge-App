@@ -108,27 +108,40 @@
       }
     }
 
-    var ROLES = ['participant','admin','superadmin'];
+    var ROLE_RANK = { participant: 1, admin: 2, superadmin: 3, god_admin: 4 };
 
     function renderPage(ws, members, invList, allWs, isGod) {
-      if (isGod) ROLES = ['participant','admin','superadmin','god_admin'];
+      var callerRole = isGod ? 'god_admin' : (ws.my_role || user.role);
+      var callerRank = ROLE_RANK[callerRole] || 0;
+
       var memberRows = members.map(function(m) {
-        var initials = (m.name || '?').split(' ').map(function(w){ return w[0] || ''; }).join('').slice(0,2).toUpperCase();
-        var roleOpts = ROLES.map(function(r) {
-          return '<option value="' + r + '"' + (m.role === r ? ' selected' : '') + '>' + r + '</option>';
-        }).join('');
+        var initials   = (m.name || '?').split(' ').map(function(w){ return w[0] || ''; }).join('').slice(0,2).toUpperCase();
+        var targetRank = ROLE_RANK[m.role] || 0;
+        var canEdit    = callerRank > targetRank;  // solo si tenés mayor rango
+
+        // Roles que puede asignar: solo menores al propio
+        var assignableRoles = ['participant','admin','superadmin','god_admin'].filter(function(r) {
+          return ROLE_RANK[r] < callerRank;
+        });
+
+        var roleCell = canEdit
+          ? '<select data-ws="' + ws.id + '" data-uid="' + m.user_id + '" onchange="changeRole(this)" ' +
+              'style="height:32px;padding:0 8px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-size:12px;outline:none;cursor:pointer;">' +
+              assignableRoles.map(function(r) {
+                return '<option value="' + r + '"' + (m.role === r ? ' selected' : '') + '>' + r + '</option>';
+              }).join('') +
+            '</select>'
+          : '<span class="ws-badge ' + (m.role||'') + '" title="Sin permiso para editar este rol">' + (m.role||'') + '</span>';
+
+        var removeBtn = canEdit
+          ? '<button onclick="removeMember(\'' + ws.id + '\',\'' + m.user_id + '\')" class="ws-btn danger" style="height:34px;font-size:12px;padding:0 12px;">Remover</button>'
+          : '<span style="font-size:11px;color:#4a5060;">—</span>';
+
         return '<tr id="row-' + m.user_id + '">' +
           '<td><span class="ws-avatar">' + initials + '</span>' + U.esc(m.name || '—') + '</td>' +
           '<td style="color:#8b93a3;">' + U.esc(m.email || '—') + '</td>' +
-          '<td>' +
-            '<select data-ws="' + ws.id + '" data-uid="' + m.user_id + '" onchange="changeRole(this)" ' +
-              'style="height:32px;padding:0 8px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-size:12px;outline:none;cursor:pointer;">' +
-              roleOpts +
-            '</select>' +
-          '</td>' +
-          '<td>' +
-            '<button onclick="removeMember(\'' + ws.id + '\',\'' + m.user_id + '\')" class="ws-btn danger" style="height:34px;font-size:12px;padding:0 12px;">Remover</button>' +
-          '</td>' +
+          '<td>' + roleCell + '</td>' +
+          '<td>' + removeBtn + '</td>' +
         '</tr>';
       }).join('');
 
