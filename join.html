@@ -20,10 +20,61 @@
   <script>
     (function() {
       var API = window.LyfterAPI;
+      var U   = window.LyfterUtils;
       var app = document.getElementById('app');
-      var params = new URLSearchParams(window.location.search);
+      var params  = new URLSearchParams(window.location.search);
       var eventId = params.get('event');
+      var wsToken = params.get('token');
+      var wsCode  = params.get('code');
 
+      // ── Flujo workspace invite ──────────────────────────────
+      if (wsToken || wsCode) {
+        var user = API.currentUser();
+        if (!user) {
+          var next = encodeURIComponent(window.location.pathname + window.location.search);
+          app.innerHTML =
+            '<div class="text-4xl mb-4">🏢</div>' +
+            '<h2 class="text-xl font-bold mb-2" style="color:#f4f6f9;">Fuiste invitado</h2>' +
+            '<p class="text-gray-400 text-sm mb-6">Necesitás una cuenta para aceptar la invitación.</p>' +
+            '<a href="register.html?invite_token=' + encodeURIComponent(wsToken||'') + '&invite_code=' + encodeURIComponent(wsCode||'') + '" class="w-full py-3 rounded-btn font-semibold block text-center mb-3" style="background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;text-decoration:none;">Crear cuenta y unirme</a>' +
+            '<a href="login.html?next=' + next + '" class="text-sm text-center block" style="color:#8b93a3;text-decoration:none;">Ya tengo cuenta — Iniciar sesión</a>';
+          return;
+        }
+        app.innerHTML =
+          '<div class="text-4xl mb-4">🏢</div>' +
+          '<h2 class="text-xl font-bold mb-2" style="color:#f4f6f9;">Fuiste invitado a un workspace</h2>' +
+          '<p class="text-gray-400 text-sm mb-6">Aceptá la invitación para unirte.</p>' +
+          '<button id="btn-join-ws" class="w-full py-3 rounded-btn font-semibold" style="background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;border:none;cursor:pointer;font-size:16px;">Unirme al workspace</button>';
+        document.getElementById('btn-join-ws').addEventListener('click', async function() {
+          var btn = this;
+          btn.disabled = true; btn.textContent = 'Procesando...';
+          try {
+            var body = {};
+            if (wsToken) body.token = wsToken;
+            if (wsCode)  body.code  = wsCode;
+            var res = await fetch(API.base + '/workspaces/join', {
+              method: 'POST',
+              headers: Object.assign({}, API.authHeaders(), {'Content-Type': 'application/json'}),
+              body: JSON.stringify(body)
+            });
+            var data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Error');
+            app.innerHTML =
+              '<div class="text-5xl mb-4">🎉</div>' +
+              '<h2 class="text-xl font-bold mb-2" style="color:#f4f6f9;">¡Bienvenido a ' + (data.workspace || 'el workspace') + '!</h2>' +
+              '<p class="text-gray-400 text-sm mb-6">Rol: ' + (data.role || '') + '</p>' +
+              '<a href="profile.html" class="w-full py-3 rounded-btn font-semibold block text-center" style="background:#6C63FF;color:#fff;text-decoration:none;">Ir al perfil</a>';
+          } catch(e) {
+            app.innerHTML =
+              '<div class="text-4xl mb-4">⚠️</div>' +
+              '<p class="text-gray-400 mb-4">' + (e.message || 'Error') + '</p>' +
+              '<a href="profile.html" class="text-sm" style="color:#6C63FF;">← Volver al perfil</a>';
+          }
+        });
+        return;
+      }
+
+      // ── Flujo evento (QR de acceso) ────────────────────────
       if (!eventId) {
         app.innerHTML = '<div class="text-4xl mb-4">❌</div><p class="text-gray-600">QR inválido.</p>';
         return;

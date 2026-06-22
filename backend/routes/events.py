@@ -4,7 +4,7 @@ from datetime import datetime
 
 from bson import ObjectId
 from flask import Blueprint, jsonify, request
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt, verify_jwt_in_request
 
 from db import users, events, badges, scans, event_joins, user_achievements
 from utils import valid_oid, fmt_event, fmt_badge, compute_event_status, haversine
@@ -13,6 +13,19 @@ from services.xp import compute_level, level_name
 events_bp = Blueprint("events", __name__)
 # /leaderboard no cuelga de /events, va en su propio blueprint sin prefix
 leaderboard_bp = Blueprint("leaderboard", __name__)
+
+
+def _get_ws_id_optional():
+    """Devuelve workspace_id del JWT como ObjectId si hay sesión activa, sino None."""
+    try:
+        verify_jwt_in_request(optional=True)
+        claims = get_jwt()
+        ws = claims.get("workspace_id") if claims else None
+        if ws and claims.get("role") != "god_admin":
+            return ObjectId(ws)
+    except Exception:
+        pass
+    return None
 
 
 # ──────────────────────────────────────────────
@@ -24,7 +37,11 @@ leaderboard_bp = Blueprint("leaderboard", __name__)
 def list_events():
     now = datetime.utcnow()
     visible_statuses = ("upcoming", "open", "ongoing")
-    docs = list(events().find({"active": True, "end_date": {"$gte": now}}))
+    ws_id = _get_ws_id_optional()
+    query = {"active": True, "end_date": {"$gte": now}}
+    if ws_id:
+        query["workspace_id"] = ws_id
+    docs = list(events().find(query))
     result = [fmt_event(e) for e in docs if compute_event_status(e) in visible_statuses]
     return jsonify(result), 200
 

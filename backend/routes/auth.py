@@ -15,7 +15,7 @@ from flask_jwt_extended import (
 from google.oauth2 import id_token
 from google.auth.transport import requests as grequests
 
-from db import users, scans
+from db import users, scans, workspace_members, invitations as invitations_col
 from utils import sanitize, fmt_user
 from security.limiter import (
     register_limit, login_participant_limit, login_admin_limit, avatar_limit
@@ -23,6 +23,18 @@ from security.limiter import (
 from security.ip_guard import ip_guard_register, ip_guard_login
 
 auth_bp = Blueprint("auth", __name__)
+
+
+def _workspace_claims(user_doc):
+    """Construye los additional_claims JWT con info de workspace."""
+    member = workspace_members().find_one({"user_id": user_doc["_id"]})
+    return {
+        "role":           user_doc.get("role", "participant"),
+        "name":           user_doc.get("name", ""),
+        "workspace_id":   str(member["workspace_id"]) if member else None,
+        "workspace_role": member["role"] if member else None,
+    }
+
 
 # ──────────────────────────────────────────────
 # RATE LIMITING (en memoria)
@@ -78,8 +90,31 @@ def register():
         "created_at":    datetime.utcnow(),
     })
 
-    new_user = users().find_one({"_id": result.inserted_id})
-    token    = create_access_token(identity=str(result.inserted_id))
+    new_user_id = result.inserted_id
+
+    # Procesar invitación de workspace si viene en el body
+    invite_token = (data.get("invite_token") or "").strip()
+    invite_code  = (data.get("invite_code")  or "").strip().upper()
+
+    if invite_token or invite_code:
+        query = {"status": "pending"}
+        if invite_token: query["token"] = invite_token
+        elif invite_code: query["code"] = invite_code
+        inv = invitations_col().find_one(query)
+        if inv and inv["expires_at"] > datetime.utcnow():
+            workspace_members().insert_one({
+                "workspace_id": inv["workspace_id"],
+                "user_id":      new_user_id,
+                "role":         inv["role"],
+                "joined_at":    datetime.utcnow(),
+            })
+            invitations_col().update_one({"_id": inv["_id"]}, {"$set": {"status": "accepted"}})
+
+    new_user = users().find_one({"_id": new_user_id})
+    token    = create_access_token(
+        identity=str(new_user_id),
+        additional_claims=_workspace_claims(new_user),
+    )
     return jsonify(token=token, user=fmt_user(new_user)), 201
 
 
@@ -214,7 +249,10 @@ def login():
         return jsonify(error="Credenciales inválidas"), 401
 
     clear_attempts(email)
-    token = create_access_token(identity=str(user["_id"]))
+    token = create_access_token(
+        identity=str(user["_id"]),
+        additional_claims=_workspace_claims(user),
+    )
     return jsonify(token=token, user=fmt_user(user)), 200
 
 
@@ -272,7 +310,10 @@ def google_login():
         users().update_one({"_id": user["_id"]}, {"$set": updates})
         user = users().find_one({"_id": user["_id"]})
 
-    token = create_access_token(identity=str(user["_id"]))
+    token = create_access_token(
+        identity=str(user["_id"]),
+        additional_claims=_workspace_claims(user),
+    )
     return jsonify(token=token, user=fmt_user(user)), 200
 
 

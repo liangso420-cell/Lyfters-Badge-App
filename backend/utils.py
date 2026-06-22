@@ -34,7 +34,7 @@ def generate_qr_base64(data: str) -> str:
 def require_admin():
     uid = get_jwt_identity()
     user = users().find_one({"_id": ObjectId(uid)})
-    if not user or user.get("role") != "admin":
+    if not user or user.get("role") not in ("admin", "superadmin", "god_admin"):
         return None
     return user
 

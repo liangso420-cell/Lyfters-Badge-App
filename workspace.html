@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Workspace — Lyfter Badge App</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body style="margin:0;background:#15171d;font-family:Manrope,system-ui,sans-serif;">
+  <div id="app"></div>
+  <div id="toast-root" style="position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;"></div>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+  (function() {
+    var API = window.LyfterAPI;
+    var U   = window.LyfterUtils;
+
+    var user = API.currentUser();
+    if (!user) { window.location.replace('login.html'); return; }
+    if (!['superadmin','admin','god_admin'].includes(user.role)) {
+      window.location.replace('profile.html'); return;
+    }
+
+    var app = document.getElementById('app');
+    app.innerHTML = U.loadingHtml();
+
+    var styles = '<style>' +
+      '.ws-header{background:#1a1d24;border-bottom:1px solid #262a33;padding:16px 28px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:10;}' +
+      '.ws-title{font-family:Poppins,sans-serif;font-size:20px;font-weight:700;color:#f4f6f9;}' +
+      '.ws-main{max-width:1000px;margin:0 auto;padding:36px 24px 80px;}' +
+      '.ws-card{background:#1c1f27;border:1px solid #2f343f;border-radius:20px;padding:28px 30px;margin-bottom:20px;}' +
+      '.ws-card-title{font-family:Poppins,sans-serif;font-size:17px;font-weight:700;color:#f4f6f9;margin-bottom:18px;}' +
+      '.ws-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;}' +
+      '.ws-stat{background:#20242d;border:1px solid #2f343f;border-radius:14px;padding:16px;text-align:center;}' +
+      '.ws-stat-num{font-family:Poppins,sans-serif;font-size:28px;font-weight:800;color:#f4f6f9;}' +
+      '.ws-stat-label{font-size:12px;color:#8b93a3;margin-top:4px;}' +
+      '.ws-table{width:100%;border-collapse:collapse;}' +
+      '.ws-table th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6f7686;font-weight:700;padding:10px 14px;border-bottom:1px solid #262a33;text-align:left;}' +
+      '.ws-table td{padding:12px 14px;border-bottom:1px solid #20242d;font-size:14px;color:#cdd2db;}' +
+      '.ws-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#70cfff,#d897e7);display:inline-flex;align-items:center;justify-content:center;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;color:#1c1f27;margin-right:10px;vertical-align:middle;}' +
+      '.ws-badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;}' +
+      '.ws-badge.superadmin{background:rgba(216,151,231,0.15);color:#d897e7;}' +
+      '.ws-badge.admin{background:rgba(112,207,255,0.15);color:#70cfff;}' +
+      '.ws-badge.participant{background:rgba(171,209,148,0.15);color:#abd194;}' +
+      '.ws-badge.god_admin{background:rgba(255,200,80,0.15);color:#ffc850;}' +
+      '.ws-input{height:48px;border-radius:12px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:15px;padding:0 16px;outline:none;width:100%;box-sizing:border-box;}' +
+      '.ws-input:focus{border-color:#d897e7;box-shadow:0 0 0 3px rgba(216,151,231,0.18);}' +
+      '.ws-select{height:48px;border-radius:12px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:15px;padding:0 16px;outline:none;appearance:none;cursor:pointer;}' +
+      '.ws-btn{height:44px;padding:0 20px;border-radius:10px;border:none;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .15s;}' +
+      '.ws-btn.cta{background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;box-shadow:0 4px 16px rgba(230,138,141,0.28);}' +
+      '.ws-btn.outline{background:transparent;border:1px solid #353a46;color:#aab1bf;}' +
+      '.ws-btn.danger{background:rgba(230,138,141,0.12);border:1px solid rgba(230,138,141,0.30);color:#e68a8d;}' +
+      '.ws-btn:hover{opacity:.85;}' +
+      '.ws-tabs{display:flex;gap:4px;margin-bottom:20px;}' +
+      '.ws-tab{padding:8px 16px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid transparent;color:#8b93a3;background:transparent;font-family:Manrope,sans-serif;}' +
+      '.ws-tab.active{background:rgba(216,151,231,0.12);border-color:rgba(216,151,231,0.28);color:#f4f6f9;}' +
+      '.ws-code-box{background:#20242d;border:1px solid #353a46;border-radius:14px;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;}' +
+      '.ws-code{font-family:"JetBrains Mono",monospace;font-size:28px;font-weight:600;color:#d897e7;letter-spacing:.2em;}' +
+      '.ws-all-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}' +
+      '.ws-all-card{background:#1c1f27;border:1px solid #2f343f;border-radius:16px;padding:20px;transition:border-color .15s;}' +
+      '.ws-all-card:hover{border-color:rgba(216,151,231,0.35);}' +
+    '</style>';
+
+    async function init() {
+      try {
+        var isGod = user.role === 'god_admin';
+        var wsData, members, invList, allWorkspaces = [];
+
+        if (isGod) {
+          var allRes = await fetch(API.base + '/workspaces/', { headers: API.authHeaders() });
+          allWorkspaces = await allRes.json();
+          // Para god_admin mostrar el primer workspace o crear vista global
+          if (allWorkspaces.length > 0) {
+            wsData = allWorkspaces[0];
+            wsData.id = wsData.id || allWorkspaces[0].id;
+          } else {
+            wsData = { id: null, name: 'Sin workspaces', slug: '', plan: 'enterprise', my_role: 'god_admin' };
+          }
+        } else {
+          var wsRes = await fetch(API.base + '/workspaces/mine', { headers: API.authHeaders() });
+          if (!wsRes.ok) {
+            app.innerHTML = styles + '<div class="ws-main"><div class="ws-card" style="text-align:center;padding:48px;">' +
+              '<div style="font-size:48px;margin-bottom:16px;">🏢</div>' +
+              '<p style="color:#8b93a3;font-size:15px;margin-bottom:24px;">No pertenecés a ningún workspace todavía.</p>' +
+              '<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">' +
+                '<a href="profile.html" class="ws-btn outline" style="display:inline-flex;align-items:center;text-decoration:none;">← Volver al perfil</a>' +
+              '</div></div></div>';
+            return;
+          }
+          wsData = await wsRes.json();
+        }
+
+        if (wsData.id) {
+          var memRes = await fetch(API.base + '/workspaces/' + wsData.id + '/members', { headers: API.authHeaders() });
+          members = memRes.ok ? await memRes.json() : [];
+          var invRes = await fetch(API.base + '/workspaces/' + wsData.id + '/invitations', { headers: API.authHeaders() });
+          invList = invRes.ok ? await invRes.json() : [];
+        } else {
+          members = []; invList = [];
+        }
+
+        renderPage(wsData, members, invList, allWorkspaces, isGod);
+      } catch(err) {
+        app.innerHTML = styles + U.errorHtml('Error cargando el workspace: ' + err.message);
+      }
+    }
+
+    function renderPage(ws, members, invList, allWs, isGod) {
+      var memberRows = members.map(function(m) {
+        var initials = (m.name || '?').split(' ').map(function(w){ return w[0] || ''; }).join('').slice(0,2).toUpperCase();
+        return '<tr>' +
+          '<td><span class="ws-avatar">' + initials + '</span>' + U.esc(m.name || '—') + '</td>' +
+          '<td style="color:#8b93a3;">' + U.esc(m.email || '—') + '</td>' +
+          '<td><span class="ws-badge ' + (m.role||'') + '">' + (m.role||'') + '</span></td>' +
+          '<td>' +
+            '<button onclick="changeRole(\'' + ws.id + '\',\'' + m.user_id + '\')" class="ws-btn outline" style="height:34px;font-size:12px;padding:0 12px;margin-right:6px;">Cambiar rol</button>' +
+            '<button onclick="removeMember(\'' + ws.id + '\',\'' + m.user_id + '\')" class="ws-btn danger" style="height:34px;font-size:12px;padding:0 12px;">Remover</button>' +
+          '</td>' +
+        '</tr>';
+      }).join('');
+
+      var pendingInv = invList.filter(function(i){ return i.status === 'pending'; });
+      var invRows = pendingInv.map(function(i) {
+        return '<tr>' +
+          '<td>' + U.esc(i.email || '—') + '</td>' +
+          '<td><code style="background:#20242d;padding:2px 8px;border-radius:6px;font-family:JetBrains Mono,monospace;color:#d897e7;">' + (i.code||'') + '</code></td>' +
+          '<td><span class="ws-badge ' + (i.role||'') + '">' + (i.role||'') + '</span></td>' +
+          '<td style="color:#8b93a3;font-size:12px;">' + (i.status||'') + '</td>' +
+        '</tr>';
+      }).join('');
+
+      var allWsHtml = isGod && allWs.length ? '<div class="ws-card"><div class="ws-card-title">Todos los workspaces (' + allWs.length + ')</div>' +
+        '<div class="ws-all-grid">' +
+        allWs.map(function(w) {
+          return '<div class="ws-all-card">' +
+            '<div style="font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#f4f6f9;margin-bottom:8px;">' + U.esc(w.name||'') + '</div>' +
+            '<div style="font-size:12px;color:#8b93a3;margin-bottom:12px;">/' + U.esc(w.slug||'') + ' · ' + (w.plan||'free') + '</div>' +
+            '<div style="display:flex;gap:10px;font-size:12px;color:#6f7686;">' +
+              '<span>👥 ' + (w.member_count||0) + ' miembros</span>' +
+              '<span>🎟️ ' + (w.event_count||0) + ' eventos</span>' +
+            '</div>' +
+            '<div style="margin-top:12px;">' +
+              '<span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;' +
+                (w.active ? 'background:rgba(171,209,148,0.15);color:#abd194;' : 'background:rgba(230,138,141,0.15);color:#e68a8d;') + '">' +
+                (w.active ? 'Activo' : 'Suspendido') + '</span>' +
+            '</div>' +
+          '</div>';
+        }).join('') +
+        '</div></div>' : '';
+
+      app.innerHTML = styles +
+        '<div class="ws-header">' +
+          '<a href="' + (isGod ? 'admin-event.html' : 'profile.html') + '" style="color:#8b93a3;text-decoration:none;font-size:20px;margin-right:4px;">←</a>' +
+          '<div>' +
+            '<div class="ws-title">🏢 ' + U.esc(ws.name||'Workspace') + '</div>' +
+            '<div style="font-size:12px;color:#8b93a3;">/' + U.esc(ws.slug||'') + ' · ' + (ws.plan||'free') + (ws.my_role ? ' · ' + ws.my_role : '') + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="ws-main">' +
+
+          '<div class="ws-stat-grid">' +
+            '<div class="ws-stat"><div class="ws-stat-num">' + members.length + '</div><div class="ws-stat-label">Miembros</div></div>' +
+            '<div class="ws-stat"><div class="ws-stat-num">' + pendingInv.length + '</div><div class="ws-stat-label">Invitaciones pendientes</div></div>' +
+            (isGod ? '<div class="ws-stat"><div class="ws-stat-num">' + allWs.length + '</div><div class="ws-stat-label">Workspaces totales</div></div>' : '') +
+          '</div>' +
+
+          (ws.id ? '<div class="ws-card">' +
+            '<div class="ws-card-title">Miembros del workspace</div>' +
+            (memberRows
+              ? '<div style="overflow-x:auto;"><table class="ws-table"><thead><tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Acciones</th></tr></thead><tbody>' + memberRows + '</tbody></table></div>'
+              : '<p style="color:#8b93a3;text-align:center;padding:24px;">No hay miembros</p>') +
+          '</div>' : '') +
+
+          (ws.id ? '<div class="ws-card">' +
+            '<div class="ws-card-title">Invitar al workspace</div>' +
+            '<div class="ws-tabs">' +
+              '<button class="ws-tab active" id="tab-email" onclick="switchTab(\'email\')">📧 Por email</button>' +
+              '<button class="ws-tab" id="tab-code" onclick="switchTab(\'code\')">🔑 Por código</button>' +
+            '</div>' +
+            '<div id="panel-email">' +
+              '<div style="display:flex;gap:12px;flex-wrap:wrap;">' +
+                '<input id="inv-email" type="email" placeholder="email@empresa.com" class="ws-input" style="flex:1;min-width:200px;" />' +
+                '<select id="inv-role" class="ws-select" style="width:180px;">' +
+                  '<option value="participant">Participante</option>' +
+                  '<option value="admin">Admin</option>' +
+                '</select>' +
+                '<button class="ws-btn cta" onclick="sendEmailInvite(\'' + ws.id + '\')">Enviar</button>' +
+              '</div>' +
+            '</div>' +
+            '<div id="panel-code" style="display:none;">' +
+              '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">' +
+                '<select id="code-role" class="ws-select" style="width:200px;">' +
+                  '<option value="participant">Participante</option>' +
+                  '<option value="admin">Admin</option>' +
+                '</select>' +
+                '<button class="ws-btn cta" onclick="generateCode(\'' + ws.id + '\')">Generar código</button>' +
+              '</div>' +
+              '<div id="code-result"></div>' +
+            '</div>' +
+            (invRows ? '<div style="margin-top:20px;"><div style="font-size:13px;font-weight:700;color:#cdd2db;margin-bottom:10px;">Invitaciones pendientes</div><div style="overflow-x:auto;"><table class="ws-table"><thead><tr><th>Email</th><th>Código</th><th>Rol</th><th>Estado</th></tr></thead><tbody>' + invRows + '</tbody></table></div></div>' : '') +
+          '</div>' : '') +
+
+          allWsHtml +
+
+        '</div>';
+    }
+
+    window.switchTab = function(tab) {
+      document.getElementById('panel-email').style.display = tab === 'email' ? '' : 'none';
+      document.getElementById('panel-code').style.display  = tab === 'code'  ? '' : 'none';
+      document.getElementById('tab-email').className = 'ws-tab' + (tab === 'email' ? ' active' : '');
+      document.getElementById('tab-code').className  = 'ws-tab' + (tab === 'code'  ? ' active' : '');
+    };
+
+    window.sendEmailInvite = async function(wsId) {
+      var email = document.getElementById('inv-email').value.trim();
+      var role  = document.getElementById('inv-role').value;
+      if (!email) { U.toast('Ingresá un email', 'error'); return; }
+      try {
+        var res = await fetch(API.base + '/workspaces/' + wsId + '/invite', {
+          method: 'POST',
+          headers: Object.assign({}, API.authHeaders(), {'Content-Type': 'application/json'}),
+          body: JSON.stringify({ email: email, role: role, method: 'email' })
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error');
+        U.toast(data.email_sent ? 'Email enviado a ' + email : 'Código generado: ' + data.code, 'success');
+        document.getElementById('inv-email').value = '';
+        setTimeout(function() { init(); }, 800);
+      } catch(e) { U.toast(e.message, 'error'); }
+    };
+
+    window.generateCode = async function(wsId) {
+      var role = document.getElementById('code-role').value;
+      try {
+        var res = await fetch(API.base + '/workspaces/' + wsId + '/invite', {
+          method: 'POST',
+          headers: Object.assign({}, API.authHeaders(), {'Content-Type': 'application/json'}),
+          body: JSON.stringify({ role: role, method: 'code' })
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error');
+        document.getElementById('code-result').innerHTML =
+          '<div class="ws-code-box">' +
+            '<div>' +
+              '<div style="font-size:12px;color:#8b93a3;margin-bottom:8px;">Compartí este código con el invitado:</div>' +
+              '<div class="ws-code">' + data.code + '</div>' +
+              '<div style="font-size:12px;color:#6f7686;margin-top:6px;">Rol: ' + role + ' · Expira en 7 días</div>' +
+            '</div>' +
+            '<button class="ws-btn outline" onclick="navigator.clipboard.writeText(\'' + data.code + '\').then(function(){ U.toast(\'Código copiado\',\'success\'); })">Copiar</button>' +
+          '</div>';
+      } catch(e) { U.toast(e.message, 'error'); }
+    };
+
+    window.changeRole = async function(wsId, userId) {
+      var newRole = prompt('Nuevo rol (admin, participant, superadmin):');
+      if (!newRole) return;
+      try {
+        var res = await fetch(API.base + '/workspaces/' + wsId + '/members/' + userId, {
+          method: 'PATCH',
+          headers: Object.assign({}, API.authHeaders(), {'Content-Type': 'application/json'}),
+          body: JSON.stringify({ role: newRole })
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error');
+        U.toast('Rol actualizado', 'success');
+        init();
+      } catch(e) { U.toast(e.message, 'error'); }
+    };
+
+    window.removeMember = async function(wsId, userId) {
+      if (!confirm('¿Seguro que querés remover a este miembro?')) return;
+      try {
+        var res = await fetch(API.base + '/workspaces/' + wsId + '/members/' + userId, {
+          method: 'DELETE',
+          headers: API.authHeaders()
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error');
+        U.toast('Miembro removido', 'success');
+        init();
+      } catch(e) { U.toast(e.message, 'error'); }
+    };
+
+    init();
+  })();
+  </script>
+</body>
+</html>

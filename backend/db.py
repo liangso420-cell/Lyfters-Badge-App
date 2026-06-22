@@ -52,6 +52,11 @@ def achievements():      return get_db()["achievements"]
 def user_achievements(): return get_db()["user_achievements"]
 def xp_log():            return get_db()["xp_log"]
 
+# Colecciones del sistema multi-tenant
+def workspaces():        return get_db()["workspaces"]
+def workspace_members(): return get_db()["workspace_members"]
+def invitations():       return get_db()["invitations"]
+
 
 def init_indexes():
     from pymongo import ASCENDING
@@ -80,3 +85,12 @@ def init_indexes():
     )
     # Auditoría de XP por usuario, ordenable por fecha
     xp_log().create_index([("user_id", ASCENDING), ("created_at", ASCENDING)])
+
+    # ── Sistema multi-tenant ────────────────────────────────
+    workspaces().create_index("slug", unique=True)
+    workspace_members().create_index(
+        [("workspace_id", ASCENDING), ("user_id", ASCENDING)], unique=True
+    )
+    invitations().create_index("token", unique=True)
+    invitations().create_index("code", unique=True)
+    invitations().create_index("expires_at", expireAfterSeconds=0)

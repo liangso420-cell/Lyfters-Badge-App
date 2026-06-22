@@ -6,15 +6,25 @@ from datetime import datetime
 
 from pymongo.errors import DuplicateKeyError
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt
+from bson import ObjectId
 
-from db import users, events, badges, scans
+from db import users, events, badges, scans, workspace_members
 from utils import (
     require_admin, valid_oid, sanitize,
     generate_qr_base64, fmt_event, fmt_admin_badge, fmt_user
 )
 
 admin_bp = Blueprint("admin", __name__)
+
+
+def _get_ws_id():
+    """Devuelve el workspace_id del JWT como ObjectId, o None para god_admin / sin workspace."""
+    claims = get_jwt()
+    if claims.get("role") == "god_admin":
+        return None
+    ws = claims.get("workspace_id")
+    return ObjectId(ws) if ws else None
 
 
 def _parse_int_in_range(value, lo, hi, field):
@@ -43,7 +53,9 @@ def _parse_int_in_range(value, lo, hi, field):
 def admin_list_events():
     if not require_admin():
         return jsonify(error="Acceso denegado"), 403
-    docs = events().find({})
+    ws_id = _get_ws_id()
+    query = {"workspace_id": ws_id} if ws_id else {}
+    docs = events().find(query)
     return jsonify([fmt_event(e) for e in docs]), 200
 
 
@@ -166,7 +178,8 @@ def create_event():
     if err:
         return jsonify(error=err), 400
 
-    result = events().insert_one({
+    ws_id = _get_ws_id()
+    new_event_doc = {
         "title":       nombre,
         "description": descripcion,
         "start_date":  start,
@@ -179,7 +192,10 @@ def create_event():
         "xp_completion_bonus": xp_completion_bonus if xp_completion_bonus is not None else 50,
         "created_by":  admin["_id"],
         "created_at":  datetime.utcnow(),
-    })
+    }
+    if ws_id:
+        new_event_doc["workspace_id"] = ws_id
+    result = events().insert_one(new_event_doc)
 
     new_event = events().find_one({"_id": result.inserted_id})
     return jsonify(fmt_event(new_event)), 201
@@ -549,13 +565,22 @@ def admin_dashboard():
     if not require_admin():
         return jsonify(error="Acceso denegado"), 403
 
-    total_participantes    = users().count_documents({"role": "participant"})
-    total_eventos          = events().count_documents({})
-    total_badges_creados   = badges().count_documents({})
-    total_badges_canjeados = scans().count_documents({})
+    ws_id = _get_ws_id()
+    ws_filter = {"workspace_id": ws_id} if ws_id else {}
+
+    if ws_id:
+        # Contar solo participantes del workspace
+        member_ids = [m["user_id"] for m in workspace_members().find({"workspace_id": ws_id})]
+        total_participantes = len([m for m in workspace_members().find({"workspace_id": ws_id}) if True])
+    else:
+        total_participantes = users().count_documents({"role": "participant"})
+
+    total_eventos          = events().count_documents(ws_filter)
+    total_badges_creados   = badges().count_documents(ws_filter)
+    total_badges_canjeados = scans().count_documents(ws_filter)
 
     progreso = []
-    for e in events().find({}):
+    for e in events().find(ws_filter):
         eid     = e["_id"]
         total_b = badges().count_documents({"event_id": eid})
         total_c = scans().count_documents({"event_id": eid})
@@ -584,7 +609,15 @@ def admin_dashboard():
 def admin_list_users():
     if not require_admin():
         return jsonify(error="Acceso denegado"), 403
-    docs = list(users().find({}, {"password_hash": 0}))
+
+    ws_id = _get_ws_id()
+    if ws_id:
+        members  = list(workspace_members().find({"workspace_id": ws_id}))
+        user_ids = [m["user_id"] for m in members]
+        docs     = list(users().find({"_id": {"$in": user_ids}}, {"password_hash": 0}))
+    else:
+        docs = list(users().find({}, {"password_hash": 0}))
+
     result = []
     for u in docs:
         try:
