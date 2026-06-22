@@ -75,8 +75,8 @@ def register():
         return jsonify(error="El nombre es requerido"), 400
     if not email or not EMAIL_RE.match(email):
         return jsonify(error="Formato de email inválido"), 400
-    if len(password) < 6:
-        return jsonify(error="La contraseña debe tener al menos 6 caracteres"), 400
+    if len(password) < 8:
+        return jsonify(error="La contraseña debe tener al menos 8 caracteres"), 400
 
     if users().find_one({"email": email}):
         return jsonify(error="Email ya registrado"), 409
@@ -208,8 +208,8 @@ def change_password():
     data = request.get_json() or {}
     current = (data.get("current_password") or "").encode()
     new_pw  = (data.get("new_password") or "")
-    if len(new_pw) < 6:
-        return jsonify(error="La nueva contraseña debe tener al menos 6 caracteres"), 400
+    if len(new_pw) < 8:
+        return jsonify(error="La nueva contraseña debe tener al menos 8 caracteres"), 400
     user = users().find_one({"_id": ObjectId(uid)})
     if not user or not bcrypt.checkpw(current, user["password_hash"].encode()):
         return jsonify(error="Contraseña actual incorrecta"), 401
@@ -374,8 +374,8 @@ def reset_password():
 
     if not reset_token or not new_password:
         return jsonify(error="Token y contraseña requeridos"), 400
-    if len(new_password) < 6:
-        return jsonify(error="La contraseña debe tener mínimo 6 caracteres"), 400
+    if len(new_password) < 8:
+        return jsonify(error="La contraseña debe tener mínimo 8 caracteres"), 400
 
     user = users().find_one({
         "reset_token": reset_token,
