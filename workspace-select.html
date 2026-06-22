@@ -310,10 +310,8 @@
       // Join by code
       html += joinSectionHtml();
 
-      // Create workspace (solo admins con permiso — god_admin sin código, resto con código)
+      // Create workspace (solo admins con permiso)
       if (['admin','superadmin','god_admin'].indexOf(user.role) !== -1) {
-        html += '<div class="ws-divider">o</div>';
-        html += '<button class="ws-create-btn" id="btn-create-ws">+ Crear nuevo workspace</button>';
         html += createWsFormHtml(isGod);
       }
 
@@ -323,35 +321,41 @@
     }
 
     function createWsFormHtml(isGod) {
-      var codeField = !isGod
-        ? '<input id="new-ws-code" type="text" maxlength="10" placeholder="Código de creación (10 chars)" ' +
-            'style="flex:1;min-width:200px;height:50px;border-radius:12px;border:1px solid rgba(255,200,80,0.3);background:#2e323d;color:#ffc850;font-family:JetBrains Mono,monospace;font-size:15px;padding:0 16px;outline:none;letter-spacing:.12em;text-transform:uppercase;" />'
-        : '';
-      var hint = !isGod
-        ? '<p style="font-size:12px;color:#8b93a3;margin-bottom:14px;">Necesitás un código de creación generado por god_admin para crear un workspace.</p>'
-        : '';
-      return '<div id="create-ws-form" style="display:none;background:#1a1d24;border:1px solid #262a33;border-radius:20px;padding:28px 30px;margin-top:14px;">' +
-        '<p style="font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#f4f6f9;margin-bottom:6px;">Crear workspace</p>' +
-        hint +
-        '<div style="display:flex;gap:12px;flex-wrap:wrap;">' +
-          '<input id="new-ws-name" type="text" placeholder="Nombre del workspace" style="flex:2;min-width:180px;height:50px;border-radius:12px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:15px;padding:0 16px;outline:none;" />' +
-          codeField +
-          '<button id="btn-confirm-create" style="height:50px;padding:0 24px;border-radius:12px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Crear</button>' +
+      return '<div style="background:#1a1d24;border:1px solid #262a33;border-radius:20px;padding:28px 30px;margin-top:24px;">' +
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:' + (isGod ? '18px' : '10px') + ';">' +
+          '<span style="font-size:20px;">🏗️</span>' +
+          '<div>' +
+            '<div style="font-family:Poppins,sans-serif;font-size:15px;font-weight:700;color:#f4f6f9;">Crear nuevo workspace</div>' +
+            (!isGod ? '<div style="font-size:12px;color:#8b93a3;margin-top:2px;">Necesitás un código de creación emitido por god_admin.</div>' : '') +
+          '</div>' +
+        '</div>' +
+
+        '<div style="display:flex;flex-direction:column;gap:12px;">' +
+
+          '<div>' +
+            '<label style="display:block;font-size:12px;font-weight:600;color:#8b93a3;margin-bottom:6px;letter-spacing:.04em;">NOMBRE DEL WORKSPACE</label>' +
+            '<input id="new-ws-name" type="text" placeholder="Ej: Mi organización" autocomplete="off" ' +
+              'style="width:100%;height:50px;border-radius:12px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:15px;padding:0 16px;outline:none;box-sizing:border-box;" />' +
+          '</div>' +
+
+          (!isGod ?
+            '<div>' +
+              '<label style="display:block;font-size:12px;font-weight:600;color:#ffc850;margin-bottom:6px;letter-spacing:.04em;">CÓDIGO DE CREACIÓN <span style="color:#8b93a3;font-weight:400;">(generado por god_admin)</span></label>' +
+              '<input id="new-ws-code" type="text" maxlength="10" placeholder="XXXXXXXXXX" autocomplete="off" ' +
+                'style="width:100%;height:50px;border-radius:12px;border:1px solid rgba(255,200,80,0.35);background:#2e323d;color:#ffc850;font-family:JetBrains Mono,monospace;font-size:18px;padding:0 16px;outline:none;letter-spacing:.18em;text-transform:uppercase;box-sizing:border-box;" />' +
+            '</div>'
+          : '') +
+
+          '<button id="btn-confirm-create" ' +
+            'style="height:50px;border-radius:12px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;">' +
+            'Crear workspace' +
+          '</button>' +
+
         '</div>' +
       '</div>';
     }
 
     function bindCreateWorkspace() {
-      var btn = document.getElementById('btn-create-ws');
-      var form = document.getElementById('create-ws-form');
-      if (!btn || !form) return;
-
-      btn.addEventListener('click', function() {
-        var visible = form.style.display !== 'none';
-        form.style.display = visible ? 'none' : 'block';
-        if (!visible) document.getElementById('new-ws-name').focus();
-      });
-
       var confirmBtn = document.getElementById('btn-confirm-create');
       if (!confirmBtn) return;
       confirmBtn.addEventListener('click', async function() {
