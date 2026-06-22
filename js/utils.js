@@ -440,8 +440,23 @@
 
   /* ── HTML de estado ── */
   function loadingHtml() {
-    return '<div class="device-frame px-4 pt-24 text-center text-gray-400">' +
-      '<div class="text-3xl animate-pulse-badge"><img src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" style="width:40px;height:40px;object-fit:contain;border-radius:8px;" /></div><p class="mt-3 text-sm">Cargando…</p></div>';
+    return '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;">' +
+      '<canvas id="lottie-loader" style="width:200px;height:200px;"></canvas>' +
+      '<p style="font-family:Manrope,sans-serif;font-size:14px;color:#8b93a3;margin-top:16px;">Cargando...</p>' +
+    '</div>' +
+    '<script>' +
+      'setTimeout(function(){' +
+        'var canvas=document.getElementById("lottie-loader");' +
+        'if(canvas&&window.DotLottie){' +
+          'new window.DotLottie({autoplay:true,loop:true,canvas:canvas,src:"lodernuevo.json"});' +
+        '}else{' +
+          'import("https://unpkg.com/@lottiefiles/dotlottie-web@1.6.1/dist/dotlottie-web.browser.es2022.js").then(function(m){' +
+            'var c=document.getElementById("lottie-loader");' +
+            'if(c)new m.DotLottie({autoplay:true,loop:true,canvas:c,src:"lodernuevo.json"});' +
+          '});' +
+        '}' +
+      '},100);' +
+    '<\/script>';
   }
   function hideLoading() {
     var ls = document.getElementById('loading-screen');
@@ -1200,6 +1215,18 @@
     legendary: { color: '#D97706', label: 'Legendario', glow: 'rgba(217,119,6,0.45)' }
   };
 
+  var ACHIEVEMENT_ICONS = {
+    'primer_paso':    'assets/icons/achievements/primer-paso.png',
+    'coleccionista':  'assets/icons/achievements/coleccionista.png',
+    'vertigo':        'assets/icons/achievements/vertigo.png',
+    'completista':    'assets/icons/achievements/perfeccionista.png',
+    'perfeccionista': 'assets/icons/achievements/perfeccionista.png',
+    'viajero':        'assets/icons/achievements/viajero.png',
+    'veterano':       'assets/icons/achievements/veterano.png',
+    'ojo_halcon':     'assets/icons/achievements/ojo-de-halcon.png',
+    'leyenda':        'assets/icons/achievements/leyenda.png'
+  };
+
   // Toast flotante "+N XP" (y banner opcional de subida de nivel).
   // opts = { levelUp:bool, level:int }
   function showXpGain(amount, opts) {
@@ -1248,6 +1275,7 @@
   function _showAchievementAt(queue, i, onDone) {
     if (i >= queue.length) { onDone(); return; }
     var a = queue[i];
+    var iconSrc = ACHIEVEMENT_ICONS[a.slug] || a.icon || 'assets/icons/achievements/primer-paso.png';
     var rs = RARITY_STYLES[a.rarity] || RARITY_STYLES.common;
     var root = document.getElementById('modal-root');
     if (!root) { onDone(); return; }
@@ -1261,7 +1289,7 @@
       '<div id="ach-overlay" class="fixed inset-0 z-[70] flex items-center justify-center p-6 anim-fade" style="background:rgba(17,24,39,0.8);">' +
         '<div class="bg-white rounded-card p-8 text-center w-full max-w-xs shadow-soft anim-pop" style="border-top:5px solid ' + rs.color + ';">' +
           '<p class="text-xs font-semibold uppercase tracking-wide mb-3" style="color:' + rs.color + ';">¡Logro desbloqueado!</p>' +
-          '<div class="mb-3" style="filter:drop-shadow(0 0 14px ' + rs.glow + ');"><img src="' + (a.icon || 'assets/icons/achievements/primer-paso.png') + '" style="width:80px;height:80px;object-fit:contain;" /></div>' +
+          '<div class="mb-3" style="filter:drop-shadow(0 0 14px ' + rs.glow + ');display:flex;justify-content:center;"><img src="' + iconSrc + '" style="width:80px;height:80px;object-fit:contain;display:block;" /></div>' +
           '<h3 class="text-lg font-bold text-gray-800">' + esc(a.name) + '</h3>' +
           '<p class="text-sm text-gray-500 mt-1">' + esc(a.description || '') + '</p>' +
           '<span class="inline-block mt-3 px-3 py-1 rounded-full text-xs font-bold text-white" style="background:' + rs.color + ';">' + rs.label + ' · +' + (a.xp_reward || 0) + ' XP</span>' +
@@ -1305,16 +1333,18 @@
     var cells = [];
     (data.unlocked || []).forEach(function (a) {
       var rs = RARITY_STYLES[a.rarity] || RARITY_STYLES.common;
+      var iconSrc = ACHIEVEMENT_ICONS[a.slug] || a.icon || 'assets/icons/achievements/primer-paso.png';
       cells.push('<div class="rounded-card p-3 text-center" style="background:#21242d;border:1px solid ' + rs.color + '44;box-shadow:0 2px 10px ' + rs.glow + ';">' +
-        '<div><img src="' + (a.icon || 'assets/icons/achievements/primer-paso.png') + '" style="width:48px;height:48px;object-fit:contain;" /></div>' +
+        '<div style="display:flex;justify-content:center;"><img src="' + iconSrc + '" style="width:48px;height:48px;object-fit:contain;display:block;" /></div>' +
         '<p class="text-xs font-semibold mt-1" style="color:#f0eaf2;">' + esc(a.name) + '</p>' +
         '<p class="text-\[10px\] mt-0\.5" style="color:' + rs.color + ';">' + rs.label + '</p>' +
         (a.unlocked_at ? '<p class="text-\[10px\]" style="color:rgba(240,234,242,0.35);">' + fmtDate(a.unlocked_at) + '</p>' : '') +
       '</div>');
     });
     (data.locked || []).forEach(function (a) {
+      var iconSrc = ACHIEVEMENT_ICONS[a.slug] || a.icon || 'assets/icons/achievements/primer-paso.png';
       cells.push('<div class="rounded-card p-3 text-center" style="background:#1a1d24;border:1px solid rgba(255,255,255,0.06);" title="' + esc(a.hint || '') + '">' +
-        '<div style="opacity:0.25;filter:grayscale(1);"><img src="' + (a.icon || 'assets/icons/achievements/primer-paso.png') + '" style="width:48px;height:48px;object-fit:contain;" /></div>' +
+        '<div style="opacity:0.25;filter:grayscale(1);display:flex;justify-content:center;"><img src="' + iconSrc + '" style="width:48px;height:48px;object-fit:contain;display:block;" /></div>' +
         '<p class="text-xs mt-1" style="color:rgba(240,234,242,0.44);">' + esc(a.name) + '</p>' +
         '<p class="text-\[10px\]" style="color:rgba(240,234,242,0.25);"></p>' +
       '</div>');
