@@ -184,8 +184,8 @@
           '<a href="workspace-select.html" style="color:#8b93a3;text-decoration:none;font-size:20px;margin-right:4px;">←</a>' +
           '<img src="assets/icons/ui/icono-usuarios.png" style="width:28px;height:28px;object-fit:contain;opacity:.8;" />' +
           '<div>' +
-            '<div class="ws-title">' + (ws.name ? U.esc(ws.name) : 'Mis Workspaces') + '</div>' +
-            (ws.slug ? '<div style="font-size:12px;color:#8b93a3;">/' + U.esc(ws.slug) + ' · ' + (ws.plan||'free') + (ws.my_role ? ' · ' + ws.my_role : '') + '</div>' : '') +
+            '<div class="ws-title">' + (isGod ? 'Gestionar plataforma' : (ws.name ? U.esc(ws.name) : 'Mis Workspaces')) + '</div>' +
+            (!isGod && ws.slug ? '<div style="font-size:12px;color:#8b93a3;">/' + U.esc(ws.slug) + ' · ' + (ws.plan||'free') + (ws.my_role ? ' · ' + ws.my_role : '') + '</div>' : '') +
           '</div>' +
         '</div>' +
         '<div class="ws-main">' +
