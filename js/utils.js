@@ -450,7 +450,7 @@
         autoplay: true,
         path: 'lodernuevo.json'
       });
-    }, 300);
+    }, 1000);
 
     return '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;">' +
       '<div id="lottie-loader" style="width:200px;height:200px;display:block;"></div>' +
