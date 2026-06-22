@@ -249,6 +249,31 @@ def login():
         return jsonify(error="Credenciales inválidas"), 401
 
     clear_attempts(email)
+
+    # Check account ban
+    now_dt = datetime.utcnow()
+    banned_until = user.get("banned_until")
+    if banned_until:
+        if getattr(banned_until, "tzinfo", None) is not None:
+            banned_until = banned_until.replace(tzinfo=None)
+        if banned_until > now_dt:
+            if banned_until.year >= 9999:
+                msg = "Tu cuenta ha sido baneada permanentemente."
+            else:
+                msg = "Tu cuenta está baneada hasta " + banned_until.strftime("%d/%m/%Y %H:%M") + " UTC."
+            reason = user.get("ban_reason", "")
+            if reason:
+                msg += " Razón: " + reason
+            return jsonify(error=msg, banned=True), 403
+
+    # Check IP ban
+    client_ip = (request.headers.get("X-Forwarded-For") or request.remote_addr or "").split(",")[0].strip()
+    if client_ip:
+        ip_ban = users().find_one({"ban_ip": client_ip, "banned_until": {"$gt": now_dt}})
+        if ip_ban:
+            return jsonify(error="Acceso denegado desde esta red."), 403
+        users().update_one({"_id": user["_id"]}, {"$set": {"last_login_ip": client_ip}})
+
     token = create_access_token(
         identity=str(user["_id"]),
         additional_claims=_workspace_claims(user),
