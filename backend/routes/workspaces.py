@@ -70,6 +70,7 @@ def generate_creation_code():
         "_id":        inv_id,
         "type":       "ws_creation",
         "code":       code,
+        "token":      str(uuid.uuid4()),
         "created_by": ObjectId(get_jwt_identity()),
         "created_at": datetime.now(timezone.utc),
         "expires_at": expires,

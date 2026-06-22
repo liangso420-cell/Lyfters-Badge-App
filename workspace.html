@@ -410,8 +410,11 @@
           method: 'POST',
           headers: Object.assign({}, API.authHeaders(), {'Content-Type': 'application/json'}),
         });
-        var data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Error');
+        var data = {};
+        try { data = await res.json(); } catch(je) {
+          throw new Error('Error del servidor (estado ' + res.status + '). Intentá de nuevo.');
+        }
+        if (!res.ok) throw new Error(data.error || 'Error ' + res.status);
         var exp = data.expires_at ? new Date(data.expires_at).toLocaleDateString('es-ES', {day:'numeric',month:'long'}) : '';
         out.innerHTML =
           '<div style="background:#15171d;border:1px solid rgba(255,200,80,0.25);border-radius:10px;padding:12px 16px;margin-top:4px;">' +
