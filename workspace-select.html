@@ -365,13 +365,15 @@
     }
 
     window.enterPanel = function() {
+      try { sessionStorage.setItem('lyfter_ws_entered', '1'); } catch(e) {}
       window.location.href = 'admin-event.html';
     };
 
     window.enterWorkspace = function(wsId) {
-      // Para god_admin: podría guardar el workspace activo en sessionStorage
-      // y redirigir al panel
-      try { sessionStorage.setItem('lyfter_active_ws', wsId); } catch(e) {}
+      try {
+        sessionStorage.setItem('lyfter_active_ws', wsId);
+        sessionStorage.setItem('lyfter_ws_entered', '1');
+      } catch(e) {}
       window.location.href = 'admin-event.html';
     };
 
