@@ -310,11 +310,11 @@
       // Join by code
       html += joinSectionHtml();
 
-      // Create workspace (solo admins con permiso)
+      // Create workspace (solo admins con permiso — god_admin sin código, resto con código)
       if (['admin','superadmin','god_admin'].indexOf(user.role) !== -1) {
         html += '<div class="ws-divider">o</div>';
         html += '<button class="ws-create-btn" id="btn-create-ws">+ Crear nuevo workspace</button>';
-        html += createWsFormHtml();
+        html += createWsFormHtml(isGod);
       }
 
       main.innerHTML = html;
@@ -322,11 +322,20 @@
       bindCreateWorkspace();
     }
 
-    function createWsFormHtml() {
+    function createWsFormHtml(isGod) {
+      var codeField = !isGod
+        ? '<input id="new-ws-code" type="text" maxlength="10" placeholder="Código de creación (10 chars)" ' +
+            'style="flex:1;min-width:200px;height:50px;border-radius:12px;border:1px solid rgba(255,200,80,0.3);background:#2e323d;color:#ffc850;font-family:JetBrains Mono,monospace;font-size:15px;padding:0 16px;outline:none;letter-spacing:.12em;text-transform:uppercase;" />'
+        : '';
+      var hint = !isGod
+        ? '<p style="font-size:12px;color:#8b93a3;margin-bottom:14px;">Necesitás un código de creación generado por god_admin para crear un workspace.</p>'
+        : '';
       return '<div id="create-ws-form" style="display:none;background:#1a1d24;border:1px solid #262a33;border-radius:20px;padding:28px 30px;margin-top:14px;">' +
-        '<p style="font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#f4f6f9;margin-bottom:18px;">Crear workspace</p>' +
+        '<p style="font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#f4f6f9;margin-bottom:6px;">Crear workspace</p>' +
+        hint +
         '<div style="display:flex;gap:12px;flex-wrap:wrap;">' +
-          '<input id="new-ws-name" type="text" placeholder="Nombre del workspace" style="flex:1;min-width:220px;height:50px;border-radius:12px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:15px;padding:0 16px;outline:none;" />' +
+          '<input id="new-ws-name" type="text" placeholder="Nombre del workspace" style="flex:2;min-width:180px;height:50px;border-radius:12px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:15px;padding:0 16px;outline:none;" />' +
+          codeField +
           '<button id="btn-confirm-create" style="height:50px;padding:0 24px;border-radius:12px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Crear</button>' +
         '</div>' +
       '</div>';
@@ -348,9 +357,16 @@
       confirmBtn.addEventListener('click', async function() {
         var name = (document.getElementById('new-ws-name').value || '').trim();
         if (!name || name.length < 2) { toast('El nombre debe tener al menos 2 caracteres', 'error'); return; }
+        var codeInp = document.getElementById('new-ws-code');
+        var body = { name: name };
+        if (codeInp) {
+          var code = codeInp.value.trim().toUpperCase();
+          if (!code) { toast('Ingresá el código de creación', 'error'); return; }
+          body.creation_code = code;
+        }
         confirmBtn.disabled = true; confirmBtn.textContent = 'Creando...';
         try {
-          await apiFetch('/workspaces/', { method: 'POST', body: JSON.stringify({ name: name }) });
+          await apiFetch('/workspaces/', { method: 'POST', body: JSON.stringify(body) });
           toast('Workspace "' + name + '" creado', 'success');
           setTimeout(function() { load(); }, 800);
         } catch(e) {
@@ -359,9 +375,17 @@
         }
       });
 
-      document.getElementById('new-ws-name').addEventListener('keydown', function(e) {
+      var nameInp = document.getElementById('new-ws-name');
+      if (nameInp) nameInp.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') confirmBtn.click();
       });
+      var codeInputEl = document.getElementById('new-ws-code');
+      if (codeInputEl) {
+        codeInputEl.addEventListener('input', function() {
+          codeInputEl.value = codeInputEl.value.replace(/[^a-zA-Z0-9]/g,'').toUpperCase().slice(0,10);
+        });
+        codeInputEl.addEventListener('keydown', function(e) { if (e.key === 'Enter') confirmBtn.click(); });
+      }
     }
 
     window.enterPanel = function() {

@@ -52,6 +52,32 @@ def get_my_workspace():
     return jsonify(result)
 
 
+# ── POST /workspaces/creation-code  (solo god_admin) ─────────
+@ws_bp.route("/creation-code", methods=["POST"])
+@jwt_required()
+def generate_creation_code():
+    claims = get_jwt()
+    if claims.get("role") != "god_admin":
+        return jsonify(error="Solo god_admin puede generar códigos de creación"), 403
+
+    code = generate_invite_code(10)
+    while invitations().find_one({"code": code}):
+        code = generate_invite_code(10)
+
+    expires = datetime.now(timezone.utc) + timedelta(days=30)
+    inv_id  = ObjectId()
+    invitations().insert_one({
+        "_id":        inv_id,
+        "type":       "ws_creation",
+        "code":       code,
+        "created_by": ObjectId(get_jwt_identity()),
+        "created_at": datetime.now(timezone.utc),
+        "expires_at": expires,
+        "status":     "pending",
+    })
+    return jsonify(code=code, expires_at=expires.isoformat()), 201
+
+
 # ── POST /workspaces/ ─────────────────────────────────────────
 @ws_bp.route("/", methods=["POST"])
 @jwt_required()
@@ -67,6 +93,22 @@ def create_workspace():
     name = (data.get("name") or "").strip()
     if not name or len(name) < 2:
         return jsonify(error="El nombre del workspace es requerido"), 400
+
+    # No-god_admin debe presentar un código de creación válido
+    if role != "god_admin":
+        raw_code = (data.get("creation_code") or "").strip().upper()
+        if not raw_code:
+            return jsonify(error="Se requiere un código de creación emitido por god_admin"), 400
+        inv = invitations().find_one({
+            "type":   "ws_creation",
+            "code":   raw_code,
+            "status": "pending",
+            "expires_at": {"$gt": datetime.now(timezone.utc)},
+        })
+        if not inv:
+            return jsonify(error="Código de creación inválido o expirado"), 400
+        # Marcar usado
+        invitations().update_one({"_id": inv["_id"]}, {"$set": {"status": "used"}})
 
     slug = slugify(name)
     base_slug = slug
@@ -334,7 +376,7 @@ def join_workspace():
     if token: query["token"] = token
 
     inv = invitations().find_one(query)
-    if not inv:
+    if not inv or inv.get("type") == "ws_creation":
         return jsonify(error="Código o link inválido o ya usado"), 404
 
     inv_expires = inv["expires_at"]
@@ -366,6 +408,27 @@ def join_workspace():
         "workspace":    ws["name"] if ws else "",
         "role":         inv["role"],
     })
+
+
+# ── POST /workspaces/grant-god-admin  (solo god_admin) ───────
+@ws_bp.route("/grant-god-admin", methods=["POST"])
+@jwt_required()
+def grant_god_admin():
+    claims = get_jwt()
+    if claims.get("role") != "god_admin":
+        return jsonify(error="Solo god_admin puede otorgar este rol"), 403
+
+    data  = request.get_json() or {}
+    email = (data.get("email") or "").strip().lower()
+    if not email:
+        return jsonify(error="Email requerido"), 400
+
+    target = users().find_one({"email": email})
+    if not target:
+        return jsonify(error="Usuario no encontrado"), 404
+
+    users().update_one({"_id": target["_id"]}, {"$set": {"role": "god_admin"}})
+    return jsonify(ok=True, name=target.get("name", ""), email=email)
 
 
 # ── GET /workspaces/<ws_id>/invitations ───────────────────────
