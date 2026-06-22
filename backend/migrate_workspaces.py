@@ -43,7 +43,23 @@ for col_name in ["events", "badges", "scans", "event_joins", "xp_log", "user_ach
     )
     print(f"{col_name}: {result.modified_count} docs actualizados")
 
-# 3. Crear god_admin si no existe
+# 3. Actualizar el validator de users para aceptar los nuevos roles
+db.command("collMod", "users", validator={
+    "$jsonSchema": {
+        "bsonType": "object",
+        "required": ["name", "email", "password_hash", "role", "created_at"],
+        "properties": {
+            "name":          {"bsonType": "string"},
+            "email":         {"bsonType": "string"},
+            "password_hash": {"bsonType": "string"},
+            "role":          {"bsonType": "string", "enum": ["participant", "admin", "superadmin", "god_admin"]},
+            "created_at":    {"bsonType": "date"},
+        }
+    }
+}, validationAction="warn")
+print("Validator de users actualizado")
+
+# 4. Crear god_admin si no existe
 god_email = os.getenv("GOD_ADMIN_EMAIL", "god@lyfter.app")
 god_pass  = os.getenv("GOD_ADMIN_PASSWORD", "lyfter_god_2026")
 existing  = db["users"].find_one({"email": god_email})
@@ -64,7 +80,7 @@ else:
     db["users"].update_one({"_id": god_id}, {"$set": {"role": "god_admin"}})
     print(f"God admin ya existe: {god_email}")
 
-# 4. Asignar todos los usuarios existentes al workspace Lyfter
+# 5. Asignar todos los usuarios existentes al workspace Lyfter
 all_users = list(db["users"].find({}))
 for u in all_users:
     role_in_ws = "superadmin" if u.get("role") in ("admin", "god_admin") else "participant"
