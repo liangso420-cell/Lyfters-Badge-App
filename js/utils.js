@@ -443,7 +443,7 @@
     setTimeout(function() {
       var canvas = document.getElementById('lottie-loader');
       if (!canvas) return;
-      import('https://unpkg.com/@lottiefiles/dotlottie-web@1.6.1/dist/dotlottie-web.browser.es2022.js')
+      import('https://cdn.jsdelivr.net/npm/@lottiefiles/dotlottie-web/dist/dotlottie-web.browser.es2022.js')
         .then(function(m) {
           var DotLottieClass = m.DotLottie || m.default;
           if (DotLottieClass) {
