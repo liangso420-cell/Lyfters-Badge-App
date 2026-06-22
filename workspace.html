@@ -93,7 +93,7 @@
           wsData = await wsRes.json();
         }
 
-        if (wsData.id) {
+        if (wsData && wsData.id) {
           var memRes = await fetch(API.base + '/workspaces/' + wsData.id + '/members', { headers: API.authHeaders() });
           members = memRes.ok ? await memRes.json() : [];
           var invRes = await fetch(API.base + '/workspaces/' + wsData.id + '/invitations', { headers: API.authHeaders() });
@@ -104,7 +104,12 @@
 
         renderPage(wsData, members, invList, allWorkspaces, isGod);
       } catch(err) {
-        app.innerHTML = styles + U.errorHtml('Error cargando el workspace: ' + err.message);
+        // Si falla la carga pero es god_admin, igual mostrar el panel de herramientas
+        if (user.role === 'god_admin') {
+          renderPage({ id: null, name: '', slug: '', plan: '' }, [], [], [], true);
+        } else {
+          app.innerHTML = styles + U.errorHtml('Error cargando el workspace: ' + err.message);
+        }
       }
     }
 
@@ -177,9 +182,10 @@
       app.innerHTML = styles +
         '<div class="ws-header">' +
           '<a href="workspace-select.html" style="color:#8b93a3;text-decoration:none;font-size:20px;margin-right:4px;">←</a>' +
+          '<img src="assets/icons/ui/icono-usuarios.png" style="width:28px;height:28px;object-fit:contain;opacity:.8;" />' +
           '<div>' +
-            '<div class="ws-title">🏢 ' + U.esc(ws.name||'Workspace') + '</div>' +
-            '<div style="font-size:12px;color:#8b93a3;">/' + U.esc(ws.slug||'') + ' · ' + (ws.plan||'free') + (ws.my_role ? ' · ' + ws.my_role : '') + '</div>' +
+            '<div class="ws-title">' + (ws.name ? U.esc(ws.name) : 'Mis Workspaces') + '</div>' +
+            (ws.slug ? '<div style="font-size:12px;color:#8b93a3;">/' + U.esc(ws.slug) + ' · ' + (ws.plan||'free') + (ws.my_role ? ' · ' + ws.my_role : '') + '</div>' : '') +
           '</div>' +
         '</div>' +
         '<div class="ws-main">' +

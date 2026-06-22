@@ -1171,9 +1171,12 @@
           navItem('leaderboard',   '', 'Leaderboard', 'admin-leaderboard.html') +
         '</nav>' +
         eventBlock +
-        '<div style="margin-top:16px;border-top:1px solid #262a33;padding-top:16px;">' +
+        '<div style="margin-top:16px;border-top:1px solid #262a33;padding-top:16px;display:flex;flex-direction:column;gap:2px;">' +
           '<a href="workspace-select.html" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;color:#8b93a3;text-decoration:none;font-size:14px;font-weight:600;transition:color .15s;" onmouseover="this.style.color=\'#d897e7\'" onmouseout="this.style.color=\'#8b93a3\'">' +
-            '<span style="font-size:17px;">🏢</span> Mi Workspace' +
+            '<img src="assets/icons/ui/icono-usuarios.png" style="width:18px;height:18px;object-fit:contain;opacity:.7;" /> Mis Workspaces' +
+          '</a>' +
+          '<a href="workspace.html" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;color:#8b93a3;text-decoration:none;font-size:13px;font-weight:600;transition:color .15s;" onmouseover="this.style.color=\'#d897e7\'" onmouseout="this.style.color=\'#8b93a3\'">' +
+            '<img src="assets/icons/ui/icono-editar.png" style="width:16px;height:16px;object-fit:contain;opacity:.6;" /> Gestionar workspace' +
           '</a>' +
         '</div>' +
         '<div style="margin-top:auto;padding-top:22px;">' +

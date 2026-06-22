@@ -145,8 +145,8 @@
       '</div>' +
       '<div style="display:flex;gap:8px;margin-left:8px;">' +
         '<a href="workspace.html" title="Gestionar workspace" ' +
-          'style="height:34px;padding:0 14px;border-radius:10px;border:1px solid #353a46;background:rgba(255,255,255,0.04);color:#cdd2db;font-family:Poppins,sans-serif;font-size:12px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">' +
-          '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg> Mi cuenta' +
+          'style="height:34px;padding:0 14px;border-radius:10px;border:1px solid #353a46;background:rgba(255,255,255,0.04);color:#cdd2db;font-family:Poppins,sans-serif;font-size:12px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;">' +
+          '<img src="assets/icons/ui/icono-editar.png" style="width:13px;height:13px;object-fit:contain;opacity:.7;" /> Gestionar workspace' +
         '</a>' +
         '<button onclick="doLogout()" title="Cerrar sesion" ' +
           'style="height:34px;padding:0 14px;border-radius:10px;border:1px solid rgba(230,138,141,0.3);background:rgba(230,138,141,0.08);color:#e68a8d;font-family:Poppins,sans-serif;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">' +
@@ -269,9 +269,12 @@
     function render(wsData, members, allWs) {
       var html = '';
 
-      html += '<div style="margin-bottom:36px;">' +
-        '<h1 class="ws-heading">Seleccioná tu workspace</h1>' +
-        '<p class="ws-subheading">Entrá al panel de administración de tu organización.</p>' +
+      html += '<div style="display:flex;align-items:center;gap:14px;margin-bottom:36px;">' +
+        '<img src="assets/icons/ui/icono-usuarios.png" style="width:40px;height:40px;object-fit:contain;opacity:.85;" />' +
+        '<div>' +
+          '<h1 class="ws-heading" style="margin-bottom:2px;">Mis Workspaces</h1>' +
+          '<p class="ws-subheading" style="margin-bottom:0;">Seleccioná un workspace para entrar al panel de administración.</p>' +
+        '</div>' +
       '</div>';
 
       if (isGod && allWs.length > 1) {
