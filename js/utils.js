@@ -441,15 +441,19 @@
   /* ── HTML de estado ── */
   function loadingHtml() {
     setTimeout(function() {
-      var canvas = document.getElementById('lottie-loader');
-      if (!canvas) return;
-      if (window.DotLottie) {
-        new window.DotLottie({ autoplay: true, loop: true, canvas: canvas, src: 'lodernuevo.json' });
-      }
+      var container = document.getElementById('lottie-loader');
+      if (!container || !window.lottie) return;
+      window.lottie.loadAnimation({
+        container: container,
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        path: 'lodernuevo.json'
+      });
     }, 300);
 
     return '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;">' +
-      '<canvas id="lottie-loader" style="width:200px;height:200px;display:block;"></canvas>' +
+      '<div id="lottie-loader" style="width:200px;height:200px;display:block;"></div>' +
       '<p style="font-family:Manrope,sans-serif;font-size:14px;color:#8b93a3;margin-top:16px;">Cargando...</p>' +
     '</div>';
   }
