@@ -45,7 +45,7 @@
       });
 
       var user = API.currentUser();
-      if (user) { window.location.replace(user.role === 'admin' ? 'admin-event.html' : 'profile.html'); return; }
+      if (user) { window.location.replace(['admin','superadmin','god_admin'].indexOf(user.role) !== -1 ? 'workspace-select.html' : 'profile.html'); return; }
 
       var app = document.getElementById('app');
 
@@ -141,10 +141,10 @@
         btn.textContent = U.t('loading');
         try {
           var newUser = await API.register({ name: name.value.trim(), email: email.value.trim(), password: pass.value });
-          if (newUser.role !== 'admin') {
-            showInterestsStep();
+          if (['admin','superadmin','god_admin'].indexOf(newUser.role) !== -1) {
+            window.location.href = 'workspace-select.html';
           } else {
-            window.location.href = 'admin-event.html';
+            showInterestsStep();
           }
         } catch (err) {
           U.setFieldError(email, err.message || 'No se pudo crear la cuenta');
@@ -177,10 +177,10 @@
             name:    result.user.displayName,
             photo:   result.user.photoURL
           });
-          if (loggedUser.role !== 'admin') {
-            showInterestsStep();
+          if (['admin','superadmin','god_admin'].indexOf(loggedUser.role) !== -1) {
+            window.location.href = 'workspace-select.html';
           } else {
-            window.location.href = 'admin-event.html';
+            showInterestsStep();
           }
         } catch (err) {
           var mensajes = {

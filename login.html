@@ -64,7 +64,8 @@
       }
 
       var user = API.currentUser();
-      if (user) { window.location.replace(nextUrl || (user.role === 'admin' ? 'admin-event.html' : 'profile.html')); return; }
+      var _adminRoles = ['admin','superadmin','god_admin'];
+      if (user) { window.location.replace(nextUrl || (_adminRoles.indexOf(user.role) !== -1 ? 'workspace-select.html' : 'profile.html')); return; }
 
       var app = document.getElementById('app');
       U.showPendingToast();
@@ -141,7 +142,8 @@
         try {
           var loggedUser = await API.login(email.value.trim(), pass.value);
           U.toastNextPage(U.t('welcome'), 'success');
-          window.location.href = nextUrl || (loggedUser.role === 'admin' ? 'admin-event.html' : 'profile.html');
+          var _ar = ['admin','superadmin','god_admin'];
+          window.location.href = nextUrl || (_ar.indexOf(loggedUser.role) !== -1 ? 'workspace-select.html' : 'profile.html');
         } catch (err) {
           U.setFieldError(pass, err.message || 'No se pudo iniciar sesión');
         } finally {
@@ -172,7 +174,8 @@
             photo:   result.user.photoURL
           });
           U.toastNextPage(U.t('welcome_google'), 'success');
-          window.location.href = nextUrl || (loggedUser.role === 'admin' ? 'admin-event.html' : 'profile.html');
+          var _ar2 = ['admin','superadmin','god_admin'];
+          window.location.href = nextUrl || (_ar2.indexOf(loggedUser.role) !== -1 ? 'workspace-select.html' : 'profile.html');
         } catch (err) {
           var mensajes = {
             'auth/popup-closed-by-user':    'Cerraste la ventana antes de completar el inicio.',

@@ -600,7 +600,10 @@
   /* =========================================================
      BACKEND (fetch → API Flask)
      ========================================================= */
-  function roleFromBackend(rol) { return rol === 'admin' ? 'admin' : 'participant'; }
+  function roleFromBackend(rol) {
+    var admin_roles = ['admin', 'superadmin', 'god_admin'];
+    return admin_roles.indexOf(rol) !== -1 ? rol : 'participant';
+  }
   function mapUser(u) { return { id: u.id, name: u.nombre, email: u.email, role: roleFromBackend(u.rol) }; }
   function mapEvent(e) {
     return {
@@ -900,6 +903,11 @@
 
   window.LyfterAPI = {
     mode: CFG.mode,
+    base: CFG.apiBaseUrl,
+    authHeaders: function() {
+      var s = getSession();
+      return s && s.token ? { 'Authorization': 'Bearer ' + s.token } : {};
+    },
     getSession: getSession,
     currentUser: function () { var s = getSession(); return s ? s.user : null; },
     login: login,

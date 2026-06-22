@@ -1172,7 +1172,7 @@
         '</nav>' +
         eventBlock +
         '<div style="margin-top:16px;border-top:1px solid #262a33;padding-top:16px;">' +
-          '<a href="workspace.html" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;color:#8b93a3;text-decoration:none;font-size:14px;font-weight:600;transition:color .15s;" onmouseover="this.style.color=\'#d897e7\'" onmouseout="this.style.color=\'#8b93a3\'">' +
+          '<a href="workspace-select.html" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;color:#8b93a3;text-decoration:none;font-size:14px;font-weight:600;transition:color .15s;" onmouseover="this.style.color=\'#d897e7\'" onmouseout="this.style.color=\'#8b93a3\'">' +
             '<span style="font-size:17px;">🏢</span> Mi Workspace' +
           '</a>' +
         '</div>' +

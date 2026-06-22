@@ -44,7 +44,8 @@
 
       var user = API.currentUser();
       if (!user) { window.location.replace('login.html'); return; }
-      if (user.role !== 'admin') { window.location.replace('profile.html'); return; }
+      var ADMIN_ROLES = ['admin','superadmin','god_admin'];
+      if (ADMIN_ROLES.indexOf(user.role) === -1) { window.location.replace('profile.html'); return; }
 
       var app = document.getElementById('app');
       U.showPendingToast();

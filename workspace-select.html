@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Workspace — Lyfter Badge App</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{background:#0f1117;font-family:Manrope,system-ui,sans-serif;min-height:100vh;color:#f4f6f9;overflow-x:hidden;}
+
+    /* Fondo con glows */
+    .bg-glow{position:fixed;inset:0;pointer-events:none;z-index:0;
+      background:
+        radial-gradient(ellipse 70% 50% at 20% 10%,rgba(216,151,231,0.12),transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 80%,rgba(112,207,255,0.09),transparent 60%),
+        radial-gradient(ellipse 50% 50% at 50% 50%,rgba(230,138,141,0.06),transparent 70%);}
+
+    /* Header */
+    .ws-header{position:relative;z-index:10;padding:20px 28px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.06);}
+    .ws-logo{display:flex;align-items:center;gap:10px;}
+    .ws-logo img{width:28px;height:28px;border-radius:6px;object-fit:contain;}
+    .ws-logo-text{font-family:Poppins,sans-serif;font-size:18px;font-weight:700;color:#f4f6f9;}
+    .ws-user-chip{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:999px;padding:7px 14px 7px 10px;}
+    .ws-user-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#d897e7,#70cfff);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#1c1f27;}
+    .ws-user-name{font-size:13px;font-weight:600;color:#cdd2db;}
+    .ws-user-role{font-size:10px;color:#8b93a3;background:rgba(216,151,231,0.12);border-radius:999px;padding:2px 8px;margin-left:4px;}
+
+    /* Main */
+    .ws-main{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:48px 24px 80px;}
+    .ws-heading{font-family:Poppins,sans-serif;font-size:28px;font-weight:800;color:#f4f6f9;margin-bottom:6px;}
+    .ws-subheading{font-size:15px;color:#8b93a3;margin-bottom:40px;}
+
+    /* Workspace card principal */
+    .ws-card-main{background:linear-gradient(135deg,rgba(216,151,231,0.08),rgba(112,207,255,0.05));border:1px solid rgba(216,151,231,0.25);border-radius:24px;padding:32px;margin-bottom:20px;position:relative;overflow:hidden;cursor:pointer;transition:border-color .2s,transform .15s,box-shadow .2s;}
+    .ws-card-main:hover{border-color:rgba(216,151,231,0.5);transform:translateY(-2px);box-shadow:0 12px 40px rgba(216,151,231,0.12);}
+    .ws-card-main::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(216,151,231,0.15),transparent 70%);pointer-events:none;}
+    .ws-card-main-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:12px;}
+    .ws-card-main-icon{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,rgba(216,151,231,0.2),rgba(230,138,141,0.15));border:1px solid rgba(216,151,231,0.3);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
+    .ws-card-main-info{flex:1;}
+    .ws-card-main-name{font-family:Poppins,sans-serif;font-size:22px;font-weight:700;color:#f4f6f9;margin-bottom:4px;}
+    .ws-card-main-slug{font-size:13px;color:#8b93a3;font-family:'JetBrains Mono',monospace;}
+    .ws-role-pill{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:999px;font-size:12px;font-weight:700;}
+    .ws-role-pill.superadmin{background:rgba(216,151,231,0.15);color:#d897e7;border:1px solid rgba(216,151,231,0.25);}
+    .ws-role-pill.admin{background:rgba(112,207,255,0.15);color:#70cfff;border:1px solid rgba(112,207,255,0.25);}
+    .ws-role-pill.participant{background:rgba(171,209,148,0.15);color:#abd194;border:1px solid rgba(171,209,148,0.25);}
+    .ws-role-pill.god_admin{background:rgba(255,200,80,0.15);color:#ffc850;border:1px solid rgba(255,200,80,0.25);}
+    .ws-card-stats{display:flex;gap:24px;padding-top:18px;border-top:1px solid rgba(255,255,255,0.06);}
+    .ws-stat{text-align:center;}
+    .ws-stat-n{font-family:Poppins,sans-serif;font-size:20px;font-weight:700;color:#f4f6f9;}
+    .ws-stat-l{font-size:11px;color:#6f7686;margin-top:2px;}
+    .ws-card-actions{display:flex;gap:12px;margin-top:22px;flex-wrap:wrap;}
+    .btn-enter{height:48px;padding:0 28px;border-radius:12px;border:none;font-family:Poppins,sans-serif;font-size:15px;font-weight:700;cursor:pointer;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;box-shadow:0 4px 20px rgba(230,138,141,0.30);transition:opacity .15s,transform .15s;}
+    .btn-enter:hover{opacity:.9;transform:translateY(-1px);}
+    .btn-manage{height:48px;padding:0 22px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:#cdd2db;font-family:Poppins,sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s,border-color .15s;text-decoration:none;display:inline-flex;align-items:center;gap:7px;}
+    .btn-manage:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.2);}
+
+    /* Grid workspaces (god_admin) */
+    .ws-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:24px;}
+    .ws-grid-card{background:#1c1f27;border:1px solid #2a2e38;border-radius:18px;padding:22px;cursor:pointer;transition:border-color .2s,transform .15s,box-shadow .15s;}
+    .ws-grid-card:hover{border-color:rgba(216,151,231,0.4);transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,0.3);}
+    .ws-grid-card.active-ws{border-color:#d897e7;background:linear-gradient(135deg,rgba(216,151,231,0.08),rgba(112,207,255,0.04));}
+    .ws-grid-name{font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#f4f6f9;margin-bottom:5px;}
+    .ws-grid-slug{font-size:12px;color:#8b93a3;margin-bottom:12px;font-family:'JetBrains Mono',monospace;}
+    .ws-grid-meta{display:flex;gap:12px;font-size:12px;color:#6f7686;}
+    .ws-grid-active-dot{width:7px;height:7px;border-radius:50%;background:#abd194;display:inline-block;margin-right:5px;flex-shrink:0;}
+
+    /* Join by code section */
+    .ws-join-section{background:#1a1d24;border:1px solid #262a33;border-radius:20px;padding:28px 30px;margin-top:24px;}
+    .ws-join-title{font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#f4f6f9;margin-bottom:6px;}
+    .ws-join-sub{font-size:13px;color:#8b93a3;margin-bottom:18px;}
+    .ws-join-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+    .ws-code-input{flex:1;min-width:180px;height:50px;border-radius:12px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-family:'JetBrains Mono',Manrope,monospace;font-size:18px;padding:0 18px;outline:none;letter-spacing:.15em;text-transform:uppercase;transition:border-color .15s;}
+    .ws-code-input:focus{border-color:#d897e7;box-shadow:0 0 0 3px rgba(216,151,231,0.15);}
+    .ws-code-input::placeholder{font-size:14px;letter-spacing:0;text-transform:none;color:#5a6172;}
+    .btn-join-code{height:50px;padding:0 24px;border-radius:12px;border:none;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;cursor:pointer;background:rgba(216,151,231,0.15);color:#d897e7;border:1px solid rgba(216,151,231,0.3);transition:background .15s;}
+    .btn-join-code:hover{background:rgba(216,151,231,0.25);}
+    .ws-join-result{margin-top:14px;padding:14px 18px;border-radius:12px;font-size:14px;font-weight:600;display:none;}
+    .ws-join-result.ok{background:rgba(171,209,148,0.12);color:#abd194;border:1px solid rgba(171,209,148,0.2);}
+    .ws-join-result.err{background:rgba(230,138,141,0.12);color:#e68a8d;border:1px solid rgba(230,138,141,0.2);}
+
+    /* Divider */
+    .ws-divider{display:flex;align-items:center;gap:14px;margin:28px 0;color:#3a3f4a;font-size:12px;}
+    .ws-divider::before,.ws-divider::after{content:'';flex:1;height:1px;background:#262a33;}
+
+    /* Create workspace */
+    .ws-create-btn{width:100%;height:52px;border-radius:14px;border:1px dashed #353a46;background:transparent;color:#6f7686;font-family:Poppins,sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s,border-color .15s,color .15s;display:flex;align-items:center;justify-content:center;gap:8px;}
+    .ws-create-btn:hover{background:rgba(216,151,231,0.06);border-color:rgba(216,151,231,0.3);color:#d897e7;}
+
+    /* Loading */
+    .ws-spinner{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 0;gap:16px;}
+    .ws-spinner-ring{width:44px;height:44px;border-radius:50%;border:3px solid #262a33;border-top-color:#d897e7;animation:spin .7s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .ws-empty{text-align:center;padding:60px 24px;}
+    .ws-empty-icon{font-size:56px;margin-bottom:16px;}
+    .ws-empty-text{font-size:16px;color:#8b93a3;margin-bottom:8px;}
+    .ws-empty-sub{font-size:13px;color:#5a6172;}
+  </style>
+</head>
+<body>
+  <div class="bg-glow"></div>
+
+  <header class="ws-header">
+    <div class="ws-logo">
+      <img src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" />
+      <span class="ws-logo-text">Lyfter</span>
+    </div>
+    <div id="user-chip" class="ws-user-chip"></div>
+  </header>
+
+  <main class="ws-main" id="main-content">
+    <div class="ws-spinner">
+      <div class="ws-spinner-ring"></div>
+      <span style="font-size:14px;color:#8b93a3;">Cargando workspace...</span>
+    </div>
+  </main>
+
+  <div id="toast-root" style="position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:100;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+  (function() {
+    var API = window.LyfterAPI;
+    var U   = window.LyfterUtils;
+
+    // Auth guard
+    var user = API.currentUser();
+    if (!user) { window.location.replace('login.html'); return; }
+
+    var ADMIN_ROLES = ['admin','superadmin','god_admin'];
+    if (ADMIN_ROLES.indexOf(user.role) === -1) {
+      window.location.replace('profile.html'); return;
+    }
+
+    // Mostrar chip de usuario
+    var initials = (user.name || '?').split(' ').map(function(w){ return w[0]||''; }).join('').slice(0,2).toUpperCase();
+    document.getElementById('user-chip').innerHTML =
+      '<div class="ws-user-avatar">' + initials + '</div>' +
+      '<span class="ws-user-name">' + U.esc(user.name || user.email || '') + '</span>' +
+      '<span class="ws-user-role">' + user.role + '</span>';
+
+    var isGod = user.role === 'god_admin';
+    var main  = document.getElementById('main-content');
+
+    function toast(msg, type) { U.toast(msg, type); }
+
+    // Helper fetch autenticado
+    async function apiFetch(path, opts) {
+      opts = opts || {};
+      var headers = Object.assign({ 'Content-Type': 'application/json' }, API.authHeaders());
+      if (opts.headers) Object.assign(headers, opts.headers);
+      var res = await fetch(API.base + path, Object.assign({}, opts, { headers: headers }));
+      var data = {};
+      try { data = await res.json(); } catch(e) {}
+      if (!res.ok) throw new Error(data.error || 'Error ' + res.status);
+      return data;
+    }
+
+    // ─────────────────────────────────────────────────────────
+    async function load() {
+      try {
+        var wsData = null, members = [], allWs = [];
+
+        if (isGod) {
+          allWs = await apiFetch('/workspaces/');
+          wsData = allWs.length ? allWs[0] : null;
+          if (wsData) {
+            try { members = await apiFetch('/workspaces/' + wsData.id + '/members'); } catch(e) {}
+          }
+        } else {
+          try { wsData = await apiFetch('/workspaces/mine'); } catch(e) {}
+          if (wsData && wsData.id) {
+            try { members = await apiFetch('/workspaces/' + wsData.id + '/members'); } catch(e) {}
+          }
+        }
+
+        render(wsData, members, allWs);
+      } catch(err) {
+        main.innerHTML =
+          '<div class="ws-empty">' +
+            '<div class="ws-empty-icon">⚠️</div>' +
+            '<p class="ws-empty-text">No se pudo cargar el workspace</p>' +
+            '<p class="ws-empty-sub">' + U.esc(err.message) + '</p>' +
+          '</div>' +
+          joinSectionHtml();
+        bindJoin();
+      }
+    }
+
+    function roleLabel(role) {
+      var labels = { superadmin: 'Super Admin', admin: 'Admin', participant: 'Participante', god_admin: 'God Admin' };
+      return labels[role] || role;
+    }
+
+    function planBadge(plan) {
+      var c = plan === 'enterprise' ? '#ffc850' : plan === 'pro' ? '#70cfff' : '#8b93a3';
+      return '<span style="font-size:11px;font-weight:700;color:' + c + ';background:' + c + '22;border-radius:999px;padding:2px 8px;margin-left:8px;">' + (plan||'free').toUpperCase() + '</span>';
+    }
+
+    function joinSectionHtml() {
+      return '<div class="ws-join-section">' +
+        '<div class="ws-join-title">🔑 Unirse con código de invitación</div>' +
+        '<div class="ws-join-sub">Si tenés un código de 8 caracteres, ingresalo para unirte a un workspace.</div>' +
+        '<div class="ws-join-row">' +
+          '<input id="code-input" class="ws-code-input" maxlength="8" placeholder="Ej: ABC12345" autocomplete="off" />' +
+          '<button class="btn-join-code" id="btn-join-code">Unirse</button>' +
+        '</div>' +
+        '<div class="ws-join-result" id="join-result"></div>' +
+      '</div>';
+    }
+
+    function bindJoin() {
+      var inp = document.getElementById('code-input');
+      var btn = document.getElementById('btn-join-code');
+      var res = document.getElementById('join-result');
+      if (!btn || !inp) return;
+
+      // Formato automático uppercase
+      inp.addEventListener('input', function() {
+        var v = inp.value.replace(/[^a-zA-Z0-9]/g,'').toUpperCase().slice(0,8);
+        inp.value = v;
+      });
+
+      btn.addEventListener('click', async function() {
+        var code = inp.value.trim().toUpperCase();
+        if (code.length < 4) { toast('Ingresá el código completo', 'error'); return; }
+        btn.disabled = true; btn.textContent = 'Procesando...';
+        res.style.display = 'none';
+        try {
+          var data = await apiFetch('/workspaces/join', { method: 'POST', body: JSON.stringify({ code: code }) });
+          res.className = 'ws-join-result ok'; res.style.display = 'block';
+          res.textContent = '✅ Te uniste a ' + (data.workspace || 'el workspace') + ' como ' + (data.role || '');
+          inp.value = '';
+          toast('¡Bienvenido a ' + (data.workspace || 'el workspace') + '!', 'success');
+          setTimeout(function() { load(); }, 1200);
+        } catch(e) {
+          res.className = 'ws-join-result err'; res.style.display = 'block';
+          res.textContent = '✗ ' + e.message;
+          toast(e.message, 'error');
+        }
+        btn.disabled = false; btn.textContent = 'Unirse';
+      });
+
+      // Enter key
+      inp.addEventListener('keydown', function(e) { if (e.key === 'Enter') btn.click(); });
+    }
+
+    function render(wsData, members, allWs) {
+      var html = '';
+
+      html += '<div style="margin-bottom:36px;">' +
+        '<h1 class="ws-heading">Seleccioná tu workspace</h1>' +
+        '<p class="ws-subheading">Entrá al panel de administración de tu organización.</p>' +
+      '</div>';
+
+      if (isGod && allWs.length > 1) {
+        // God admin: grid de workspaces
+        html += '<p style="font-size:13px;font-weight:700;color:#8b93a3;letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px;">Todos los workspaces</p>';
+        html += '<div class="ws-grid">';
+        allWs.forEach(function(w) {
+          html += '<div class="ws-grid-card" onclick="enterWorkspace(\'' + w.id + '\')">' +
+            '<div class="ws-grid-name">' + U.esc(w.name) + (w.active === false ? ' <span style="font-size:10px;color:#e68a8d;">(Suspendido)</span>' : '') + '</div>' +
+            '<div class="ws-grid-slug">/' + U.esc(w.slug||'') + planBadge(w.plan) + '</div>' +
+            '<div class="ws-grid-meta">' +
+              '<span><span class="ws-grid-active-dot"></span>' + (w.member_count||0) + ' miembros</span>' +
+              '<span>🎟 ' + (w.event_count||0) + ' eventos</span>' +
+            '</div>' +
+          '</div>';
+        });
+        html += '</div>';
+
+        if (wsData) {
+          html += '<div class="ws-divider">Workspace seleccionado</div>';
+        }
+      }
+
+      if (wsData) {
+        var myRole = wsData.my_role || (isGod ? 'god_admin' : user.role);
+        html += '<div class="ws-card-main" onclick="enterPanel()">' +
+          '<div class="ws-card-main-top">' +
+            '<div class="ws-card-main-icon">🏢</div>' +
+            '<div class="ws-card-main-info">' +
+              '<div class="ws-card-main-name">' + U.esc(wsData.name||'') + '</div>' +
+              '<div class="ws-card-main-slug">/' + U.esc(wsData.slug||'') + planBadge(wsData.plan) + '</div>' +
+            '</div>' +
+            '<span class="ws-role-pill ' + myRole + '">' + roleLabel(myRole) + '</span>' +
+          '</div>' +
+          '<div class="ws-card-stats">' +
+            '<div class="ws-stat"><div class="ws-stat-n">' + members.length + '</div><div class="ws-stat-l">Miembros</div></div>' +
+            (wsData.active === false
+              ? '<div class="ws-stat"><div class="ws-stat-n" style="color:#e68a8d;">Susp.</div><div class="ws-stat-l">Estado</div></div>'
+              : '<div class="ws-stat"><div class="ws-stat-n" style="color:#abd194;">Activo</div><div class="ws-stat-l">Estado</div></div>') +
+          '</div>' +
+          '<div class="ws-card-actions">' +
+            '<button class="btn-enter" onclick="event.stopPropagation();enterPanel();">Entrar al panel →</button>' +
+            '<a href="workspace.html" class="btn-manage" onclick="event.stopPropagation();">⚙️ Gestionar workspace</a>' +
+          '</div>' +
+        '</div>';
+      } else {
+        html += '<div class="ws-empty">' +
+          '<div class="ws-empty-icon">🏢</div>' +
+          '<p class="ws-empty-text">No estás en ningún workspace todavía</p>' +
+          '<p class="ws-empty-sub">Ingresá un código de invitación para unirte, o creá uno nuevo.</p>' +
+        '</div>';
+      }
+
+      // Join by code
+      html += joinSectionHtml();
+
+      // Create workspace (solo admins con permiso)
+      if (['admin','superadmin','god_admin'].indexOf(user.role) !== -1) {
+        html += '<div class="ws-divider">o</div>';
+        html += '<button class="ws-create-btn" id="btn-create-ws">+ Crear nuevo workspace</button>';
+        html += createWsFormHtml();
+      }
+
+      main.innerHTML = html;
+      bindJoin();
+      bindCreateWorkspace();
+    }
+
+    function createWsFormHtml() {
+      return '<div id="create-ws-form" style="display:none;background:#1a1d24;border:1px solid #262a33;border-radius:20px;padding:28px 30px;margin-top:14px;">' +
+        '<p style="font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#f4f6f9;margin-bottom:18px;">Crear workspace</p>' +
+        '<div style="display:flex;gap:12px;flex-wrap:wrap;">' +
+          '<input id="new-ws-name" type="text" placeholder="Nombre del workspace" style="flex:1;min-width:220px;height:50px;border-radius:12px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:15px;padding:0 16px;outline:none;" />' +
+          '<button id="btn-confirm-create" style="height:50px;padding:0 24px;border-radius:12px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Crear</button>' +
+        '</div>' +
+      '</div>';
+    }
+
+    function bindCreateWorkspace() {
+      var btn = document.getElementById('btn-create-ws');
+      var form = document.getElementById('create-ws-form');
+      if (!btn || !form) return;
+
+      btn.addEventListener('click', function() {
+        var visible = form.style.display !== 'none';
+        form.style.display = visible ? 'none' : 'block';
+        if (!visible) document.getElementById('new-ws-name').focus();
+      });
+
+      var confirmBtn = document.getElementById('btn-confirm-create');
+      if (!confirmBtn) return;
+      confirmBtn.addEventListener('click', async function() {
+        var name = (document.getElementById('new-ws-name').value || '').trim();
+        if (!name || name.length < 2) { toast('El nombre debe tener al menos 2 caracteres', 'error'); return; }
+        confirmBtn.disabled = true; confirmBtn.textContent = 'Creando...';
+        try {
+          await apiFetch('/workspaces/', { method: 'POST', body: JSON.stringify({ name: name }) });
+          toast('Workspace "' + name + '" creado', 'success');
+          setTimeout(function() { load(); }, 800);
+        } catch(e) {
+          toast(e.message, 'error');
+          confirmBtn.disabled = false; confirmBtn.textContent = 'Crear';
+        }
+      });
+
+      document.getElementById('new-ws-name').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') confirmBtn.click();
+      });
+    }
+
+    window.enterPanel = function() {
+      window.location.href = 'admin-event.html';
+    };
+
+    window.enterWorkspace = function(wsId) {
+      // Para god_admin: podría guardar el workspace activo en sessionStorage
+      // y redirigir al panel
+      try { sessionStorage.setItem('lyfter_active_ws', wsId); } catch(e) {}
+      window.location.href = 'admin-event.html';
+    };
+
+    load();
+  })();
+  </script>
+</body>
+</html>

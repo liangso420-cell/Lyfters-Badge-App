@@ -731,7 +731,7 @@
 
     if (user) {
       // Sesión activa → botón "Ir a mi perfil"
-      var dest = user.role === 'admin' ? 'admin-event.html' : 'profile.html';
+      var dest = ['admin','superadmin','god_admin'].indexOf(user.role) !== -1 ? 'workspace-select.html' : 'profile.html';
       var btnPerfil = '<a href="' + dest + '" class="nav-btn-cta">Ir a mi perfil →</a>';
       if (navActions)  navActions.innerHTML  = btnPerfil;
       if (heroActions) heroActions.innerHTML =

@@ -32,7 +32,7 @@
 
       var user = API.currentUser();
       if (!user) { window.location.replace('login.html?next=' + encodeURIComponent(window.location.pathname + window.location.search)); return; }
-      if (user.role === 'admin') { window.location.replace('admin-event.html'); return; }
+      if (['admin','superadmin','god_admin'].indexOf(user.role) !== -1) { window.location.replace('workspace-select.html'); return; }
 
       var app = document.getElementById('app');
 
