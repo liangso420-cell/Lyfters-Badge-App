@@ -108,15 +108,25 @@
       }
     }
 
+    var ROLES = ['participant','admin','superadmin'];
+
     function renderPage(ws, members, invList, allWs, isGod) {
+      if (isGod) ROLES = ['participant','admin','superadmin','god_admin'];
       var memberRows = members.map(function(m) {
         var initials = (m.name || '?').split(' ').map(function(w){ return w[0] || ''; }).join('').slice(0,2).toUpperCase();
-        return '<tr>' +
+        var roleOpts = ROLES.map(function(r) {
+          return '<option value="' + r + '"' + (m.role === r ? ' selected' : '') + '>' + r + '</option>';
+        }).join('');
+        return '<tr id="row-' + m.user_id + '">' +
           '<td><span class="ws-avatar">' + initials + '</span>' + U.esc(m.name || '—') + '</td>' +
           '<td style="color:#8b93a3;">' + U.esc(m.email || '—') + '</td>' +
-          '<td><span class="ws-badge ' + (m.role||'') + '">' + (m.role||'') + '</span></td>' +
           '<td>' +
-            '<button onclick="changeRole(\'' + ws.id + '\',\'' + m.user_id + '\')" class="ws-btn outline" style="height:34px;font-size:12px;padding:0 12px;margin-right:6px;">Cambiar rol</button>' +
+            '<select data-ws="' + ws.id + '" data-uid="' + m.user_id + '" onchange="changeRole(this)" ' +
+              'style="height:32px;padding:0 8px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-size:12px;outline:none;cursor:pointer;">' +
+              roleOpts +
+            '</select>' +
+          '</td>' +
+          '<td>' +
             '<button onclick="removeMember(\'' + ws.id + '\',\'' + m.user_id + '\')" class="ws-btn danger" style="height:34px;font-size:12px;padding:0 12px;">Remover</button>' +
           '</td>' +
         '</tr>';
@@ -153,7 +163,7 @@
 
       app.innerHTML = styles +
         '<div class="ws-header">' +
-          '<a href="' + (isGod ? 'admin-event.html' : 'profile.html') + '" style="color:#8b93a3;text-decoration:none;font-size:20px;margin-right:4px;">←</a>' +
+          '<a href="workspace-select.html" style="color:#8b93a3;text-decoration:none;font-size:20px;margin-right:4px;">←</a>' +
           '<div>' +
             '<div class="ws-title">🏢 ' + U.esc(ws.name||'Workspace') + '</div>' +
             '<div style="font-size:12px;color:#8b93a3;">/' + U.esc(ws.slug||'') + ' · ' + (ws.plan||'free') + (ws.my_role ? ' · ' + ws.my_role : '') + '</div>' +
@@ -255,9 +265,12 @@
       } catch(e) { U.toast(e.message, 'error'); }
     };
 
-    window.changeRole = async function(wsId, userId) {
-      var newRole = prompt('Nuevo rol (admin, participant, superadmin):');
-      if (!newRole) return;
+    window.changeRole = async function(sel) {
+      var wsId  = sel.dataset.ws;
+      var userId = sel.dataset.uid;
+      var newRole = sel.value;
+      var prev = sel.querySelector('option:checked');
+      sel.disabled = true;
       try {
         var res = await fetch(API.base + '/workspaces/' + wsId + '/members/' + userId, {
           method: 'PATCH',
@@ -266,9 +279,12 @@
         });
         var data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Error');
-        U.toast('Rol actualizado', 'success');
-        init();
-      } catch(e) { U.toast(e.message, 'error'); }
+        U.toast('Rol actualizado a ' + newRole, 'success');
+      } catch(e) {
+        U.toast(e.message, 'error');
+        if (prev) sel.value = prev.value;
+      }
+      sel.disabled = false;
     };
 
     window.removeMember = async function(wsId, userId) {
