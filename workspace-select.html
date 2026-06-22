@@ -22,7 +22,7 @@
     .ws-logo{display:flex;align-items:center;gap:10px;}
     .ws-logo img{width:28px;height:28px;border-radius:6px;object-fit:contain;}
     .ws-logo-text{font-family:Poppins,sans-serif;font-size:18px;font-weight:700;color:#f4f6f9;}
-    .ws-user-chip{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:999px;padding:7px 14px 7px 10px;}
+    .ws-user-chip{display:flex;align-items:center;gap:10px;}
     .ws-user-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#d897e7,#70cfff);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#1c1f27;}
     .ws-user-name{font-size:13px;font-weight:600;color:#cdd2db;}
     .ws-user-role{font-size:10px;color:#8b93a3;background:rgba(216,151,231,0.12);border-radius:999px;padding:2px 8px;margin-left:4px;}
@@ -135,37 +135,27 @@
       window.location.replace('profile.html'); return;
     }
 
-    // Menú de cuenta en el header
+    // Header: info de usuario + botones de cuenta
     var initials = (user.name || '?').split(' ').map(function(w){ return w[0]||''; }).join('').slice(0,2).toUpperCase();
-    var chip = document.getElementById('user-chip');
-    chip.style.cursor = 'pointer';
-    chip.innerHTML =
+    document.getElementById('user-chip').innerHTML =
       '<div class="ws-user-avatar">' + initials + '</div>' +
-      '<span class="ws-user-name">' + U.esc(user.name || user.email || '') + '</span>' +
-      '<span class="ws-user-role">' + user.role + '</span>' +
-      '<span style="font-size:11px;color:#6f7686;margin-left:2px;">▾</span>';
-
-    // Dropdown del menú de cuenta
-    var acctMenu = document.createElement('div');
-    acctMenu.id = 'acct-menu';
-    acctMenu.style.cssText = 'display:none;position:fixed;top:64px;right:20px;z-index:200;background:#1c1f27;border:1px solid #2f343f;border-radius:14px;padding:8px;min-width:200px;box-shadow:0 12px 40px rgba(0,0,0,0.5);';
-    acctMenu.innerHTML =
-      '<div style="padding:12px 14px 10px;border-bottom:1px solid #262a33;margin-bottom:6px;">' +
-        '<div style="font-size:13px;font-weight:700;color:#f4f6f9;">' + U.esc(user.name || '') + '</div>' +
-        '<div style="font-size:11px;color:#8b93a3;margin-top:2px;">' + U.esc(user.email || '') + '</div>' +
+      '<div style="display:flex;flex-direction:column;gap:1px;">' +
+        '<span class="ws-user-name">' + U.esc(user.name || user.email || '') + '</span>' +
+        '<span style="font-size:10px;color:#8b93a3;">' + user.role + '</span>' +
       '</div>' +
-      '<a href="workspace.html" style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:8px;color:#cdd2db;text-decoration:none;font-size:13px;font-weight:600;" onmouseover="this.style.background=\'#262a33\'" onmouseout="this.style.background=\'\'">⚙️ Gestionar workspace</a>' +
-      '<button onclick="doLogout()" style="width:100%;display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:8px;background:transparent;border:none;color:#e68a8d;font-size:13px;font-weight:600;cursor:pointer;text-align:left;" onmouseover="this.style.background=\'rgba(230,138,141,0.1)\'" onmouseout="this.style.background=\'\'">🚪 Cerrar sesión</button>';
-    document.body.appendChild(acctMenu);
-
-    chip.addEventListener('click', function(e) {
-      e.stopPropagation();
-      acctMenu.style.display = acctMenu.style.display === 'none' ? 'block' : 'none';
-    });
-    document.addEventListener('click', function() { acctMenu.style.display = 'none'; });
+      '<div style="display:flex;gap:8px;margin-left:8px;">' +
+        '<a href="workspace.html" title="Gestionar workspace" ' +
+          'style="height:34px;padding:0 14px;border-radius:10px;border:1px solid #353a46;background:rgba(255,255,255,0.04);color:#cdd2db;font-family:Poppins,sans-serif;font-size:12px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">' +
+          '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg> Mi cuenta' +
+        '</a>' +
+        '<button onclick="doLogout()" title="Cerrar sesion" ' +
+          'style="height:34px;padding:0 14px;border-radius:10px;border:1px solid rgba(230,138,141,0.3);background:rgba(230,138,141,0.08);color:#e68a8d;font-family:Poppins,sans-serif;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">' +
+          '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Salir' +
+        '</button>' +
+      '</div>';
 
     window.doLogout = function() {
-      API.logout ? API.logout() : (function(){ try { localStorage.removeItem('lyfter_session'); } catch(e){} })();
+      try { localStorage.removeItem('lyfter_session'); } catch(e) {}
       try { sessionStorage.clear(); } catch(e) {}
       window.location.replace('login.html');
     };
