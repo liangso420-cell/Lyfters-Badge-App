@@ -486,3 +486,140 @@ def list_invitations(ws_id):
         "status":     i.get("status"),
         "expires_at": i["expires_at"].isoformat() if i.get("expires_at") else None,
     } for i in invs])
+
+
+# ── GET /workspaces/platform/users  (god_admin) ───────────────
+@ws_bp.route("/platform/users", methods=["GET"])
+@jwt_required()
+def list_platform_users():
+    claims = get_jwt()
+    if claims.get("role") != "god_admin":
+        return jsonify(error="Solo god_admin puede acceder"), 403
+
+    now = datetime.utcnow()
+    result = []
+    for u in users().find({}, {"password_hash": 0, "reset_token": 0, "reset_token_expiry": 0}):
+        bu = u.get("banned_until")
+        if bu and getattr(bu, "tzinfo", None) is not None:
+            bu = bu.replace(tzinfo=None)
+        active_ban = bool(bu and bu > now)
+        result.append({
+            "id":            str(u["_id"]),
+            "name":          u.get("name", ""),
+            "email":         u.get("email", ""),
+            "role":          u.get("role", "participant"),
+            "created_at":    u["created_at"].isoformat() if u.get("created_at") else None,
+            "banned":        active_ban,
+            "banned_until":  bu.isoformat() if bu else None,
+            "ban_permanent": active_ban and bu and bu.year >= 9999,
+            "ban_ip":        u.get("ban_ip"),
+            "ban_reason":    u.get("ban_reason", ""),
+            "last_login_ip": u.get("last_login_ip"),
+        })
+    return jsonify(result)
+
+
+# ── POST /workspaces/platform/users/<user_id>/ban  (god_admin) ─
+@ws_bp.route("/platform/users/<user_id>/ban", methods=["POST"])
+@jwt_required()
+def ban_platform_user(user_id):
+    claims = get_jwt()
+    if claims.get("role") != "god_admin":
+        return jsonify(error="Solo god_admin puede banear usuarios"), 403
+
+    caller_id = ObjectId(get_jwt_identity())
+    try:
+        target_uid = ObjectId(user_id)
+    except Exception:
+        return jsonify(error="ID inválido"), 400
+
+    if target_uid == caller_id:
+        return jsonify(error="No podés banearte a vos mismo"), 400
+
+    target = users().find_one({"_id": target_uid})
+    if not target:
+        return jsonify(error="Usuario no encontrado"), 404
+    if target.get("role") == "god_admin":
+        return jsonify(error="No podés banear a otro god_admin"), 403
+
+    data           = request.get_json() or {}
+    duration_hours = data.get("duration_hours")
+    ban_scope      = data.get("ban_scope", "account")
+    reason         = (data.get("reason") or "").strip()[:500]
+
+    if duration_hours is not None:
+        try:
+            duration_hours = int(duration_hours)
+            if duration_hours <= 0:
+                return jsonify(error="La duración debe ser positiva"), 400
+            banned_until = datetime.utcnow() + timedelta(hours=duration_hours)
+        except (ValueError, TypeError):
+            return jsonify(error="Duración inválida"), 400
+    else:
+        banned_until = datetime(9999, 12, 31, 23, 59, 59)
+
+    update = {
+        "banned_until": banned_until,
+        "ban_reason":   reason,
+        "banned_by":    caller_id,
+        "banned_at":    datetime.utcnow(),
+        "ban_ip":       None,
+    }
+    if ban_scope == "account_ip":
+        last_ip = target.get("last_login_ip")
+        if last_ip:
+            update["ban_ip"] = last_ip
+
+    users().update_one({"_id": target_uid}, {"$set": update})
+    return jsonify(ok=True, banned_until=banned_until.isoformat(), ban_ip=update.get("ban_ip"))
+
+
+# ── POST /workspaces/platform/users/<user_id>/unban  (god_admin) ─
+@ws_bp.route("/platform/users/<user_id>/unban", methods=["POST"])
+@jwt_required()
+def unban_platform_user(user_id):
+    claims = get_jwt()
+    if claims.get("role") != "god_admin":
+        return jsonify(error="Solo god_admin puede desbanear usuarios"), 403
+    try:
+        target_uid = ObjectId(user_id)
+    except Exception:
+        return jsonify(error="ID inválido"), 400
+
+    if not users().find_one({"_id": target_uid}):
+        return jsonify(error="Usuario no encontrado"), 404
+
+    users().update_one(
+        {"_id": target_uid},
+        {"$unset": {"banned_until": "", "ban_ip": "", "ban_reason": "", "banned_by": "", "banned_at": ""}},
+    )
+    return jsonify(ok=True)
+
+
+# ── DELETE /workspaces/platform/users/<user_id>  (god_admin) ──
+@ws_bp.route("/platform/users/<user_id>", methods=["DELETE"])
+@jwt_required()
+def delete_platform_user(user_id):
+    claims = get_jwt()
+    if claims.get("role") != "god_admin":
+        return jsonify(error="Solo god_admin puede eliminar usuarios"), 403
+
+    caller_id = ObjectId(get_jwt_identity())
+    try:
+        target_uid = ObjectId(user_id)
+    except Exception:
+        return jsonify(error="ID inválido"), 400
+
+    if target_uid == caller_id:
+        return jsonify(error="No podés eliminar tu propia cuenta"), 400
+
+    target = users().find_one({"_id": target_uid})
+    if not target:
+        return jsonify(error="Usuario no encontrado"), 404
+    if target.get("role") == "god_admin":
+        return jsonify(error="No podés eliminar a otro god_admin"), 403
+
+    users().delete_one({"_id": target_uid})
+    workspace_members().delete_many({"user_id": target_uid})
+    scans().delete_many({"user_id": target_uid})
+    return jsonify(ok=True)

@@ -258,6 +258,20 @@
             '</div>' +
           '</div>' : '') +
 
+          (isGod ? '<div class="ws-card" style="margin-top:4px;">' +
+            '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px;">' +
+              '<div class="ws-card-title" style="margin-bottom:0;">👥 Usuarios de la plataforma</div>' +
+              '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' +
+                '<input id="users-search" type="text" placeholder="Buscar..." oninput="filterPlatformUsers(this.value)" ' +
+                  'style="height:36px;padding:0 12px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:13px;outline:none;width:220px;" />' +
+                '<button class="ws-btn outline" onclick="loadPlatformUsers()" style="height:36px;font-size:13px;">Cargar usuarios</button>' +
+              '</div>' +
+            '</div>' +
+            '<div id="platform-users-list">' +
+              '<p style="font-size:13px;color:#6f7686;text-align:center;padding:24px 0;">Hacé clic en "Cargar usuarios" para ver la lista.</p>' +
+            '</div>' +
+          '</div>' : '') +
+
         '</div>';
     }
 
@@ -394,6 +408,206 @@
         if (!res.ok) throw new Error(data.error || 'Error');
         U.toast('✅ ' + (data.name || email) + ' ahora es god_admin. Debe volver a iniciar sesión.', 'success');
         inp.value = '';
+      } catch(e) { U.toast(e.message, 'error'); }
+    };
+
+    // ── Platform user management (god_admin) ──────────────────
+    var _platformUsersCache = [];
+
+    window.loadPlatformUsers = async function() {
+      var container = document.getElementById('platform-users-list');
+      if (!container) return;
+      container.innerHTML = '<p style="font-size:13px;color:#8b93a3;text-align:center;padding:20px;">Cargando...</p>';
+      try {
+        var res = await fetch(API.base + '/workspaces/platform/users', { headers: API.authHeaders() });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error');
+        _platformUsersCache = data;
+        renderPlatformUsers(data);
+      } catch(e) {
+        container.innerHTML = '<p style="color:#e68a8d;font-size:13px;text-align:center;padding:20px;">Error: ' + U.esc(e.message) + '</p>';
+      }
+    };
+
+    window.filterPlatformUsers = function(q) {
+      if (!_platformUsersCache.length) return;
+      var lq = q.toLowerCase();
+      var filtered = q.length < 2 ? _platformUsersCache : _platformUsersCache.filter(function(u) {
+        return (u.name + ' ' + u.email).toLowerCase().indexOf(lq) !== -1;
+      });
+      renderPlatformUsers(filtered);
+    };
+
+    function renderPlatformUsers(list) {
+      var container = document.getElementById('platform-users-list');
+      if (!container) return;
+      if (!list.length) {
+        container.innerHTML = '<p style="font-size:13px;color:#6f7686;text-align:center;padding:20px;">No se encontraron usuarios.</p>';
+        return;
+      }
+      var rows = list.map(function(u) {
+        var initials = (u.name || '?').split(' ').map(function(w){ return w[0]||''; }).join('').slice(0,2).toUpperCase();
+        var statusCell = u.banned
+          ? '<span class="ws-badge" style="background:rgba(230,138,141,0.15);color:#e68a8d;border:1px solid rgba(230,138,141,0.2);">Baneado' + (u.ban_permanent ? ' ∞' : '') + '</span>' +
+            (u.ban_ip ? '<br/><span style="font-size:10px;color:#6f7686;margin-top:3px;display:block;">IP: ' + U.esc(u.ban_ip) + '</span>' : '')
+          : '<span class="ws-badge" style="background:rgba(171,209,148,0.15);color:#abd194;">Activo</span>';
+
+        var safeName = u.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        var actions = '';
+        if (!u.banned) {
+          actions += '<button onclick="openBanModal(\'' + u.id + '\',\'' + safeName + '\')" ' +
+            'style="height:30px;font-size:12px;padding:0 12px;border-radius:8px;border:1px solid rgba(255,200,80,0.3);background:rgba(255,200,80,0.1);color:#ffc850;cursor:pointer;margin-right:6px;">Banear</button>';
+        } else {
+          actions += '<button onclick="unbanPlatformUser(\'' + u.id + '\')" ' +
+            'style="height:30px;font-size:12px;padding:0 12px;border-radius:8px;border:1px solid #353a46;background:transparent;color:#aab1bf;cursor:pointer;margin-right:6px;">Desbanear</button>';
+        }
+        actions += '<button onclick="deletePlatformUser(\'' + u.id + '\',\'' + safeName + '\')" ' +
+          'class="ws-btn danger" style="height:30px;font-size:12px;padding:0 12px;">Eliminar</button>';
+
+        return '<tr>' +
+          '<td><span class="ws-avatar">' + initials + '</span>' + U.esc(u.name || '—') + '</td>' +
+          '<td style="color:#8b93a3;">' + U.esc(u.email || '—') + '</td>' +
+          '<td><span class="ws-badge ' + (u.role||'') + '">' + (u.role||'') + '</span></td>' +
+          '<td>' + statusCell + '</td>' +
+          '<td style="white-space:nowrap;">' + actions + '</td>' +
+        '</tr>';
+      }).join('');
+
+      container.innerHTML =
+        '<div style="overflow-x:auto;">' +
+          '<table class="ws-table"><thead><tr>' +
+            '<th>Nombre</th><th>Email</th><th>Rol</th><th>Estado</th><th>Acciones</th>' +
+          '</tr></thead><tbody>' + rows + '</tbody></table>' +
+        '</div>' +
+        '<p style="font-size:11px;color:#4a5060;margin-top:10px;">' + list.length + ' usuario(s)</p>';
+    }
+
+    var _banModalTarget = null;
+
+    window.openBanModal = function(userId, userName) {
+      _banModalTarget = userId;
+      var old = document.getElementById('ban-modal-overlay');
+      if (old) old.remove();
+
+      var DURATIONS = [
+        {label:'1 hora',   val:'1'},
+        {label:'6 horas',  val:'6'},
+        {label:'24 horas', val:'24', checked:true},
+        {label:'7 días',   val:'168'},
+        {label:'30 días',  val:'720'},
+        {label:'Permanente', val:'perm'},
+      ];
+
+      var overlay = document.createElement('div');
+      overlay.id = 'ban-modal-overlay';
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;';
+      overlay.innerHTML =
+        '<div style="background:#1c1f27;border:1px solid #353a46;border-radius:20px;padding:28px 30px;max-width:460px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,0.5);">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;">' +
+            '<div style="font-family:Poppins,sans-serif;font-size:17px;font-weight:700;color:#ffc850;">Banear a ' + U.esc(userName) + '</div>' +
+            '<button onclick="closeBanModal()" style="background:none;border:none;color:#6f7686;font-size:22px;cursor:pointer;line-height:1;padding:0 4px;">×</button>' +
+          '</div>' +
+
+          '<div style="margin-bottom:18px;">' +
+            '<div style="font-size:11px;font-weight:700;color:#8b93a3;margin-bottom:10px;letter-spacing:.06em;text-transform:uppercase;">Duración</div>' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;">' +
+              DURATIONS.map(function(d) {
+                return '<label style="display:flex;align-items:center;gap:6px;padding:9px 12px;border-radius:10px;border:1px solid #353a46;cursor:pointer;font-size:13px;color:#cdd2db;">' +
+                  '<input type="radio" name="ban-dur" value="' + d.val + '"' + (d.checked ? ' checked' : '') + ' style="accent-color:#ffc850;flex-shrink:0;"/> ' + d.label + '</label>';
+              }).join('') +
+            '</div>' +
+          '</div>' +
+
+          '<div style="margin-bottom:18px;">' +
+            '<div style="font-size:11px;font-weight:700;color:#8b93a3;margin-bottom:10px;letter-spacing:.06em;text-transform:uppercase;">Alcance</div>' +
+            '<div style="display:flex;flex-direction:column;gap:8px;">' +
+              '<label style="display:flex;align-items:flex-start;gap:8px;padding:11px 14px;border-radius:10px;border:1px solid #353a46;cursor:pointer;font-size:13px;color:#cdd2db;">' +
+                '<input type="radio" name="ban-scope" value="account" checked style="accent-color:#ffc850;flex-shrink:0;margin-top:2px;"/> ' +
+                '<div><div style="font-weight:600;">Solo la cuenta</div><div style="font-size:11px;color:#8b93a3;margin-top:2px;">El usuario no puede iniciar sesión con esta cuenta.</div></div>' +
+              '</label>' +
+              '<label style="display:flex;align-items:flex-start;gap:8px;padding:11px 14px;border-radius:10px;border:1px solid #353a46;cursor:pointer;font-size:13px;color:#cdd2db;">' +
+                '<input type="radio" name="ban-scope" value="account_ip" style="accent-color:#ffc850;flex-shrink:0;margin-top:2px;"/> ' +
+                '<div><div style="font-weight:600;">Cuenta + IP</div><div style="font-size:11px;color:#8b93a3;margin-top:2px;">Bloquea también el acceso desde la IP de su último login (si disponible).</div></div>' +
+              '</label>' +
+            '</div>' +
+          '</div>' +
+
+          '<div style="margin-bottom:22px;">' +
+            '<div style="font-size:11px;font-weight:700;color:#8b93a3;margin-bottom:8px;letter-spacing:.06em;text-transform:uppercase;">Razón (opcional)</div>' +
+            '<input id="ban-reason-input" type="text" placeholder="Ej: spam, comportamiento inapropiado..." ' +
+              'style="width:100%;height:44px;border-radius:10px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:14px;padding:0 14px;outline:none;box-sizing:border-box;" />' +
+          '</div>' +
+
+          '<div style="display:flex;gap:10px;">' +
+            '<button onclick="closeBanModal()" style="flex:1;height:44px;border-radius:10px;border:1px solid #353a46;background:transparent;color:#aab1bf;font-family:Poppins,sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Cancelar</button>' +
+            '<button id="confirm-ban-btn" onclick="confirmBanUser()" style="flex:2;height:44px;border-radius:10px;border:1px solid rgba(255,200,80,0.4);background:rgba(255,200,80,0.15);color:#ffc850;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Confirmar ban</button>' +
+          '</div>' +
+        '</div>';
+
+      document.body.appendChild(overlay);
+      overlay.addEventListener('click', function(e) { if (e.target === overlay) closeBanModal(); });
+    };
+
+    window.closeBanModal = function() {
+      var el = document.getElementById('ban-modal-overlay');
+      if (el) el.remove();
+      _banModalTarget = null;
+    };
+
+    window.confirmBanUser = async function() {
+      if (!_banModalTarget) return;
+      var durEl   = document.querySelector('input[name="ban-dur"]:checked');
+      var scopeEl = document.querySelector('input[name="ban-scope"]:checked');
+      var reason  = (document.getElementById('ban-reason-input').value || '').trim();
+      var dur     = durEl ? durEl.value : '24';
+      var scope   = scopeEl ? scopeEl.value : 'account';
+      var duration_hours = dur === 'perm' ? null : parseInt(dur, 10);
+
+      var btn = document.getElementById('confirm-ban-btn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Procesando...'; }
+      try {
+        var res = await fetch(API.base + '/workspaces/platform/users/' + _banModalTarget + '/ban', {
+          method: 'POST',
+          headers: Object.assign({}, API.authHeaders(), {'Content-Type': 'application/json'}),
+          body: JSON.stringify({ duration_hours: duration_hours, ban_scope: scope, reason: reason }),
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error');
+        closeBanModal();
+        U.toast('Usuario baneado', 'success');
+        loadPlatformUsers();
+      } catch(e) {
+        U.toast(e.message, 'error');
+        if (btn) { btn.disabled = false; btn.textContent = 'Confirmar ban'; }
+      }
+    };
+
+    window.unbanPlatformUser = async function(userId) {
+      if (!confirm('¿Desbanear a este usuario?')) return;
+      try {
+        var res = await fetch(API.base + '/workspaces/platform/users/' + userId + '/unban', {
+          method: 'POST',
+          headers: Object.assign({}, API.authHeaders(), {'Content-Type': 'application/json'}),
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error');
+        U.toast('Usuario desbaneado', 'success');
+        loadPlatformUsers();
+      } catch(e) { U.toast(e.message, 'error'); }
+    };
+
+    window.deletePlatformUser = async function(userId, userName) {
+      if (!confirm('¿Eliminar la cuenta de ' + userName + '?\n\nEsta acción es PERMANENTE y elimina todos sus datos.')) return;
+      if (!confirm('CONFIRMACIÓN FINAL\n¿Eliminar definitivamente a ' + userName + '?')) return;
+      try {
+        var res = await fetch(API.base + '/workspaces/platform/users/' + userId, {
+          method: 'DELETE',
+          headers: API.authHeaders(),
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error');
+        U.toast('Cuenta eliminada', 'success');
+        loadPlatformUsers();
       } catch(e) { U.toast(e.message, 'error'); }
     };
 
