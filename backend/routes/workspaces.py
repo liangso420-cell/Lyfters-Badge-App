@@ -305,10 +305,14 @@ def invite_member(ws_id):
     caller = ObjectId(get_jwt_identity())
     oid    = ObjectId(ws_id)
 
-    if claims.get("role") != "god_admin":
+    caller_role = claims.get("role", "")
+    caller_ws_role = caller_role  # default for god_admin
+
+    if caller_role != "god_admin":
         member = workspace_members().find_one({"workspace_id": oid, "user_id": caller})
         if not member or member["role"] not in ("superadmin", "admin"):
             return jsonify(error="No autorizado"), 403
+        caller_ws_role = member["role"]
 
     data   = request.get_json() or {}
     email  = (data.get("email") or "").strip().lower() or None
@@ -317,6 +321,10 @@ def invite_member(ws_id):
 
     if role not in ("admin", "participant"):
         return jsonify(error="Rol inválido"), 400
+
+    # Solo superadmin y god_admin pueden invitar como admin
+    if role == "admin" and _ROLE_RANK.get(caller_ws_role, 0) < 3:
+        return jsonify(error="Solo superadmin o god_admin pueden invitar como admin"), 403
 
     expires = datetime.now(timezone.utc) + timedelta(days=7)
     code    = generate_invite_code()
