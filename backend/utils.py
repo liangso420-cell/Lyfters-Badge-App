@@ -82,7 +82,7 @@ def haversine(lat1, lon1, lat2, lon2):
     return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
 
 
-def fmt_event(doc):
+def fmt_event(doc, ws_name=None):
     return {
         "id":           str(doc["_id"]),
         "nombre":       doc.get("title", ""),
@@ -102,6 +102,8 @@ def fmt_event(doc):
         "xp_first_scan":       doc.get("xp_first_scan", 5),
         "xp_rare_bonus":       doc.get("xp_rare_bonus", 15),
         "xp_completion_bonus": doc.get("xp_completion_bonus", 50),
+        "workspace_id":   str(doc["workspace_id"]) if doc.get("workspace_id") else None,
+        "workspace_name": ws_name,
     }
 
 
