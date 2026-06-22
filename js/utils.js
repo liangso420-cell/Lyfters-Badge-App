@@ -440,23 +440,23 @@
 
   /* ── HTML de estado ── */
   function loadingHtml() {
+    setTimeout(function() {
+      var canvas = document.getElementById('lottie-loader');
+      if (!canvas) return;
+      if (window.DotLottie) {
+        new window.DotLottie({ autoplay: true, loop: true, canvas: canvas, src: 'lodernuevo.json' });
+      } else {
+        import('https://unpkg.com/@lottiefiles/dotlottie-web@1.6.1/dist/dotlottie-web.browser.es2022.js').then(function(m) {
+          var c = document.getElementById('lottie-loader');
+          if (c) new m.DotLottie({ autoplay: true, loop: true, canvas: c, src: 'lodernuevo.json' });
+        });
+      }
+    }, 100);
+
     return '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;">' +
-      '<canvas id="lottie-loader" style="width:200px;height:200px;"></canvas>' +
+      '<canvas id="lottie-loader" style="width:200px;height:200px;display:block;"></canvas>' +
       '<p style="font-family:Manrope,sans-serif;font-size:14px;color:#8b93a3;margin-top:16px;">Cargando...</p>' +
-    '</div>' +
-    '<script>' +
-      'setTimeout(function(){' +
-        'var canvas=document.getElementById("lottie-loader");' +
-        'if(canvas&&window.DotLottie){' +
-          'new window.DotLottie({autoplay:true,loop:true,canvas:canvas,src:"lodernuevo.json"});' +
-        '}else{' +
-          'import("https://unpkg.com/@lottiefiles/dotlottie-web@1.6.1/dist/dotlottie-web.browser.es2022.js").then(function(m){' +
-            'var c=document.getElementById("lottie-loader");' +
-            'if(c)new m.DotLottie({autoplay:true,loop:true,canvas:c,src:"lodernuevo.json"});' +
-          '});' +
-        '}' +
-      '},100);' +
-    '<\/script>';
+    '</div>';
   }
   function hideLoading() {
     var ls = document.getElementById('loading-screen');
