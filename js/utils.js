@@ -443,15 +443,10 @@
     setTimeout(function() {
       var canvas = document.getElementById('lottie-loader');
       if (!canvas) return;
-      import('https://cdn.jsdelivr.net/npm/@lottiefiles/dotlottie-web/dist/dotlottie-web.browser.es2022.js')
-        .then(function(m) {
-          var DotLottieClass = m.DotLottie || m.default;
-          if (DotLottieClass) {
-            new DotLottieClass({ autoplay: true, loop: true, canvas: canvas, src: 'lodernuevo.json' });
-          }
-        })
-        .catch(function(e) { console.log('Lottie error:', e); });
-    }, 200);
+      if (window.DotLottie) {
+        new window.DotLottie({ autoplay: true, loop: true, canvas: canvas, src: 'lodernuevo.json' });
+      }
+    }, 300);
 
     return '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;">' +
       '<canvas id="lottie-loader" style="width:200px;height:200px;display:block;"></canvas>' +
