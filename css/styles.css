@@ -576,3 +576,8 @@ button:not(:disabled):not(.no-hover):active {
   box-shadow: 0 8px 32px rgba(216,151,231,0.14), 0 4px 16px rgba(0,0,0,0.40);
   border-color: rgba(216,151,231,0.25);
 }
+
+/* ── Font size overrides ── */
+body.font-small  { font-size: 13px; }
+body.font-medium { font-size: 16px; }
+body.font-large  { font-size: 20px; }

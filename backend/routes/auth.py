@@ -304,7 +304,7 @@ def login():
     user = users().find_one({"email": email})
     if not user or not bcrypt.checkpw(password, user["password_hash"].encode()):
         record_failed_attempt(email)
-        return jsonify(error="Credenciales inválidas"), 401
+        return jsonify(error="Correo o contraseña incorrectos"), 401
 
     clear_attempts(email)
 

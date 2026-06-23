@@ -130,6 +130,21 @@
         if (d && window.innerWidth >= 900) { d.style.display = 'block'; }
       })();
       var form = document.getElementById('login-form');
+      (function() {
+        var inp = form.elements['password'];
+        if (!inp) return;
+        inp.parentElement.style.position = 'relative';
+        inp.style.paddingRight = '44px';
+        var btn = document.createElement('button');
+        btn.type = 'button'; btn.tabIndex = -1;
+        btn.style.cssText = 'position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:4px;line-height:0;color:#8b93a3;';
+        btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+        btn.onclick = function() {
+          if (inp.type === 'password') { inp.type = 'text'; btn.style.color = '#d897e7'; }
+          else { inp.type = 'password'; btn.style.color = '#8b93a3'; }
+        };
+        inp.parentElement.appendChild(btn);
+      })();
       form.addEventListener('submit', async function (e) {
         e.preventDefault();
         var email = form.email, pass = form.password, ok = true;
@@ -145,7 +160,7 @@
           var _ar = ['admin','superadmin','god_admin'];
           window.location.href = nextUrl || (_ar.indexOf(loggedUser.role) !== -1 ? 'workspace-select.html' : 'profile.html');
         } catch (err) {
-          U.setFieldError(pass, err.message || 'No se pudo iniciar sesión');
+          U.toast('Correo o contraseña incorrectos', 'error');
         } finally {
           btn.disabled = false;
           btn.textContent = U.t('enter_btn');
