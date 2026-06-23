@@ -592,7 +592,7 @@
               '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2 mt-2" style="color:rgba(240,234,242,0.35);">Información</p>' +
               '<button id="drawer-about-btn" ' + dBtn + ' ' + dBtnHover + '><img src="assets/icons/ui/icono-acerca.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:4px;"> <span>Acerca de la app</span></button>' +
             '</div>' +
-            (isAdmin && userRole !== 'god_admin'
+            (userRole === 'superadmin'
               ? '<div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.07);">' +
                   '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2 mt-2" style="color:rgba(240,234,242,0.35);">Administración</p>' +
                   '<button id="drawer-users-btn" ' + dBtn + ' ' + dBtnHover + '><img src="assets/icons/ui/icono-usuarios.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:4px;"> <span>Gestionar usuarios</span></button>' +
@@ -663,7 +663,7 @@
             '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2 mt-2" style="color:rgba(240,234,242,0.35);">Información</p>' +
             '<button id="drawer-about-btn-2" ' + dBtn + ' ' + dBtnHover + '><img src="assets/icons/ui/icono-acerca.png" style="width:18px;height:18px;object-fit:contain;margin-right:4px;"> <span>Acerca de la app</span></button>' +
           '</div>' +
-          (isAdmin && userRole !== 'god_admin' ? '<div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.07);">' +
+          (userRole === 'superadmin' ? '<div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.07);">' +
             '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2 mt-2" style="color:rgba(240,234,242,0.35);">Administración</p>' +
             '<button id="drawer-users-btn-2" ' + dBtn + ' ' + dBtnHover + '><img src="assets/icons/ui/icono-usuarios.png" style="width:18px;height:18px;object-fit:contain;margin-right:4px;"> <span>Gestionar usuarios</span></button>' +
           '</div>' : '') +
