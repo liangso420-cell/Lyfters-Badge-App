@@ -559,6 +559,27 @@ def list_invitations(ws_id):
     } for i in invs])
 
 
+# ── POST /workspaces/cleanup-membership  (temporal, god_admin) ─
+@ws_bp.route("/cleanup-membership", methods=["POST"])
+@jwt_required()
+def cleanup_membership():
+    claims = get_jwt()
+    if claims.get("role") != "god_admin":
+        return jsonify(error="Solo god_admin"), 403
+    data       = request.get_json() or {}
+    user_email = data.get("email")
+    ws_slug    = data.get("ws_slug")
+    ws   = workspaces().find_one({"slug": ws_slug})
+    user = users().find_one({"email": user_email})
+    if not ws or not user:
+        return jsonify(error="No encontrado", ws=str(ws), user=str(user)), 404
+    r = workspace_members().delete_one({
+        "workspace_id": ws["_id"],
+        "user_id":      user["_id"],
+    })
+    return jsonify(deleted=r.deleted_count), 200
+
+
 # ── GET /workspaces/platform/users  (god_admin) ───────────────
 @ws_bp.route("/platform/users", methods=["GET"])
 @jwt_required()
