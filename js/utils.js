@@ -583,6 +583,24 @@
                   '<button id="drawer-users-btn" ' + dBtn + ' ' + dBtnHover + '><img src="assets/icons/ui/icono-usuarios.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:4px;"> <span>Gestionar usuarios</span></button>' +
                 '</div>'
               : '') +
+            '<div style="margin:16px 20px 0;border-top:1px solid #2f343f;padding-top:16px;">' +
+              '<div style="font-size:10px;font-weight:700;color:#4a5060;letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;">Workspace</div>' +
+              '<div style="background:linear-gradient(135deg,rgba(216,151,231,0.06),rgba(230,138,141,0.04));border:1px solid rgba(216,151,231,0.15);border-radius:14px;padding:14px;">' +
+                '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">' +
+                  '<img src="assets/icons/ui/icono-usuarios.png" style="width:16px;height:16px;object-fit:contain;opacity:.7;" />' +
+                  '<span style="font-family:Poppins,sans-serif;font-size:12px;font-weight:700;color:#cdd2db;">Unirse a un workspace</span>' +
+                '</div>' +
+                '<p style="font-size:11px;color:#6f7686;line-height:1.5;margin-bottom:10px;">Si tu organización te envió un código de invitación, ingrésalo aquí.</p>' +
+                '<div style="display:flex;gap:6px;">' +
+                  '<input id="drawer-ws-code" type="text" maxlength="8" placeholder="ABC12345" ' +
+                    'style="flex:1;height:34px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-size:12px;padding:0 10px;outline:none;letter-spacing:.1em;text-transform:uppercase;" ' +
+                    'oninput="this.value=this.value.replace(/[^a-zA-Z0-9]/g,\'\').toUpperCase().slice(0,8)" />' +
+                  '<button onclick="window.joinWorkspaceFromDrawer(\'drawer-ws-code\',\'drawer-ws-result\')" ' +
+                    'style="height:34px;padding:0 12px;border-radius:8px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Unirse</button>' +
+                '</div>' +
+                '<div id="drawer-ws-result" style="margin-top:6px;font-size:11px;display:none;"></div>' +
+              '</div>' +
+            '</div>' +
             '<div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.07);">' +
               '<button id="drawer-logout-btn" ' + dBtn + ' ' + dBtnHover + ' style="background:transparent;border:none;width:100%;display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1.25rem;font-size:0.875rem;color:rgba(248,113,113,0.75);cursor:pointer;">⎋ <span>Cerrar sesión</span></button>' +
             '</div>' +
@@ -634,6 +652,24 @@
             '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2 mt-2" style="color:rgba(240,234,242,0.35);">Administración</p>' +
             '<button id="drawer-users-btn-2" ' + dBtn + ' ' + dBtnHover + '><img src="assets/icons/ui/icono-usuarios.png" style="width:18px;height:18px;object-fit:contain;margin-right:4px;"> <span>Gestionar usuarios</span></button>' +
           '</div>' : '') +
+          '<div style="margin:16px 20px 0;border-top:1px solid #2f343f;padding-top:16px;">' +
+            '<div style="font-size:10px;font-weight:700;color:#4a5060;letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;">Workspace</div>' +
+            '<div style="background:linear-gradient(135deg,rgba(216,151,231,0.06),rgba(230,138,141,0.04));border:1px solid rgba(216,151,231,0.15);border-radius:14px;padding:14px;">' +
+              '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">' +
+                '<img src="assets/icons/ui/icono-usuarios.png" style="width:16px;height:16px;object-fit:contain;opacity:.7;" />' +
+                '<span style="font-family:Poppins,sans-serif;font-size:12px;font-weight:700;color:#cdd2db;">Unirse a un workspace</span>' +
+              '</div>' +
+              '<p style="font-size:11px;color:#6f7686;line-height:1.5;margin-bottom:10px;">Si tu organización te envió un código de invitación, ingrésalo aquí.</p>' +
+              '<div style="display:flex;gap:6px;">' +
+                '<input id="drawer-ws-code-2" type="text" maxlength="8" placeholder="ABC12345" ' +
+                  'style="flex:1;height:34px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-size:12px;padding:0 10px;outline:none;letter-spacing:.1em;text-transform:uppercase;" ' +
+                  'oninput="this.value=this.value.replace(/[^a-zA-Z0-9]/g,\'\').toUpperCase().slice(0,8)" />' +
+                '<button onclick="window.joinWorkspaceFromDrawer(\'drawer-ws-code-2\',\'drawer-ws-result-2\')" ' +
+                  'style="height:34px;padding:0 12px;border-radius:8px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Unirse</button>' +
+              '</div>' +
+              '<div id="drawer-ws-result-2" style="margin-top:6px;font-size:11px;display:none;"></div>' +
+            '</div>' +
+          '</div>' +
           '<div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.07);">' +
             '<button id="drawer-logout-btn-2" ' + dBtn + ' ' + dBtnHover + ' style="color:rgba(248,113,113,0.75);">⎋ <span>Cerrar sesión</span></button>' +
           '</div>';
@@ -1442,5 +1478,37 @@
     catch (e) { toast(e.message, 'error'); return; }
     window.LyfterAPI.logout();
     window.location.href = 'login.html';
+  };
+
+  window.joinWorkspaceFromDrawer = async function(inputId, resultId) {
+    var inp    = document.getElementById(inputId || 'drawer-ws-code');
+    var result = document.getElementById(resultId || 'drawer-ws-result');
+    if (!inp || !result) return;
+    var code = (inp.value || '').trim().toUpperCase();
+    if (code.length < 4) {
+      result.style.display = 'block';
+      result.style.color   = '#e68a8d';
+      result.textContent   = 'Ingresá el código completo.';
+      return;
+    }
+    result.style.display = 'block';
+    result.style.color   = '#8b93a3';
+    result.textContent   = 'Verificando...';
+    try {
+      var API = window.LyfterAPI;
+      var res = await fetch(API.base + '/workspaces/join', {
+        method:  'POST',
+        headers: Object.assign({}, API.authHeaders(), {'Content-Type': 'application/json'}),
+        body:    JSON.stringify({ code: code })
+      });
+      var data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Código inválido o expirado');
+      result.style.color = '#abd194';
+      result.textContent = '✅ Te uniste a ' + (data.workspace || 'el workspace') + ' como ' + (data.role || '') + '. Cerrá sesión y volvé a entrar para ver los cambios.';
+      inp.value = '';
+    } catch(e) {
+      result.style.color = '#e68a8d';
+      result.textContent = '✗ ' + (e.message || 'Error al unirse');
+    }
   };
 })();
