@@ -1252,6 +1252,7 @@
         '<div style="display:flex;align-items:center;gap:8px;min-width:0;">' +
           '<img src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" style="width:28px;height:28px;flex-shrink:0;object-fit:contain;border-radius:6px;" />' +
           '<span style="font-family:Poppins,sans-serif;font-size:18px;font-weight:700;color:#f4f6f9;letter-spacing:-0.01em;">Lyfter</span>' +
+          '<a href="landing.html" style="font-family:Manrope,sans-serif;font-size:12px;font-weight:600;color:#8b93a3;text-decoration:none;padding:4px 8px;border-radius:8px;flex-shrink:0;">← Inicio</a>' +
         '</div>' +
         '<button type="button" aria-label="Mi perfil" onclick="var b=document.getElementById(\'admin-profile-menu\');if(b)b.click();" ' +
           'style="display:flex;align-items:center;gap:8px;max-width:60%;min-width:0;padding:5px 12px 5px 5px;border-radius:999px;border:1px solid #353a46;background:rgba(255,255,255,0.04);cursor:pointer;">' +

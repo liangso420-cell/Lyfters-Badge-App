@@ -30,9 +30,12 @@
     .ws-user-role{font-size:10px;color:#8b93a3;background:rgba(216,151,231,0.12);border-radius:999px;padding:2px 8px;margin-left:4px;}
     /* Pill móvil [avatar + nombre ▼] — oculto en desktop */
     .ws-chip-mobile{display:none;}
+    /* "← Inicio" junto al logo — solo móvil */
+    .ws-home-mobile{display:none;}
     @media (max-width:640px){
       .ws-header{padding:14px 16px;}
       .ws-home-link{display:none;}
+      .ws-home-mobile{display:inline-block !important;}
       .ws-chip-desktop{display:none !important;}
       .ws-chip-mobile{display:inline-flex !important;}
     }
@@ -115,6 +118,7 @@
     <div class="ws-logo">
       <img src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" />
       <span class="ws-logo-text">Lyfter</span>
+      <a href="landing.html" class="ws-home-link ws-home-mobile">← Inicio</a>
     </div>
     <div style="display:flex;align-items:center;gap:14px;">
       <a href="landing.html" class="ws-home-link">← Inicio</a>
