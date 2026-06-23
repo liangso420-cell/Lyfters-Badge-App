@@ -384,6 +384,7 @@ def invite_member(ws_id):
                     role=role
                 ), 200
             else:
+                workspace_members().delete_many({"user_id": existing_user["_id"]})
                 workspace_members().insert_one({
                     "workspace_id": oid,
                     "user_id":      existing_user["_id"],

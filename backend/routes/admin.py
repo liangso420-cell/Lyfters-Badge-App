@@ -84,9 +84,9 @@ def admin_list_events():
     if ws_id is None:
         # god_admin sin workspace seleccionado — ve todo
         query = {}
-    elif role == "admin" and claims.get("role") != "god_admin":
-        # Admin normal — solo sus eventos en su workspace
-        query = {"workspace_id": ws_id, "created_by": ObjectId(get_jwt_identity())}
+    elif role == "admin":
+        # Admin ve todos los eventos de su workspace
+        query = {"workspace_id": ws_id}
     else:
         # superadmin o god_admin con workspace seleccionado — todos los eventos del workspace
         query = {"workspace_id": ws_id}

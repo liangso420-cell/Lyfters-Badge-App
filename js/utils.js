@@ -535,7 +535,7 @@
   }
 
   /* ----- Drawer lateral ----- */
-  function showDrawer(avatarUrl, userName, onAvatarSave, isAdmin) {
+  function showDrawer(avatarUrl, userName, onAvatarSave, isAdmin, userRole) {
     try {
       var savedTheme = localStorage.getItem('lyfter_theme');
       if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
@@ -592,7 +592,7 @@
               '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2 mt-2" style="color:rgba(240,234,242,0.35);">Información</p>' +
               '<button id="drawer-about-btn" ' + dBtn + ' ' + dBtnHover + '><img src="assets/icons/ui/icono-acerca.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:4px;"> <span>Acerca de la app</span></button>' +
             '</div>' +
-            (isAdmin
+            (isAdmin && userRole !== 'god_admin'
               ? '<div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.07);">' +
                   '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2 mt-2" style="color:rgba(240,234,242,0.35);">Administración</p>' +
                   '<button id="drawer-users-btn" ' + dBtn + ' ' + dBtnHover + '><img src="assets/icons/ui/icono-usuarios.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:4px;"> <span>Gestionar usuarios</span></button>' +
@@ -663,7 +663,7 @@
             '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2 mt-2" style="color:rgba(240,234,242,0.35);">Información</p>' +
             '<button id="drawer-about-btn-2" ' + dBtn + ' ' + dBtnHover + '><img src="assets/icons/ui/icono-acerca.png" style="width:18px;height:18px;object-fit:contain;margin-right:4px;"> <span>Acerca de la app</span></button>' +
           '</div>' +
-          (isAdmin ? '<div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.07);">' +
+          (isAdmin && userRole !== 'god_admin' ? '<div class="mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.07);">' +
             '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2 mt-2" style="color:rgba(240,234,242,0.35);">Administración</p>' +
             '<button id="drawer-users-btn-2" ' + dBtn + ' ' + dBtnHover + '><img src="assets/icons/ui/icono-usuarios.png" style="width:18px;height:18px;object-fit:contain;margin-right:4px;"> <span>Gestionar usuarios</span></button>' +
           '</div>' : '') +
@@ -705,7 +705,7 @@
         });
       }).catch(function() {
         closeModal();
-        showDrawer(avatarUrl, userName, onAvatarSave, isAdmin);
+        showDrawer(avatarUrl, userName, onAvatarSave, isAdmin, userRole);
       });
     }
 
@@ -1252,17 +1252,19 @@
       profileBtn.addEventListener('click', async function() {
         try {
           var _cu = window.LyfterAPI.currentUser();
-          var _isGod = _cu && _cu.role === 'god_admin';
+          var _cuRole = _cu && _cu.role;
+          var _isAdmin = _cuRole === 'admin' || _cuRole === 'superadmin';
           var p = await window.LyfterAPI.getProfile();
           showDrawer(p.avatar, p.nombre, function(newAvatar) {
             if (newAvatar) {
               profileBtn.style.backgroundImage = 'url(' + newAvatar + ')';
               profileBtn.style.backgroundSize = 'cover';
             }
-          }, _isGod);
+          }, _isAdmin, _cuRole);
         } catch(e) {
           var _cu2 = window.LyfterAPI.currentUser();
-          showDrawer(null, null, null, _cu2 && _cu2.role === 'god_admin');
+          var _cu2Role = _cu2 && _cu2.role;
+          showDrawer(null, null, null, _cu2Role === 'admin' || _cu2Role === 'superadmin', _cu2Role);
         }
       });
     }
