@@ -171,7 +171,12 @@
         var wsData = null, members = [], allWs = [];
 
         if (isGod) {
-          allWs = await apiFetch('/workspaces/');
+          try {
+            allWs = await apiFetch('/workspaces/');
+          } catch(e) {
+            console.warn('[load] No se pudieron cargar workspaces:', e.message);
+            allWs = [];
+          }
         } else {
           try { wsData = await apiFetch('/workspaces/mine'); } catch(e) {}
           if (wsData && wsData.id) {
@@ -181,14 +186,19 @@
 
         render(wsData, members, allWs);
       } catch(err) {
-        main.innerHTML =
-          '<div class="ws-empty">' +
-            '<div class="ws-empty-icon">⚠️</div>' +
-            '<p class="ws-empty-text">No se pudo cargar el workspace</p>' +
-            '<p class="ws-empty-sub">' + U.esc(err.message) + '</p>' +
-          '</div>' +
-          joinSectionHtml();
-        bindJoin();
+        if (isGod) {
+          // god_admin nunca queda bloqueado en pantalla de error
+          render(null, [], []);
+        } else {
+          main.innerHTML =
+            '<div class="ws-empty">' +
+              '<div class="ws-empty-icon">⚠️</div>' +
+              '<p class="ws-empty-text">No se pudo cargar el workspace</p>' +
+              '<p class="ws-empty-sub">' + U.esc(err.message) + '</p>' +
+            '</div>' +
+            joinSectionHtml();
+          bindJoin();
+        }
       }
     }
 
