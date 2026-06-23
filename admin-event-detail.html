@@ -86,6 +86,7 @@
           var blist = data.badges || [];
 
           var statusLabel = STATUS_MAP[ev.status] ? STATUS_MAP[ev.status].label : (ev.status || '');
+          var isOngoing = ev.status === 'ongoing' || ev.status === 'open';
           var CARD_GRADIENTS = [
             'linear-gradient(120deg,#d897e7 0%,#e68a8d 60%,#ffcb8a 100%)',
             'linear-gradient(120deg,#70cfff 0%,#abd194 100%)',
@@ -144,7 +145,9 @@
                         '<p style="font-size:11px;color:#8b93a3;font-family:Manrope,sans-serif;margin:2px 0 0;">' + (b.redeemed || 0) + ' canjes · ' + bxp + ' XP</p>' +
                       '</div>' +
                       '<div style="display:flex;gap:6px;flex-shrink:0;">' +
-                        '<button data-qr-b="' + b.id + '" data-qr-img="' + U.esc(b.qrImage || b.qr_image || '') + '" data-qr-name="' + U.esc(bname) + '" class="badge-qr-btn" style="height:30px;padding:0 10px;border-radius:8px;border:1px solid rgba(112,207,255,0.4);background:rgba(112,207,255,0.08);color:#70cfff;font-size:12px;font-weight:600;cursor:pointer;font-family:Manrope,sans-serif;">QR</button>' +
+                        (isOngoing
+                          ? '<button data-qr-b="' + b.id + '" data-qr-img="' + U.esc(b.qrImage || b.qr_image || '') + '" data-qr-name="' + U.esc(bname) + '" class="badge-qr-btn" style="height:30px;padding:0 10px;border-radius:8px;border:1px solid rgba(112,207,255,0.4);background:rgba(112,207,255,0.08);color:#70cfff;font-size:12px;font-weight:600;cursor:pointer;font-family:Manrope,sans-serif;">QR</button>'
+                          : '<button disabled title="El evento debe estar En curso para activar el QR" style="height:30px;padding:0 10px;border-radius:8px;border:1px solid rgba(112,207,255,0.2);background:rgba(112,207,255,0.04);color:#70cfff;font-size:12px;font-weight:600;font-family:Manrope,sans-serif;opacity:0.4;cursor:not-allowed;">QR</button>') +
                         '<button data-edit-b="' + b.id + '" class="badge-edit-btn" style="height:30px;padding:0 10px;border-radius:8px;border:1px solid #353a46;background:transparent;color:#cdd2db;font-size:12px;cursor:pointer;"><img src="assets/icons/ui/icono-editar.png" style="filter:brightness(0) invert(1);width:16px;height:16px;object-fit:contain;vertical-align:middle;"></button>' +
                         '<button data-del-b="' + b.id + '" data-del-bname="' + U.esc(bname) + '" class="badge-del-btn" style="height:30px;padding:0 10px;border-radius:8px;border:1px solid rgba(230,138,141,0.4);background:transparent;cursor:pointer;"><img src="assets/icons/ui/icono-basura-blanco.png" alt="Eliminar" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;display:inline-block;filter:invert(60%) sepia(1) saturate(3) hue-rotate(300deg);" /></button>' +
                       '</div>' +
@@ -375,19 +378,23 @@
               if (preview.style.display !== 'none') { preview.style.display = 'none'; return; }
               var qrImg = btn.getAttribute('data-qr-img');
               var name  = btn.getAttribute('data-qr-name');
-              if (qrImg) {
-                preview.style.display = 'block';
-                preview.innerHTML =
-                  '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;padding:16px 0;">' +
-                    '<p style="font-family:Manrope,sans-serif;font-size:13px;color:#8b93a3;margin-bottom:12px;">QR — ' + U.esc(name) + '</p>' +
-                    '<img src="' + qrImg + '" style="width:180px;height:180px;display:block;margin:0 auto;border-radius:12px;" />' +
-                    '<button id="dl-badge-qr-' + bid + '" style="margin-top:16px;height:36px;padding:0 18px;border-radius:9px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-size:13px;font-weight:700;cursor:pointer;font-family:Poppins,sans-serif;">⬇ Descargar</button>' +
-                  '</div>';
+              var qrContent = isOngoing
+                ? (qrImg
+                    ? '<img src="' + qrImg + '" style="width:180px;height:180px;display:block;margin:0 auto;border-radius:12px;" />' +
+                      '<button id="dl-badge-qr-' + bid + '" style="margin-top:16px;height:36px;padding:0 18px;border-radius:9px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-size:13px;font-weight:700;cursor:pointer;font-family:Poppins,sans-serif;">⬇ Descargar</button>'
+                    : '<p style="color:#8b93a3;font-size:13px;font-family:Manrope,sans-serif;">Este badge aún no tiene QR generado.</p>')
+                : '<img src="assets/icons/ui/icono-alerta.png" style="width:32px;height:32px;object-fit:contain;opacity:0.5;display:block;margin:0 auto 8px;" />' +
+                  '<p style="color:#8b93a3;font-size:13px;font-family:Manrope,sans-serif;margin:0;">El evento debe estar <strong style="color:#f4f6f9;">En curso</strong> para mostrar el QR.</p>';
+              preview.style.display = 'block';
+              preview.innerHTML =
+                '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;padding:16px 0;">' +
+                  '<p style="font-family:Manrope,sans-serif;font-size:13px;color:#8b93a3;margin-bottom:12px;">QR — ' + U.esc(name) + '</p>' +
+                  qrContent +
+                '</div>';
+              if (isOngoing && qrImg) {
                 document.getElementById('dl-badge-qr-' + bid).addEventListener('click', function() {
                   var a = document.createElement('a'); a.href = qrImg; a.download = 'badge-' + name + '.png'; a.click();
                 });
-              } else {
-                U.toast('Este badge aún no tiene QR generado', 'error');
               }
             });
           });
