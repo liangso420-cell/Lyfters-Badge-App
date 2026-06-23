@@ -163,7 +163,6 @@
                       '<div style="display:flex;gap:8px;">' +
                         '<button type="button" data-rarity="normal" class="rarity-btn" style="flex:1;padding:10px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-size:12px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;">Normal</button>' +
                         '<button type="button" data-rarity="rare" class="rarity-btn" style="flex:1;padding:10px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-size:12px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;">Raro</button>' +
-                        '<button type="button" data-rarity="ultra_rare" class="rarity-btn" style="flex:1;padding:10px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-size:12px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;">Ultra Raro</button>' +
                       '</div>' +
                     '</div>' +
                   '</div>' +
@@ -301,9 +300,8 @@
         var selectedBadgeIcon = null;
 
         var RARITY_COLORS = {
-          normal:     { border: '#353a46', bg: '#2e323d', color: '#f4f6f9' },
-          rare:       { border: '#22c55e', bg: 'rgba(34,197,94,0.15)', color: '#22c55e' },
-          ultra_rare: { border: '#eab308', bg: 'rgba(234,179,8,0.15)', color: '#eab308' }
+          normal: { border: '#353a46', bg: '#2e323d', color: '#f4f6f9' },
+          rare:   { border: '#22c55e', bg: 'rgba(34,197,94,0.15)', color: '#22c55e' }
         };
 
         Array.prototype.forEach.call(document.querySelectorAll('.rarity-btn'), function(btn) {
@@ -363,9 +361,8 @@
         });
 
         var rarityColors = {
-          normal:     { bg: '#20242d', border: '#2f343f', label: 'Normal',     labelColor: '#8b93a3' },
-          rare:       { bg: 'rgba(34,197,94,0.1)',  border: '#22c55e', label: 'Raro',      labelColor: '#22c55e' },
-          ultra_rare: { bg: 'rgba(234,179,8,0.1)', border: '#eab308', label: 'Ultra Raro', labelColor: '#eab308' }
+          normal: { bg: '#20242d', border: '#2f343f', label: 'Normal', labelColor: '#8b93a3' },
+          rare:   { bg: 'rgba(34,197,94,0.1)', border: '#22c55e', label: 'Raro', labelColor: '#22c55e' }
         };
 
         document.getElementById('create-add-badge-btn').addEventListener('click', function() {

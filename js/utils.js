@@ -1226,9 +1226,6 @@
           '<a href="workspace-select.html" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;color:#8b93a3;text-decoration:none;font-size:14px;font-weight:600;transition:color .15s;" onmouseover="this.style.color=\'#d897e7\'" onmouseout="this.style.color=\'#8b93a3\'">' +
             '<img src="assets/icons/ui/icono-usuarios.png" style="width:18px;height:18px;object-fit:contain;opacity:.7;" /> Mis Workspaces' +
           '</a>' +
-          '<a href="workspace.html" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;color:#8b93a3;text-decoration:none;font-size:13px;font-weight:600;transition:color .15s;" onmouseover="this.style.color=\'#d897e7\'" onmouseout="this.style.color=\'#8b93a3\'">' +
-            '<img src="assets/icons/ui/icono-editar.png" style="width:16px;height:16px;object-fit:contain;opacity:.6;" /> Gestionar workspace' +
-          '</a>' +
         '</div>' +
         '<div style="margin-top:auto;padding-top:22px;">' +
           '<button id="admin-profile-menu" style="width:100%;height:44px;border-radius:12px;border:1px solid #353a46;background:transparent;color:#aab1bf;font-family:Poppins,sans-serif;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">☰ Mi perfil</button>' +

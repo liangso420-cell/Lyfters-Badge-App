@@ -68,8 +68,8 @@
     function render(detail, meta) {
       var statusColors = { upcoming:'#3b82f6', open:'#16a34a', ongoing:'#6C63FF', closed:'#d97706', postponed:'#9333ea', draft:'#8b93a3' };
       var statusLabels = { upcoming:'Próximo', open:'Abierto', ongoing:'En curso', closed:'Cerrado', postponed:'Pospuesto', draft:'Borrador' };
-      var rarityLabels = { common:'Común', rare:'Raro', epic:'Épico', legendary:'Legendario', normal:'Normal', ultra_rare:'Ultra raro' };
-      var rarityColors = { common:'#8b93a3', rare:'#4ade80', epic:'#a78bfa', legendary:'#fbbf24', normal:'#8b93a3', ultra_rare:'#fb923c' };
+      var rarityLabels = { common:'Común', rare:'Raro', epic:'Épico', legendary:'Legendario', normal:'Normal' };
+      var rarityColors = { common:'#8b93a3', rare:'#4ade80', epic:'#a78bfa', legendary:'#fbbf24', normal:'#8b93a3' };
 
       var status     = meta.status || 'draft';
       var statusCol  = statusColors[status] || '#8b93a3';
