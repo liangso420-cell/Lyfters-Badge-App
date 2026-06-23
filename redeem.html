@@ -8,7 +8,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
-  <script type="module" src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs"></script>
 </head>
 <body>
   <div id="loading-screen">
@@ -105,7 +104,11 @@
         }
 
         var animBlock = !isDup
-          ? '<dotlottie-player src="happy.lottie" autoplay style="width:120px;height:120px;margin:0 auto 4px;display:block;"></dotlottie-player>'
+          ? '<div style="text-align:center;margin-bottom:20px;">' +
+              '<div style="font-size:48px;animation:bounceIn 0.6s ease;">🎉</div>' +
+              '<h2 style="font-family:Poppins,sans-serif;font-size:20px;font-weight:700;color:#d897e7;margin:12px 0 4px;">¡Te uniste al evento!</h2>' +
+              '<p style="font-family:Manrope,sans-serif;font-size:14px;color:#8b93a3;">Badge obtenido exitosamente</p>' +
+            '</div>'
           : '';
 
         var prizeBlock = (isLast && r.prize)
@@ -191,6 +194,7 @@
           '.copy-btn{background:#F3F4F6;color:#374151;}' +
           '.redeem-profile-btn{width:100%;padding:14px;border-radius:12px;border:none;font-size:15px;font-weight:600;color:#fff;cursor:pointer;margin-top:16px;font-family:inherit;transition:opacity .15s;}' +
           '.redeem-profile-btn:hover{opacity:.9;}' +
+          '@keyframes bounceIn{0%{transform:scale(0);opacity:0;}60%{transform:scale(1.2);}100%{transform:scale(1);opacity:1;}}' +
           '</style>';
 
         app.innerHTML =
@@ -209,8 +213,9 @@
             '</div>' +
           '</section>';
 
+        setTimeout(function() { window.location.href = 'user-events.html'; }, 2500);
         document.getElementById('redeem-profile').addEventListener('click', function () {
-          window.location.href = 'profile.html';
+          window.location.href = 'user-events.html';
         });
 
         var igBtn = document.getElementById('share-instagram');

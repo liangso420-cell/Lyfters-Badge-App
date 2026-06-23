@@ -1377,7 +1377,7 @@
       '<div id="ach-overlay" class="fixed inset-0 z-[70] flex items-center justify-center p-6 anim-fade" style="background:rgba(17,24,39,0.8);">' +
         '<div class="bg-white rounded-card p-8 text-center w-full max-w-xs shadow-soft anim-pop" style="border-top:5px solid ' + rs.color + ';">' +
           '<p class="text-xs font-semibold uppercase tracking-wide mb-3" style="color:' + rs.color + ';">¡Logro desbloqueado!</p>' +
-          '<div class="mb-3" style="filter:drop-shadow(0 0 14px ' + rs.glow + ');display:flex;justify-content:center;"><img src="' + iconSrc + '" style="width:80px;height:80px;object-fit:contain;display:block;" /></div>' +
+          '<div class="mb-3" style="filter:drop-shadow(0 0 14px ' + rs.glow + ');display:flex;justify-content:center;align-items:center;width:100%;"><img src="' + iconSrc + '" style="width:80px;height:80px;object-fit:contain;display:block;" /></div>' +
           '<h3 class="text-lg font-bold text-gray-800">' + esc(a.name) + '</h3>' +
           '<p class="text-sm text-gray-500 mt-1">' + esc(a.description || '') + '</p>' +
           '<span class="inline-block mt-3 px-3 py-1 rounded-full text-xs font-bold text-white" style="background:' + rs.color + ';">' + rs.label + ' · +' + (a.xp_reward || 0) + ' XP</span>' +

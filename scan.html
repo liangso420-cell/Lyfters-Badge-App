@@ -39,7 +39,6 @@
     .corner-br { bottom: 0; right: 0; border-width: 0 3px 3px 0; }
   </style>
   <link rel="stylesheet" href="css/styles.css" />
-  <script type="module" src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs"></script>
 </head>
 <body>
   <div id="loading-screen">
@@ -257,7 +256,7 @@
             modalRoot.innerHTML =
               '<div class="fixed inset-0 z-50 flex items-center justify-center p-6 anim-fade" style="background:rgba(17,24,39,0.75);">' +
                 '<div class="bg-white rounded-card p-8 text-center w-full max-w-xs shadow-soft anim-pop">' +
-                  '<dotlottie-player src="surprised.lottie" autoplay style="width:120px;height:120px;margin:0 auto 8px;display:block;"></dotlottie-player>' +
+                  '<div style="font-size:64px;margin:0 auto 8px;text-align:center;">😮</div>' +
                   '<h3 style="font-size:18px;font-weight:700;color:#F59E0B;margin:0 0 6px;">¡Ya lo tenías!</h3>' +
                   '<p style="font-size:14px;color:#6b7280;margin:0;">' + (r.badge ? '"' + U.esc(r.badge.name) + '"' : 'Este badge ya está en tu colección') + '</p>' +
                 '</div>' +
@@ -324,7 +323,7 @@
         modalRoot.innerHTML =
           '<div class="fixed inset-0 z-50 flex items-center justify-center p-6 anim-fade" style="background:rgba(17,24,39,0.75);">' +
             '<div class="bg-white rounded-card p-8 text-center w-full max-w-sm shadow-soft anim-pop">' +
-              '<dotlottie-player src="happy.lottie" autoplay loop style="width:150px;height:150px;margin:0 auto 12px;display:block;"></dotlottie-player>' +
+              '<div style="font-size:64px;margin:0 auto 12px;text-align:center;animation:bounceIn 0.6s ease;">🎉</div>' +
               '<div class="text-4xl mb-2">' + badgeEmoji + '</div>' +
               '<h3 class="text-xl font-bold text-primary">' + (isLast ? U.t('completed_event') : U.t('badge_obtained')) + '</h3>' +
               '<p class="text-lg font-semibold mt-1 text-gray-800">' + U.esc(badgeName) + '</p>' +
@@ -345,10 +344,8 @@
 
         document.getElementById('celebrate-ok').addEventListener('click', function() {
           U.closeModal();
-          // Tras cerrar la celebración, mostrar los logros desbloqueados (si hay)
-          // y luego ir al perfil.
           U.showAchievementUnlocks(r.achievements || [], function() {
-            window.location.href = 'profile.html';
+            window.location.href = 'user-events.html';
           });
         });
 
