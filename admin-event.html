@@ -47,6 +47,18 @@
       var ADMIN_ROLES = ['admin','superadmin','god_admin'];
       if (ADMIN_ROLES.indexOf(user.role) === -1) { window.location.replace('profile.html'); return; }
       try { if (!sessionStorage.getItem('lyfter_ws_entered')) { window.location.replace('workspace-select.html'); return; } } catch(e) {}
+      // Verificar consistencia entre sessionStorage y JWT
+      try {
+        var _activeWs = sessionStorage.getItem('lyfter_active_ws');
+        var _sess = JSON.parse(localStorage.getItem('lyfter_session') || '{}');
+        var _payload = {};
+        try { _payload = JSON.parse(atob((_sess.token || '').split('.')[1])); } catch(e) {}
+        if (_activeWs && _payload.workspace_id && _activeWs !== _payload.workspace_id) {
+          sessionStorage.removeItem('lyfter_active_ws');
+          sessionStorage.removeItem('lyfter_ws_entered');
+          window.location.replace('workspace-select.html');
+        }
+      } catch(e) {}
 
       var app = document.getElementById('app');
       U.showPendingToast();

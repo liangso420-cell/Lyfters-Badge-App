@@ -538,23 +538,19 @@
 
     window.enterWorkspace = async function(wsId) {
       try {
-        console.log('[enterWorkspace] Entrando a workspace:', wsId);
-        // Guardar siempre como fallback via header X-Workspace-Id
+        try {
+          sessionStorage.removeItem('lyfter_active_ws');
+          sessionStorage.removeItem('lyfter_ws_entered');
+        } catch(e) {}
         try { sessionStorage.setItem('lyfter_active_ws', wsId); } catch(e) {}
         var res = await apiFetch('/auth/switch-workspace', {
           method: 'POST',
           body: JSON.stringify({ workspace_id: wsId })
         });
-        console.log('[enterWorkspace] Nuevo token recibido:', res.token ? res.token.substring(0, 50) + '...' : 'NINGUNO');
         API.setToken(res.token);
-        try {
-          var sessionCheck = JSON.parse(localStorage.getItem('lyfter_session') || '{}');
-          console.log('[enterWorkspace] Token en localStorage tras setToken:', sessionCheck.token ? sessionCheck.token.substring(0, 50) + '...' : 'NINGUNO');
-        } catch(e) {}
         try { sessionStorage.setItem('lyfter_ws_entered', '1'); } catch(e) {}
         window.location.href = 'admin-event.html';
       } catch(e) {
-        console.error('[enterWorkspace] Error switch-workspace:', e);
         U.toast('Error al entrar al workspace: ' + e.message, 'error');
       }
     };
