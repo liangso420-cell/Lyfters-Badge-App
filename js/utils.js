@@ -1209,7 +1209,7 @@
     var eventBlock = '';
 
     var sidebar =
-      '<aside id="admin-sidebar" style="position:fixed;top:0;left:0;bottom:0;width:248px;background:#1a1d24;border-right:1px solid #262a33;display:flex;flex-direction:column;padding:26px 18px;z-index:20;overflow-y:auto;">' +
+      '<aside id="admin-sidebar" style="position:fixed;top:0;left:0;bottom:0;width:248px;background:rgba(26,29,36,0.88);backdrop-filter:blur(24px) saturate(1.5);-webkit-backdrop-filter:blur(24px) saturate(1.5);border-right:1px solid rgba(47,52,63,0.70);display:flex;flex-direction:column;padding:26px 18px;z-index:20;overflow-y:auto;">' +
         '<div style="display:flex;align-items:center;gap:10px;padding:0 8px 26px;">' +
           '<img id="admin-sidebar-logo" src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" style="width:28px;height:28px;object-fit:contain;border-radius:6px;vertical-align:middle;display:inline-block;transition:opacity .2s;" />' +
           '<span id="admin-sidebar-ws-name" style="font-family:Poppins,sans-serif;font-size:20px;font-weight:700;color:#f4f6f9;letter-spacing:-0.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px;">...</span>' +
@@ -1243,7 +1243,27 @@
         innerHtml +
       '</main>';
 
-    return glows + sidebar + main;
+    var mobileNav =
+      '<nav id="mobile-bottom-nav">' +
+        '<a href="admin-event.html" class="' + (activeTab === 'event' ? 'active' : '') + '">' +
+          '<span class="icon">🎟️</span>' +
+          '<span>Eventos</span>' +
+        '</a>' +
+        '<a href="admin-participation.html" class="' + (activeTab === 'participation' ? 'active' : '') + '">' +
+          '<span class="icon">📊</span>' +
+          '<span>Dashboard</span>' +
+        '</a>' +
+        '<a href="admin-leaderboard.html" class="' + (activeTab === 'leaderboard' ? 'active' : '') + '">' +
+          '<span class="icon">🏆</span>' +
+          '<span>Ranking</span>' +
+        '</a>' +
+        '<a href="workspace.html">' +
+          '<span class="icon">🏢</span>' +
+          '<span>Workspace</span>' +
+        '</a>' +
+      '</nav>';
+
+    return glows + sidebar + main + mobileNav;
   }
 
   function mountAdminShell() {

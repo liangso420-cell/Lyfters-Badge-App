@@ -80,10 +80,10 @@
       justify-content: space-between;
       padding: 0 48px;
       height: 68px;
-      background: rgba(21,23,29,0.80);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid rgba(216,151,231,0.12);
+      background: rgba(21,23,29,0.72);
+      backdrop-filter: blur(20px) saturate(1.6);
+      -webkit-backdrop-filter: blur(20px) saturate(1.6);
+      border-bottom: 1px solid rgba(216,151,231,0.10);
       transition: background .3s;
     }
     .nav-logo {
@@ -516,6 +516,16 @@
       .stat-item { padding: 28px 14px; }
       .cta-card { padding: 40px 24px; }
     }
+    @media (max-width: 640px) {
+      .hero-title { font-size: clamp(32px, 9vw, 56px) !important; }
+      .hero-actions { flex-direction: column; align-items: stretch; }
+      .btn-hero-cta, .btn-hero-outline { width: 100%; justify-content: center; }
+      .stats-row { flex-wrap: wrap; }
+      .stat-item { flex: 1 1 50%; border-right: none !important; border-bottom: 1px solid #262a33; }
+      .steps-grid { grid-template-columns: 1fr !important; }
+      .features-grid { grid-template-columns: 1fr !important; }
+      .cta-card { padding: 32px 20px !important; }
+    }
   </style>
 </head>
 <body>
@@ -925,11 +935,12 @@
       if (nav) {
         nav.style.background = window.scrollY > 40
           ? 'rgba(21,23,29,0.95)'
-          : 'rgba(21,23,29,0.80)';
+          : 'rgba(21,23,29,0.72)';
       }
     }, { passive: true });
 
   })();
   </script>
+  <script src="js/stars.js"></script>
 </body>
 </html>

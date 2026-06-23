@@ -582,3 +582,110 @@ button:not(:disabled):not(.no-hover):active {
 body.font-small  { font-size: 13px; }
 body.font-medium { font-size: 16px; }
 body.font-large  { font-size: 20px; }
+
+/* ── GLASSMORPHISM HEADER ── */
+.glass-header {
+  background: rgba(21, 23, 29, 0.82) !important;
+  backdrop-filter: blur(20px) saturate(1.6) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.6) !important;
+  border-bottom: 1px solid rgba(216, 151, 231, 0.10) !important;
+}
+
+.glass-sidebar {
+  background: rgba(26, 29, 36, 0.90) !important;
+  backdrop-filter: blur(24px) saturate(1.5) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(1.5) !important;
+  border-right: 1px solid rgba(47, 52, 63, 0.70) !important;
+}
+
+body {
+  background-color: #15171d !important;
+  background-attachment: fixed;
+}
+
+/* ══════════════════════════════════════
+   MOBILE — App nativa (max 768px)
+══════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+  /* Admin: sidebar oculto en mobile */
+  #admin-sidebar {
+    display: none !important;
+  }
+  #admin-main {
+    margin-left: 0 !important;
+    padding: 16px 16px 90px !important;
+  }
+
+  /* Bottom nav for admin on mobile */
+  #mobile-bottom-nav {
+    display: flex !important;
+  }
+
+  /* Cards más compactas */
+  .ws-card { padding: 18px 16px !important; }
+  .ws-main { padding: 20px 14px 80px !important; }
+
+  /* Login: solo formulario */
+  #login-deco { display: none !important; }
+
+  /* Workspace: tabla scrolleable */
+  .ws-table { font-size: 12px !important; }
+  .ws-table td, .ws-table th { padding: 8px 10px !important; }
+
+}
+
+/* Bottom navigation for admin on mobile */
+#mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  z-index: 50;
+  background: rgba(26, 29, 36, 0.95);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  border-top: 1px solid rgba(216, 151, 231, 0.12);
+  padding: 0 8px;
+  justify-content: space-around;
+  align-items: center;
+}
+#mobile-bottom-nav a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: #8b93a3;
+  font-family: Manrope, sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  transition: color 0.15s;
+}
+#mobile-bottom-nav a.active {
+  color: #d897e7;
+  background: rgba(216,151,231,0.10);
+}
+#mobile-bottom-nav a span.icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+/* Touch-friendly targets */
+@media (max-width: 768px) {
+  button, a, input, select {
+    min-height: 44px;
+  }
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
