@@ -563,13 +563,31 @@ def list_invitations(ws_id):
 @ws_bp.route("/platform/users", methods=["GET"])
 @jwt_required()
 def list_platform_users():
-    claims = get_jwt()
-    if claims.get("role") != "god_admin":
-        return jsonify(error="Solo god_admin puede acceder"), 403
+    claims      = get_jwt()
+    caller_role = claims.get("role", "")
+
+    if caller_role not in ("god_admin", "superadmin", "admin"):
+        return jsonify(error="Acceso denegado"), 403
 
     now = datetime.utcnow()
+
+    if caller_role == "god_admin":
+        user_docs = list(users().find({}, {"password_hash": 0, "reset_token": 0, "reset_token_expiry": 0}))
+        role_map  = {}
+    else:
+        ws_id = claims.get("workspace_id")
+        if not ws_id:
+            return jsonify([]), 200
+        memberships = list(workspace_members().find({"workspace_id": ObjectId(ws_id)}))
+        user_ids    = [m["user_id"] for m in memberships]
+        role_map    = {str(m["user_id"]): m["role"] for m in memberships}
+        user_docs   = list(users().find(
+            {"_id": {"$in": user_ids}},
+            {"password_hash": 0, "reset_token": 0, "reset_token_expiry": 0}
+        ))
+
     result = []
-    for u in users().find({}, {"password_hash": 0, "reset_token": 0, "reset_token_expiry": 0}):
+    for u in user_docs:
         bu = u.get("banned_until")
         if bu and getattr(bu, "tzinfo", None) is not None:
             bu = bu.replace(tzinfo=None)
@@ -578,7 +596,7 @@ def list_platform_users():
             "id":            str(u["_id"]),
             "name":          u.get("name", ""),
             "email":         u.get("email", ""),
-            "role":          u.get("role", "participant"),
+            "role":          role_map.get(str(u["_id"]), u.get("role", "participant")),
             "created_at":    u["created_at"].isoformat() if u.get("created_at") else None,
             "banned":        active_ban,
             "banned_until":  bu.isoformat() if bu else None,

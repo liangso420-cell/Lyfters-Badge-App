@@ -125,20 +125,26 @@
         var canEdit    = callerRank > targetRank;
 
         // Roles que puede asignar: solo menores al propio, nunca god_admin
-        var assignableRoles = ['participant','admin','superadmin'].filter(function(r) {
+        // superadmin solo puede asignar participant y admin
+        var editableRoles = callerRole === 'god_admin'
+          ? ['participant', 'admin', 'superadmin']
+          : ['participant', 'admin'];
+        var assignableRoles = editableRoles.filter(function(r) {
           return ROLE_RANK[r] < callerRank;
         });
 
-        var roleCell = m.role === 'god_admin'
-          ? '<span class="we-badge god_admin">God Admin</span>'
-          : canEdit
-            ? '<select data-ws="' + wsId + '" data-uid="' + m.user_id + '" onchange="changeRole(this)" ' +
-                'style="height:32px;padding:0 8px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-size:12px;outline:none;cursor:pointer;">' +
-                assignableRoles.map(function(r) {
-                  return '<option value="' + r + '"' + (m.role === r ? ' selected' : '') + '>' + r + '</option>';
-                }).join('') +
-              '</select>'
-            : '<span class="we-badge ' + (m.role||'') + '" title="Sin permiso para editar este rol">' + (m.role||'') + '</span>';
+        var showBadge = m.role === 'god_admin' ||
+          (m.role === 'superadmin' && callerRole !== 'god_admin') ||
+          !canEdit;
+
+        var roleCell = showBadge
+          ? '<span class="we-badge ' + (m.role||'') + '">' + (m.role||'') + '</span>'
+          : '<select data-ws="' + wsId + '" data-uid="' + m.user_id + '" onchange="changeRole(this)" ' +
+              'style="height:32px;padding:0 8px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-size:12px;outline:none;cursor:pointer;">' +
+              assignableRoles.map(function(r) {
+                return '<option value="' + r + '"' + (m.role === r ? ' selected' : '') + '>' + r + '</option>';
+              }).join('') +
+            '</select>';
 
         var removeBtn = canEdit
           ? '<button onclick="removeMember(\'' + wsId + '\',\'' + m.user_id + '\')" class="we-btn danger" style="height:32px;font-size:12px;padding:0 12px;">Remover</button>'
