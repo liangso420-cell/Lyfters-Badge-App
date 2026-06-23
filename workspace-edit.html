@@ -34,7 +34,7 @@
     var ROLE_RANK = { participant: 1, admin: 2, superadmin: 3, god_admin: 4 };
 
     var styles = '<style>' +
-      '.we-header{background:#1a1d24;border-bottom:1px solid #262a33;padding:16px 28px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:10;}' +
+      '.we-header{background:rgba(26,29,36,0.88);backdrop-filter:blur(20px) saturate(1.5);-webkit-backdrop-filter:blur(20px) saturate(1.5);border-bottom:1px solid rgba(216,151,231,0.10);padding:16px 28px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:10;}' +
       '.we-title{font-family:Poppins,sans-serif;font-size:20px;font-weight:700;color:#f4f6f9;}' +
       '.we-main{max-width:900px;margin:0 auto;padding:36px 24px 80px;}' +
       '.we-card{background:#1c1f27;border:1px solid #2f343f;border-radius:20px;padding:28px 30px;margin-bottom:20px;}' +
@@ -68,7 +68,8 @@
         '<a href="workspace-select.html" style="display:inline-flex;align-items:center;gap:6px;color:#8b93a3;text-decoration:none;font-size:14px;font-family:Manrope,sans-serif;font-weight:600;">' +
           '<span style="font-size:18px;">←</span> Volver' +
         '</a>' +
-        '<div class="we-title" id="we-title">Editar workspace</div>' +
+        '<div class="we-title" id="we-title" style="flex:1;">Editar workspace</div>' +
+        '<a href="landing.html" style="font-size:12px;font-weight:600;color:#8b93a3;text-decoration:none;padding:5px 10px;border-radius:8px;border:1px solid transparent;transition:color .15s,border-color .15s;font-family:Manrope,sans-serif;" onmouseover="this.style.color=\'#d897e7\';this.style.borderColor=\'rgba(216,151,231,0.25)\'" onmouseout="this.style.color=\'#8b93a3\';this.style.borderColor=\'transparent\'">← Inicio</a>' +
       '</div>' +
       '<div class="we-main" id="we-main">' +
         '<div style="display:flex;align-items:center;gap:12px;padding:60px 0;justify-content:center;">' +

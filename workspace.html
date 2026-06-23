@@ -189,10 +189,11 @@
           (ws.logo_url && !isGod
             ? '<img src="' + ws.logo_url + '" style="height:34px;max-width:50px;object-fit:contain;flex-shrink:0;" />'
             : '<img src="assets/icons/ui/icono-usuarios.png" style="width:28px;height:28px;object-fit:contain;opacity:.8;" />') +
-          '<div>' +
+          '<div style="flex:1;">' +
             '<div class="ws-title">' + (isGod ? 'Gestionar plataforma' : (ws.name ? U.esc(ws.name) : 'Mis Workspaces')) + '</div>' +
             (!isGod && ws.slug ? '<div style="font-size:12px;color:#8b93a3;">/' + U.esc(ws.slug) + ' · ' + (ws.plan||'free') + (ws.my_role ? ' · ' + ws.my_role : '') + '</div>' : '') +
           '</div>' +
+          '<a href="landing.html" style="font-size:12px;font-weight:600;color:#8b93a3;text-decoration:none;padding:5px 10px;border-radius:8px;border:1px solid transparent;transition:color .15s,border-color .15s;font-family:Manrope,sans-serif;flex-shrink:0;" onmouseover="this.style.color=\'#d897e7\';this.style.borderColor=\'rgba(216,151,231,0.25)\'" onmouseout="this.style.color=\'#8b93a3\';this.style.borderColor=\'transparent\'">← Inicio</a>' +
         '</div>' +
         '<div class="ws-main">' +
 
