@@ -169,16 +169,28 @@
     async function load() {
       try {
         try {
-          var oldToken = (JSON.parse(localStorage.getItem('lyfter_session') || '{}') || {}).token || '';
+          var session = JSON.parse(localStorage.getItem('lyfter_session') || '{}');
+          var oldWsId = '';
+          try {
+            var oldPayload = JSON.parse(atob((session.token || '').split('.')[1] || 'e30='));
+            oldWsId = oldPayload.workspace_id || '';
+          } catch(e) {}
+
           var refreshRes = await apiFetch('/auth/refresh-token', { method: 'POST' });
-          if (refreshRes && refreshRes.token && refreshRes.token !== oldToken) {
+          if (refreshRes && refreshRes.token) {
+            var newPayload = JSON.parse(atob(refreshRes.token.split('.')[1]));
+            var newWsId = newPayload.workspace_id || '';
             API.setToken(refreshRes.token);
-            window.location.reload();
-            return;
+            if (newWsId !== oldWsId && !sessionStorage.getItem('lyfter_refreshed')) {
+              sessionStorage.setItem('lyfter_refreshed', '1');
+              window.location.reload();
+              return;
+            }
           }
         } catch(e) {
           console.warn('[load] No se pudo refrescar token:', e.message);
         }
+        sessionStorage.removeItem('lyfter_refreshed');
 
         var wsData = null, members = [], allWs = [];
 
