@@ -47,14 +47,14 @@
             '</div>' +
             '<div class="flex gap-2">' +
               '<button id="tab-global" class="flex-1 py-2 rounded-btn text-sm font-medium ' + (currentTab === 'global' ? 'text-white' : 'text-gray-500 bg-gray-100') + '" style="' + (currentTab === 'global' ? 'background:#6C63FF;' : '') + '">🌍 Global</button>' +
-              '<button id="tab-event" class="flex-1 py-2 rounded-btn text-sm font-medium ' + (currentTab === 'event' ? 'text-white' : 'text-gray-500 bg-gray-100') + '" style="' + (currentTab === 'event' ? 'background:#6C63FF;' : '') + '">🎪 Mi evento</button>' +
+              '<button id="tab-event" class="flex-1 py-2 rounded-btn text-sm font-medium ' + (currentTab === 'event' ? 'text-white' : 'text-gray-500 bg-gray-100') + '" style="' + (currentTab === 'event' ? 'background:#6C63FF;' : '') + '"><img src="assets/icons/ui/icono-evento.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:4px;"> Mi evento</button>' +
             '</div>' +
           '</div>';
       }
 
       function globalRow(e) {
         var rank = e.position;
-        var medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '<span class="text-gray-400 font-bold">' + rank + '</span>';
+        var medal = rank === 1 ? '<img src="assets/icons/ui/icono-reclamado.png" style="width:20px;height:20px;object-fit:contain;">' : rank === 2 ? '<img src="assets/icons/ui/icono-reclamado.png" style="width:18px;height:18px;object-fit:contain;opacity:0.75;">' : rank === 3 ? '<img src="assets/icons/ui/icono-reclamado.png" style="width:16px;height:16px;object-fit:contain;opacity:0.55;">' : '<span class="text-gray-400 font-bold">' + rank + '</span>';
         var isSelf = e.user_id === user.id;
         var lname = e.level_name || (API.levelName ? API.levelName(e.level) : ('Nivel ' + e.level));
         return '<div class="flex items-center gap-3 py-2.5 border-b border-gray-100 last:border-0' + (isSelf ? ' bg-primary-soft/30 -mx-4 px-4 rounded-card' : '') + '">' +
@@ -63,7 +63,7 @@
             '<p class="text-sm font-medium text-gray-700 truncate">' + U.esc(e.name) + (isSelf ? ' <span class="text-xs text-primary">(tú)</span>' : '') + '</p>' +
             '<p class="text-[11px] text-gray-400">' +
               '<span class="font-semibold" style="color:' + rarityColor(e.level) + ';">Nv ' + e.level + ' · ' + U.esc(lname) + '</span>' +
-              ' · ' + e.badges_total + ' 🏅 · ' + e.events_participated + ' 🎪 · ' + e.achievements_count + ' 🏆' +
+              ' · ' + e.badges_total + ' <img src="assets/icons/ui/icono-reclamado.png" style="width:12px;height:12px;object-fit:contain;vertical-align:middle;"> · ' + e.events_participated + ' <img src="assets/icons/ui/icono-evento.png" style="width:12px;height:12px;object-fit:contain;vertical-align:middle;"> · ' + e.achievements_count + ' 🏆' +
             '</p>' +
           '</div>' +
           '<span class="text-sm font-bold text-primary whitespace-nowrap">' + e.xp_total + ' XP</span>' +
@@ -72,17 +72,17 @@
 
       function eventRow(e) {
         var rank = e.position;
-        var medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '<span class="text-gray-400 font-bold">' + rank + '</span>';
+        var medal = rank === 1 ? '<img src="assets/icons/ui/icono-reclamado.png" style="width:20px;height:20px;object-fit:contain;">' : rank === 2 ? '<img src="assets/icons/ui/icono-reclamado.png" style="width:18px;height:18px;object-fit:contain;opacity:0.75;">' : rank === 3 ? '<img src="assets/icons/ui/icono-reclamado.png" style="width:16px;height:16px;object-fit:contain;opacity:0.55;">' : '<span class="text-gray-400 font-bold">' + rank + '</span>';
         var isSelf = e.user_id === user.id;
         var lname = e.level_name || (API.levelName ? API.levelName(e.level) : ('Nivel ' + e.level));
-        var completedChip = e.completed ? ' <span title="Completó el evento">✅</span>' : '';
+        var completedChip = e.completed ? ' <span title="Completó el evento"><img src="assets/icons/ui/icono-reclamado.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></span>' : '';
         return '<div class="flex items-center gap-3 py-2.5 border-b border-gray-100 last:border-0' + (isSelf ? ' bg-primary-soft/30 -mx-4 px-4 rounded-card' : '') + '">' +
           '<span class="w-6 text-center text-sm">' + medal + '</span>' +
           '<div class="flex-1 min-w-0">' +
             '<p class="text-sm font-medium text-gray-700 truncate">' + U.esc(e.name) + (isSelf ? ' <span class="text-xs text-primary">(tú)</span>' : '') + completedChip + '</p>' +
             '<p class="text-[11px] text-gray-400">Nv ' + e.level + ' · ' + U.esc(lname) + ' · ' + e.xp_total + ' XP</p>' +
           '</div>' +
-          '<span class="text-sm font-bold text-primary whitespace-nowrap">' + e.badges_in_event + ' 🏅</span>' +
+          '<span class="text-sm font-bold text-primary whitespace-nowrap">' + e.badges_in_event + ' <img src="assets/icons/ui/icono-reclamado.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></span>' +
         '</div>';
       }
 

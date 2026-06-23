@@ -50,7 +50,7 @@
       function eventCard(e, isRecommended) {
         var photoHtml = e.photo
           ? '<img src="' + U.esc(e.photo) + '" class="w-full h-40 object-cover" />'
-          : '<div class="w-full h-40 bg-primary-soft flex items-center justify-center text-5xl">🎪</div>';
+          : '<div class="w-full h-40 bg-primary-soft flex items-center justify-center"><img src="assets/icons/ui/icono-evento.png" style="width:48px;height:48px;object-fit:contain;opacity:0.7;"></div>';
         var tags = (e.tags || []).slice(0, 3).map(function(t) {
           return '<span class="px-2 py-0.5 rounded-full text-xs bg-white/20 text-white">' + U.esc(t) + '</span>';
         }).join('');
@@ -72,8 +72,8 @@
             statusBadge +
           '</div>' +
           '<div class="p-4">' +
-            (e.workspace_name ? '<p class="text-xs font-semibold mb-1" style="color:#6C63FF;">🏢 ' + U.esc(e.workspace_name) + '</p>' : '') +
-            '<p class="text-xs text-gray-400 mb-1">📅 ' + fmtDate(e.start) + ' — ' + fmtDate(e.end) + '</p>' +
+            (e.workspace_name ? '<p class="text-xs font-semibold mb-1" style="color:#6C63FF;display:flex;align-items:center;gap:3px;"><img src="assets/icons/ui/icono-evento.png" style="width:12px;height:12px;object-fit:contain;"> ' + U.esc(e.workspace_name) + '</p>' : '') +
+            '<p class="text-xs text-gray-400 mb-1" style="display:flex;align-items:center;gap:3px;"><img src="assets/icons/ui/icono-calendario-blanco.png" style="width:14px;height:14px;object-fit:contain;opacity:0.7;filter:brightness(0);"> ' + fmtDate(e.start) + ' — ' + fmtDate(e.end) + '</p>' +
             (e.prize ? '<p class="text-xs text-gray-500">🎁 ' + U.esc(e.prize) + '</p>' : '') +
           '</div>' +
         '</div>';
@@ -89,7 +89,7 @@
         }
         var photoHtml = e.photo
           ? '<img src="' + U.esc(e.photo) + '" class="w-full h-48 object-cover rounded-t-card" />'
-          : '<div class="w-full h-32 bg-primary-soft flex items-center justify-center text-5xl rounded-t-card">🎪</div>';
+          : '<div class="w-full h-32 bg-primary-soft flex items-center justify-center rounded-t-card"><img src="assets/icons/ui/icono-evento.png" style="width:40px;height:40px;object-fit:contain;opacity:0.7;"></div>';
         var tags = (e.tags || []).map(function(t) {
           return '<span class="px-2 py-1 rounded-full text-xs border border-primary text-primary">' + U.esc(t) + '</span>';
         }).join('');
@@ -104,11 +104,11 @@
                   '<h2 class="text-lg font-bold text-gray-800 flex-1">' + U.esc(e.name) + '</h2>' +
                   (statusInfo ? '<span class="ml-2 px-2 py-1 rounded-full text-xs font-semibold text-white flex-shrink-0" style="background:' + statusInfo.color + ';">' + statusInfo.label + '</span>' : '') +
                 '</div>' +
-                (e.workspace_name ? '<p class="text-xs font-semibold mb-2" style="color:#6C63FF;">🏢 ' + U.esc(e.workspace_name) + '</p>' : '') +
+                (e.workspace_name ? '<p class="text-xs font-semibold mb-2" style="color:#6C63FF;display:flex;align-items:center;gap:3px;"><img src="assets/icons/ui/icono-evento.png" style="width:12px;height:12px;object-fit:contain;"> ' + U.esc(e.workspace_name) + '</p>' : '') +
                 (e.description ? '<p class="text-sm text-gray-500 mb-3">' + U.esc(e.description) + '</p>' : '') +
                 '<div class="space-y-2 mb-4">' +
-                  '<p class="text-xs text-gray-500 flex items-center gap-2">📅 ' + fmtDate(e.start) + ' — ' + fmtDate(e.end) + '</p>' +
-                  (e.location ? '<p class="text-xs text-gray-500 flex items-center gap-2">📍 ' + U.esc(e.location) + '</p>' : '') +
+                  '<p class="text-xs text-gray-500 flex items-center gap-2"><img src="assets/icons/ui/icono-calendario-blanco.png" style="width:14px;height:14px;object-fit:contain;opacity:0.6;filter:brightness(0);"> ' + fmtDate(e.start) + ' — ' + fmtDate(e.end) + '</p>' +
+                  (e.location ? '<p class="text-xs text-gray-500 flex items-center gap-2"><img src="assets/icons/ui/icono-ubicacion.png" style="width:14px;height:14px;object-fit:contain;opacity:0.7;filter:brightness(0);"> ' + U.esc(e.location) + '</p>' : '') +
                   (e.prize ? '<p class="text-xs text-gray-500 flex items-center gap-2">🎁 ' + U.esc(e.prize) + '</p>' : '') +
                 '</div>' +
                 (tags ? '<div class="flex flex-wrap gap-2 mb-4">' + tags + '</div>' : '') +
@@ -160,7 +160,7 @@
 
           var emptyHtml = (!recommended.length && !otherEvents.length)
             ? '<div class="text-center py-16 text-gray-400">' +
-                '<div class="text-5xl mb-4">🎪</div>' +
+                '<div class="mb-4"><img src="assets/icons/ui/icono-evento.png" style="width:48px;height:48px;object-fit:contain;opacity:0.5;"></div>' +
                 '<p class="text-sm">' + U.t('no_events_available') + '</p>' +
               '</div>'
             : '';

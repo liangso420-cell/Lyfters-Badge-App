@@ -148,7 +148,7 @@
       admin_now_add_badges: 'Ahora agrega los badges del evento',
       admin_badge_name_placeholder: 'Nombre del badge *',
       admin_badge_desc_placeholder: 'Descripción',
-      admin_badge_emoji_placeholder: 'Emoji (ej: 🏅)',
+      admin_badge_emoji_placeholder: 'Emoji del badge',
       admin_redeem_count: 'canjes',
       admin_added: 'Agregado',
       redeem_loading: 'Canjeando badge…',
@@ -310,7 +310,7 @@
       admin_now_add_badges: 'Now add the event badges',
       admin_badge_name_placeholder: 'Badge name *',
       admin_badge_desc_placeholder: 'Description',
-      admin_badge_emoji_placeholder: 'Emoji (e.g. 🏅)',
+      admin_badge_emoji_placeholder: 'Badge emoji',
       admin_redeem_count: 'redemptions',
       admin_added: 'Added',
       redeem_loading: 'Redeeming badge…',
@@ -826,7 +826,7 @@
             modalRoot.innerHTML =
               '<div class="fixed inset-0 z-50 flex items-center justify-center p-6 anim-fade" style="background:rgba(17,24,39,0.75);">' +
                 '<div class="bg-white rounded-card p-6 w-full max-w-sm shadow-soft anim-pop">' +
-                  '<p class="text-sm font-semibold text-gray-700 mb-3">📧 Cambiar email</p>' +
+                  '<p class="text-sm font-semibold text-gray-700 mb-3">Cambiar email</p>' +
                   '<input id="inline-email-input" type="email" value="' + esc(currentEmail) + '" class="w-full px-4 py-3 bg-base rounded-btn border border-gray-200 focus:border-primary outline-none text-sm mb-4" />' +
                   '<div class="flex gap-3 justify-end">' +
                     '<button id="inline-cancel" class="px-5 py-2.5 rounded-btn border border-gray-200 text-sm font-medium text-gray-600">Cancelar</button>' +

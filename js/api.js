@@ -69,7 +69,7 @@
     { slug: 'first_scan',           name: 'Primer paso',    description: 'Escaneaste tu primer badge.',               hint: 'Escaneá tu primer badge.',          icon: '👣', img: 'assets/icons/achievements/primer-paso.png',    rarity: 'common',    xp_reward: 15 },
     { slug: 'five_badges',          name: 'Coleccionista',  description: 'Acumulaste 5 badges en total.',             hint: 'Seguí coleccionando badges.',       icon: '🎖️', img: 'assets/icons/achievements/coleccionista.png',  rarity: 'common',    xp_reward: 15 },
     { slug: 'vertigo',              name: 'Vértigo',        description: 'Escanea 5 badges en menos de una hora.',    hint: 'Coleccioná badges rápidamente.',    icon: '🔥', img: 'assets/icons/achievements/vertigo.png',        rarity: 'rare',      xp_reward: 30 },
-    { slug: 'first_event_complete', name: 'Completista',    description: 'Completaste todos los badges de un evento.', hint: 'Completá todos los badges de un evento.', icon: '✅',                                           rarity: 'rare',      xp_reward: 30 },
+    { slug: 'first_event_complete', name: 'Completista',    description: 'Completaste todos los badges de un evento.', hint: 'Completá todos los badges de un evento.', icon: '<img src="assets/icons/ui/icono-reclamado.png" style="width:16px;height:16px;object-fit:contain;">',                                           rarity: 'rare',      xp_reward: 30 },
     { slug: 'three_completions',    name: 'Perfeccionista', description: 'Completaste 3 eventos distintos.',          hint: 'Completá varios eventos.',          icon: '💯', img: 'assets/icons/achievements/perfeccionista.png', rarity: 'epic',      xp_reward: 75 },
     { slug: 'three_events',         name: 'Viajero',        description: 'Participaste en 3 eventos distintos.',      hint: 'Participá en varios eventos.',      icon: '🧳', img: 'assets/icons/achievements/viajero.png',        rarity: 'rare',      xp_reward: 30 },
     { slug: 'five_events',          name: 'Veterano',       description: 'Participaste en 5 eventos distintos.',      hint: 'Participá en muchos eventos.',      icon: '🎓', img: 'assets/icons/achievements/veterano.png',       rarity: 'epic',      xp_reward: 75 },
@@ -91,7 +91,7 @@
       { id: 'b1', emoji: '🚀', name: 'Bienvenida',  desc: 'Check-in en recepción',    token: 'a1b2-c3d4', redemptions: 128 },
       { id: 'b2', emoji: '🎤', name: 'Keynote',     desc: 'Charla principal',         token: 'e5f6-g7h8', redemptions: 96 },
       { id: 'b3', emoji: '☕', name: 'Networking',  desc: 'Café y conexiones',        token: 'i9j0-k1l2', redemptions: 74 },
-      { id: 'b4', emoji: '💡', name: 'Workshop',    desc: 'Taller práctico',          token: 'm3n4-o5p6', redemptions: 41 },
+      { id: 'b4', emoji: '', name: 'Workshop',    desc: 'Taller práctico',          token: 'm3n4-o5p6', redemptions: 41 },
       { id: 'b5', emoji: '🏗️', name: 'Demo',        desc: 'Demostración de producto', token: 'q7r8-s9t0', redemptions: 20 },
     ];
     var hackathonBadges = [
@@ -324,7 +324,7 @@
     },
     async addBadge(eventId, data) {
       var e = mockEvent(eventId); if (!e) throw new Error('Evento no encontrado');
-      var b = { id: uid('b'), emoji: data.emoji || '🏅', icon_url: data.icon_url || null, name: data.name.trim(),
+      var b = { id: uid('b'), emoji: data.emoji || '', icon_url: data.icon_url || null, name: data.name.trim(),
         desc: (data.desc || '').trim() || 'Sin descripción', token: genToken(), redemptions: 0,
         xp_value: data.xp_value != null ? data.xp_value : 10, is_rare: !!data.is_rare };
       e.badges.push(b); persist();
@@ -402,7 +402,7 @@
       if (!b) throw new Error('Badge no encontrado');
       if (data.name != null)     b.name     = data.name.trim();
       if (data.desc != null)     b.desc     = data.desc.trim();
-      if (data.emoji != null)    b.emoji    = data.emoji.trim() || '🏅';
+      if (data.emoji != null)    b.emoji    = data.emoji.trim() || '';
       if (data.xp_value != null && !isNaN(data.xp_value)) b.xp_value = data.xp_value;
       if (data.is_rare != null)  b.is_rare  = !!data.is_rare;
       persist();
@@ -508,7 +508,7 @@
         total_badges: total, total_canjeados: canjeados,
         pct_canjeados: total > 0 ? Math.round(canjeados/total*100) : 0,
         progreso_distribucion: {"0-25": 5, "26-50": 10, "51-75": 8, "76-100": 3},
-        badge_ranking: e.badges.map(function(b){ return {nombre:b.name, icon:b.emoji||'🏅', count:b.redemptions||0}; }).sort(function(a,b){return b.count-a.count;}),
+        badge_ranking: e.badges.map(function(b){ return {nombre:b.name, icon:b.emoji||'', count:b.redemptions||0}; }).sort(function(a,b){return b.count-a.count;}),
         top_usuarios: [],
         actividad_por_hora: []
       };
@@ -687,7 +687,7 @@
       return {
         id: d.id, name: d.nombre, prize: d.premio,
         badges: (d.badges || []).map(function (b) {
-          return { id: b.id, emoji: b.icon || '🏅', name: b.nombre, desc: b.descripcion,
+          return { id: b.id, emoji: b.icon || '', name: b.nombre, desc: b.descripcion,
             obtained: !!b.obtenido, scannedAt: b.scanned_at || null };
         }),
         total: d.total_badges, obtained: d.obtenidos, complete: !!d.completado,
@@ -700,7 +700,7 @@
       var d = await apiRequest('POST', '/redeem/' + eventId + '/' + token, body);
       return {
         status: d.status === 'duplicado' ? 'duplicate' : 'ok',
-        badge: d.badge ? { emoji: d.badge.icon || '🏅', name: d.badge.nombre, desc: d.badge.descripcion } : null,
+        badge: d.badge ? { emoji: d.badge.icon || '', name: d.badge.nombre, desc: d.badge.descripcion } : null,
         complete: !!d.completado, prize: d.premio || null,
         progress: d.progreso ? { obtained: d.progreso.obtenidos, total: d.progreso.total } : null,
         xp: { gained: d.xp_gained || 0, total: d.xp_total || 0, level: d.level || 1, levelUp: !!d.level_up },
@@ -723,12 +723,12 @@
       return mapEvent(d);
     },
     async addBadge(eventId, data) {
-      var body = { nombre: data.name, descripcion: data.desc, icon: data.emoji || '🏅' };
+      var body = { nombre: data.name, descripcion: data.desc, icon: data.emoji || '' };
       if (data.xp_value != null) body.xp_value = data.xp_value;
       if (data.is_rare != null)  body.is_rare = data.is_rare;
       if (data.icon_url)         body.icon_url = data.icon_url;
       var d = await apiRequest('POST', '/admin/events/' + eventId + '/badge', body);
-      return { id: d.id, emoji: d.icon || '🏅', icon_url: d.icon_url || null, name: d.nombre, desc: d.descripcion,
+      return { id: d.id, emoji: d.icon || '', icon_url: d.icon_url || null, name: d.nombre, desc: d.descripcion,
         token: d.token, redeemUrl: null, redeemed: 0, qrImage: d.qr_image || null,
         xp_value: d.xp_value, is_rare: d.is_rare };
     },
@@ -737,7 +737,7 @@
       return {
         event: { id: d.evento.id, name: d.evento.nombre, totalParticipants: undefined, access_qr: d.evento.access_qr || null, photo: d.evento.photo || null },
         badges: (d.badges || []).map(function (b) {
-          return { id: b.id, emoji: b.icon || '🏅', icon_url: b.icon_url || null, name: b.nombre, desc: b.descripcion,
+          return { id: b.id, emoji: b.icon || '', icon_url: b.icon_url || null, name: b.nombre, desc: b.descripcion,
             token: b.token, redeemUrl: b.redeem_url || (APP_BASE + 'redeem.html?event=' + d.evento.id + '&token=' + b.token),
             redeemed: b.canjeados || 0, qrImage: b.qr_image || null,
             xp_value: b.xp_value != null ? b.xp_value : 10, is_rare: !!b.is_rare };
@@ -783,7 +783,7 @@
       if (data.xp_value != null && !isNaN(data.xp_value)) body.xp_value = data.xp_value;
       if (data.is_rare != null)  body.is_rare     = data.is_rare;
       var d = await apiRequest('PATCH', '/admin/events/' + eventId + '/badges/' + badgeId, body);
-      return { id: d.id, emoji: d.icon || '🏅', name: d.nombre, desc: d.descripcion,
+      return { id: d.id, emoji: d.icon || '', name: d.nombre, desc: d.descripcion,
         token: d.token, redeemUrl: d.redeem_url || null, redeemed: d.canjeados || 0, qrImage: d.qr_image || null,
         xp_value: d.xp_value, is_rare: d.is_rare };
     },
@@ -801,7 +801,7 @@
     },
     async regenerateBadgeQr(badgeId) {
       var d = await apiRequest('POST', '/admin/badges/' + badgeId + '/regenerate-qr');
-      return { id: d.id, emoji: d.icon || '🏅', name: d.nombre, desc: d.descripcion,
+      return { id: d.id, emoji: d.icon || '', name: d.nombre, desc: d.descripcion,
         token: d.token, redeemUrl: d.redeem_url, redeemed: d.canjeados || 0, qrImage: d.qr_image || null };
     },
     async changePassword(currentPw, newPw) {

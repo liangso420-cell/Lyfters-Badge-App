@@ -237,7 +237,7 @@
               });
             }
             modalRoot.innerHTML = '';
-            U.toast('Si el email existe, recibirás un correo en breve 📧', 'success');
+            U.toast('Si el email existe, recibirás un correo en breve', 'success');
           } catch(err) {
             U.toast('No se pudo enviar el correo', 'error');
             btn.disabled = false; btn.textContent = 'Enviar enlace';

@@ -81,7 +81,7 @@
         var badge  = r.badge || {};
         var icon = badge.icon_url
           ? '<img src="' + badge.icon_url + '" style="width:80px;height:80px;object-fit:contain;">'
-          : (badge.emoji || '🏅');
+          : (badge.emoji || '<img src="assets/icons/ui/icono-reclamado.png" style="width:48px;height:48px;object-fit:contain;">');
         var user   = API.currentUser() || {};
         var userName = user.name ? user.name.split(' ')[0] : '';
 
@@ -262,7 +262,7 @@
         var isInactive = lower.includes('inactivo') || lower.includes('no encontrado');
 
         var icon, heading;
-        if (isExpired)       { icon = '🔒'; heading = U.t('redeem_session_expired'); }
+        if (isExpired)       { icon = '<img src="assets/icons/ui/icono-candado.png" style="width:48px;height:48px;object-fit:contain;">'; heading = U.t('redeem_session_expired'); }
         else if (isInvalid)  { icon = '❌'; heading = U.t('redeem_invalid_qr'); }
         else if (isInactive) { icon = '📭'; heading = U.t('redeem_event_unavailable'); }
         else                 { icon = '<img src="assets/icons/ui/icono-alerta.png" style="width:20px;height:20px;object-fit:contain;">'; heading = U.t('redeem_could_not'); }

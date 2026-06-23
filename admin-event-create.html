@@ -373,7 +373,7 @@
             name: name,
             desc: document.getElementById('create-badge-desc').value.trim(),
             icon_url: selectedBadgeIcon || null,
-            emoji: selectedBadgeIcon ? null : '🏅',
+            emoji: selectedBadgeIcon ? null : '',
             xp_value: parseInt(document.getElementById('create-badge-xp').value, 10) || 10,
             rarity: selectedRarity,
             is_rare: selectedRarity !== 'normal'
@@ -384,7 +384,7 @@
             var brc = rarityColors[b.rarity] || rarityColors.normal;
             return '<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;border:1px solid ' + brc.border + ';background:' + brc.bg + ';">' +
               '<div style="width:36px;height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">' +
-                (b.icon_url ? '<img src="' + b.icon_url + '" style="width:32px;height:32px;object-fit:contain;" />' : '<span style="font-size:24px;">🏅</span>') +
+                (b.icon_url ? '<img src="' + b.icon_url + '" style="width:32px;height:32px;object-fit:contain;" />' : '<img src="assets/icons/ui/icono-reclamado.png" style="width:24px;height:24px;object-fit:contain;">') +
               '</div>' +
               '<div style="flex:1;min-width:0;">' +
                 '<p style="font-family:Poppins,sans-serif;font-size:13px;font-weight:600;color:#f4f6f9;margin:0;">' + U.esc(b.name) + '</p>' +
@@ -451,7 +451,7 @@
               await API.updateEventCoordinates(created.id, parseFloat(latVal), parseFloat(lngVal));
             }
             U.setActiveId(created.id);
-            U.toast('Evento creado ✅', 'success');
+            U.toast('Evento creado <img src="assets/icons/ui/icono-reclamado.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;">', 'success');
             window.location.href = 'admin-event-detail.html?id=' + created.id;
           } catch(err) {
             U.toast(err.message || 'Error', 'error');
