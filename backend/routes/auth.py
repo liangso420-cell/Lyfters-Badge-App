@@ -10,7 +10,7 @@ import bcrypt
 from bson import ObjectId
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import (
-    create_access_token, jwt_required, get_jwt_identity
+    create_access_token, jwt_required, get_jwt_identity, get_jwt
 )
 from google.oauth2 import id_token
 from google.auth.transport import requests as grequests
@@ -61,6 +61,41 @@ def clear_attempts(email):
 # ──────────────────────────────────────────────
 # AUTH
 # ──────────────────────────────────────────────
+
+@auth_bp.route("/auth/switch-workspace", methods=["POST"])
+@jwt_required()
+def switch_workspace():
+    user_id = get_jwt_identity()
+    data = request.get_json() or {}
+    ws_id_str = data.get("workspace_id")
+    if not ws_id_str:
+        return jsonify(error="workspace_id requerido"), 400
+    try:
+        ws_oid = ObjectId(ws_id_str)
+    except Exception:
+        return jsonify(error="workspace_id inválido"), 400
+
+    user_doc = users().find_one({"_id": ObjectId(user_id)})
+    if not user_doc:
+        return jsonify(error="Usuario no encontrado"), 404
+
+    role = get_jwt().get("role", "participant")
+    member = workspace_members().find_one({"user_id": ObjectId(user_id), "workspace_id": ws_oid})
+
+    if role != "god_admin" and not member:
+        return jsonify(error="No pertenecés a ese workspace"), 403
+
+    ws_role = member["role"] if member else "god_admin"
+
+    claims = {
+        "role":           role,
+        "name":           user_doc.get("name", ""),
+        "workspace_id":   ws_id_str,
+        "workspace_role": ws_role,
+    }
+    token = create_access_token(identity=user_id, additional_claims=claims)
+    return jsonify(token=token), 200
+
 
 @auth_bp.route("/register", methods=["POST"])
 @register_limit

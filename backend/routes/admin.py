@@ -32,10 +32,8 @@ def is_admin_or_above():
 
 
 def _get_ws_id():
-    """Devuelve el workspace_id del JWT como ObjectId, o None para god_admin / sin workspace."""
+    """Devuelve el workspace_id del JWT como ObjectId, o None si no hay workspace seleccionado."""
     claims = get_jwt()
-    if claims.get("role") == "god_admin":
-        return None
     ws = claims.get("workspace_id")
     return ObjectId(ws) if ws else None
 
@@ -43,8 +41,9 @@ def _get_ws_id():
 def verify_event_ownership(event_id):
     """Verifica que el evento pertenece al workspace del admin actual."""
     ws_id = _get_ws_id()
-    if ws_id is None:  # god_admin puede acceder a todo
-        return True
+    claims = get_jwt()
+    if ws_id is None and claims.get("role") == "god_admin":
+        return True  # god_admin sin workspace seleccionado puede acceder a todo
     event = events().find_one({"_id": ObjectId(event_id)})
     if not event:
         return False
@@ -79,11 +78,15 @@ def admin_list_events():
         return jsonify(error="Acceso denegado"), 403
     ws_id = _get_ws_id()
     role = get_caller_role()
-    if ws_id is None:  # god_admin
+    claims = get_jwt()
+    if ws_id is None:
+        # god_admin sin workspace seleccionado — ve todo
         query = {}
-    elif role == "admin":
+    elif role == "admin" and claims.get("role") != "god_admin":
+        # Admin normal — solo sus eventos en su workspace
         query = {"workspace_id": ws_id, "created_by": get_jwt_identity()}
     else:
+        # superadmin o god_admin con workspace seleccionado — todos los eventos del workspace
         query = {"workspace_id": ws_id}
     docs = list(events().find(query))
     # Build workspace name cache to avoid N+1 queries

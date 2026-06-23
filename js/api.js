@@ -911,6 +911,10 @@
     },
     getSession: getSession,
     currentUser: function () { var s = getSession(); return s ? s.user : null; },
+    setToken: function(token) {
+      var s = getSession();
+      if (s) { s.token = token; saveSession(s); }
+    },
     login: login,
     register: register,
     loginWithGoogle: loginWithGoogle,

@@ -515,12 +515,18 @@
       window.location.href = 'admin-event.html';
     };
 
-    window.enterWorkspace = function(wsId) {
+    window.enterWorkspace = async function(wsId) {
       try {
-        sessionStorage.setItem('lyfter_active_ws', wsId);
-        sessionStorage.setItem('lyfter_ws_entered', '1');
-      } catch(e) {}
-      window.location.href = 'admin-event.html';
+        var res = await apiFetch('/auth/switch-workspace', {
+          method: 'POST',
+          body: JSON.stringify({ workspace_id: wsId })
+        });
+        API.setToken(res.token);
+        try { sessionStorage.setItem('lyfter_ws_entered', '1'); } catch(e) {}
+        window.location.href = 'admin-event.html';
+      } catch(e) {
+        U.toast('Error al entrar al workspace: ' + e.message, 'error');
+      }
     };
 
     load();
