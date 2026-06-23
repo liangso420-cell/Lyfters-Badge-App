@@ -622,6 +622,7 @@
       xp_first_scan:       e.xp_first_scan,
       xp_rare_bonus:       e.xp_rare_bonus,
       xp_completion_bonus: e.xp_completion_bonus,
+      workspace_name: e.workspace_name || null,
     };
   }
 

@@ -39,7 +39,7 @@
     .corner-br { bottom: 0; right: 0; border-width: 0 3px 3px 0; }
   </style>
   <link rel="stylesheet" href="css/styles.css" />
-  <script src="https://cdn.jsdelivr.net/npm/@lottiefiles/dotlottie-web/dist/dotlottie-web.browser.es2022.js" type="module"></script>
+  <script type="module" src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs"></script>
 </head>
 <body>
   <div id="loading-screen">
@@ -253,11 +253,20 @@
           if (r.status === 'duplicate') {
             vibrate([100, 50, 100]);
             stopCamera();
-            setStatus(U.t('badge_already_obtained'));
+            var modalRoot = document.getElementById('modal-root');
+            modalRoot.innerHTML =
+              '<div class="fixed inset-0 z-50 flex items-center justify-center p-6 anim-fade" style="background:rgba(17,24,39,0.75);">' +
+                '<div class="bg-white rounded-card p-8 text-center w-full max-w-xs shadow-soft anim-pop">' +
+                  '<dotlottie-player src="surprised.lottie" autoplay style="width:120px;height:120px;margin:0 auto 8px;display:block;"></dotlottie-player>' +
+                  '<h3 style="font-size:18px;font-weight:700;color:#F59E0B;margin:0 0 6px;">¡Ya lo tenías!</h3>' +
+                  '<p style="font-size:14px;color:#6b7280;margin:0;">' + (r.badge ? '"' + U.esc(r.badge.name) + '"' : 'Este badge ya está en tu colección') + '</p>' +
+                '</div>' +
+              '</div>';
             setTimeout(function() {
+              U.closeModal();
               U.toastNextPage('Ya tenías "' + (r.badge ? r.badge.name : 'este badge') + '"', 'warning');
               window.location.href = 'profile.html';
-            }, 1000);
+            }, 2200);
             return;
           }
 
@@ -315,7 +324,7 @@
         modalRoot.innerHTML =
           '<div class="fixed inset-0 z-50 flex items-center justify-center p-6 anim-fade" style="background:rgba(17,24,39,0.75);">' +
             '<div class="bg-white rounded-card p-8 text-center w-full max-w-sm shadow-soft anim-pop">' +
-              '<canvas id="duck-animation" style="width:150px;height:150px;margin:0 auto 12px;display:block;"></canvas>' +
+              '<dotlottie-player src="happy.lottie" autoplay loop style="width:150px;height:150px;margin:0 auto 12px;display:block;"></dotlottie-player>' +
               '<div class="text-4xl mb-2">' + badgeEmoji + '</div>' +
               '<h3 class="text-xl font-bold text-primary">' + (isLast ? U.t('completed_event') : U.t('badge_obtained')) + '</h3>' +
               '<p class="text-lg font-semibold mt-1 text-gray-800">' + U.esc(badgeName) + '</p>' +
@@ -342,25 +351,6 @@
             window.location.href = 'profile.html';
           });
         });
-
-        var DotLottie = window.DotLottie;
-        if (typeof DotLottie !== 'undefined') {
-          new DotLottie({
-            autoplay: true,
-            loop: true,
-            canvas: document.getElementById('duck-animation'),
-            src: 'happy.lottie'
-          });
-        } else {
-          import('https://cdn.jsdelivr.net/npm/@lottiefiles/dotlottie-web/dist/dotlottie-web.browser.es2022.js').then(function(m) {
-            new m.DotLottie({
-              autoplay: true,
-              loop: true,
-              canvas: document.getElementById('duck-animation'),
-              src: 'happy.lottie'
-            });
-          });
-        }
 
         document.getElementById('celebrate-share').addEventListener('click', async function() {
           var btn = this;

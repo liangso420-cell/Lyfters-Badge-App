@@ -85,6 +85,7 @@
                 '</div>' +
               '</div>' +
               '<div style="padding:14px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
+                (e.workspace_name ? '<span style="font-size:11px;font-weight:700;color:#b18cf7;font-family:Manrope,sans-serif;background:rgba(177,140,247,0.12);border:1px solid rgba(177,140,247,0.3);padding:2px 9px;border-radius:999px;">🏢 ' + U.esc(e.workspace_name) + '</span>' : '') +
                 '<span style="font-size:12px;color:#8b93a3;font-family:Manrope,sans-serif;display:inline-flex;align-items:center;gap:4px;"><img src="assets/icons/ui/icono-calendario-blanco.png" alt="" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;display:inline-block;" />' + fmtDate(e.start) + (e.end ? ' — ' + fmtDate(e.end) : '') + '</span>' +
                 (e.prize ? '<span style="font-size:12px;color:#8b93a3;font-family:Manrope,sans-serif;">' + U.esc(e.prize) + '</span>' : '') +
                 '<div style="margin-left:auto;display:flex;gap:8px;align-items:center;">' +

@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
+  <script type="module" src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs"></script>
 </head>
 <body>
   <div id="loading-screen">
@@ -103,6 +104,10 @@
           bgGradient  = 'linear-gradient(135deg, #EEEDFF 0%, #F0EEFF 100%)';
         }
 
+        var animBlock = !isDup
+          ? '<dotlottie-player src="happy.lottie" autoplay style="width:120px;height:120px;margin:0 auto 4px;display:block;"></dotlottie-player>'
+          : '';
+
         var prizeBlock = (isLast && r.prize)
           ? '<div class="prize-box">' +
               '<p class="prize-label">🎁 ' + U.t('redeem_prize_unlocked') + '</p>' +
@@ -192,6 +197,7 @@
           styles +
           '<section style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:' + bgGradient + ';">' +
             '<div class="redeem-card anim-pop">' +
+              animBlock +
               '<div class="badge-glow" style="background:' + bgGradient + ';">' + icon + '</div>' +
               '<h2 class="redeem-title" style="color:' + accentColor + ';">' + title + '</h2>' +
               '<p class="redeem-sub">' + subtitle + '</p>' +

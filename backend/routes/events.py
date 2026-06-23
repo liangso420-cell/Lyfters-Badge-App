@@ -6,7 +6,7 @@ from bson import ObjectId
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt, verify_jwt_in_request
 
-from db import users, events, badges, scans, event_joins, user_achievements
+from db import users, events, badges, scans, event_joins, user_achievements, workspaces
 from utils import valid_oid, fmt_event, fmt_badge, compute_event_status, haversine
 from services.xp import compute_level, level_name
 
@@ -42,7 +42,13 @@ def list_events():
     if ws_id:
         query["workspace_id"] = ws_id
     docs = list(events().find(query))
-    result = [fmt_event(e) for e in docs if compute_event_status(e) in visible_statuses]
+    visible = [e for e in docs if compute_event_status(e) in visible_statuses]
+    ws_ids = {e["workspace_id"] for e in visible if e.get("workspace_id")}
+    ws_names = {
+        str(ws["_id"]): ws.get("name", "")
+        for ws in workspaces().find({"_id": {"$in": list(ws_ids)}}, {"name": 1})
+    }
+    result = [fmt_event(e, ws_names.get(str(e.get("workspace_id", "")))) for e in visible]
     return jsonify(result), 200
 
 
