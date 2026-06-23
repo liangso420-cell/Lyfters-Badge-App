@@ -39,7 +39,15 @@
 /* ── Reset ── */
 *, *::before, *::after { box-sizing: border-box; }
 
+/* El fondo base pinta todo el viewport (incluye overscroll y cualquier hueco):
+   evita franjas negras a los lados/abajo en páginas con contenido centrado. */
+html {
+  background: var(--base);
+  min-height: 100vh;
+}
+
 body {
+  margin: 0;
   font-family: 'Manrope', 'Poppins', system-ui, sans-serif;
   background: var(--base);
   color: var(--text-1);
@@ -658,6 +666,11 @@ body {
   background: rgba(28, 31, 39, 0.92) !important;
   backdrop-filter: blur(24px) saturate(1.4) !important;
   -webkit-backdrop-filter: blur(24px) saturate(1.4) !important;
+}
+
+/* En móvil el drawer de perfil cubre todo el ancho de la pantalla */
+@media (max-width: 640px) {
+  #drawer-panel { width: 100vw !important; }
 }
 
 /* ── Toast root stays sharp ── */

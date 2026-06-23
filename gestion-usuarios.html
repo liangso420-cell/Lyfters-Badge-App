@@ -39,6 +39,17 @@
       '.gu-table th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6f7686;font-weight:700;padding:10px 14px;border-bottom:1px solid #262a33;text-align:left;}' +
       '.gu-table td{padding:12px 14px;border-bottom:1px solid #20242d;font-size:14px;color:#cdd2db;}' +
       '.gu-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#70cfff,#d897e7);display:inline-flex;align-items:center;justify-content:center;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;color:#1c1f27;margin-right:10px;vertical-align:middle;}' +
+      // Móvil (≤640px): cada fila de la tabla se apila como card con todo visible
+      '@media (max-width:640px){' +
+        '.gu-header{padding:14px 16px;}' +
+        '.gu-main{padding:24px 14px 80px;}' +
+        '.gu-card{padding:20px 16px;}' +
+        '.gu-table thead{display:none;}' +
+        '.gu-table,.gu-table tbody,.gu-table tr,.gu-table td{display:block;width:100%;}' +
+        '.gu-table tr{background:#20242d;border:1px solid #2f343f;border-radius:14px;padding:14px 16px;margin-bottom:14px;}' +
+        '.gu-table td{border-bottom:none;padding:5px 0;}' +
+        '.gu-table td:first-child{font-size:15px;font-weight:600;color:#f4f6f9;margin-bottom:4px;}' +
+      '}' +
     '</style>';
 
     app.innerHTML = styles +
