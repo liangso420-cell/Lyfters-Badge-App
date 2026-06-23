@@ -566,16 +566,14 @@ def cleanup_membership():
     claims = get_jwt()
     if claims.get("role") != "god_admin":
         return jsonify(error="Solo god_admin"), 403
-    data       = request.get_json() or {}
-    user_email = data.get("email")
-    ws_slug    = data.get("ws_slug")
-    ws   = workspaces().find_one({"slug": ws_slug})
-    user = users().find_one({"email": user_email})
-    if not ws or not user:
-        return jsonify(error="No encontrado", ws=str(ws), user=str(user)), 404
+    data    = request.get_json() or {}
+    user_id = data.get("user_id")
+    ws_id   = data.get("ws_id")
+    if not user_id or not ws_id:
+        return jsonify(error="user_id y ws_id requeridos"), 400
     r = workspace_members().delete_one({
-        "workspace_id": ws["_id"],
-        "user_id":      user["_id"],
+        "workspace_id": ObjectId(ws_id),
+        "user_id":      ObjectId(user_id),
     })
     return jsonify(deleted=r.deleted_count), 200
 
