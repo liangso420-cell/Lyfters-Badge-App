@@ -726,6 +726,8 @@ def change_user_role(user_id):
     user = users().find_one({"_id": oid})
     if not user:
         return jsonify(error="Usuario no encontrado"), 404
+    if user.get("role") == "god_admin" and get_jwt().get("role") != "god_admin":
+        return jsonify(error="No tenés permiso para modificar a un God Admin"), 403
 
     users().update_one({"_id": oid}, {"$set": {"role": new_role}})
     return jsonify(fmt_user(users().find_one({"_id": oid}))), 200

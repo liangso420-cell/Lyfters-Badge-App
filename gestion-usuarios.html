@@ -239,12 +239,15 @@
         var safeName = u.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
         var safeEmail = (u.email || '').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
         var modBtns = '';
-        if (!u.banned) {
+        if (u.role === 'god_admin') {
+          modBtns = '<span style="font-size:11px;color:#ffc850;padding:4px 10px;background:rgba(255,200,80,0.1);border:1px solid rgba(255,200,80,0.2);border-radius:6px;">Protegido</span>';
+        } else if (!u.banned) {
           modBtns += '<button onclick="openBanModal(\'' + u.id + '\',\'' + safeName + '\')" style="height:30px;font-size:12px;padding:0 12px;border-radius:8px;border:1px solid rgba(255,200,80,0.3);background:rgba(255,200,80,0.1);color:#ffc850;cursor:pointer;margin-right:6px;">Banear</button>';
+          modBtns += '<button onclick="deletePlatformUser(\'' + u.id + '\',\'' + safeName + '\')" style="height:30px;font-size:12px;padding:0 12px;border-radius:8px;border:1px solid rgba(230,138,141,0.30);background:rgba(230,138,141,0.12);color:#e68a8d;cursor:pointer;">Eliminar</button>';
         } else {
           modBtns += '<button onclick="unbanPlatformUser(\'' + u.id + '\')" style="height:30px;font-size:12px;padding:0 12px;border-radius:8px;border:1px solid #353a46;background:transparent;color:#aab1bf;cursor:pointer;margin-right:6px;">Desbanear</button>';
+          modBtns += '<button onclick="deletePlatformUser(\'' + u.id + '\',\'' + safeName + '\')" style="height:30px;font-size:12px;padding:0 12px;border-radius:8px;border:1px solid rgba(230,138,141,0.30);background:rgba(230,138,141,0.12);color:#e68a8d;cursor:pointer;">Eliminar</button>';
         }
-        modBtns += '<button onclick="deletePlatformUser(\'' + u.id + '\',\'' + safeName + '\')" style="height:30px;font-size:12px;padding:0 12px;border-radius:8px;border:1px solid rgba(230,138,141,0.30);background:rgba(230,138,141,0.12);color:#e68a8d;cursor:pointer;">Eliminar</button>';
         var assignRow;
         if (u.role === 'god_admin') {
           assignRow = '<div style="margin-top:7px;"><span style="font-size:11px;color:#ffc850;background:rgba(255,200,80,0.1);border:1px solid rgba(255,200,80,0.2);border-radius:6px;padding:4px 10px;">God Admin global</span></div>';
