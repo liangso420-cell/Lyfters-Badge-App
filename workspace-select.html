@@ -343,7 +343,7 @@
           '</div>' +
           '<div class="ws-card-actions">' +
             '<button class="btn-enter" onclick="event.stopPropagation();enterPanel();">Entrar al panel →</button>' +
-            '<a href="workspace.html" class="btn-manage" onclick="event.stopPropagation();"><img src="assets/icons/ui/icono-editar.png" style="width:14px;height:14px;object-fit:contain;opacity:.8;" /> Gestionar workspace</a>' +
+            (myRole === 'superadmin' ? '<a href="workspace-edit.html?ws=' + wsData.id + '" class="btn-manage" onclick="event.stopPropagation();"><img src="assets/icons/ui/icono-usuarios.png" style="width:14px;height:14px;object-fit:contain;opacity:.8;" /> Gestionar miembros</a>' : '') +
           '</div>' +
         '</div>';
       } else if (!isGod) {
