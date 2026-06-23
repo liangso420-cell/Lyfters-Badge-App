@@ -315,6 +315,7 @@ def google_login():
     # Buscar usuario existente o crear uno nuevo (upsert)
     user = users().find_one({"email": email})
 
+    is_new = user is None
     if user is None:
         # Registro automático — sin password_hash porque usa Google
         result = users().insert_one({
@@ -339,7 +340,7 @@ def google_login():
         identity=str(user["_id"]),
         additional_claims=_workspace_claims(user),
     )
-    return jsonify(token=token, user=fmt_user(user)), 200
+    return jsonify(token=token, user=fmt_user(user), is_new=is_new), 200
 
 
 @auth_bp.route("/forgot-password", methods=["POST"])
