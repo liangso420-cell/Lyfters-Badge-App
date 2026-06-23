@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Evento — Lyfter</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{background:#13151b;font-family:Manrope,system-ui,sans-serif;min-height:100vh;color:#f4f6f9;}
+    .badge-row{display:flex;align-items:center;gap:12px;padding:12px;background:#1c1f27;border-radius:12px;border:1px solid #2a2e38;margin-bottom:8px;transition:border-color .15s;}
+    .badge-row.obtained{border-color:rgba(74,222,128,0.35);}
+    .badge-row.pending{opacity:0.55;}
+    .badge-icon{width:44px;height:44px;border-radius:10px;background:#2e323d;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px;}
+    .badge-icon img{width:28px;height:28px;object-fit:contain;}
+  </style>
+</head>
+<body>
+  <div id="loading-screen">
+    <img src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" />
+    <div class="loader"></div>
+    <span>Cargando...</span>
+  </div>
+  <div id="app" style="max-width:480px;margin:0 auto;padding:16px 16px 40px;"></div>
+  <div id="modal-root"></div>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/particles.js"></script>
+  <script>
+  (function() {
+    var API = window.LyfterAPI;
+    var U   = window.LyfterUtils;
+
+    var user = API.currentUser();
+    if (!user) { window.location.replace('login.html'); return; }
+
+    var params  = new URLSearchParams(window.location.search);
+    var eventId = params.get('id');
+    if (!eventId) { window.location.replace('profile.html'); return; }
+
+    var app = document.getElementById('app');
+
+    function fmtDate(iso) {
+      if (!iso) return '—';
+      try { return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }); }
+      catch(e) { return iso; }
+    }
+
+    async function init() {
+      try {
+        // Detalle con badges + estado obtenido por usuario
+        var detail = await API.getEventDetail(eventId);
+
+        // Metadata completa (foto, status, location, tags, workspace_name)
+        var allEvents = await API.listEvents().catch(function() { return []; });
+        var meta = allEvents.find(function(e) { return e.id === eventId; }) || {};
+
+        U.hideLoading();
+        render(detail, meta);
+      } catch(e) {
+        U.hideLoading();
+        app.innerHTML = '<p style="color:#e68a8d;text-align:center;padding:40px;">No se pudo cargar el evento.</p>';
+      }
+    }
+
+    function render(detail, meta) {
+      var statusColors = { upcoming:'#3b82f6', open:'#16a34a', ongoing:'#6C63FF', closed:'#d97706', postponed:'#9333ea', draft:'#8b93a3' };
+      var statusLabels = { upcoming:'Próximo', open:'Abierto', ongoing:'En curso', closed:'Cerrado', postponed:'Pospuesto', draft:'Borrador' };
+      var rarityLabels = { common:'Común', rare:'Raro', epic:'Épico', legendary:'Legendario', normal:'Normal', ultra_rare:'Ultra raro' };
+      var rarityColors = { common:'#8b93a3', rare:'#4ade80', epic:'#a78bfa', legendary:'#fbbf24', normal:'#8b93a3', ultra_rare:'#fb923c' };
+
+      var status     = meta.status || 'draft';
+      var statusCol  = statusColors[status] || '#8b93a3';
+      var statusLbl  = statusLabels[status]  || status;
+      var obtained   = detail.obtained || 0;
+      var total      = detail.total    || (detail.badges || []).length;
+      var pct        = total ? Math.round((obtained / total) * 100) : 0;
+
+      var coverHtml = meta.photo
+        ? '<img src="' + U.esc(meta.photo) + '" style="width:100%;height:200px;object-fit:cover;border-radius:16px;margin-bottom:16px;" />'
+        : '<div style="width:100%;height:180px;border-radius:16px;background:linear-gradient(135deg,#d897e7,#e68a8d);margin-bottom:16px;display:flex;align-items:center;justify-content:center;"><span style="font-size:52px;">🎪</span></div>';
+
+      var tagsHtml = (meta.tags || []).map(function(t) {
+        return '<span style="padding:3px 10px;border-radius:999px;font-size:11px;background:#2e323d;color:#8b93a3;">' + U.esc(t) + '</span>';
+      }).join('');
+
+      var badgesHtml = (detail.badges || []).map(function(b) {
+        var got = b.obtained;
+        var rColor = rarityColors[b.rarity] || '#8b93a3';
+        var rLabel = rarityLabels[b.rarity] || (b.rarity || 'normal');
+        return '<div class="badge-row ' + (got ? 'obtained' : 'pending') + '">' +
+          '<div class="badge-icon">' +
+            (b.icon_url
+              ? '<img src="' + U.esc(b.icon_url) + '" />'
+              : '<span>' + (b.emoji || '🏅') + '</span>') +
+          '</div>' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="font-family:Poppins,sans-serif;font-size:13px;font-weight:700;color:#f4f6f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + U.esc(b.name) + '</div>' +
+            (b.desc ? '<div style="font-size:11px;color:#6f7686;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + U.esc(b.desc) + '</div>' : '') +
+            '<div style="font-size:11px;color:' + rColor + ';margin-top:3px;font-weight:600;">' + rLabel + (b.xp ? ' · +' + b.xp + ' XP' : '') + '</div>' +
+          '</div>' +
+          (got ? '<span style="color:#4ade80;font-size:20px;flex-shrink:0;">✓</span>' : '<span style="color:#3a3f4a;font-size:16px;flex-shrink:0;">○</span>') +
+        '</div>';
+      }).join('') || '<p style="color:#8b93a3;font-size:13px;text-align:center;padding:20px 0;">Sin badges todavía</p>';
+
+      app.innerHTML =
+        '<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">' +
+          '<button onclick="history.back()" style="background:rgba(255,255,255,0.06);border:none;border-radius:10px;width:36px;height:36px;cursor:pointer;color:#f4f6f9;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">←</button>' +
+          '<h1 style="font-family:Poppins,sans-serif;font-size:18px;font-weight:700;color:#f4f6f9;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + U.esc(meta.name || detail.name || '') + '</h1>' +
+        '</div>' +
+
+        coverHtml +
+
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">' +
+          '<span style="padding:4px 12px;border-radius:999px;font-size:12px;font-weight:700;background:' + statusCol + '22;color:' + statusCol + ';">' + statusLbl + '</span>' +
+          tagsHtml +
+        '</div>' +
+
+        '<div style="background:#1c1f27;border-radius:16px;padding:16px;margin-bottom:16px;display:flex;flex-direction:column;gap:8px;">' +
+          '<div style="font-size:13px;color:#8b93a3;">📅 ' + fmtDate(meta.start) + (meta.end ? ' — ' + fmtDate(meta.end) : '') + '</div>' +
+          (meta.location ? '<div style="font-size:13px;color:#8b93a3;">📍 ' + U.esc(meta.location) + '</div>' : '') +
+          (meta.workspace_name ? '<div style="font-size:13px;color:#d897e7;font-weight:600;">🏢 ' + U.esc(meta.workspace_name) + '</div>' : '') +
+          (meta.description ? '<div style="font-size:13px;color:#8b93a3;line-height:1.5;margin-top:4px;">' + U.esc(meta.description) + '</div>' : '') +
+        '</div>' +
+
+        '<div style="background:#1c1f27;border-radius:16px;padding:16px;margin-bottom:16px;">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+            '<span style="font-family:Poppins,sans-serif;font-size:14px;font-weight:700;color:#f4f6f9;">Tu progreso</span>' +
+            '<span style="font-size:13px;font-weight:700;color:#d897e7;">' + obtained + ' / ' + total + '</span>' +
+          '</div>' +
+          '<div style="height:6px;background:#2e323d;border-radius:99px;overflow:hidden;">' +
+            '<div style="height:100%;border-radius:99px;background:linear-gradient(90deg,#d897e7,#e68a8d);width:' + pct + '%;transition:width .6s ease;"></div>' +
+          '</div>' +
+          (detail.complete ? '<div style="margin-top:10px;text-align:center;font-size:13px;font-weight:700;color:#4ade80;">🏆 ¡Evento completado!</div>' : '') +
+        '</div>' +
+
+        '<h3 style="font-family:Poppins,sans-serif;font-size:15px;font-weight:700;color:#f4f6f9;margin-bottom:12px;">Badges del evento</h3>' +
+        '<div style="margin-bottom:20px;">' + badgesHtml + '</div>' +
+
+        '<a href="scan.html" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:16px;background:linear-gradient(180deg,#ec9799,#e68a8d);border-radius:14px;font-family:Poppins,sans-serif;font-size:15px;font-weight:700;color:#3a1f20;text-decoration:none;box-shadow:0 4px 20px rgba(230,138,141,0.3);">' +
+          '📷 Escanear badge' +
+        '</a>';
+    }
+
+    setTimeout(function() { U.hideLoading(); }, 6000);
+    init();
+  })();
+  </script>
+</body>
+</html>
