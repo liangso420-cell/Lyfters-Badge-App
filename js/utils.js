@@ -1254,10 +1254,6 @@
           '<span class="icon">🏆</span>' +
           '<span>Ranking</span>' +
         '</a>' +
-        '<a href="workspace.html">' +
-          '<span class="icon">🏢</span>' +
-          '<span>Workspace</span>' +
-        '</a>' +
       '</nav>';
 
     return glows + sidebar + main + mobileNav;
