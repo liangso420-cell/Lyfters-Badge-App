@@ -109,7 +109,7 @@
 
       document.getElementById('scan-close').addEventListener('click', function () {
         stopCamera();
-        window.location.href = 'profile.html';
+        window.location.href = 'user-events.html';
       });
 
       document.getElementById('toggle-manual').addEventListener('click', function() {
@@ -203,8 +203,13 @@
                   return API.joinEvent(eid, coords);
                 }).then(function(r) {
                   U.setActiveId(eid);
-                  U.toastNextPage(r.status === 'already_joined' ? U.t('already_in_event') : U.t('joined_event'), 'success');
-                  window.location.href = 'profile.html';
+                  if (r.status === 'already_joined') {
+                    U.toastNextPage(U.t('already_in_event'), 'info');
+                    window.location.href = 'user-events.html';
+                  } else {
+                    try { sessionStorage.setItem('lyfter_joined_event', JSON.stringify({ name: r.event_name || r.name || 'el evento', ts: Date.now() })); } catch(e) {}
+                    window.location.href = 'user-events.html';
+                  }
                 }).catch(function(err) {
                   U.toast(err.message || 'No se pudo unir al evento', 'error');
                   processing = false;
@@ -246,7 +251,7 @@
             vibrate(200);
             U.toastNextPage(U.t('completed_all_badges'), 'info');
             stopCamera();
-            window.location.href = 'profile.html';
+            window.location.href = 'user-events.html';
             return;
           }
           if (r.status === 'duplicate') {
@@ -264,7 +269,7 @@
             setTimeout(function() {
               U.closeModal();
               U.toastNextPage('Ya tenías "' + (r.badge ? r.badge.name : 'este badge') + '"', 'warning');
-              window.location.href = 'profile.html';
+              window.location.href = 'user-events.html';
             }, 2200);
             return;
           }

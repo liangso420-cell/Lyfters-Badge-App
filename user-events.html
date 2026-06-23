@@ -33,6 +33,27 @@
       if (!user) { window.location.replace('login.html?next=' + encodeURIComponent(window.location.pathname + window.location.search)); return; }
       if (['admin','superadmin','god_admin'].indexOf(user.role) !== -1) { window.location.replace('workspace-select.html'); return; }
 
+      // Banner de bienvenida si viene de escanear un evento
+      (function() {
+        var joined = sessionStorage.getItem('lyfter_joined_event');
+        if (!joined) return;
+        sessionStorage.removeItem('lyfter_joined_event');
+        try {
+          var ev = JSON.parse(joined);
+          if (Date.now() - ev.ts < 10000) {
+            var banner = document.createElement('div');
+            banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999;background:linear-gradient(90deg,#d897e7,#e68a8d);padding:16px;text-align:center;font-family:Poppins,sans-serif;font-size:15px;font-weight:700;color:#fff;animation:slideDown 0.4s ease;';
+            banner.innerHTML = '🎉 ¡Te uniste a ' + ev.name + ' exitosamente!';
+            document.body.appendChild(banner);
+            setTimeout(function() {
+              banner.style.transition = 'opacity 0.4s';
+              banner.style.opacity = '0';
+              setTimeout(function() { banner.remove(); }, 400);
+            }, 3000);
+          }
+        } catch(e) {}
+      })();
+
       var app = document.getElementById('app');
 
       function fmtDate(iso) {
