@@ -86,7 +86,7 @@ def admin_list_events():
         query = {}
     elif role == "admin" and claims.get("role") != "god_admin":
         # Admin normal — solo sus eventos en su workspace
-        query = {"workspace_id": ws_id, "created_by": get_jwt_identity()}
+        query = {"workspace_id": ws_id, "created_by": ObjectId(get_jwt_identity())}
     else:
         # superadmin o god_admin con workspace seleccionado — todos los eventos del workspace
         query = {"workspace_id": ws_id}
@@ -233,7 +233,7 @@ def create_event():
         "xp_first_scan":       xp_first_scan if xp_first_scan is not None else 5,
         "xp_rare_bonus":       xp_rare_bonus if xp_rare_bonus is not None else 15,
         "xp_completion_bonus": xp_completion_bonus if xp_completion_bonus is not None else 50,
-        "created_by":  get_jwt_identity(),
+        "created_by":  ObjectId(get_jwt_identity()),
         "created_at":  datetime.utcnow(),
     }
     if ws_id:
