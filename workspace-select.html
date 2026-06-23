@@ -167,44 +167,47 @@
 
     // ─────────────────────────────────────────────────────────
     async function load() {
-      // Refresh silencioso — siempre, sin reload ni loop
-      try {
-        var refreshRes = await apiFetch('/auth/refresh-token', { method: 'POST' });
-        if (refreshRes && refreshRes.token) API.setToken(refreshRes.token);
-      } catch(e) {}
-
       try {
         var wsData = null, members = [], allWs = [];
 
         if (isGod) {
           try { allWs = await apiFetch('/workspaces/'); } catch(e) { allWs = []; }
+          render(wsData, members, allWs);
         } else {
-          // mine-all lee directo de la DB — siempre refleja la membresía actual
-          try {
-            var mineAll = await apiFetch('/workspaces/mine-all');
-            allWs = Array.isArray(mineAll) ? mineAll : [];
-          } catch(e) { allWs = []; }
+          // Verificar si el JWT actual ya tiene workspace_id
+          var session = JSON.parse(localStorage.getItem('lyfter_session') || '{}');
+          var payload = {};
+          try { payload = JSON.parse(atob((session.token || '').split('.')[1])); } catch(e) {}
+          var hasWsInJwt = !!payload.workspace_id;
 
-          if (allWs.length === 1) {
-            wsData = allWs[0];
+          if (!hasWsInJwt) {
+            // Sin workspace en JWT — intentar refresh para ver si fue asignado
+            try {
+              var refreshRes = await apiFetch('/auth/refresh-token', { method: 'POST' });
+              if (refreshRes && refreshRes.token) {
+                var newPayload = JSON.parse(atob(refreshRes.token.split('.')[1]));
+                if (newPayload.workspace_id) {
+                  // Tiene workspace en DB — guardar token y navegar (no reload)
+                  API.setToken(refreshRes.token);
+                  window.location.href = 'workspace-select.html';
+                  return;
+                }
+              }
+            } catch(e) {}
+            // Definitivamente sin workspace — mostrar pantalla de unirse
+            render(null, [], []);
+            return;
+          }
+
+          // Tiene workspace en JWT — cargar normalmente
+          try { wsData = await apiFetch('/workspaces/mine'); } catch(e) {}
+          if (wsData && wsData.id) {
             try { members = await apiFetch('/workspaces/' + wsData.id + '/members'); } catch(e) {}
           }
+          render(wsData, members, []);
         }
-
-        render(wsData, members, allWs);
       } catch(err) {
-        if (isGod) {
-          render(null, [], []);
-        } else {
-          main.innerHTML =
-            '<div class="ws-empty">' +
-              '<div class="ws-empty-icon">⚠️</div>' +
-              '<p class="ws-empty-text">No se pudo cargar el workspace</p>' +
-              '<p class="ws-empty-sub">' + U.esc(err.message) + '</p>' +
-            '</div>' +
-            joinSectionHtml();
-          bindJoin();
-        }
+        render(null, [], []);
       }
     }
 
