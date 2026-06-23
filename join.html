@@ -88,8 +88,11 @@
 
       API.joinEvent(eventId).then(function(r) {
         var msg = r.status === 'already_joined' ? 'Ya estás registrado en este evento.' : '¡Te uniste al evento!';
+        var joinIcon = r.status === 'already_joined'
+          ? '<img src="assets/icons/ui/icono-reclamado.png" style="width:48px;height:48px;object-fit:contain;margin:0 auto 12px;display:block;" />'
+          : '<img src="assets/icons/ui/icono-celebracion.png" style="width:24px;height:24px;object-fit:contain;margin:0 auto 8px;display:block;" />';
         app.innerHTML =
-          '<div class="text-5xl mb-4"><img src="assets/icons/ui/icono-celebracion.png" style="width:24px;height:24px;object-fit:contain;"></div>' +
+          '<div class="mb-4">' + joinIcon + '</div>' +
           '<h2 class="text-xl font-bold mb-2" style="color:#6C63FF;">' + msg + '</h2>' +
           '<p class="text-gray-500 text-sm mb-6">' + (r.event ? (r.event.name || r.event.nombre || '') : '') + '</p>' +
           '<button id="go-profile" class="w-full py-3 rounded-btn text-white font-semibold" style="background:#6C63FF;">Ver mis badges</button>';

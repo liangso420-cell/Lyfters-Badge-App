@@ -114,9 +114,9 @@
             '<div style="' + CARD + '">' +
               '<p style="font-family:Poppins,sans-serif;font-size:15px;font-weight:700;color:#f4f6f9;margin:0 0 6px;">QR de acceso</p>' +
               '<p style="font-size:12px;color:#8b93a3;font-family:Manrope,sans-serif;margin:0 0 16px;">Los asistentes escanean este QR para unirse al evento.</p>' +
-              '<div id="access-qr-area" style="display:flex;flex-direction:column;align-items:flex-start;gap:12px;">' +
+              '<div id="access-qr-area" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;width:100%;gap:12px;">' +
                 (ev.access_qr
-                  ? '<img src="' + U.esc(ev.access_qr) + '" style="width:140px;height:140px;border-radius:10px;border:1px solid #353a46;" />' +
+                  ? '<img src="' + U.esc(ev.access_qr) + '" style="width:140px;height:140px;border-radius:10px;border:1px solid #353a46;display:block;margin:0 auto;" />' +
                     '<button id="dl-access-qr" style="height:36px;padding:0 18px;border-radius:9px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⬇ Descargar QR</button>'
                   : '<button id="gen-access-qr" style="height:38px;padding:0 20px;border-radius:10px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Generar QR de acceso</button>') +
               '</div>' +
@@ -128,8 +128,8 @@
                 var bname  = b.name || b.nombre || '';
                 var bdesc  = b.desc || b.descripcion || '';
                 var iconHtml = b.icon_url
-                  ? '<img src="' + U.esc(b.icon_url) + '" style="width:32px;height:32px;object-fit:contain;">'
-                  : '<img src="assets/icons/ui/icono-badges-creados.png" style="width:32px;height:32px;object-fit:contain;filter:brightness(0) invert(1);">';
+                  ? '<div style="width:40px;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-align:center;"><img src="' + U.esc(b.icon_url) + '" style="width:32px;height:32px;object-fit:contain;display:block;margin:0 auto;"></div>'
+                  : '<div style="width:40px;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-align:center;"><img src="assets/icons/ui/icono-badges-creados.png" style="width:32px;height:32px;object-fit:contain;filter:brightness(0) invert(1);display:block;margin:0 auto;"></div>';
                 var bxp    = b.xp_value != null ? b.xp_value : 10;
                 var bRarity = b.rarity || (b.is_rare ? 'rare' : 'normal');
                 var bBg = bRarity === 'rare' ? 'rgba(34,197,94,0.1)' : '#20242d';
@@ -310,7 +310,7 @@
                 var r = await API.generateEventAccessQr(eid);
                 var area = document.getElementById('access-qr-area');
                 area.innerHTML =
-                  '<img src="' + r.access_qr + '" style="width:140px;height:140px;border-radius:10px;border:1px solid #353a46;" />' +
+                  '<img src="' + r.access_qr + '" style="width:140px;height:140px;border-radius:10px;border:1px solid #353a46;display:block;margin:0 auto;" />' +
                   '<button id="dl-access-qr" style="height:36px;padding:0 18px;border-radius:9px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⬇ Descargar QR</button>';
                 document.getElementById('dl-access-qr').addEventListener('click', function() {
                   var a = document.createElement('a'); a.href = r.access_qr; a.download = 'acceso-evento.png'; a.click();
