@@ -68,7 +68,7 @@ def ip_guard_register(view):
             return view(*args, **kwargs)
 
         ip = get_client_ip()
-        if users().count_documents({"ip_address": ip}) >= 5:
+        if users().count_documents({"ip_address": ip}) >= 10:
             return jsonify(error="Ya existe una cuenta registrada desde esta red"), 409
 
         resp = view(*args, **kwargs)
@@ -118,7 +118,7 @@ def ip_guard_login(view):
 def check_register_ip():
     if _is_dev():
         return None
-    if users().count_documents({"ip_address": get_client_ip()}) >= 5:
+    if users().count_documents({"ip_address": get_client_ip()}) >= 10:
         return jsonify(error="Ya existe una cuenta registrada desde esta red"), 409
     return None
 
