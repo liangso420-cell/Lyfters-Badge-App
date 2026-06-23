@@ -60,13 +60,13 @@
             var data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Error');
             app.innerHTML =
-              '<div class="text-5xl mb-4"><img src="assets/icons/ui/icono-celebracion.png" style="width:24px;height:24px;object-fit:contain;"></div>' +
+              '<div style="margin-bottom:16px;text-align:center;"><img src="assets/icons/ui/icono-celebracion.png" style="width:64px;height:64px;object-fit:contain;display:block;margin:0 auto;" /></div>' +
               '<h2 class="text-xl font-bold mb-2" style="color:#f4f6f9;">¡Bienvenido a ' + (data.workspace || 'el workspace') + '!</h2>' +
               '<p class="text-gray-400 text-sm mb-6">Rol: ' + (data.role || '') + '</p>' +
               '<a href="profile.html" class="w-full py-3 rounded-btn font-semibold block text-center" style="background:#6C63FF;color:#fff;text-decoration:none;">Ir al perfil</a>';
           } catch(e) {
             app.innerHTML =
-              '<div class="text-4xl mb-4"><img src="assets/icons/ui/icono-alerta.png" style="width:20px;height:20px;object-fit:contain;"></div>' +
+              '<div style="margin-bottom:16px;text-align:center;"><img src="assets/icons/ui/icono-alerta.png" style="width:48px;height:48px;object-fit:contain;display:block;margin:0 auto;" /></div>' +
               '<p class="text-gray-400 mb-4">' + (e.message || 'Error') + '</p>' +
               '<a href="profile.html" class="text-sm" style="color:#6C63FF;">← Volver al perfil</a>';
           }
@@ -90,7 +90,7 @@
         var msg = r.status === 'already_joined' ? 'Ya estás registrado en este evento.' : '¡Te uniste al evento!';
         var joinIcon = r.status === 'already_joined'
           ? '<img src="assets/icons/ui/icono-reclamado.png" style="width:48px;height:48px;object-fit:contain;margin:0 auto 12px;display:block;" />'
-          : '<img src="assets/icons/ui/icono-celebracion.png" style="width:24px;height:24px;object-fit:contain;margin:0 auto 8px;display:block;" />';
+          : '<img src="assets/icons/ui/icono-celebracion.png" style="width:64px;height:64px;object-fit:contain;display:block;margin:0 auto;" />';
         app.innerHTML =
           '<div class="mb-4">' + joinIcon + '</div>' +
           '<h2 class="text-xl font-bold mb-2" style="color:#6C63FF;">' + msg + '</h2>' +
@@ -102,7 +102,7 @@
         });
       }).catch(function(err) {
         app.innerHTML =
-          '<div class="text-4xl mb-4"><img src="assets/icons/ui/icono-alerta.png" style="width:20px;height:20px;object-fit:contain;"></div>' +
+          '<div style="margin-bottom:16px;text-align:center;"><img src="assets/icons/ui/icono-alerta.png" style="width:48px;height:48px;object-fit:contain;display:block;margin:0 auto;" /></div>' +
           '<p class="text-gray-600 mb-4">' + (err.message || 'No se pudo unir al evento') + '</p>' +
           '<a href="profile.html" class="text-sm" style="color:#6C63FF;">← Volver al perfil</a>';
       });

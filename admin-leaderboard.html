@@ -56,7 +56,7 @@
               '</thead>' +
               '<tbody>' +
                 data.map(function(entry, i) {
-                  var medals = ['<img src="assets/icons/ui/icono-reclamado.png" style="width:20px;height:20px;object-fit:contain;">','<img src="assets/icons/ui/icono-reclamado.png" style="width:18px;height:18px;object-fit:contain;opacity:0.75;">','<img src="assets/icons/ui/icono-reclamado.png" style="width:16px;height:16px;object-fit:contain;opacity:0.55;">'];
+                  var medals = ['<span style="font-size:18px;font-weight:900;color:#FFD700;">1°</span>','<span style="font-size:18px;font-weight:900;color:#C0C0C0;">2°</span>','<span style="font-size:18px;font-weight:900;color:#CD7F32;">3°</span>'];
                   var rank = medals[i] || '<span style="color:#8b93a3;font-weight:700;">' + (i+1) + '</span>';
                   var avatarHtml = entry.avatar
                     ? '<img src="' + entry.avatar + '" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:1px solid #2f343f;" />'
@@ -93,7 +93,7 @@
               '</thead>' +
               '<tbody>' +
                 data.map(function(entry, i) {
-                  var medals = ['<img src="assets/icons/ui/icono-reclamado.png" style="width:20px;height:20px;object-fit:contain;">','<img src="assets/icons/ui/icono-reclamado.png" style="width:18px;height:18px;object-fit:contain;opacity:0.75;">','<img src="assets/icons/ui/icono-reclamado.png" style="width:16px;height:16px;object-fit:contain;opacity:0.55;">'];
+                  var medals = ['<span style="font-size:18px;font-weight:900;color:#FFD700;">1°</span>','<span style="font-size:18px;font-weight:900;color:#C0C0C0;">2°</span>','<span style="font-size:18px;font-weight:900;color:#CD7F32;">3°</span>'];
                   var rank = medals[i] || '<span style="color:#8b93a3;font-weight:700;">' + (i+1) + '</span>';
                   var avatarHtml = entry.avatar
                     ? '<img src="' + entry.avatar + '" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:1px solid #2f343f;">'

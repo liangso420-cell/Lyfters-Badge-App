@@ -119,7 +119,7 @@
         });
         var data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Error al crear el workspace');
-        U.toast('Workspace creado <img src="assets/icons/ui/icono-reclamado.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;">', 'success');
+        U.toast('Workspace creado correctamente', 'success');
         setTimeout(function() { window.location.replace('workspace-select.html'); }, 900);
       } catch(e) {
         U.toast(e.message, 'error');

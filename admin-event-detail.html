@@ -360,7 +360,7 @@
                   xp_value: parseInt(form.elements['xp_value'].value, 10) || 10,
                   is_rare: form.elements['is_rare'].checked
                 });
-                U.toast('Badge actualizado <img src="assets/icons/ui/icono-reclamado.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;">', 'success');
+                U.toast('Badge actualizado correctamente', 'success');
                 init();
               } catch(err) {
                 U.toast(err.message || 'Error', 'error');
@@ -491,7 +491,7 @@
                   is_rare: ibSelectedRarity !== 'normal',
                   xp_value: parseInt(document.getElementById('ib-xp-' + eid).value, 10) || 10
                 });
-                U.toast('<div style="display:flex;align-items:center;justify-content:center;gap:8px;"><img src="assets/icons/ui/icono-reclamado.png" style="width:20px;height:20px;object-fit:contain;" /><span>Badge agregado</span></div>', 'success');
+                U.toast('Badge agregado', 'success');
                 init();
               } catch(err) { U.toast(err.message || 'Error', 'error'); ibAdd.disabled = false; }
             });
@@ -553,7 +553,7 @@
                 var elng = parseFloat(editForm.elements['lng'].value);
                 if (!isNaN(elat) && !isNaN(elng)) saves.push(API.updateEventCoordinates(eid, elat, elng));
                 await Promise.all(saves);
-                U.toast('Evento actualizado <img src="assets/icons/ui/icono-reclamado.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;">', 'success');
+                U.toast('Evento actualizado correctamente', 'success');
                 init();
               } catch(err) {
                 U.toast(err.message || 'Error', 'error');

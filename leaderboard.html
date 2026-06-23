@@ -54,7 +54,7 @@
 
       function globalRow(e) {
         var rank = e.position;
-        var medal = rank === 1 ? '<img src="assets/icons/ui/icono-reclamado.png" style="width:20px;height:20px;object-fit:contain;">' : rank === 2 ? '<img src="assets/icons/ui/icono-reclamado.png" style="width:18px;height:18px;object-fit:contain;opacity:0.75;">' : rank === 3 ? '<img src="assets/icons/ui/icono-reclamado.png" style="width:16px;height:16px;object-fit:contain;opacity:0.55;">' : '<span class="text-gray-400 font-bold">' + rank + '</span>';
+        var medal = rank === 1 ? '<span style="font-size:18px;font-weight:900;color:#FFD700;">1°</span>' : rank === 2 ? '<span style="font-size:18px;font-weight:900;color:#C0C0C0;">2°</span>' : rank === 3 ? '<span style="font-size:18px;font-weight:900;color:#CD7F32;">3°</span>' : '<span class="text-gray-400 font-bold">' + rank + '</span>';
         var isSelf = e.user_id === user.id;
         var lname = e.level_name || (API.levelName ? API.levelName(e.level) : ('Nivel ' + e.level));
         return '<div class="flex items-center gap-3 py-2.5 border-b border-gray-100 last:border-0' + (isSelf ? ' bg-primary-soft/30 -mx-4 px-4 rounded-card' : '') + '">' +
@@ -72,7 +72,7 @@
 
       function eventRow(e) {
         var rank = e.position;
-        var medal = rank === 1 ? '<img src="assets/icons/ui/icono-reclamado.png" style="width:20px;height:20px;object-fit:contain;">' : rank === 2 ? '<img src="assets/icons/ui/icono-reclamado.png" style="width:18px;height:18px;object-fit:contain;opacity:0.75;">' : rank === 3 ? '<img src="assets/icons/ui/icono-reclamado.png" style="width:16px;height:16px;object-fit:contain;opacity:0.55;">' : '<span class="text-gray-400 font-bold">' + rank + '</span>';
+        var medal = rank === 1 ? '<span style="font-size:18px;font-weight:900;color:#FFD700;">1°</span>' : rank === 2 ? '<span style="font-size:18px;font-weight:900;color:#C0C0C0;">2°</span>' : rank === 3 ? '<span style="font-size:18px;font-weight:900;color:#CD7F32;">3°</span>' : '<span class="text-gray-400 font-bold">' + rank + '</span>';
         var isSelf = e.user_id === user.id;
         var lname = e.level_name || (API.levelName ? API.levelName(e.level) : ('Nivel ' + e.level));
         var completedChip = e.completed ? ' <span title="Completó el evento"><img src="assets/icons/ui/icono-reclamado.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></span>' : '';

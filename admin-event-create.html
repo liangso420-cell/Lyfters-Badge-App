@@ -451,7 +451,7 @@
               await API.updateEventCoordinates(created.id, parseFloat(latVal), parseFloat(lngVal));
             }
             U.setActiveId(created.id);
-            U.toast('Evento creado <img src="assets/icons/ui/icono-reclamado.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;">', 'success');
+            U.toast('Evento creado correctamente', 'success');
             window.location.href = 'admin-event-detail.html?id=' + created.id;
           } catch(err) {
             U.toast(err.message || 'Error', 'error');
