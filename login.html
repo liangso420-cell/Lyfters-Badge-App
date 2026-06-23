@@ -74,41 +74,92 @@
         ? '<p class="text-center text-xs text-gray-300 pt-2">Demo · admin@lyfter.cc / admin123 · ana@correo.com / ana123</p>'
         : '';
 
-      app.innerHTML =
-        '<div style="position:fixed;top:-200px;right:-120px;width:900px;height:620px;pointer-events:none;z-index:0;background:radial-gradient(44% 60% at 30% 30%,rgba(216,151,231,0.16),transparent 70%),radial-gradient(44% 60% at 76% 40%,rgba(112,207,255,0.12),transparent 70%),radial-gradient(50% 50% at 54% 88%,rgba(230,138,141,0.10),transparent 70%);"></div>' +
-        '<div style="position:relative;z-index:1;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 20px;">' +
-          '<div style="width:100%;max-width:480px;background:rgba(28,31,39,0.82);backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);border:1px solid rgba(47,52,63,0.60);border-radius:26px;padding:36px 40px 44px;box-shadow:0 40px 100px rgba(0,0,0,0.55);">' +
+      /* ── Full-page responsive glow blobs (position:fixed, inset:0) ── */
+      var glowBg =
+        '<div style="position:fixed;inset:0;pointer-events:none;z-index:0;' +
+          'background:' +
+            'radial-gradient(55% 55% at 12% 18%,rgba(216,151,231,0.28),transparent 65%),' +
+            'radial-gradient(50% 50% at 88% 12%,rgba(112,207,255,0.22),transparent 65%),' +
+            'radial-gradient(50% 50% at 90% 85%,rgba(255,203,138,0.20),transparent 65%),' +
+            'radial-gradient(50% 55% at 8%  88%,rgba(171,209,148,0.20),transparent 65%),' +
+            'radial-gradient(40% 40% at 50% 50%,rgba(230,138,141,0.15),transparent 65%);' +
+        '"></div>';
 
-            '<div style="flex:1;display:flex;flex-direction:column;justify-content:center;min-width:0;">' +
-              '<a href="landing.html" style="display:inline-flex;align-items:center;gap:6px;font-family:Manrope,sans-serif;font-size:13px;font-weight:600;color:#8b93a3;text-decoration:none;margin-bottom:20px;padding:6px 10px;border-radius:8px;transition:color .15s;border:1px solid transparent;" onmouseover="this.style.color=\'#d897e7\';this.style.borderColor=\'rgba(216,151,231,0.25)\'" onmouseout="this.style.color=\'#8b93a3\';this.style.borderColor=\'transparent\'">← Volver al inicio</a>' +
-              '<div style="text-align:center;margin-bottom:24px;">' +
-                '<img src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" style="width:80px;height:80px;object-fit:contain;border-radius:16px;margin:0 auto 12px;display:block;" />' +
-                '<h2 style="margin:0;font-family:Poppins,sans-serif;font-size:20px;font-weight:700;color:#f4f6f9;">Lyfter Badge App</h2>' +
-                '<p style="margin:4px 0 0;font-size:13px;color:#8b93a3;font-family:Manrope,sans-serif;">' + U.t('app_tagline') + '</p>' +
-              '</div>' +
-              '<h1 style="margin:0;font-family:Poppins,sans-serif;font-size:36px;font-weight:700;color:#f4f6f9;letter-spacing:-0.01em;">Iniciar sesión</h1>' +
-              '<p style="margin:10px 0 32px;font-size:15px;color:#8b93a3;font-family:Manrope,sans-serif;">' + U.t('no_account') + ' <a href="register.html" style="font-weight:700;text-decoration:none;color:#d897e7;">' + U.t('sign_up') + '</a></p>' +
-              '<form id="login-form" style="display:flex;flex-direction:column;gap:18px;" novalidate>' +
-                U.inputField({ label: U.t('email_label'), type: 'email', name: 'email', placeholder: 'tu@correo.com' }) +
-                U.inputField({ label: U.t('password_label'), type: 'password', name: 'password', placeholder: '••••••••' }) +
-                U.primaryButton(U.t('enter_btn'), 'type="submit"') +
-                '<div style="display:flex;align-items:center;gap:12px;margin:4px 0;">' +
-                  '<div style="flex:1;height:1px;background:#2f343f;"></div>' +
-                  '<span style="font-size:12px;color:#6f7686;font-family:Manrope,sans-serif;">' + U.t('or_continue') + '</span>' +
-                  '<div style="flex:1;height:1px;background:#2f343f;"></div>' +
-                '</div>' +
-                '<button type="button" id="btn-google" style="width:100%;height:52px;border-radius:13px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">' +
-                  '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:20px;height:20px;" alt="Google" />' +
-                  U.t('continue_google') +
-                '</button>' +
-                '<p style="text-align:center;font-size:13px;color:#8b93a3;margin:0;font-family:Manrope,sans-serif;">' +
-                  '<button type="button" id="forgot-pw-btn" style="background:none;border:none;color:#6f7686;font-size:13px;cursor:pointer;font-family:Manrope,sans-serif;text-decoration:underline;">' + U.t('forgot_password') + '</button>' +
-                '</p>' +
-                demoHint +
-              '</form>' +
-            '</div>' +
+      /* ── Decorative left panel ── */
+      var decoPanel =
+        '<div id="login-deco" style="' +
+            'display:none;width:380px;flex-shrink:0;border-radius:20px;overflow:hidden;' +
+            'position:relative;min-height:460px;' +
+            'background:' +
+              'radial-gradient(80% 60% at 22% 16%,rgba(112,207,255,0.55),transparent 60%),' +
+              'radial-gradient(75% 60% at 84% 26%,rgba(216,151,231,0.60),transparent 60%),' +
+              'radial-gradient(80% 70% at 80% 90%,rgba(255,203,138,0.50),transparent 62%),' +
+              'radial-gradient(80% 70% at 14% 92%,rgba(171,209,148,0.50),transparent 62%),' +
+              'radial-gradient(70% 60% at 52% 56%,rgba(230,138,141,0.45),transparent 62%),' +
+              'linear-gradient(158deg,#1e2235,#1a1d2a);' +
+        '">' +
+          '<span style="position:absolute;top:8%;left:12%;font-family:\'JetBrains Mono\',monospace;font-size:30px;font-weight:600;color:rgba(255,255,255,0.28);">&lt;/&gt;</span>' +
+          '<span style="position:absolute;top:18%;right:14%;font-family:\'JetBrains Mono\',monospace;font-size:22px;color:rgba(255,255,255,0.22);">$_</span>' +
+          '<span style="position:absolute;top:34%;left:18%;font-family:\'JetBrains Mono\',monospace;font-size:26px;color:rgba(255,203,138,0.50);">{ }</span>' +
+          '<span style="position:absolute;top:44%;right:18%;font-family:\'JetBrains Mono\',monospace;font-size:34px;color:rgba(112,207,255,0.45);">;</span>' +
+          '<span style="position:absolute;top:58%;left:24%;font-family:\'JetBrains Mono\',monospace;font-size:24px;color:rgba(216,151,231,0.50);">=&gt;</span>' +
+          '<span style="position:absolute;top:70%;right:22%;font-family:\'JetBrains Mono\',monospace;font-size:20px;font-weight:600;color:rgba(171,209,148,0.55);">JS</span>' +
+          '<span style="position:absolute;top:80%;left:16%;font-family:\'JetBrains Mono\',monospace;font-size:22px;font-weight:600;color:rgba(230,138,141,0.55);">TS</span>' +
+          '<div style="position:absolute;left:0;right:0;bottom:0;padding:26px 28px;background:linear-gradient(180deg,transparent,rgba(20,22,28,0.55));">' +
+            '<div style="font-family:Poppins,sans-serif;font-size:18px;font-weight:600;color:#fff;line-height:1.35;">Gestioná eventos,<br><span style="color:#d897e7;">badges y rankings</span></div>' +
+            '<div style="font-family:Manrope,sans-serif;font-size:13px;color:rgba(255,255,255,0.6);margin-top:6px;">Tu plataforma de reconocimiento · Lyfter</div>' +
           '</div>' +
         '</div>';
+
+      /* ── Form section ── */
+      var formSection =
+        '<div style="flex:1;display:flex;flex-direction:column;justify-content:center;min-width:0;">' +
+          '<a href="landing.html" style="display:inline-flex;align-items:center;gap:6px;font-family:Manrope,sans-serif;font-size:13px;font-weight:600;color:#8b93a3;text-decoration:none;margin-bottom:20px;padding:6px 10px;border-radius:8px;transition:color .15s;border:1px solid transparent;" onmouseover="this.style.color=\'#d897e7\';this.style.borderColor=\'rgba(216,151,231,0.25)\'" onmouseout="this.style.color=\'#8b93a3\';this.style.borderColor=\'transparent\'">← Volver al inicio</a>' +
+          '<div style="text-align:center;margin-bottom:24px;">' +
+            '<img src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" style="width:80px;height:80px;object-fit:contain;border-radius:16px;margin:0 auto 12px;display:block;" />' +
+            '<h2 style="margin:0;font-family:Poppins,sans-serif;font-size:20px;font-weight:700;color:#f4f6f9;">Lyfter Badge App</h2>' +
+            '<p style="margin:4px 0 0;font-size:13px;color:#8b93a3;font-family:Manrope,sans-serif;">' + U.t('app_tagline') + '</p>' +
+          '</div>' +
+          '<h1 style="margin:0;font-family:Poppins,sans-serif;font-size:36px;font-weight:700;color:#f4f6f9;letter-spacing:-0.01em;">Iniciar sesión</h1>' +
+          '<p style="margin:10px 0 32px;font-size:15px;color:#8b93a3;font-family:Manrope,sans-serif;">' + U.t('no_account') + ' <a href="register.html" style="font-weight:700;text-decoration:none;color:#d897e7;">' + U.t('sign_up') + '</a></p>' +
+          '<form id="login-form" style="display:flex;flex-direction:column;gap:18px;" novalidate>' +
+            U.inputField({ label: U.t('email_label'), type: 'email', name: 'email', placeholder: 'tu@correo.com' }) +
+            U.inputField({ label: U.t('password_label'), type: 'password', name: 'password', placeholder: '••••••••' }) +
+            U.primaryButton(U.t('enter_btn'), 'type="submit"') +
+            '<div style="display:flex;align-items:center;gap:12px;margin:4px 0;">' +
+              '<div style="flex:1;height:1px;background:#2f343f;"></div>' +
+              '<span style="font-size:12px;color:#6f7686;font-family:Manrope,sans-serif;">' + U.t('or_continue') + '</span>' +
+              '<div style="flex:1;height:1px;background:#2f343f;"></div>' +
+            '</div>' +
+            '<button type="button" id="btn-google" style="width:100%;height:52px;border-radius:13px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">' +
+              '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:20px;height:20px;" alt="Google" />' +
+              U.t('continue_google') +
+            '</button>' +
+            '<p style="text-align:center;font-size:13px;color:#8b93a3;margin:0;font-family:Manrope,sans-serif;">' +
+              '<button type="button" id="forgot-pw-btn" style="background:none;border:none;color:#6f7686;font-size:13px;cursor:pointer;font-family:Manrope,sans-serif;text-decoration:underline;">' + U.t('forgot_password') + '</button>' +
+            '</p>' +
+            demoHint +
+          '</form>' +
+        '</div>';
+
+      app.innerHTML =
+        glowBg +
+        '<div style="position:relative;z-index:1;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 20px;">' +
+          '<div style="width:100%;max-width:1100px;background:rgba(28,31,39,0.78);backdrop-filter:blur(24px) saturate(1.4);-webkit-backdrop-filter:blur(24px) saturate(1.4);border:1px solid rgba(47,52,63,0.50);border-radius:26px;padding:28px 32px 36px;box-shadow:0 40px 100px rgba(0,0,0,0.55);display:flex;gap:48px;align-items:stretch;">' +
+            decoPanel +
+            formSection +
+          '</div>' +
+        '</div>';
+
+      /* Mostrar panel deco en desktop */
+      (function() {
+        var d = document.getElementById('login-deco');
+        if (d && window.innerWidth >= 900) { d.style.display = 'block'; }
+        window.addEventListener('resize', function() {
+          if (!d) return;
+          d.style.display = window.innerWidth >= 900 ? 'block' : 'none';
+        });
+      })();
 
       var form = document.getElementById('login-form');
       (function() {
