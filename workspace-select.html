@@ -172,10 +172,6 @@
 
         if (isGod) {
           allWs = await apiFetch('/workspaces/');
-          wsData = allWs.length ? allWs[0] : null;
-          if (wsData) {
-            try { members = await apiFetch('/workspaces/' + wsData.id + '/members'); } catch(e) {}
-          }
         } else {
           try { wsData = await apiFetch('/workspaces/mine'); } catch(e) {}
           if (wsData && wsData.id) {
@@ -296,13 +292,19 @@
           html += '<div style="text-align:center;padding:32px;color:#8b93a3;font-size:14px;margin-bottom:24px;">No hay workspaces aún.</div>';
         }
 
-        if (wsData) {
-          html += '<div class="ws-divider">Workspace activo</div>';
-        }
+        html += '<a href="gestion-usuarios.html" style="display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,rgba(255,200,80,0.08),rgba(216,151,231,0.04));border:1px solid rgba(255,200,80,0.3);border-radius:18px;padding:18px 22px;text-decoration:none;margin-top:16px;transition:border-color .2s;" onmouseover="this.style.borderColor='rgba(255,200,80,0.55)'" onmouseout="this.style.borderColor='rgba(255,200,80,0.3)'">' +
+          '<div style="width:44px;height:44px;border-radius:12px;background:rgba(255,200,80,0.12);border:1px solid rgba(255,200,80,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+            '<img src="assets/icons/ui/icono-usuarios.png" style="width:22px;height:22px;object-fit:contain;opacity:.9;" />' +
+          '</div>' +
+          '<div>' +
+            '<div style="font-family:Poppins,sans-serif;font-size:15px;font-weight:700;color:#ffc850;margin-bottom:3px;">Gestión de usuarios</div>' +
+            '<div style="font-size:12px;color:#8b93a3;">Herramientas God Admin y usuarios de la plataforma</div>' +
+          '</div>' +
+        '</a>';
       }
 
-      if (wsData) {
-        var myRole = wsData.my_role || (isGod ? 'god_admin' : user.role);
+      if (wsData && !isGod) {
+        var myRole = wsData.my_role || user.role;
         var cardIconHtml = wsData.logo_url
           ? '<img src="' + wsData.logo_url + '" style="width:46px;height:46px;object-fit:contain;" />'
           : '<img src="assets/icons/ui/icono-usuarios.png" style="width:30px;height:30px;object-fit:contain;opacity:.85;" />';
@@ -326,7 +328,7 @@
             '<a href="workspace.html" class="btn-manage" onclick="event.stopPropagation();"><img src="assets/icons/ui/icono-editar.png" style="width:14px;height:14px;object-fit:contain;opacity:.8;" /> Gestionar workspace</a>' +
           '</div>' +
         '</div>';
-      } else {
+      } else if (!isGod) {
         html += '<div class="ws-empty">' +
           '<div class="ws-empty-icon"><img src="assets/icons/ui/icono-usuarios.png" style="width:56px;height:56px;object-fit:contain;opacity:.4;" /></div>' +
           '<p class="ws-empty-text">No estás en ningún workspace todavía</p>' +
@@ -342,12 +344,9 @@
         html += createWsFormHtml(false);
       }
 
-      if (isGod) html += godAdminToolsHtml();
-
       main.innerHTML = html;
       bindJoin();
       bindCreateWorkspace();
-      if (isGod) loadUsersForGrant();
     }
 
     function createWsFormHtml(isGod) {
@@ -493,303 +492,6 @@
       }
     }
 
-    function godAdminToolsHtml() {
-      return (
-        '<div style="background:linear-gradient(135deg,rgba(255,200,80,0.05),rgba(216,151,231,0.03));border:1px solid rgba(255,200,80,0.25);border-radius:20px;padding:28px 30px;margin-top:24px;">' +
-          '<div style="font-family:Poppins,sans-serif;font-size:17px;font-weight:700;color:#ffc850;margin-bottom:20px;">⚡ Herramientas God Admin</div>' +
-          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:4px;">' +
-            '<div style="background:#20242d;border:1px solid #2a2e38;border-radius:14px;padding:20px;">' +
-              '<div style="font-size:13px;font-weight:700;color:#f4f6f9;margin-bottom:6px;">Código de creación de workspace</div>' +
-              '<div style="font-size:12px;color:#8b93a3;margin-bottom:14px;">Genera un código de un solo uso que permite a un admin crear un nuevo workspace.</div>' +
-              '<button id="btn-gen-creation-code" onclick="genCreationCode()" style="height:40px;padding:0 16px;border-radius:10px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Generar código</button>' +
-              '<div id="creation-code-result" style="margin-top:12px;"></div>' +
-            '</div>' +
-            '<div style="background:#20242d;border:1px solid #2a2e38;border-radius:14px;padding:20px;">' +
-              '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">' +
-                '<div style="font-size:13px;font-weight:700;color:#f4f6f9;">Otorgar God Admin</div>' +
-                '<button onclick="loadUsersForGrant()" style="font-size:11px;color:#ffc850;background:rgba(255,200,80,0.1);border:1px solid rgba(255,200,80,0.25);border-radius:6px;padding:3px 10px;cursor:pointer;">↻ Cargar</button>' +
-              '</div>' +
-              '<div style="font-size:12px;color:#8b93a3;margin-bottom:12px;">Seleccioná un usuario de la lista o ingresá el email directamente.</div>' +
-              '<div style="display:flex;flex-direction:column;gap:10px;">' +
-                '<select id="god-user-select" onchange="this.value&&(document.getElementById(\'god-email\').value=this.value)" style="height:40px;border-radius:10px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:13px;padding:0 12px;outline:none;cursor:pointer;width:100%;box-sizing:border-box;">' +
-                  '<option value="">— Seleccionar usuario —</option>' +
-                '</select>' +
-                '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
-                  '<input id="god-email" type="email" placeholder="o escribí el email directamente" style="flex:1;min-width:160px;height:40px;border-radius:10px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:13px;padding:0 12px;outline:none;box-sizing:border-box;" />' +
-                  '<button onclick="grantGodAdmin()" style="height:40px;padding:0 14px;border-radius:10px;border:1px solid rgba(255,200,80,0.3);background:rgba(255,200,80,0.15);color:#ffc850;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;">Otorgar</button>' +
-                '</div>' +
-              '</div>' +
-            '</div>' +
-          '</div>' +
-        '</div>' +
-        '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:20px;padding:28px 30px;margin-top:8px;">' +
-          '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px;">' +
-            '<div style="font-family:Poppins,sans-serif;font-size:17px;font-weight:700;color:#f4f6f9;">👥 Usuarios de la plataforma</div>' +
-            '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' +
-              '<input id="users-search" type="text" placeholder="Buscar..." oninput="filterPlatformUsers(this.value)" style="height:36px;padding:0 12px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:13px;outline:none;width:220px;box-sizing:border-box;" />' +
-              '<button onclick="loadPlatformUsers()" style="height:36px;padding:0 16px;border-radius:8px;border:1px solid #353a46;background:transparent;color:#aab1bf;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Cargar usuarios</button>' +
-            '</div>' +
-          '</div>' +
-          '<div id="platform-users-list">' +
-            '<p style="font-size:13px;color:#6f7686;text-align:center;padding:24px 0;">Hacé clic en "Cargar usuarios" para ver la lista.</p>' +
-          '</div>' +
-        '</div>'
-      );
-    }
-
-    window.genCreationCode = async function() {
-      var btn = document.getElementById('btn-gen-creation-code');
-      var out = document.getElementById('creation-code-result');
-      if (!btn || !out) return;
-      btn.disabled = true; btn.textContent = 'Generando...';
-      try {
-        var res = await fetch(API.base + '/workspaces/creation-code', {
-          method: 'POST',
-          headers: Object.assign({}, API.authHeaders(), { 'Content-Type': 'application/json' }),
-        });
-        var data = {};
-        try { data = await res.json(); } catch(je) { throw new Error('Error del servidor (estado ' + res.status + ').'); }
-        if (!res.ok) throw new Error(data.error || 'Error ' + res.status);
-        var exp = data.expires_at ? new Date(data.expires_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' }) : '';
-        out.innerHTML =
-          '<div style="background:#15171d;border:1px solid rgba(255,200,80,0.25);border-radius:10px;padding:12px 16px;margin-top:4px;">' +
-            '<div style="font-size:11px;color:#8b93a3;margin-bottom:4px;">Código de un solo uso · expira ' + exp + '</div>' +
-            '<div style="display:flex;align-items:center;gap:10px;">' +
-              '<code style="font-family:JetBrains Mono,monospace;font-size:20px;font-weight:700;color:#ffc850;letter-spacing:.15em;">' + U.esc(data.code) + '</code>' +
-              '<button onclick="navigator.clipboard.writeText(\'' + U.esc(data.code) + '\').then(function(){ toast(\'Copiado\',\'success\'); })" style="height:30px;padding:0 12px;border-radius:8px;border:1px solid rgba(255,200,80,0.3);background:rgba(255,200,80,0.1);color:#ffc850;font-size:12px;cursor:pointer;">Copiar</button>' +
-            '</div>' +
-          '</div>';
-        toast('Código generado', 'success');
-      } catch(e) { toast(e.message, 'error'); }
-      btn.disabled = false; btn.textContent = 'Generar código';
-    };
-
-    window.loadUsersForGrant = async function() {
-      var sel = document.getElementById('god-user-select');
-      if (!sel) return;
-      sel.disabled = true;
-      try {
-        var res = await fetch(API.base + '/workspaces/platform/users', { headers: API.authHeaders() });
-        var data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Error');
-        var eligible = data.filter(function(u) { return u.role !== 'god_admin'; });
-        eligible.sort(function(a, b) { return (a.name || '').localeCompare(b.name || ''); });
-        sel.innerHTML = '<option value="">— Seleccionar usuario (' + eligible.length + ') —</option>' +
-          eligible.map(function(u) {
-            return '<option value="' + U.esc(u.email) + '">' + U.esc(u.name || u.email) + ' · ' + U.esc(u.email) + ' · ' + (u.role || '') + '</option>';
-          }).join('');
-        toast(eligible.length + ' usuarios cargados', 'success');
-      } catch(e) { toast('No se pudo cargar la lista', 'error'); }
-      sel.disabled = false;
-    };
-
-    window.grantGodAdmin = async function() {
-      var inp   = document.getElementById('god-email');
-      var email = (inp ? inp.value : '').trim();
-      if (!email) { toast('Ingresá un email', 'error'); return; }
-      var c1 = confirm('⚠️ Vas a otorgar el rol GOD ADMIN a:\n\n' + email + '\n\nEsta acción le da acceso total a TODOS los workspaces y datos de la plataforma.\n\n¿Estás seguro?');
-      if (!c1) return;
-      var c2 = confirm('🔴 CONFIRMACIÓN FINAL\n\n¿Confirmás que querés hacer god_admin a ' + email + '?\n\nEsta acción NO SE PUEDE DESHACER desde la interfaz.');
-      if (!c2) return;
-      try {
-        var res = await fetch(API.base + '/workspaces/grant-god-admin', {
-          method: 'POST',
-          headers: Object.assign({}, API.authHeaders(), { 'Content-Type': 'application/json' }),
-          body: JSON.stringify({ email: email })
-        });
-        var data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Error');
-        toast('✅ ' + (data.name || email) + ' ahora es god_admin. Debe volver a iniciar sesión.', 'success');
-        if (inp) inp.value = '';
-      } catch(e) { toast(e.message, 'error'); }
-    };
-
-    var _platformUsersCache = [];
-
-    window.loadPlatformUsers = async function() {
-      var container = document.getElementById('platform-users-list');
-      if (!container) return;
-      container.innerHTML = '<p style="font-size:13px;color:#8b93a3;text-align:center;padding:20px;">Cargando...</p>';
-      try {
-        var res = await fetch(API.base + '/workspaces/platform/users', { headers: API.authHeaders() });
-        var data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Error');
-        _platformUsersCache = data;
-        renderPlatformUsers(data);
-      } catch(e) {
-        container.innerHTML = '<p style="color:#e68a8d;font-size:13px;text-align:center;padding:20px;">Error: ' + U.esc(e.message) + '</p>';
-      }
-    };
-
-    window.filterPlatformUsers = function(q) {
-      if (!_platformUsersCache.length) return;
-      var lq = q.toLowerCase();
-      var filtered = q.length < 2 ? _platformUsersCache : _platformUsersCache.filter(function(u) {
-        return (u.name + ' ' + u.email).toLowerCase().indexOf(lq) !== -1;
-      });
-      renderPlatformUsers(filtered);
-    };
-
-    function renderPlatformUsers(list) {
-      var container = document.getElementById('platform-users-list');
-      if (!container) return;
-      if (!list.length) {
-        container.innerHTML = '<p style="font-size:13px;color:#6f7686;text-align:center;padding:20px;">No se encontraron usuarios.</p>';
-        return;
-      }
-      var rows = list.map(function(u) {
-        var initials = (u.name || '?').split(' ').map(function(w){ return w[0]||''; }).join('').slice(0,2).toUpperCase();
-        var statusCell = u.banned
-          ? '<span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;background:rgba(230,138,141,0.15);color:#e68a8d;border:1px solid rgba(230,138,141,0.2);">Baneado' + (u.ban_permanent ? ' ∞' : '') + '</span>' +
-            (u.ban_ip ? '<br/><span style="font-size:10px;color:#6f7686;margin-top:3px;display:block;">IP: ' + U.esc(u.ban_ip) + '</span>' : '')
-          : '<span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;background:rgba(171,209,148,0.15);color:#abd194;">Activo</span>';
-        var safeName = u.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-        var actions = '';
-        if (!u.banned) {
-          actions += '<button onclick="openBanModal(\'' + u.id + '\',\'' + safeName + '\')" style="height:30px;font-size:12px;padding:0 12px;border-radius:8px;border:1px solid rgba(255,200,80,0.3);background:rgba(255,200,80,0.1);color:#ffc850;cursor:pointer;margin-right:6px;">Banear</button>';
-        } else {
-          actions += '<button onclick="unbanPlatformUser(\'' + u.id + '\')" style="height:30px;font-size:12px;padding:0 12px;border-radius:8px;border:1px solid #353a46;background:transparent;color:#aab1bf;cursor:pointer;margin-right:6px;">Desbanear</button>';
-        }
-        actions += '<button onclick="deletePlatformUser(\'' + u.id + '\',\'' + safeName + '\')" style="height:30px;font-size:12px;padding:0 12px;border-radius:8px;border:1px solid rgba(230,138,141,0.30);background:rgba(230,138,141,0.12);color:#e68a8d;cursor:pointer;">Eliminar</button>';
-        return '<tr>' +
-          '<td><span style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#70cfff,#d897e7);display:inline-flex;align-items:center;justify-content:center;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;color:#1c1f27;margin-right:10px;vertical-align:middle;">' + initials + '</span>' + U.esc(u.name || '—') + '</td>' +
-          '<td style="color:#8b93a3;">' + U.esc(u.email || '—') + '</td>' +
-          '<td><span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;background:rgba(216,151,231,0.12);color:#d897e7;">' + (u.role || '') + '</span></td>' +
-          '<td>' + statusCell + '</td>' +
-          '<td style="white-space:nowrap;">' + actions + '</td>' +
-        '</tr>';
-      }).join('');
-      container.innerHTML =
-        '<div style="overflow-x:auto;">' +
-          '<table style="width:100%;border-collapse:collapse;">' +
-            '<thead><tr>' +
-              '<th style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6f7686;font-weight:700;padding:10px 14px;border-bottom:1px solid #262a33;text-align:left;">Nombre</th>' +
-              '<th style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6f7686;font-weight:700;padding:10px 14px;border-bottom:1px solid #262a33;text-align:left;">Email</th>' +
-              '<th style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6f7686;font-weight:700;padding:10px 14px;border-bottom:1px solid #262a33;text-align:left;">Rol</th>' +
-              '<th style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6f7686;font-weight:700;padding:10px 14px;border-bottom:1px solid #262a33;text-align:left;">Estado</th>' +
-              '<th style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6f7686;font-weight:700;padding:10px 14px;border-bottom:1px solid #262a33;text-align:left;">Acciones</th>' +
-            '</tr></thead>' +
-            '<tbody style="font-size:14px;color:#cdd2db;">' + rows + '</tbody>' +
-          '</table>' +
-        '</div>' +
-        '<p style="font-size:11px;color:#4a5060;margin-top:10px;">' + list.length + ' usuario(s)</p>';
-    }
-
-    var _banModalTarget = null;
-
-    window.openBanModal = function(userId, userName) {
-      _banModalTarget = userId;
-      var old = document.getElementById('ban-modal-overlay');
-      if (old) old.remove();
-      var DURATIONS = [
-        {label:'1 hora',val:'1'},{label:'6 horas',val:'6'},{label:'24 horas',val:'24',checked:true},
-        {label:'7 días',val:'168'},{label:'30 días',val:'720'},{label:'Permanente',val:'perm'},
-      ];
-      var overlay = document.createElement('div');
-      overlay.id = 'ban-modal-overlay';
-      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;';
-      overlay.innerHTML =
-        '<div style="background:#1c1f27;border:1px solid #353a46;border-radius:20px;padding:28px 30px;max-width:460px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,0.5);">' +
-          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;">' +
-            '<div style="font-family:Poppins,sans-serif;font-size:17px;font-weight:700;color:#ffc850;">Banear a ' + U.esc(userName) + '</div>' +
-            '<button onclick="closeBanModal()" style="background:none;border:none;color:#6f7686;font-size:22px;cursor:pointer;line-height:1;padding:0 4px;">×</button>' +
-          '</div>' +
-          '<div style="margin-bottom:18px;">' +
-            '<div style="font-size:11px;font-weight:700;color:#8b93a3;margin-bottom:10px;letter-spacing:.06em;text-transform:uppercase;">Duración</div>' +
-            '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;">' +
-              DURATIONS.map(function(d) {
-                return '<label style="display:flex;align-items:center;gap:6px;padding:9px 12px;border-radius:10px;border:1px solid #353a46;cursor:pointer;font-size:13px;color:#cdd2db;">' +
-                  '<input type="radio" name="ban-dur" value="' + d.val + '"' + (d.checked ? ' checked' : '') + ' style="accent-color:#ffc850;flex-shrink:0;" /> ' + d.label + '</label>';
-              }).join('') +
-            '</div>' +
-          '</div>' +
-          '<div style="margin-bottom:18px;">' +
-            '<div style="font-size:11px;font-weight:700;color:#8b93a3;margin-bottom:10px;letter-spacing:.06em;text-transform:uppercase;">Alcance</div>' +
-            '<div style="display:flex;flex-direction:column;gap:8px;">' +
-              '<label style="display:flex;align-items:flex-start;gap:8px;padding:11px 14px;border-radius:10px;border:1px solid #353a46;cursor:pointer;font-size:13px;color:#cdd2db;">' +
-                '<input type="radio" name="ban-scope" value="account" checked style="accent-color:#ffc850;flex-shrink:0;margin-top:2px;" /> ' +
-                '<div><div style="font-weight:600;">Solo la cuenta</div><div style="font-size:11px;color:#8b93a3;margin-top:2px;">El usuario no puede iniciar sesión con esta cuenta.</div></div>' +
-              '</label>' +
-              '<label style="display:flex;align-items:flex-start;gap:8px;padding:11px 14px;border-radius:10px;border:1px solid #353a46;cursor:pointer;font-size:13px;color:#cdd2db;">' +
-                '<input type="radio" name="ban-scope" value="account_ip" style="accent-color:#ffc850;flex-shrink:0;margin-top:2px;" /> ' +
-                '<div><div style="font-weight:600;">Cuenta + IP</div><div style="font-size:11px;color:#8b93a3;margin-top:2px;">Bloquea también la IP de su último login.</div></div>' +
-              '</label>' +
-            '</div>' +
-          '</div>' +
-          '<div style="margin-bottom:22px;">' +
-            '<div style="font-size:11px;font-weight:700;color:#8b93a3;margin-bottom:8px;letter-spacing:.06em;text-transform:uppercase;">Razón (opcional)</div>' +
-            '<input id="ban-reason-input" type="text" placeholder="Ej: spam, comportamiento inapropiado..." style="width:100%;height:44px;border-radius:10px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:14px;padding:0 14px;outline:none;box-sizing:border-box;" />' +
-          '</div>' +
-          '<div style="display:flex;gap:10px;">' +
-            '<button onclick="closeBanModal()" style="flex:1;height:44px;border-radius:10px;border:1px solid #353a46;background:transparent;color:#aab1bf;font-family:Poppins,sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Cancelar</button>' +
-            '<button id="confirm-ban-btn" onclick="confirmBanUser()" style="flex:2;height:44px;border-radius:10px;border:1px solid rgba(255,200,80,0.4);background:rgba(255,200,80,0.15);color:#ffc850;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Confirmar ban</button>' +
-          '</div>' +
-        '</div>';
-      document.body.appendChild(overlay);
-      overlay.addEventListener('click', function(e) { if (e.target === overlay) closeBanModal(); });
-    };
-
-    window.closeBanModal = function() {
-      var el = document.getElementById('ban-modal-overlay');
-      if (el) el.remove();
-      _banModalTarget = null;
-    };
-
-    window.confirmBanUser = async function() {
-      if (!_banModalTarget) return;
-      var durEl   = document.querySelector('input[name="ban-dur"]:checked');
-      var scopeEl = document.querySelector('input[name="ban-scope"]:checked');
-      var reason  = (document.getElementById('ban-reason-input').value || '').trim();
-      var dur     = durEl ? durEl.value : '24';
-      var scope   = scopeEl ? scopeEl.value : 'account';
-      var duration_hours = dur === 'perm' ? null : parseInt(dur, 10);
-      var btn = document.getElementById('confirm-ban-btn');
-      if (btn) { btn.disabled = true; btn.textContent = 'Procesando...'; }
-      try {
-        var res = await fetch(API.base + '/workspaces/platform/users/' + _banModalTarget + '/ban', {
-          method: 'POST',
-          headers: Object.assign({}, API.authHeaders(), { 'Content-Type': 'application/json' }),
-          body: JSON.stringify({ duration_hours: duration_hours, ban_scope: scope, reason: reason }),
-        });
-        var data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Error');
-        closeBanModal();
-        toast('Usuario baneado', 'success');
-        loadPlatformUsers();
-      } catch(e) {
-        toast(e.message, 'error');
-        if (btn) { btn.disabled = false; btn.textContent = 'Confirmar ban'; }
-      }
-    };
-
-    window.unbanPlatformUser = async function(userId) {
-      if (!confirm('¿Desbanear a este usuario?')) return;
-      try {
-        var res = await fetch(API.base + '/workspaces/platform/users/' + userId + '/unban', {
-          method: 'POST',
-          headers: Object.assign({}, API.authHeaders(), { 'Content-Type': 'application/json' }),
-        });
-        var data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Error');
-        toast('Usuario desbaneado', 'success');
-        loadPlatformUsers();
-      } catch(e) { toast(e.message, 'error'); }
-    };
-
-    window.deletePlatformUser = async function(userId, userName) {
-      if (!confirm('¿Eliminar la cuenta de ' + userName + '?\n\nEsta acción es PERMANENTE.')) return;
-      if (!confirm('CONFIRMACIÓN FINAL\n¿Eliminar definitivamente a ' + userName + '?')) return;
-      try {
-        var res = await fetch(API.base + '/workspaces/platform/users/' + userId, {
-          method: 'DELETE',
-          headers: API.authHeaders(),
-        });
-        var data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Error');
-        toast('Cuenta eliminada', 'success');
-        loadPlatformUsers();
-      } catch(e) { toast(e.message, 'error'); }
-    };
 
     window.enterPanel = function() {
       try { sessionStorage.setItem('lyfter_ws_entered', '1'); } catch(e) {}

@@ -20,7 +20,7 @@
 
     var user = API.currentUser();
     if (!user) { window.location.replace('login.html'); return; }
-    if (user.role !== 'god_admin') { window.location.replace('workspace.html'); return; }
+    if (user.role !== 'god_admin') { window.location.replace('workspace-select.html'); return; }
 
     var app = document.getElementById('app');
 
@@ -41,7 +41,7 @@
 
     app.innerHTML = styles +
       '<div class="ws-header">' +
-        '<a href="workspace.html" style="display:inline-flex;align-items:center;gap:6px;color:#8b93a3;text-decoration:none;font-size:14px;font-family:Manrope,sans-serif;font-weight:600;">' +
+        '<a href="workspace-select.html" style="display:inline-flex;align-items:center;gap:6px;color:#8b93a3;text-decoration:none;font-size:14px;font-family:Manrope,sans-serif;font-weight:600;">' +
           '<span style="font-size:18px;">←</span> Volver' +
         '</a>' +
         '<div class="ws-title" style="margin-left:4px;">Crear Workspace</div>' +
@@ -119,7 +119,7 @@
         var data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Error al crear el workspace');
         U.toast('Workspace creado ✅', 'success');
-        setTimeout(function() { window.location.replace('workspace.html'); }, 900);
+        setTimeout(function() { window.location.replace('workspace-select.html'); }, 900);
       } catch(e) {
         U.toast(e.message, 'error');
         btn.disabled = false; btn.textContent = 'Crear workspace'; btn.style.opacity = '';
