@@ -167,39 +167,26 @@
 
     // ─────────────────────────────────────────────────────────
     async function load() {
-      var alreadyRefreshed = sessionStorage.getItem('ws_refreshed');
-      if (!alreadyRefreshed) {
-        try {
-          var refreshRes = await apiFetch('/auth/refresh-token', { method: 'POST' });
-          if (refreshRes && refreshRes.token) API.setToken(refreshRes.token);
-        } catch(e) {
-          console.warn('refresh-token falló:', e.message);
-        }
-        sessionStorage.setItem('ws_refreshed', '1');
-      }
+      // Refresh silencioso — siempre, sin reload ni loop
+      try {
+        var refreshRes = await apiFetch('/auth/refresh-token', { method: 'POST' });
+        if (refreshRes && refreshRes.token) API.setToken(refreshRes.token);
+      } catch(e) {}
 
       try {
         var wsData = null, members = [], allWs = [];
 
         if (isGod) {
-          try {
-            allWs = await apiFetch('/workspaces/');
-          } catch(e) {
-            console.warn('[load] No se pudieron cargar workspaces:', e.message);
-            allWs = [];
-          }
+          try { allWs = await apiFetch('/workspaces/'); } catch(e) { allWs = []; }
         } else {
+          // mine-all lee directo de la DB — siempre refleja la membresía actual
           try {
             var mineAll = await apiFetch('/workspaces/mine-all');
-            allWs = Array.isArray(mineAll) ? mineAll : (mineAll ? [mineAll] : []);
-          } catch(e) {
-            try {
-              wsData = await apiFetch('/workspaces/mine');
-              allWs = wsData ? [wsData] : [];
-            } catch(e2) {}
-          }
-          if (!wsData && allWs.length === 1) wsData = allWs[0];
-          if (wsData && wsData.id && allWs.length === 1) {
+            allWs = Array.isArray(mineAll) ? mineAll : [];
+          } catch(e) { allWs = []; }
+
+          if (allWs.length === 1) {
+            wsData = allWs[0];
             try { members = await apiFetch('/workspaces/' + wsData.id + '/members'); } catch(e) {}
           }
         }
@@ -207,7 +194,6 @@
         render(wsData, members, allWs);
       } catch(err) {
         if (isGod) {
-          // god_admin nunca queda bloqueado en pantalla de error
           render(null, [], []);
         } else {
           main.innerHTML =
