@@ -10,6 +10,8 @@
 <body style="margin:0;background:#15171d;font-family:Manrope,system-ui,sans-serif;">
   <div id="app"></div>
   <div id="toast-root" style="position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script>emailjs.init('mPuA_uCE-0FS1U3Tm');</script>
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/utils.js"></script>
@@ -237,14 +239,33 @@
         var res = await fetch(API.base + '/workspaces/' + wsId + '/invite', {
           method: 'POST',
           headers: Object.assign({}, API.authHeaders(), { 'Content-Type': 'application/json' }),
-          body: JSON.stringify({ email: email, role: role, method: 'email' })
+          body: JSON.stringify({ email: email, role: role, method: 'code' })
         });
         var data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Error');
-        U.toast(data.email_sent ? 'Email enviado a ' + email : 'Código generado: ' + data.code, 'success');
+
+        if (data.direct) {
+          U.toast(email + ' agregado directamente como ' + role, 'success');
+          document.getElementById('inv-email').value = '';
+          setTimeout(function() { init(); }, 800);
+          return;
+        }
+
+        var joinLink = 'https://liangso420-cell.github.io/Lyfters-Badge-App/workspace-select.html';
+        await emailjs.send('service_ygnw2ze', 'template_ekihyct', {
+          to_email:  email,
+          to_name:   email,
+          from_name: 'Lyfter Badge App',
+          ws_name:   wsData ? wsData.name : 'un workspace en Lyfter',
+          role:      role,
+          code:      data.code,
+          join_link: joinLink
+        });
+
+        U.toast('Invitación enviada a ' + email, 'success');
         document.getElementById('inv-email').value = '';
         setTimeout(function() { init(); }, 800);
-      } catch(e) { U.toast(e.message, 'error'); }
+      } catch(e) { U.toast(e.message || 'Error al enviar invitación', 'error'); }
     };
 
     window.generateCode = async function() {
