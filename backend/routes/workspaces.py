@@ -12,6 +12,17 @@ from workspace_utils import (
 ws_bp = Blueprint("workspaces", __name__)
 
 
+# ── POST /workspaces/upload-logo ──────────────────────────────
+@ws_bp.route("/upload-logo", methods=["POST"])
+@jwt_required()
+def upload_logo():
+    data       = request.get_json() or {}
+    image_data = data.get("image")
+    if not image_data:
+        return jsonify(error="No image"), 400
+    return jsonify(logo_url=image_data), 200
+
+
 def _ws_to_dict(ws):
     return {
         "id":         str(ws["_id"]),
