@@ -1194,6 +1194,11 @@
 
   /* ----- Shell admin ----- */
   function adminShell(activeTab, innerHtml, events, activeId) {
+    // Datos de usuario para el header móvil (solo lectura, no altera comportamiento)
+    var _hdrUser = (window.LyfterAPI && window.LyfterAPI.currentUser && window.LyfterAPI.currentUser()) || {};
+    var _hdrName = _hdrUser.name || _hdrUser.email || 'Mi cuenta';
+    var _hdrInitials = String(_hdrName).split(' ').map(function(w){ return w[0] || ''; }).join('').slice(0,2).toUpperCase() || '?';
+
     var eventOptions = events.map(function(e) {
       return '<option value="' + e.id + '"' + (e.id === activeId ? ' selected' : '') + '>' + esc(e.name) + '</option>';
     }).join('');
@@ -1240,6 +1245,22 @@
         innerHtml +
       '</main>';
 
+    // Header superior solo-móvil (≤768px): [logo + Lyfter] izquierda · pill [avatar + nombre ▼] derecha.
+    // El pill reutiliza la misma acción que "Mi perfil" (abre el drawer vía #admin-profile-menu).
+    var mobileHeader =
+      '<header id="admin-mobile-header">' +
+        '<div style="display:flex;align-items:center;gap:8px;min-width:0;">' +
+          '<img src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" style="width:28px;height:28px;flex-shrink:0;object-fit:contain;border-radius:6px;" />' +
+          '<span style="font-family:Poppins,sans-serif;font-size:18px;font-weight:700;color:#f4f6f9;letter-spacing:-0.01em;">Lyfter</span>' +
+        '</div>' +
+        '<button type="button" aria-label="Mi perfil" onclick="var b=document.getElementById(\'admin-profile-menu\');if(b)b.click();" ' +
+          'style="display:flex;align-items:center;gap:8px;max-width:60%;min-width:0;padding:5px 12px 5px 5px;border-radius:999px;border:1px solid #353a46;background:rgba(255,255,255,0.04);cursor:pointer;">' +
+          '<span style="width:28px;height:28px;flex-shrink:0;border-radius:50%;background:linear-gradient(135deg,#d897e7,#70cfff);display:flex;align-items:center;justify-content:center;font-family:Poppins,sans-serif;font-size:12px;font-weight:700;color:#1c1f27;">' + esc(_hdrInitials) + '</span>' +
+          '<span style="font-family:Manrope,sans-serif;font-size:13px;font-weight:600;color:#cdd2db;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;">' + esc(_hdrName) + '</span>' +
+          '<span style="flex-shrink:0;color:#8b93a3;font-size:10px;">▼</span>' +
+        '</button>' +
+      '</header>';
+
     var mobileNav =
       '<nav id="mobile-bottom-nav">' +
         '<a href="admin-event.html" class="' + (activeTab === 'event' ? 'active' : '') + '">' +
@@ -1256,7 +1277,7 @@
         '</a>' +
       '</nav>';
 
-    return glows + sidebar + main + mobileNav;
+    return glows + sidebar + mobileHeader + main + mobileNav;
   }
 
   function mountAdminShell() {

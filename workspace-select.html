@@ -28,6 +28,14 @@
     .ws-user-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#d897e7,#70cfff);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#1c1f27;}
     .ws-user-name{font-size:13px;font-weight:600;color:#cdd2db;}
     .ws-user-role{font-size:10px;color:#8b93a3;background:rgba(216,151,231,0.12);border-radius:999px;padding:2px 8px;margin-left:4px;}
+    /* Pill móvil [avatar + nombre ▼] — oculto en desktop */
+    .ws-chip-mobile{display:none;}
+    @media (max-width:640px){
+      .ws-header{padding:14px 16px;}
+      .ws-home-link{display:none;}
+      .ws-chip-desktop{display:none !important;}
+      .ws-chip-mobile{display:inline-flex !important;}
+    }
 
     /* Main */
     .ws-main{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:48px 24px 80px;}
@@ -143,13 +151,24 @@
 
     // Header: info de usuario + botones de cuenta
     var initials = (user.name || '?').split(' ').map(function(w){ return w[0]||''; }).join('').slice(0,2).toUpperCase();
+    var _chipName = U.esc(user.name || user.email || '');
     document.getElementById('user-chip').innerHTML =
-      '<div class="ws-user-avatar">' + initials + '</div>' +
-      '<div style="display:flex;flex-direction:column;gap:1px;">' +
-        '<span class="ws-user-name">' + U.esc(user.name || user.email || '') + '</span>' +
-        '<span style="font-size:10px;color:#8b93a3;">' + user.role + '</span>' +
+      // Desktop: avatar + nombre + rol + botón "Mi perfil"
+      '<div class="ws-chip-desktop" style="display:flex;align-items:center;gap:10px;">' +
+        '<div class="ws-user-avatar">' + initials + '</div>' +
+        '<div style="display:flex;flex-direction:column;gap:1px;">' +
+          '<span class="ws-user-name">' + _chipName + '</span>' +
+          '<span style="font-size:10px;color:#8b93a3;">' + user.role + '</span>' +
+        '</div>' +
+        '<button id="admin-profile-menu" style="height:36px;padding:0 16px;border-radius:10px;border:1px solid #353a46;background:transparent;color:#aab1bf;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px;margin-left:8px;white-space:nowrap;">☰ Mi perfil</button>' +
       '</div>' +
-      '<button id="admin-profile-menu" style="height:36px;padding:0 16px;border-radius:10px;border:1px solid #353a46;background:transparent;color:#aab1bf;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px;margin-left:8px;white-space:nowrap;">☰ Mi perfil</button>';
+      // Móvil (≤640px): pill [avatar + nombre ▼] que reutiliza la acción de "Mi perfil"
+      '<button type="button" class="ws-chip-mobile" aria-label="Mi perfil" onclick="var b=document.getElementById(\'admin-profile-menu\');if(b)b.click();" ' +
+        'style="align-items:center;gap:8px;max-width:60vw;min-width:0;padding:5px 12px 5px 5px;border-radius:999px;border:1px solid #353a46;background:rgba(255,255,255,0.04);cursor:pointer;">' +
+        '<span class="ws-user-avatar">' + initials + '</span>' +
+        '<span style="font-family:Manrope,sans-serif;font-size:13px;font-weight:600;color:#cdd2db;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;">' + _chipName + '</span>' +
+        '<span style="flex-shrink:0;color:#8b93a3;font-size:10px;">▼</span>' +
+      '</button>';
 
     U.mountAdminShell();
 
