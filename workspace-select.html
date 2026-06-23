@@ -251,6 +251,14 @@
     }
 
     function render(wsData, members, allWs) {
+      if (!isGod && allWs.length === 0) {
+        main.innerHTML =
+          '<div class="ws-empty">' +
+            '<p class="ws-empty-text">No tenés ningún workspace asignado aún.</p>' +
+            '<p class="ws-empty-sub">Contactá al God Admin para que te asigne a una empresa.</p>' +
+          '</div>';
+        return;
+      }
       var html = '';
 
       html += '<div style="display:flex;align-items:center;gap:14px;margin-bottom:' + (isGod ? '24px' : '36px') + ';">' +
