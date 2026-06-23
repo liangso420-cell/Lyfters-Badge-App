@@ -155,23 +155,26 @@
       var wsId  = (document.getElementById('grant-ws-select') || {}).value || '';
       var email = ((document.getElementById('god-email') || {}).value || '').trim();
       var role  = (document.getElementById('grant-role-select') || {}).value || '';
+      var toast = function(msg, type) { window.LyfterUtils.toast(msg, type); };
       if (!wsId)  { toast('Seleccioná un workspace', 'error'); return; }
       if (!email) { toast('Ingresá un email o seleccioná un usuario', 'error'); return; }
       if (!role)  { toast('Seleccioná un rol', 'error'); return; }
-      var c = confirm('¿Vas a asignar a ' + email + ' como ' + role + ' en el workspace seleccionado?');
-      if (!c) return;
       try {
-        var res = await fetch(API.base + '/workspaces/' + wsId + '/invite', {
+        var res = await fetch(window.LyfterAPI.base + '/workspaces/' + wsId + '/invite', {
           method: 'POST',
-          headers: Object.assign({}, API.authHeaders(), { 'Content-Type': 'application/json' }),
-          body: JSON.stringify({ email: email, role: role, method: 'email' })
+          headers: Object.assign({}, window.LyfterAPI.authHeaders(), { 'Content-Type': 'application/json' }),
+          body: JSON.stringify({ email: email, role: role, method: 'direct' })
         });
         var data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Error');
-        toast('✅ Invitación enviada a ' + email + ' como ' + role, 'success');
+        if (data.direct) {
+          toast(email + ' asignado como ' + role + ' correctamente.', 'success');
+        } else {
+          toast('Invitación enviada a ' + email + ' como ' + role, 'success');
+        }
         var inp = document.getElementById('god-email');
         if (inp) inp.value = '';
-      } catch(e) { toast(e.message, 'error'); }
+      } catch(e) { toast(e.message || 'Error al asignar', 'error'); }
     };
 
     window.loadWorkspacesForGrant = async function() {
@@ -290,23 +293,27 @@
     window.assignUserToWorkspace = async function(userId, email) {
       var wsId = (document.getElementById('ws-for-' + userId) || {}).value || '';
       var role = (document.getElementById('role-for-' + userId) || {}).value || '';
-      if (!wsId) { U.toast('Seleccioná un workspace', 'error'); return; }
-      if (!role) { U.toast('Seleccioná un rol', 'error'); return; }
-      if (!confirm('¿Asignar a ' + email + ' como ' + role + ' en el workspace seleccionado?')) return;
+      var toast = function(msg, type) { window.LyfterUtils.toast(msg, type); };
+
+      if (!wsId) { toast('Seleccioná un workspace', 'error'); return; }
+      if (!role) { toast('Seleccioná un rol', 'error'); return; }
+
       try {
-        var res = await fetch(API.base + '/workspaces/' + wsId + '/invite', {
+        var res = await fetch(window.LyfterAPI.base + '/workspaces/' + wsId + '/invite', {
           method: 'POST',
-          headers: Object.assign({}, API.authHeaders(), {'Content-Type': 'application/json'}),
+          headers: Object.assign({}, window.LyfterAPI.authHeaders(), {'Content-Type': 'application/json'}),
           body: JSON.stringify({ email: email, role: role, method: 'direct' })
         });
         var data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Error');
         if (data.direct) {
-          U.toast(email + ' asignado como ' + role + '. El usuario debe recargar su sesión para ver el cambio.', 'success');
+          toast(email + ' asignado como ' + role + ' correctamente.', 'success');
         } else {
-          U.toast('Invitación enviada a ' + email, 'success');
+          toast('Invitación enviada a ' + email, 'success');
         }
-      } catch(e) { U.toast(e.message, 'error'); }
+      } catch(e) {
+        toast(e.message || 'Error al asignar', 'error');
+      }
     };
 
     var _banModalTarget = null;
