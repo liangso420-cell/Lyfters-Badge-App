@@ -75,9 +75,9 @@ def redeem_badge(event_id, token):
             upsert=True
         )
         if result.matched_count > 0:
-            return jsonify(status="already_redeemed", message="Badge ya canjeado"), 200
+            return jsonify(status="already_redeemed", message="Badge ya canjeado", badge={"name": badge.get("name", ""), "icon_url": badge.get("icon_url", "")}), 200
     except DuplicateKeyError:
-        return jsonify(status="already_redeemed", message="Badge ya canjeado"), 200
+        return jsonify(status="already_redeemed", message="Badge ya canjeado", badge={"name": badge.get("name", ""), "icon_url": badge.get("icon_url", "")}), 200
 
     # ── Scan recién insertado — calcular progreso, XP y logros ──
     total_b    = badges().count_documents({"event_id": oid_event})

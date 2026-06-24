@@ -80,7 +80,7 @@
 
       /* ── 5. Estado éxito ── */
       function showSuccess(r) {
-        var isDup  = r.status === 'duplicate';
+        var isDup  = r.status === 'already_redeemed' || r.status === 'duplicate';
         var isLast = r.complete && !isDup;
         var badge  = r.badge || {};
         var _qp = new URLSearchParams(window.location.search);
@@ -93,13 +93,22 @@
         var user   = API.currentUser() || {};
         var userName = user.name ? user.name.split(' ')[0] : '';
 
-        var title, subtitle, accentColor, bgGradient;
         if (isDup) {
-          title       = U.t('redeem_already_have');
-          subtitle    = '"' + U.esc(badge.name) + '" ' + U.t('redeem_already_desc');
-          accentColor = '#F59E0B';
-          bgGradient  = 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)';
-        } else if (isLast) {
+          app.innerHTML =
+            '<div style="position:fixed;inset:0;background:rgba(21,23,29,0.85);z-index:999;display:flex;align-items:center;justify-content:center;padding:24px;">' +
+              '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:20px;padding:32px 24px;max-width:320px;width:100%;text-align:center;">' +
+                '<img src="assets/icons/ui/icono-alerta.png" style="width:48px;height:48px;object-fit:contain;display:block;margin:0 auto 16px;" />' +
+                '<h3 style="font-family:Poppins,sans-serif;font-size:18px;font-weight:700;color:#f4f6f9;margin:0 0 8px;">¡Ya tenés este badge!</h3>' +
+                '<p style="font-family:Manrope,sans-serif;font-size:14px;color:#8b93a3;margin:0 0 24px;">Ya escaneaste <strong style="color:#d897e7;">' + U.esc(badge.name) + '</strong> anteriormente.</p>' +
+                '<button onclick="window.location.href=\'user-events.html\'" style="width:100%;padding:12px;border-radius:12px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:15px;font-weight:700;cursor:pointer;">Ver mis eventos</button>' +
+              '</div>' +
+            '</div>';
+          U.hideLoading();
+          return;
+        }
+
+        var title, subtitle, accentColor, bgGradient;
+        if (isLast) {
           title       = U.t('redeem_completed_event');
           subtitle    = U.t('redeem_completed_desc') + (userName ? ', ' + U.esc(userName) : '') + '!';
           accentColor = '#6C63FF';
