@@ -26,8 +26,20 @@ window.LYFTER_CONFIG = {
   apiBaseUrl: 'https://lyfters-badge-app.onrender.com',
 };
 
-// Configuración Firebase para Google Auth
-// Reemplazar con los valores reales del proyecto Firebase
+// NOTA: Las Firebase Web API Keys son públicas por diseño (Google las expone en el
+// cliente para identificar el proyecto, no como secreto de autenticación).
+// La seguridad se implementa exclusivamente vía Firebase Security Rules en la consola.
+// IMPORTANTE: Asegúrate de que las Firestore Rules NO permitan acceso anónimo:
+//   rules_version = '2';
+//   service cloud.firestore {
+//     match /databases/{database}/documents {
+//       match /{document=**} {
+//         allow read, write: if false;
+//       }
+//     }
+//   }
+// Restringe además la API Key en Google Cloud Console → APIs & Services → Credentials
+// → HTTP referrers → liangso420-cell.github.io/* y localhost/*
 window.FIREBASE_CONFIG = {
 apiKey: "AIzaSyBedpuxJ7I4kVoi-0tni1rFjpFHgZUDd1A",
 authDomain: "lyfter-badge-app.firebaseapp.com",
