@@ -12,7 +12,7 @@ from bson import ObjectId
 from db import users, events, badges, scans, workspace_members, workspaces
 from utils import (
     require_admin, valid_oid, sanitize,
-    generate_qr_base64, fmt_event, fmt_admin_badge, fmt_user
+    generate_qr_base64, fmt_event, fmt_admin_badge, fmt_user, compute_event_status
 )
 
 admin_bp = Blueprint("admin", __name__)
@@ -399,10 +399,13 @@ def admin_list_badges(event_id):
 
     return jsonify({
         "evento": {
-            "id":       str(event["_id"]),
-            "nombre":   event.get("title", ""),
+            "id":        str(event["_id"]),
+            "nombre":    event.get("title", ""),
             "access_qr": event.get("access_qr", None),
-            "photo":    event.get("photo", None),
+            "photo":     event.get("photo", None),
+            "status":    compute_event_status(event),
+            "lat":       event.get("lat"),
+            "lng":       event.get("lng"),
         },
         "badges": result_badges,
     }), 200
