@@ -28,7 +28,9 @@ def get_db():
     if _db is not None:
         return _db
 
-    mongo_uri = os.getenv("MONGO_URI", "mongodb://localhost:27017")
+    mongo_uri = os.getenv("MONGO_URI")
+    if not mongo_uri:
+        raise RuntimeError("MONGO_URI no está configurada en las variables de entorno")
 
     try:
         _client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)

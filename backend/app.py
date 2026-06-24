@@ -39,11 +39,10 @@ init_indexes()
 _env_origins = [
     o.strip() for o in os.getenv(
         "CORS_ORIGINS",
-        "http://localhost:5500,http://127.0.0.1:5500"
+        "http://localhost:5500,http://localhost:3000,http://127.0.0.1:5500"
     ).split(",") if o.strip()
 ]
-# Also accept any *.vercel.app URL (preview and production deployments)
-_cors_origins = _env_origins + [re.compile(r"^https://[a-zA-Z0-9][a-zA-Z0-9\-]*\.vercel\.app$")]
+_cors_origins = _env_origins + ["https://lyfters-badge-app.vercel.app"]
 CORS(app, origins=_cors_origins, supports_credentials=True,
      allow_headers=["Content-Type", "Authorization", "X-Workspace-Id"],
      expose_headers=["Authorization"],

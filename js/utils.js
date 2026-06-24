@@ -386,13 +386,21 @@
   /* ── Toast ── */
   var TOAST_COLORS = { success: '#16a34a', error: '#ef4444', warning: '#d97706', info: '#6C63FF' };
 
-  function toast(msg, type) {
+  function toast(msg, type, iconUrl) {
     var toastRoot = document.getElementById('toast-root');
     if (!toastRoot) return;
     var el = document.createElement('div');
     el.className = 'anim-slide pointer-events-auto text-white text-sm font-medium px-4 py-2.5 rounded-btn shadow-soft';
     el.style.background = TOAST_COLORS[type] || TOAST_COLORS.info;
-    el.innerHTML = msg;
+    if (iconUrl) {
+      var img = document.createElement('img');
+      img.src = iconUrl;
+      img.style.cssText = 'width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:6px;';
+      el.appendChild(img);
+    }
+    var span = document.createElement('span');
+    span.textContent = msg;
+    el.appendChild(span);
     toastRoot.appendChild(el);
     setTimeout(function () {
       el.style.transition = 'opacity .3s'; el.style.opacity = '0';
