@@ -8,8 +8,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
+  <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
 </head>
 <body>
+  <div id="duck-celebration" style="display:none;position:fixed;inset:0;z-index:998;background:rgba(21,23,29,0.92);flex-direction:column;align-items:center;justify-content:center;">
+    <dotlottie-player src="pato-celebrando.json" autoplay style="width:280px;height:280px;"></dotlottie-player>
+    <p style="font-family:Poppins,sans-serif;font-size:18px;font-weight:700;color:#d897e7;margin-top:8px;">¡Badge obtenido!</p>
+  </div>
   <div id="loading-screen">
     <img src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" />
     <div class="loader"></div>
@@ -105,6 +110,14 @@
           subtitle    = U.esc(badge.desc || badge.name || '');
           accentColor = '#6C63FF';
           bgGradient  = 'linear-gradient(135deg, #EEEDFF 0%, #F0EEFF 100%)';
+        }
+
+        if (!isDup) {
+          var duck = document.getElementById('duck-celebration');
+          if (duck) {
+            duck.style.display = 'flex';
+            setTimeout(function() { duck.style.display = 'none'; }, 2800);
+          }
         }
 
         var animBlock = !isDup
