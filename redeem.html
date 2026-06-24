@@ -118,14 +118,17 @@
           : '';
 
         var progressBlock = '';
-        if (r.progress && !isDup) {
-          var pct = Math.round((r.progress.obtained / r.progress.total) * 100);
+        var prog = r.progreso || r.progress;
+        if (prog && !isDup) {
+          var obtained = prog.obtenidos != null ? prog.obtenidos : prog.obtained;
+          var total    = prog.total;
+          var pct = total ? Math.round((obtained / total) * 100) : 0;
           progressBlock =
             '<div class="progress-wrap">' +
               '<div class="progress-bar-bg">' +
                 '<div class="progress-bar-fill" style="width:' + pct + '%;background:' + accentColor + ';"></div>' +
               '</div>' +
-              '<p class="progress-label">' + r.progress.obtained + ' ' + U.t('redeem_of') + ' ' + r.progress.total + ' ' + U.t('redeem_badges') + '</p>' +
+              '<p class="progress-label">' + obtained + ' ' + U.t('redeem_of') + ' ' + total + ' ' + U.t('redeem_badges') + '</p>' +
             '</div>';
         }
 
