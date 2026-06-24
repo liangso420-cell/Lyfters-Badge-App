@@ -725,6 +725,63 @@ body {
 
 }
 
+/* ── Fila de miembro (compartida: workspace-edit, gestión de usuarios) ── */
+.we-member-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid #2a2e38;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.we-member-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+.we-member-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #d897e7, #e68a8d);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Poppins, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1c1f27;
+  flex-shrink: 0;
+}
+.we-member-name {
+  font-family: Poppins, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #f4f6f9;
+}
+.we-member-role {
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  margin: 3px 0;
+}
+.we-member-email {
+  font-size: 11px;
+  color: #8b93a3;
+}
+.we-member-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
 /* Admin: header superior solo-móvil (≤768px) — reemplaza al sidebar oculto */
 #admin-mobile-header {
   display: none;

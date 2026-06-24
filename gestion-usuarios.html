@@ -148,46 +148,57 @@
       renderPlatformUsers(filtered);
     };
 
-    function renderPlatformUsers(data) {
+    function renderPlatformUsers(list) {
       var container = document.getElementById('platform-users-list');
       if (!container) return;
-
-      var html = data.map(function(u) {
-        var isGod = u.role === 'god_admin';
-        var initials = (u.name || '?').split(' ').map(function(w) { return w[0] || ''; }).join('').slice(0, 2).toUpperCase();
+      if (!list.length) {
+        container.innerHTML = '<p style="font-size:13px;color:#6f7686;text-align:center;padding:20px;">No se encontraron usuarios.</p>';
+        return;
+      }
+      var rows = list.map(function(u) {
+        var initials = (u.name || '?').split(' ').map(function(w){ return w[0]||''; }).join('').slice(0,2).toUpperCase();
         var roleColors = { god_admin: '#ffc850', superadmin: '#d897e7', admin: '#70cfff', participant: '#8b93a3' };
         var roleColor = roleColors[u.role] || '#8b93a3';
-        var safeName  = (u.name  || '').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        var statusBadge = u.banned
+          ? '<span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;background:rgba(230,138,141,0.15);color:#e68a8d;border:1px solid rgba(230,138,141,0.2);">Baneado' + (u.ban_permanent ? ' ∞' : '') + '</span>' +
+            (u.ban_ip ? ' <span style="font-size:10px;color:#6f7686;">IP: ' + U.esc(u.ban_ip) + '</span>' : '')
+          : '<span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;background:rgba(171,209,148,0.15);color:#abd194;">Activo</span>';
+        var safeName = u.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
         var safeEmail = (u.email || '').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
 
-        var actionBtns;
-        if (isGod) {
-          actionBtns = '<span style="font-size:11px;color:#ffc850;padding:6px 12px;background:rgba(255,200,80,0.1);border:1px solid rgba(255,200,80,0.2);border-radius:8px;">God Admin global</span>';
-        } else if (u.banned) {
-          actionBtns =
-            '<button onclick="unbanPlatformUser(\'' + u.id + '\')" style="height:32px;padding:0 12px;border-radius:8px;border:1px solid #353a46;background:transparent;color:#aab1bf;font-family:Poppins,sans-serif;font-size:12px;font-weight:600;cursor:pointer;">Desbanear</button>' +
-            '<button onclick="deletePlatformUser(\'' + u.id + '\',\'' + safeName + '\')" style="height:32px;padding:0 12px;border-radius:8px;border:1px solid #353a46;background:rgba(230,138,141,0.05);color:#e68a8d;font-family:Poppins,sans-serif;font-size:12px;font-weight:600;cursor:pointer;">Eliminar</button>';
+        var actions;
+        if (u.role === 'god_admin') {
+          actions =
+            '<span style="font-size:11px;color:#ffc850;padding:4px 10px;background:rgba(255,200,80,0.1);border:1px solid rgba(255,200,80,0.2);border-radius:6px;">Protegido</span>' +
+            '<span style="font-size:11px;color:#ffc850;background:rgba(255,200,80,0.1);border:1px solid rgba(255,200,80,0.2);border-radius:6px;padding:4px 10px;">God Admin global</span>';
         } else {
-          actionBtns =
-            '<button onclick="openRoleModal(\'' + u.id + '\',\'' + safeName + '\',\'' + safeEmail + '\')" style="height:32px;padding:0 12px;border-radius:8px;border:1px solid #353a46;background:rgba(216,151,231,0.1);color:#d897e7;font-family:Poppins,sans-serif;font-size:12px;font-weight:600;cursor:pointer;">Modificar rol</button>' +
-            '<button onclick="openBanModal(\'' + u.id + '\',\'' + safeName + '\')" style="height:32px;padding:0 12px;border-radius:8px;border:1px solid #353a46;background:rgba(230,138,141,0.1);color:#e68a8d;font-family:Poppins,sans-serif;font-size:12px;font-weight:600;cursor:pointer;">Banear</button>' +
-            '<button onclick="deletePlatformUser(\'' + u.id + '\',\'' + safeName + '\')" style="height:32px;padding:0 12px;border-radius:8px;border:1px solid #353a46;background:rgba(230,138,141,0.05);color:#e68a8d;font-family:Poppins,sans-serif;font-size:12px;font-weight:600;cursor:pointer;">Eliminar</button>';
+          var banBtn = u.banned
+            ? '<button onclick="unbanPlatformUser(\'' + u.id + '\')" style="width:120px;height:30px;box-sizing:border-box;text-align:center;font-size:12px;padding:0 12px;border-radius:8px;border:1px solid #353a46;background:transparent;color:#aab1bf;cursor:pointer;">Desbanear</button>'
+            : '<button onclick="openBanModal(\'' + u.id + '\',\'' + safeName + '\')" style="width:120px;height:30px;box-sizing:border-box;text-align:center;font-size:12px;padding:0 12px;border-radius:8px;border:1px solid rgba(255,200,80,0.3);background:rgba(255,200,80,0.1);color:#ffc850;cursor:pointer;">Banear</button>';
+          var roleBtn = '<button onclick="openRoleModal(\'' + u.id + '\',\'' + safeName + '\',\'' + safeEmail + '\')" style="width:120px;height:30px;box-sizing:border-box;text-align:center;font-size:12px;padding:0 12px;border-radius:8px;border:1px solid rgba(216,151,231,0.3);background:rgba(216,151,231,0.12);color:#d897e7;cursor:pointer;">Modificar rol</button>';
+          var deleteBtn = '<button onclick="deletePlatformUser(\'' + u.id + '\',\'' + safeName + '\')" style="width:120px;height:30px;box-sizing:border-box;text-align:center;font-size:12px;padding:0 12px;border-radius:8px;border:1px solid rgba(230,138,141,0.30);background:rgba(230,138,141,0.12);color:#e68a8d;cursor:pointer;">Eliminar</button>';
+          actions = banBtn + roleBtn + deleteBtn;
         }
 
-        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid #2a2e38;gap:12px;">' +
-          '<div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1;">' +
-            '<div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#d897e7,#e68a8d);display:flex;align-items:center;justify-content:center;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;color:#1c1f27;flex-shrink:0;">' + initials + '</div>' +
+        return '<div class="we-member-row">' +
+          '<div class="we-member-info">' +
+            '<div class="we-member-avatar">' + initials + '</div>' +
             '<div style="min-width:0;">' +
-              '<div style="font-family:Poppins,sans-serif;font-size:13px;font-weight:700;color:#f4f6f9;">' + U.esc(u.name || '') + '</div>' +
-              '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:' + roleColor + '22;color:' + roleColor + ';">' + (u.role || 'participant') + '</span>' +
-              '<div style="font-size:11px;color:#8b93a3;margin-top:2px;">' + U.esc(u.email || '') + '</div>' +
+              '<div class="we-member-name">' + U.esc(u.name || '—') + '</div>' +
+              '<span class="we-member-role" style="background:' + roleColor + '22;color:' + roleColor + ';">' + (u.role || '') + '</span>' +
+              '<div class="we-member-email">' + U.esc(u.email || '—') + '</div>' +
+              '<div style="margin-top:4px;">' + statusBadge + '</div>' +
             '</div>' +
           '</div>' +
-          '<div style="display:flex;flex-direction:row;gap:8px;flex-shrink:0;">' + actionBtns + '</div>' +
+          '<div class="we-member-actions">' + actions + '</div>' +
         '</div>';
       }).join('');
-
-      container.innerHTML = html || '<p style="color:#8b93a3;text-align:center;padding:24px;">No hay usuarios.</p>';
+      container.innerHTML =
+        '<div style="background:rgba(216,151,231,0.08);border:1px solid rgba(216,151,231,0.2);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:12px;color:#cdd2db;">' +
+          'Asignar a un workspace agrega al usuario como miembro de esa empresa. El rol global del usuario no cambia.' +
+        '</div>' +
+        '<div id="members-list">' + rows + '</div>' +
+        '<p style="font-size:11px;color:#4a5060;margin-top:10px;">' + list.length + ' usuario(s)</p>';
     }
 
     window.assignUserToWorkspace = async function(userId, email) {
