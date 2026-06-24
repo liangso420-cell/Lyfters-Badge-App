@@ -68,6 +68,19 @@
       if (user) { window.location.replace(nextUrl || (_adminRoles.indexOf(user.role) !== -1 ? 'workspace-select.html' : 'profile.html')); return; }
 
       var app = document.getElementById('app');
+
+      // Si llegamos con datos de ban en la URL (sesión activa expulsada por
+      // api.js), mostramos el disclaimer de cuenta suspendida directamente.
+      var _banParams = new URLSearchParams(window.location.search);
+      if (_banParams.get('banned') === '1') {
+        showBanScreen({
+          reason:    _banParams.get('ban_reason') || '',
+          until:     _banParams.get('ban_until') || null,
+          permanent: _banParams.get('ban_permanent') === '1'
+        });
+        return;
+      }
+
       U.showPendingToast();
 
       var demoHint = API.mode === 'mock'
@@ -163,6 +176,8 @@
           var _ar = ['admin','superadmin','god_admin'];
           window.location.href = nextUrl || (_ar.indexOf(loggedUser.role) !== -1 ? 'workspace-select.html' : 'profile.html');
         } catch (err) {
+          // Cuenta baneada → pantalla de cuenta suspendida.
+          if (err && err.code === 'cuenta_baneada') { showBanScreen(err.ban || {}); return; }
           // Si la cuenta no existe, mensaje específico; si no, credenciales incorrectas.
           U.toast(err && err.code === 'no_account' ? 'No tenemos una cuenta con ese email' : 'Correo o contraseña incorrectos', 'error');
         } finally {
@@ -170,6 +185,44 @@
           btn.textContent = U.t('enter_btn');
         }
       });
+
+      // ── Pantalla de cuenta suspendida (ban) ──────────────
+      // Se muestra tanto al intentar loguear una cuenta baneada (email o Google)
+      // como al ser expulsado de una sesión activa (redirigido desde api.js).
+      function showBanScreen(ban) {
+        ban = ban || {};
+        var reason = (ban.reason && String(ban.reason).trim()) ? String(ban.reason).trim() : 'Sin razón especificada';
+        var duration;
+        if (ban.permanent) {
+          duration = 'Permanente';
+        } else if (ban.until) {
+          var d = new Date(ban.until);
+          duration = isNaN(d.getTime())
+            ? 'Temporal'
+            : ('Hasta el ' + d.toLocaleString('es', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }));
+        } else {
+          duration = 'Temporal';
+        }
+        app.innerHTML =
+          '<div style="position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(60% 60% at 50% 30%,rgba(230,138,141,0.18),transparent 70%);"></div>' +
+          '<div style="position:relative;z-index:1;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 20px;">' +
+            '<div style="width:100%;max-width:440px;background:#1c1f27;border:1px solid #3a2a2e;border-radius:22px;padding:36px 32px;box-shadow:0 40px 100px rgba(0,0,0,0.55);text-align:center;">' +
+              '<div style="width:72px;height:72px;border-radius:50%;background:rgba(230,138,141,0.15);border:1px solid rgba(230,138,141,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:34px;">🚫</div>' +
+              '<h1 style="margin:0 0 8px;font-family:Poppins,sans-serif;font-size:26px;font-weight:700;color:#f4f6f9;">Cuenta suspendida</h1>' +
+              '<p style="margin:0 0 24px;font-size:14px;color:#8b93a3;font-family:Manrope,sans-serif;">Tu cuenta no puede acceder a la plataforma.</p>' +
+              '<div style="text-align:left;background:#23262f;border:1px solid #2f343f;border-radius:14px;padding:16px 18px;margin-bottom:24px;">' +
+                '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#6f7686;font-family:Manrope,sans-serif;margin-bottom:4px;">Razón</div>' +
+                '<div style="font-size:14px;color:#f0eaf2;font-family:Manrope,sans-serif;margin-bottom:14px;word-break:break-word;">' + U.esc(reason) + '</div>' +
+                '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#6f7686;font-family:Manrope,sans-serif;margin-bottom:4px;">Duración</div>' +
+                '<div style="font-size:14px;color:#e68a8d;font-family:Manrope,sans-serif;font-weight:600;">' + U.esc(duration) + '</div>' +
+              '</div>' +
+              '<button id="ban-back" style="width:100%;height:50px;border-radius:13px;border:none;background:#e68a8d;color:#1c1f27;font-family:Manrope,sans-serif;font-size:15px;font-weight:700;cursor:pointer;">Volver</button>' +
+            '</div>' +
+          '</div>';
+        document.getElementById('ban-back').addEventListener('click', function() {
+          window.location.href = 'login.html';
+        });
+      }
 
       // ── Onboarding de intereses (idéntico al de register.html) ──
       // Solo se dispara para usuarios NUEVOS que entran por Google desde esta pantalla.
@@ -260,6 +313,8 @@
             window.location.href = nextUrl || 'profile.html';
           }
         } catch (err) {
+          // Cuenta baneada → pantalla de cuenta suspendida.
+          if (err && err.code === 'cuenta_baneada') { showBanScreen(err.ban || {}); return; }
           var mensajes = {
             'auth/popup-closed-by-user':    'Cerraste la ventana antes de completar el inicio.',
             'auth/cancelled-popup-request': 'Solo puede haber una ventana activa.',

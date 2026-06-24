@@ -677,6 +677,32 @@
     }
     var data = {};
     try { data = await res.json(); } catch (e) {}
+    // Cuenta baneada: el backend responde 403 con error "cuenta_baneada" en
+    // cualquier endpoint que cargue al usuario (login, google, profile,
+    // refresh-token, switch-workspace). Limpiamos la sesión y, si había una
+    // sesión activa fuera del login, redirigimos a login.html pasando los
+    // datos del ban para que muestre el disclaimer automáticamente.
+    if (res.status === 403 && data.error === 'cuenta_baneada') {
+      clearSession();
+      var ban = {
+        reason:    data.ban_reason || '',
+        until:     data.ban_until || null,
+        permanent: !!data.ban_permanent
+      };
+      var _bp = window.location.pathname;
+      if (!_bp.includes('login.html')) {
+        var bq = new URLSearchParams();
+        bq.set('banned', '1');
+        if (ban.reason) bq.set('ban_reason', ban.reason);
+        if (ban.permanent) bq.set('ban_permanent', '1');
+        else if (ban.until) bq.set('ban_until', ban.until);
+        window.location.replace('login.html?' + bq.toString());
+      }
+      var _errBan = new Error(data.error);
+      _errBan.code = 'cuenta_baneada';
+      _errBan.ban = ban;
+      throw _errBan;
+    }
     // Sesión inválida al verificar el token: el backend responde 401 (token
     // inválido/expirado) o 404 con error_code "user_not_found" (token válido
     // pero el usuario autenticado ya no existe). En ambos casos limpiamos la

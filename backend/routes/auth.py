@@ -37,6 +37,30 @@ def _workspace_claims(user_doc):
     }
 
 
+def _ban_block(user_doc):
+    """Si la cuenta está baneada (ban de cuenta activo), devuelve la respuesta
+    403 estándar (jsonify, status). Devuelve None si no está baneada.
+
+    Formato del 403:
+      { "error": "cuenta_baneada", "ban_reason": ..., "ban_until": ...|null,
+        "ban_permanent": true|false }
+    """
+    banned_until = user_doc.get("banned_until")
+    if not banned_until:
+        return None
+    if getattr(banned_until, "tzinfo", None) is not None:
+        banned_until = banned_until.replace(tzinfo=None)
+    if banned_until <= datetime.utcnow():
+        return None
+    permanent = banned_until.year >= 9999
+    return jsonify(
+        error="cuenta_baneada",
+        ban_reason=user_doc.get("ban_reason") or "",
+        ban_until=None if permanent else banned_until.isoformat(),
+        ban_permanent=permanent,
+    ), 403
+
+
 EMAIL_RE = re.compile(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
 
 
@@ -60,6 +84,10 @@ def switch_workspace():
     user_doc = users().find_one({"_id": ObjectId(user_id)})
     if not user_doc:
         return jsonify(error="Usuario no encontrado", error_code="user_not_found"), 404
+
+    ban_resp = _ban_block(user_doc)
+    if ban_resp:
+        return ban_resp
 
     role = get_jwt().get("role", "participant")
     member = workspace_members().find_one({"user_id": ObjectId(user_id), "workspace_id": ws_oid})
@@ -86,6 +114,10 @@ def refresh_token():
     user_doc = users().find_one({"_id": ObjectId(user_id)})
     if not user_doc:
         return jsonify(error="Usuario no encontrado", error_code="user_not_found"), 404
+
+    ban_resp = _ban_block(user_doc)
+    if ban_resp:
+        return ban_resp
 
     member = workspace_members().find_one(
         {"user_id": ObjectId(user_id)},
@@ -166,6 +198,9 @@ def get_profile():
     u = users().find_one({"_id": ObjectId(uid)}, {"password_hash": 0})
     if not u:
         return jsonify(error="Usuario no encontrado", error_code="user_not_found"), 404
+    ban_resp = _ban_block(u)
+    if ban_resp:
+        return ban_resp
     return jsonify({
         "id":      str(u["_id"]),
         "nombre":  u.get("name", ""),
@@ -291,21 +326,12 @@ def login():
     if not pw_hash or not bcrypt.checkpw(password, pw_hash.encode()):
         return jsonify(error="Correo o contraseña incorrectos"), 401
 
-    # Check account ban
+    # Check account ban (antes de generar el token)
+    ban_resp = _ban_block(user)
+    if ban_resp:
+        return ban_resp
+
     now_dt = datetime.utcnow()
-    banned_until = user.get("banned_until")
-    if banned_until:
-        if getattr(banned_until, "tzinfo", None) is not None:
-            banned_until = banned_until.replace(tzinfo=None)
-        if banned_until > now_dt:
-            if banned_until.year >= 9999:
-                msg = "Tu cuenta ha sido baneada permanentemente."
-            else:
-                msg = "Tu cuenta está baneada hasta " + banned_until.strftime("%d/%m/%Y %H:%M") + " UTC."
-            reason = user.get("ban_reason", "")
-            if reason:
-                msg += " Razón: " + reason
-            return jsonify(error=msg, banned=True), 403
 
     # Check IP ban
     client_ip = (request.headers.get("X-Forwarded-For") or request.remote_addr or "").split(",")[0].strip()
@@ -376,6 +402,11 @@ def google_login():
             updates["avatar"] = photo
         users().update_one({"_id": user["_id"]}, {"$set": updates})
         user = users().find_one({"_id": user["_id"]})
+
+    # Check account ban (antes de generar el token)
+    ban_resp = _ban_block(user)
+    if ban_resp:
+        return ban_resp
 
     token = create_access_token(
         identity=str(user["_id"]),
