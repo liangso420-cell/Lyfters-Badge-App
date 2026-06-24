@@ -30,7 +30,9 @@ app = Flask(__name__)
 # cliente no pueda falsear su IP inyectando hops extra en X-Forwarded-For.
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
-app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET", "dev_secret_cambia_esto")
+app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET")
+if not app.config["JWT_SECRET_KEY"]:
+    raise RuntimeError("JWT_SECRET no está configurada en las variables de entorno")
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=8)
 
 jwt = JWTManager(app)
