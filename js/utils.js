@@ -55,8 +55,8 @@
       skip_now: 'Omitir por ahora',
       connecting: 'Conectando...',
       welcome: '¡Bienvenido!',
-      welcome_google: '¡Bienvenido con Google! <img src="assets/icons/ui/icono-celebracion.png" style="width:24px;height:24px;object-fit:contain;vertical-align:middle;">',
-      account_created: '¡Cuenta creada! <img src="assets/icons/ui/icono-celebracion.png" style="width:24px;height:24px;object-fit:contain;vertical-align:middle;">',
+      welcome_google: '¡Bienvenido con Google!',
+      account_created: '¡Cuenta creada!',
       explore_events_title: 'Explorar eventos',
       recommended_for_you: '✨ Recomendados para ti',
       all_events: 'Todos los eventos',
@@ -217,8 +217,8 @@
       skip_now: 'Skip for now',
       connecting: 'Connecting...',
       welcome: 'Welcome!',
-      welcome_google: 'Welcome with Google! <img src="assets/icons/ui/icono-celebracion.png" style="width:24px;height:24px;object-fit:contain;vertical-align:middle;">',
-      account_created: 'Account created! <img src="assets/icons/ui/icono-celebracion.png" style="width:24px;height:24px;object-fit:contain;vertical-align:middle;">',
+      welcome_google: 'Welcome with Google!',
+      account_created: 'Account created!',
       explore_events_title: 'Explore events',
       recommended_for_you: '✨ Recommended for you',
       all_events: 'All events',
@@ -1595,7 +1595,14 @@
       var data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Código inválido o expirado');
       result.style.color = '#abd194';
-      result.innerHTML = '<img src="assets/icons/ui/icono-reclamado.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:4px;"> Te uniste a ' + (data.workspace || 'el workspace') + ' como ' + (data.role || '') + '. Cerrá sesión y volvé a entrar para ver los cambios.';
+      result.textContent = '';
+      var _joinImg = document.createElement('img');
+      _joinImg.src = 'assets/icons/ui/icono-reclamado.png';
+      _joinImg.style.cssText = 'width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:4px;';
+      result.appendChild(_joinImg);
+      var _joinSpan = document.createElement('span');
+      _joinSpan.textContent = 'Te uniste a ' + (data.workspace || 'el workspace') + ' como ' + (data.role || '') + '. Cerrá sesión y volvé a entrar para ver los cambios.';
+      result.appendChild(_joinSpan);
       inp.value = '';
     } catch(e) {
       result.style.color = '#e68a8d';
