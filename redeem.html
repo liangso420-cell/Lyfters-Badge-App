@@ -85,7 +85,9 @@
         var badge  = r.badge || {};
         var badgeIcon = badge.icon_url
           ? '<img src="' + badge.icon_url + '" style="width:72px;height:72px;object-fit:contain;display:block;margin:0 auto 12px;" />'
-          : '<img src="assets/icons/badges/sitio-web.png" style="width:72px;height:72px;object-fit:contain;display:block;margin:0 auto 12px;opacity:0.7;" />';
+          : '<div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#6C63FF,#9C8FFF);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">' +
+              '<img src="assets/icons/ui/icono-reclamado.png" style="width:44px;height:44px;object-fit:contain;" />' +
+            '</div>';
         var user   = API.currentUser() || {};
         var userName = user.name ? user.name.split(' ')[0] : '';
 
