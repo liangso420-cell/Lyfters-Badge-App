@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lyfter Badge · Auditoría v3</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --gd: #0e1118;
+  --sd: #161924;
+  --bd: rgba(255,255,255,0.07);
+  --td: #e8eaf0;
+  --tdim: rgba(232,234,240,0.50);
+
+  --gl: #f5f6fa;
+  --sl: #ffffff;
+  --bl: #e2e4ec;
+  --tm: #1a1d26;
+  --ts: #5a5f78;
+
+  --accent:  #6C63FF;
+  --aglow:   rgba(108,99,255,0.25);
+  --green:   #3ecf8e;
+  --yellow:  #f59e0b;
+  --red:     #ef4444;
+
+  --mono: "Cascadia Code","JetBrains Mono","Fira Code","SF Mono","Consolas",monospace;
+  --sans: "Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --rad: 10px;
+  --radlg: 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+body { font-family: var(--sans); background: var(--gl); color: var(--tm); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+
+/* ── HERO ─────────────────────────────────── */
+.hero {
+  background: var(--gd);
+  padding: 56px 40px 52px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(108,99,255,0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(108,99,255,0.045) 1px, transparent 1px);
+  background-size: 36px 36px;
+  pointer-events: none;
+}
+.hero-inner { position: relative; max-width: 900px; margin: 0 auto; }
+
+.hero-eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 30px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.hero-eyebrow-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  flex-shrink: 0;
+}
+
+.hero-score-row {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+.hero-num {
+  font-family: var(--mono);
+  font-size: clamp(72px, 14vw, 140px);
+  font-weight: 700;
+  color: var(--td);
+  letter-spacing: -.03em;
+  line-height: 1;
+}
+.hero-denom {
+  font-family: var(--mono);
+  font-size: clamp(24px, 5vw, 46px);
+  color: var(--tdim);
+  letter-spacing: -.01em;
+  line-height: 1;
+}
+
+.hero-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(62,207,142,.10);
+  border: 1px solid rgba(62,207,142,.28);
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 30px;
+}
+
+.hero-bar-track {
+  height: 5px;
+  background: rgba(255,255,255,.07);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.hero-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), var(--green));
+  border-radius: 3px;
+  animation: barFill 1.4s cubic-bezier(.22,.68,0,1.2) .4s forwards;
+}
+@keyframes barFill { to { width: 86%; } }
+
+.hero-bar-legend {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--tdim);
+  letter-spacing: .08em;
+  margin-bottom: 28px;
+}
+
+.hero-cats {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.hero-cat {
+  font-family: var(--mono);
+  font-size: 12px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--bd);
+  border-radius: 6px;
+  padding: 7px 13px;
+}
+.hero-cat-lbl { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--tdim); }
+.hero-cat-val { color: var(--td); font-size: 15px; font-weight: 600; }
+
+/* ── BODY WRAP ────────────────────────────── */
+.wrap { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
+
+/* ── SCORE RING CARDS ─────────────────────── */
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+  margin-bottom: 48px;
+}
+.score-card {
+  background: var(--sl);
+  border: 1px solid var(--bl);
+  border-radius: var(--radlg);
+  padding: 28px 20px 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.ring-wrap { position: relative; width: 84px; height: 84px; }
+.ring-wrap svg { width: 84px; height: 84px; transform: rotate(-90deg); overflow: visible; }
+.ring-bg   { fill: none; stroke: #eaecf2; stroke-width: 6; }
+.ring-arc  { fill: none; stroke-width: 6; stroke-linecap: round; }
+.ring-label {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.ring-num  { font-family: var(--mono); font-size: 24px; font-weight: 700; color: var(--tm); line-height: 1; }
+.ring-den  { font-family: var(--mono); font-size: 11px; color: var(--ts); }
+.score-card-ttl {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: .09em; text-transform: uppercase;
+  color: var(--ts); text-align: center;
+}
+
+/* ── SECTION HEADER ───────────────────────── */
+.sh {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 18px; margin-top: 44px;
+}
+.sh:first-child { margin-top: 0; }
+.sh h2 {
+  font-size: 13px; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--ts); white-space: nowrap;
+}
+.sh-line { flex: 1; height: 1px; background: var(--bl); }
+
+/* ── CHECKLIST TABLE ──────────────────────── */
+.ct {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  margin-bottom: 8px;
+  background: var(--sl);
+  border: 1px solid var(--bl);
+  border-radius: var(--rad);
+  overflow: hidden;
+}
+.ct th {
+  font-family: var(--mono);
+  font-size: 10px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--ts);
+  padding: 10px 14px; text-align: left;
+  background: #f8f9fc;
+  border-bottom: 1px solid var(--bl);
+  font-weight: 400;
+}
+.ct td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--bl);
+  vertical-align: middle;
+}
+.ct tr:last-child td { border-bottom: none; }
+.ct tbody tr:hover td { background: rgba(108,99,255,.025); }
+
+.pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: var(--mono); font-size: 11px;
+  padding: 3px 9px; border-radius: 4px; white-space: nowrap;
+}
+.ok   { background: rgba(62,207,142,.10); color: #1a7a4a;  border: 1px solid rgba(62,207,142,.3); }
+.warn { background: rgba(245,158,11,.10); color: #92580a;  border: 1px solid rgba(245,158,11,.3); }
+.fail { background: rgba(239,68,68,.10);  color: #b91c1c;  border: 1px solid rgba(239,68,68,.3); }
+
+.cd { color: var(--tm); }
+.cd small { display: block; font-size: 11.5px; color: var(--ts); margin-top: 1px; }
+.cr { font-family: var(--mono); font-size: 11.5px; color: var(--accent); text-align: right; white-space: nowrap; }
+
+/* ── SECURITY GRID ────────────────────────── */
+.sec-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+  gap: 10px;
+  margin-bottom: 40px;
+}
+.sec-item {
+  background: var(--sl);
+  border: 1px solid var(--bl);
+  border-radius: var(--rad);
+  padding: 13px 15px;
+  display: flex; align-items: center; gap: 10px;
+}
+.sec-ico {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; flex-shrink: 0;
+}
+.ico-ok   { background: rgba(62,207,142,.12); }
+.ico-warn { background: rgba(245,158,11,.12); }
+.ico-fail { background: rgba(239,68,68,.12); }
+.sec-lbl { font-size: 12.5px; font-weight: 500; color: var(--tm); }
+.sec-st  { font-family: var(--mono); font-size: 10px; color: var(--ts); margin-top: 1px; }
+
+/* ── ERROR CARDS ──────────────────────────── */
+.err-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 40px; }
+.err {
+  border-radius: var(--rad);
+  padding: 16px 20px;
+  display: flex; gap: 14px; align-items: flex-start;
+}
+.err-crit { background: rgba(239,68,68,.055); border: 1px solid rgba(239,68,68,.2); }
+.err-warn { background: rgba(245,158,11,.055); border: 1px solid rgba(245,158,11,.2); }
+.err-badge {
+  font-family: var(--mono); font-size: 10px; font-weight: 600;
+  padding: 3px 8px; border-radius: 4px; white-space: nowrap;
+  flex-shrink: 0; margin-top: 2px;
+}
+.eb-crit { background: rgba(239,68,68,.15); color: #b91c1c; }
+.eb-warn { background: rgba(245,158,11,.15); color: #92580a; }
+.err-ttl { font-size: 14px; font-weight: 600; color: var(--tm); margin-bottom: 4px; }
+.err-dsc { font-size: 13px; color: var(--ts); line-height: 1.5; }
+.err-ref { font-family: var(--mono); font-size: 11px; color: var(--accent); margin-top: 5px; }
+
+/* ── VERDICT ──────────────────────────────── */
+.verdict {
+  background: var(--gd);
+  border-radius: var(--radlg);
+  padding: 48px 40px;
+  display: flex; flex-direction: column;
+  align-items: center; text-align: center; gap: 14px;
+  position: relative; overflow: hidden;
+}
+.verdict::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(108,99,255,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(108,99,255,.04) 1px, transparent 1px);
+  background-size: 36px 36px;
+  pointer-events: none;
+}
+.verdict > * { position: relative; }
+.verdict-score {
+  font-family: var(--mono); font-size: 58px; font-weight: 700;
+  color: var(--td); letter-spacing: -.02em; line-height: 1;
+}
+.verdict-tag {
+  font-family: var(--mono); font-size: 12px;
+  letter-spacing: .22em; text-transform: uppercase;
+  color: var(--green);
+  border: 1px solid rgba(62,207,142,.3);
+  padding: 5px 16px; border-radius: 20px;
+}
+.verdict-txt { font-size: 13.5px; color: var(--tdim); max-width: 520px; line-height: 1.75; }
+.verdict-meta { font-family: var(--mono); font-size: 10px; color: rgba(232,234,240,.25); letter-spacing: .1em; }
+
+/* ── DELTA TABLE ──────────────────────────── */
+.delta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+.delta-card {
+  background: var(--sl);
+  border: 1px solid var(--bl);
+  border-radius: var(--rad);
+  padding: 18px 20px;
+}
+.delta-title {
+  font-family: var(--mono);
+  font-size: 10px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--ts);
+  margin-bottom: 12px;
+}
+.delta-row {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--tm);
+  padding: 5px 0;
+  border-bottom: 1px solid var(--bl);
+}
+.delta-row:last-child { border-bottom: none; }
+.delta-icon { font-size: 12px; flex-shrink: 0; }
+.delta-v { font-family: var(--mono); font-size: 11px; color: var(--ts); margin-left: auto; white-space: nowrap; }
+
+/* ── RESPONSIVE ───────────────────────────── */
+@media (max-width: 680px) {
+  .hero { padding: 36px 20px 36px; }
+  .wrap { padding: 24px 16px 60px; }
+  .ct th:nth-child(3), .ct td:nth-child(3) { display: none; }
+  .delta-grid { grid-template-columns: 1fr; }
+  .verdict { padding: 36px 24px; }
+  .verdict-score { font-size: 42px; }
+  .hero-cats { gap: 8px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     HERO TERMINAL
+══════════════════════════════════════════ -->
+<header class="hero">
+  <div class="hero-inner">
+
+    <div class="hero-eyebrow">
+      <span class="hero-eyebrow-dot"></span>
+      Lyfter Badge App &nbsp;·&nbsp; Tech Lead + QA Audit &nbsp;·&nbsp; 2026-06-23
+    </div>
+
+    <div class="hero-score-row">
+      <span class="hero-num">86</span>
+      <span class="hero-denom">/ 100</span>
+    </div>
+
+    <div class="hero-delta">
+      ▲ +8 pts desde v2 &nbsp;·&nbsp; 10 fixes aplicados
+    </div>
+
+    <div class="hero-bar-track">
+      <div class="hero-bar-fill"></div>
+    </div>
+    <div class="hero-bar-legend">
+      <span>0</span>
+      <span>APROBADO ≥ 80</span>
+      <span>100</span>
+    </div>
+
+    <div class="hero-cats">
+      <div class="hero-cat">
+        <div class="hero-cat-lbl">Core</div>
+        <div class="hero-cat-val">37 / 40</div>
+      </div>
+      <div class="hero-cat">
+        <div class="hero-cat-lbl">Frontend</div>
+        <div class="hero-cat-val">17 / 20</div>
+      </div>
+      <div class="hero-cat">
+        <div class="hero-cat-lbl">Producción</div>
+        <div class="hero-cat-val">16 / 20</div>
+      </div>
+      <div class="hero-cat">
+        <div class="hero-cat-lbl">Calidad</div>
+        <div class="hero-cat-val">16 / 20</div>
+      </div>
+    </div>
+
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════
+     BODY
+══════════════════════════════════════════ -->
+<main class="wrap">
+
+  <!-- SCORE RING CARDS -->
+  <div class="score-grid">
+
+    <!-- Core 37/40 = 92.5% → circ=213.6, dash=197.6 -->
+    <div class="score-card">
+      <div class="ring-wrap">
+        <svg viewBox="0 0 84 84">
+          <circle class="ring-bg" cx="42" cy="42" r="34"/>
+          <circle class="ring-arc" cx="42" cy="42" r="34"
+            stroke="#6C63FF"
+            stroke-dasharray="197.6 213.6"/>
+        </svg>
+        <div class="ring-label">
+          <span class="ring-num">37</span>
+          <span class="ring-den">/ 40</span>
+        </div>
+      </div>
+      <div class="score-card-ttl">Funcionalidad Core</div>
+    </div>
+
+    <!-- Frontend 17/20 = 85% → dash=181.6 -->
+    <div class="score-card">
+      <div class="ring-wrap">
+        <svg viewBox="0 0 84 84">
+          <circle class="ring-bg" cx="42" cy="42" r="34"/>
+          <circle class="ring-arc" cx="42" cy="42" r="34"
+            stroke="#6C63FF"
+            stroke-dasharray="181.6 213.6"/>
+        </svg>
+        <div class="ring-label">
+          <span class="ring-num">17</span>
+          <span class="ring-den">/ 20</span>
+        </div>
+      </div>
+      <div class="score-card-ttl">Frontend</div>
+    </div>
+
+    <!-- Prod 16/20 = 80% → dash=170.9 -->
+    <div class="score-card">
+      <div class="ring-wrap">
+        <svg viewBox="0 0 84 84">
+          <circle class="ring-bg" cx="42" cy="42" r="34"/>
+          <circle class="ring-arc" cx="42" cy="42" r="34"
+            stroke="#f59e0b"
+            stroke-dasharray="170.9 213.6"/>
+        </svg>
+        <div class="ring-label">
+          <span class="ring-num">16</span>
+          <span class="ring-den">/ 20</span>
+        </div>
+      </div>
+      <div class="score-card-ttl">Demo / Producción</div>
+    </div>
+
+    <!-- Quality 16/20 = 80% → dash=170.9 -->
+    <div class="score-card">
+      <div class="ring-wrap">
+        <svg viewBox="0 0 84 84">
+          <circle class="ring-bg" cx="42" cy="42" r="34"/>
+          <circle class="ring-arc" cx="42" cy="42" r="34"
+            stroke="#3ecf8e"
+            stroke-dasharray="170.9 213.6"/>
+        </svg>
+        <div class="ring-label">
+          <span class="ring-num">16</span>
+          <span class="ring-den">/ 20</span>
+        </div>
+      </div>
+      <div class="score-card-ttl">Calidad de Código</div>
+    </div>
+
+  </div>
+
+  <!-- ─── DELTA: fixes v2 → v3 ──── -->
+  <div class="sh"><h2>Delta v2 → v3</h2><div class="sh-line"></div></div>
+  <div class="delta-grid">
+    <div class="delta-card">
+      <div class="delta-title">Fixes aplicados (10)</div>
+      <div class="delta-row"><span class="delta-icon" style="color:#3ecf8e">✓</span> JWT_SECRET sin fallback <span class="delta-v">app.py:33</span></div>
+      <div class="delta-row"><span class="delta-icon" style="color:#3ecf8e">✓</span> MONGO_URI sin fallback <span class="delta-v">db.py:31</span></div>
+      <div class="delta-row"><span class="delta-icon" style="color:#3ecf8e">✓</span> CORS exacto sin wildcard <span class="delta-v">app.py:47</span></div>
+      <div class="delta-row"><span class="delta-icon" style="color:#3ecf8e">✓</span> toast() XSS → textContent <span class="delta-v">utils.js:402</span></div>
+      <div class="delta-row"><span class="delta-icon" style="color:#3ecf8e">✓</span> safeAvatarUrl() whitelist <span class="delta-v">utils.js:546</span></div>
+    </div>
+    <div class="delta-card">
+      <div class="delta-title">Fixes aplicados (cont.)</div>
+      <div class="delta-row"><span class="delta-icon" style="color:#3ecf8e">✓</span> invite_member sin role sync <span class="delta-v">workspaces.py:382</span></div>
+      <div class="delta-row"><span class="delta-icon" style="color:#3ecf8e">✓</span> Redención atómica upsert <span class="delta-v">redeem.py:59</span></div>
+      <div class="delta-row"><span class="delta-icon" style="color:#3ecf8e">✓</span> Rate limiting sin defaultdict <span class="delta-v">auth.py</span></div>
+      <div class="delta-row"><span class="delta-icon" style="color:#3ecf8e">✓</span> _PRIVACY_VISIBLE DRY <span class="delta-v">events.py:17</span></div>
+      <div class="delta-row"><span class="delta-icon" style="color:#3ecf8e">✓</span> _ROLE_RANK con admin:2 <span class="delta-v">workspaces.py:268</span></div>
+    </div>
+  </div>
+
+  <!-- ─── CAT 1: FUNCIONALIDAD CORE ──── -->
+  <div class="sh"><h2>1 — Funcionalidad Core &nbsp; 37 / 40</h2><div class="sh-line"></div></div>
+  <table class="ct">
+    <thead>
+      <tr>
+        <th>Estado</th>
+        <th>Check</th>
+        <th>Evidencia</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Register — bcrypt, email regex, invite_token
+          <small>Validación nombre/email/password, hash bcrypt, workspace invite en el mismo request</small>
+        </td>
+        <td class="cr">auth.py:105</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Login — JWT, ban check, IP guard
+          <small>Verifica banned_until, IP ban, almacena last_login_ip</small>
+        </td>
+        <td class="cr">auth.py:274</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">JWT sin fallback — RuntimeError en startup
+          <small>os.getenv("JWT_SECRET") + if not → raise RuntimeError</small>
+        </td>
+        <td class="cr">app.py:33–35</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Google OAuth — Firebase idToken verify
+          <small>id_token.verify_firebase_token(), upsert usuario, devuelve JWT propio</small>
+        </td>
+        <td class="cr">auth.py:318</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Roles — participant / admin / superadmin / god_admin
+          <small>_workspace_claims() embebe rol en JWT; rutas protegidas con require_admin()</small>
+        </td>
+        <td class="cr">auth.py:29</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Eventos CRUD completo
+          <small>GET, POST, PATCH, DELETE con validación de fechas ISO, XP config, workspace filter</small>
+        </td>
+        <td class="cr">admin.py:76–334</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Estados de evento — compute_event_status()
+          <small>upcoming / open / ongoing / ended; filtro visible_statuses en list y recommended</small>
+        </td>
+        <td class="cr">utils.py</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Geo-validación haversine 1 km
+          <small>Aplicado en /events/:id/join y /redeem/:id/:token; falla silenciosa si no hay coords</small>
+        </td>
+        <td class="cr">redeem.py:41</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Badges — UUID único + índice único MongoDB
+          <small>uuid.uuid4() + badges().create_index("token", unique=True)</small>
+        </td>
+        <td class="cr">admin.py:441 · db.py:68</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">QR generado y guardado — generate_qr_base64()
+          <small>qr_data = f"{APP_BASE_URL}/redeem.html?event=…&token=…" → qr_b64 guardado en badge</small>
+        </td>
+        <td class="cr">admin.py:443</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Regenerar QR — nuevo token + QR
+          <small>POST /admin/badges/:id/regenerate-qr regenera token UUID y qr_base64</small>
+        </td>
+        <td class="cr">admin.py:544</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Redención atómica — $setOnInsert + upsert + DuplicateKeyError
+          <small>Índice único (user_id, badge_id) + update_one upsert; dos requests simultáneas → idempotente</small>
+        </td>
+        <td class="cr">redeem.py:59–72</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">XP — $inc atómico, xp_log append-only
+          <small>grant_xp() → find_one_and_update $inc; base + first_scan + rare + completion</small>
+        </td>
+        <td class="cr">services/xp.py:94</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Logros — check_and_unlock() con cascade
+          <small>Múltiples pasadas para resolver dependencias (XP de logro puede desbloquear "legend")</small>
+        </td>
+        <td class="cr">services/achievements.py:108</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Endpoints de logros — /profile/achievements + /auth/achievements/definitions
+          <small>Ambos endpoints implementados; definitions devuelve sin _id</small>
+        </td>
+        <td class="cr">xp.py:34 · auth.py:380</td>
+      </tr>
+      <tr>
+        <td><span class="pill warn">⚠️ WARN</span></td>
+        <td class="cd">Logro "vertigo" — condición faltante en servidor
+          <small>Definido en ACHIEVEMENT_DEFS (api.js:72) pero no existe en _CONDITIONS del servidor → nunca se desbloquea</small>
+        </td>
+        <td class="cr">achievements.py:61</td>
+      </tr>
+      <tr>
+        <td><span class="pill warn">⚠️ WARN</span></td>
+        <td class="cd">Logro "twenty_five_badges" — huérfano en servidor
+          <small>Condición en _CONDITIONS (achievements.py:64) sin definición en ACHIEVEMENT_DEFS del cliente</small>
+        </td>
+        <td class="cr">achievements.py:64 · api.js:68</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ─── CAT 2: FRONTEND ──── -->
+  <div class="sh"><h2>2 — Frontend &nbsp; 17 / 20</h2><div class="sh-line"></div></div>
+  <table class="ct">
+    <thead>
+      <tr><th>Estado</th><th>Check</th><th>Evidencia</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Todas las vistas presentes — 27 HTML files
+          <small>login, register, profile, scan, redeem, event-detail, admin-event, admin-event-detail, admin-event-create, admin-leaderboard, admin-participation, gestion-usuarios, leaderboard, user-achievements, user-events, user-ranking, workspace-*…</small>
+        </td>
+        <td class="cr">/ (raíz)</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Responsive — Tailwind CSS con clases md: y sm:
+          <small>Todas las vistas usan Tailwind; flexbox/grid responsivos en cards y tablas</small>
+        </td>
+        <td class="cr">todas las vistas</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">toast() sin XSS — createElement + span.textContent
+          <small>Reescrito con DOM API puro; sin innerHTML para el mensaje</small>
+        </td>
+        <td class="cr">utils.js:389–409</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">esc() para innerHTML — todos los bloques de usuario escapados
+          <small>esc() implementado en utils.js:380; usado en confirmModal, errorHtml, showDrawer, primaryButton</small>
+        </td>
+        <td class="cr">utils.js:380</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">safeAvatarUrl() — whitelist de orígenes Google CDN
+          <small>data: + lh3/lh4/lh5/lh6.googleusercontent.com; origen desconocido → null → icono default</small>
+        </td>
+        <td class="cr">utils.js:546</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Iconos PNG — emojis reemplazados en todo el proyecto
+          <small>assets/icons/ui/, assets/icons/achievements/ usados en toasts, nav, badges</small>
+        </td>
+        <td class="cr">assets/icons/</td>
+      </tr>
+      <tr>
+        <td><span class="pill warn">⚠️ WARN</span></td>
+        <td class="cd">innerHTML sin esc() con datos del servidor — workspace join
+          <small>result.innerHTML usa data.workspace y data.role directamente desde respuesta API sin escapar</small>
+        </td>
+        <td class="cr">utils.js:1598</td>
+      </tr>
+      <tr>
+        <td><span class="pill warn">⚠️ WARN</span></td>
+        <td class="cd">Strings i18n con HTML embebido — welcome_google y account_created
+          <small>Contienen &lt;img&gt; tags inline; si se renderizan con innerHTML pueden ser vector XSS si el string es controlable</small>
+        </td>
+        <td class="cr">utils.js:58–59</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ─── CAT 3: PRODUCCIÓN ──── -->
+  <div class="sh"><h2>3 — Demo / Producción &nbsp; 16 / 20</h2><div class="sh-line"></div></div>
+  <table class="ct">
+    <thead>
+      <tr><th>Estado</th><th>Check</th><th>Evidencia</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">JWT_SECRET sin fallback — RuntimeError en startup
+          <small>Si JWT_SECRET no está configurado, Flask lanza RuntimeError antes de arrancar</small>
+        </td>
+        <td class="cr">app.py:33–35</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">MONGO_URI sin fallback — RuntimeError en get_db()
+          <small>Mismo patrón; falla rápido en startup si falta la variable</small>
+        </td>
+        <td class="cr">db.py:31–33</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">render.yaml — service, buildCommand, startCommand, envVars
+          <small>gunicorn app:app, FLASK_ENV=production, JWT_SECRET generateValue:true</small>
+        </td>
+        <td class="cr">render.yaml</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">CORS exacto — "https://lyfters-badge-app.vercel.app"
+          <small>Sin *.vercel.app ni wildcards; origins hardcodeado + env CORS_ORIGINS</small>
+        </td>
+        <td class="cr">app.py:47</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">QR apunta a APP_BASE_URL — query string ?event=&amp;token=
+          <small>f"{APP_BASE_URL}/redeem.html?event={event_id}&amp;token={token}" en badge y access-qr</small>
+        </td>
+        <td class="cr">admin.py:443 · 561 · 587</td>
+      </tr>
+      <tr>
+        <td><span class="pill warn">⚠️ WARN</span></td>
+        <td class="cd">render.yaml incompleto — faltan 3 vars de entorno
+          <small>REDIS_URL, RESEND_API_KEY, FRONTEND_URL no están declaradas → deben añadirse manualmente</small>
+        </td>
+        <td class="cr">render.yaml</td>
+      </tr>
+      <tr>
+        <td><span class="pill warn">⚠️ WARN</span></td>
+        <td class="cd">OPTIONS handlers CORS wildcard — Access-Control-Allow-Origin: *
+          <small>forgot-password y reset-password OPTIONS responden con * en vez de los orígenes configurados</small>
+        </td>
+        <td class="cr">app.py:73–86</td>
+      </tr>
+      <tr>
+        <td><span class="pill warn">⚠️ WARN</span></td>
+        <td class="cd">vercel.json rewrite stale — path-based vs query-string
+          <small>Rewrite /redeem/:event/:token ya no coincide con URLs actuales que usan ?event=&amp;token=</small>
+        </td>
+        <td class="cr">vercel.json:3</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ─── CAT 4: CALIDAD ──── -->
+  <div class="sh"><h2>4 — Calidad de Código &nbsp; 16 / 20</h2><div class="sh-line"></div></div>
+  <table class="ct">
+    <thead>
+      <tr><th>Estado</th><th>Check</th><th>Evidencia</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Sin privilege escalation en invite_member
+          <small>Ambos bloques users().update_one({"$set":{"role":…}}) eliminados; rol global nunca se sobreescribe al invitar</small>
+        </td>
+        <td class="cr">workspaces.py:382–415</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Race condition atómica — upsert + DuplicateKeyError
+          <small>Índice único (user_id, badge_id) es la barrera real; update_one($setOnInsert) es idempotente</small>
+        </td>
+        <td class="cr">redeem.py:59</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">_ROLE_RANK completo — {participant:1, admin:2, superadmin:3, god_admin:4}
+          <small>admin:2 presente; rank usado en change_role y en validación de invite_member</small>
+        </td>
+        <td class="cr">workspaces.py:268</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">_PRIVACY_VISIBLE DRY — constante de módulo
+          <small>Usada en leaderboard(), event_leaderboard(), global_leaderboard() sin duplicar el $or</small>
+        </td>
+        <td class="cr">events.py:17</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Rate limiting solo Redis — sin defaultdict en memoria
+          <small>auth.py libre de _login_attempts dict; Flask-Limiter con Redis como único store</small>
+        </td>
+        <td class="cr">security/limiter.py:104</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">XP atómico — $inc + ReturnDocument.AFTER
+          <small>Nunca se hace read-modify-write; xp_log append-only con motivo por entrada</small>
+        </td>
+        <td class="cr">services/xp.py:119</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Logros atómicos — DuplicateKeyError en insert
+          <small>Índice único (user_id, achievement_id); concurrencia resuelta silenciosamente</small>
+        </td>
+        <td class="cr">achievements.py:81–88</td>
+      </tr>
+      <tr>
+        <td><span class="pill fail">❌ BUG</span></td>
+        <td class="cd">Campo "scanned_at" vs "redeemed_at" — stat siempre vacía
+          <small>Pipeline de actividad_por_hora busca scanned_at pero redeem.py guarda redeemed_at → array siempre []</small>
+        </td>
+        <td class="cr">admin.py:159 · redeem.py:65</td>
+      </tr>
+      <tr>
+        <td><span class="pill warn">⚠️ WARN</span></td>
+        <td class="cd">Logro "vertigo" sin condición en servidor
+          <small>Requiere "5 badges en &lt;1h" — necesita timestamp de primer scan del evento para calcularlo</small>
+        </td>
+        <td class="cr">achievements.py:61</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ─── SECURITY GRID ──── -->
+  <div class="sh"><h2>Grid de Seguridad</h2><div class="sh-line"></div></div>
+  <div class="sec-grid">
+
+    <div class="sec-item">
+      <div class="sec-ico ico-ok">🔐</div>
+      <div><div class="sec-lbl">JWT Secret</div><div class="sec-st">RuntimeError sin fallback</div></div>
+    </div>
+
+    <div class="sec-item">
+      <div class="sec-ico ico-ok">🍃</div>
+      <div><div class="sec-lbl">MongoDB URI</div><div class="sec-st">RuntimeError sin fallback</div></div>
+    </div>
+
+    <div class="sec-item">
+      <div class="sec-ico ico-ok">🔒</div>
+      <div><div class="sec-lbl">Passwords</div><div class="sec-st">bcrypt + salt rounds</div></div>
+    </div>
+
+    <div class="sec-item">
+      <div class="sec-ico ico-ok">⚡</div>
+      <div><div class="sec-lbl">Rate Limiting</div><div class="sec-st">Flask-Limiter + Redis</div></div>
+    </div>
+
+    <div class="sec-item">
+      <div class="sec-ico ico-ok">🧼</div>
+      <div><div class="sec-lbl">Input Sanitize</div><div class="sec-st">sanitize() en todos los endpoints</div></div>
+    </div>
+
+    <div class="sec-item">
+      <div class="sec-ico ico-ok">🛡️</div>
+      <div><div class="sec-lbl">XSS Toasts</div><div class="sec-st">textContent — sin innerHTML</div></div>
+    </div>
+
+    <div class="sec-item">
+      <div class="sec-ico ico-ok">🖼️</div>
+      <div><div class="sec-lbl">Avatar XSS</div><div class="sec-st">safeAvatarUrl() whitelist</div></div>
+    </div>
+
+    <div class="sec-item">
+      <div class="sec-ico ico-ok">⚛️</div>
+      <div><div class="sec-lbl">Race Condition</div><div class="sec-st">Atomic upsert + DuplicateKeyError</div></div>
+    </div>
+
+    <div class="sec-item">
+      <div class="sec-ico ico-ok">👮</div>
+      <div><div class="sec-lbl">Privilege Escal.</div><div class="sec-st">invite_member limpio</div></div>
+    </div>
+
+    <div class="sec-item">
+      <div class="sec-ico ico-ok">🔑</div>
+      <div><div class="sec-lbl">Password Reset</div><div class="sec-st">Token server-side · Resend API</div></div>
+    </div>
+
+    <div class="sec-item">
+      <div class="sec-ico ico-ok">📍</div>
+      <div><div class="sec-lbl">Geo-fence</div><div class="sec-st">haversine 1 km en join y redeem</div></div>
+    </div>
+
+    <div class="sec-item">
+      <div class="sec-ico ico-warn">🌐</div>
+      <div><div class="sec-lbl">CORS</div><div class="sec-st">Main exacto · OPTIONS usa *</div></div>
+    </div>
+
+    <div class="sec-item">
+      <div class="sec-ico ico-ok">🚦</div>
+      <div><div class="sec-lbl">Roles / AuthZ</div><div class="sec-st">_ROLE_RANK + require_admin()</div></div>
+    </div>
+
+    <div class="sec-item">
+      <div class="sec-ico ico-ok">🔥</div>
+      <div><div class="sec-lbl">Firebase Keys</div><div class="sec-st">Públicas por diseño · HTTP referrer</div></div>
+    </div>
+
+    <div class="sec-item">
+      <div class="sec-ico ico-ok">📈</div>
+      <div><div class="sec-lbl">XP Integrity</div><div class="sec-st">$inc atómico · xp_log append-only</div></div>
+    </div>
+
+    <div class="sec-item">
+      <div class="sec-ico ico-warn">⚙️</div>
+      <div><div class="sec-lbl">Env Vars Prod</div><div class="sec-st">render.yaml incompleto (3 vars)</div></div>
+    </div>
+
+  </div>
+
+  <!-- ─── ERRORES PENDIENTES ──── -->
+  <div class="sh"><h2>Errores Pendientes</h2><div class="sh-line"></div></div>
+  <div class="err-list">
+
+    <div class="err err-crit">
+      <span class="err-badge eb-crit">❌ BUG</span>
+      <div>
+        <div class="err-ttl">Campo "scanned_at" inexistente — estadística siempre vacía</div>
+        <div class="err-dsc">
+          El pipeline <code>actividad_por_hora</code> en <code>event_stats()</code> filtra por <code>scanned_at</code>, pero <code>redeem.py</code> guarda el campo como <code>redeemed_at</code>. La tabla de actividad por hora siempre devuelve <code>[]</code> en producción.
+        </div>
+        <div class="err-ref">admin.py:159 · redeem.py:65 — Fix: cambiar "scanned_at" → "redeemed_at" en el $match del pipeline</div>
+      </div>
+    </div>
+
+    <div class="err err-warn">
+      <span class="err-badge eb-warn">⚠️ WARN</span>
+      <div>
+        <div class="err-ttl">Logro "vertigo" nunca se desbloquea</div>
+        <div class="err-dsc">
+          La condición "5 badges en menos de 1 hora" está definida en el cliente (<code>api.js:72</code>) pero no existe en <code>_CONDITIONS</code> del servidor. El logro aparece como bloqueado para siempre en el perfil de cualquier usuario.
+        </div>
+        <div class="err-ref">achievements.py:61 — Agregar condición "vertigo" que consulte xp_log o scans con timestamps</div>
+      </div>
+    </div>
+
+    <div class="err err-warn">
+      <span class="err-badge eb-warn">⚠️ WARN</span>
+      <div>
+        <div class="err-ttl">render.yaml faltan 3 variables de entorno</div>
+        <div class="err-dsc">
+          <code>REDIS_URL</code>, <code>RESEND_API_KEY</code> y <code>FRONTEND_URL</code> son necesarias en producción pero no están declaradas en <code>render.yaml</code>. Sin REDIS_URL el rate limiting no conecta; sin RESEND_API_KEY los emails de recuperación no se envían.
+        </div>
+        <div class="err-ref">render.yaml — Agregar las tres variables con sync: false</div>
+      </div>
+    </div>
+
+    <div class="err err-warn">
+      <span class="err-badge eb-warn">⚠️ WARN</span>
+      <div>
+        <div class="err-ttl">OPTIONS CORS wildcard en reset-password y forgot-password</div>
+        <div class="err-dsc">
+          Los handlers OPTIONS manuales en <code>app.py</code> responden con <code>Access-Control-Allow-Origin: *</code> en vez de usar la lista de orígenes configurada. Esto permite que cualquier origen envíe preflight a esos endpoints.
+        </div>
+        <div class="err-ref">app.py:73–86 — Reemplazar * por la lista _cors_origins o eliminar handlers manuales y dejar Flask-CORS gestionarlos</div>
+      </div>
+    </div>
+
+    <div class="err err-warn">
+      <span class="err-badge eb-warn">⚠️ WARN</span>
+      <div>
+        <div class="err-ttl">vercel.json rewrite desactualizado</div>
+        <div class="err-dsc">
+          El rewrite <code>/redeem/:event/:token</code> corresponde a URLs path-based que ya no se usan. El flujo actual usa <code>redeem.html?event=…&amp;token=…</code> (query string). El rewrite es inerte pero genera confusión.
+        </div>
+        <div class="err-ref">vercel.json:3 — Actualizar o eliminar el rewrite obsoleto</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ─── VEREDICTO ──── -->
+  <div class="sh"><h2>Veredicto</h2><div class="sh-line"></div></div>
+  <div class="verdict">
+    <div class="verdict-score">86 / 100</div>
+    <div class="verdict-tag">✓ APROBADO PARA DEMO</div>
+    <p class="verdict-txt">
+      La app supera el umbral de demo (80/100). Las 10 correcciones de seguridad aplicadas desde v2 eliminaron los vectores de mayor riesgo: JWT sin fallback, MONGO_URI expuesto, privilege escalation en workspaces, race condition en redención, rate limiting en memoria, y XSS en toasts y avatares.
+      El único bug crítico pendiente es el campo <code>scanned_at</code> vs <code>redeemed_at</code> que silencia la estadística de actividad por hora. Los warnings restantes son de producción (render.yaml) o estéticos (vertigo, vercel.json) y no bloquean la demo.
+    </p>
+    <div class="verdict-meta">v1: 76 pts · v2: 78 pts · v3: 86 pts · generado 2026-06-23</div>
+  </div>
+
+</main>
+
+</body>
+</html>
