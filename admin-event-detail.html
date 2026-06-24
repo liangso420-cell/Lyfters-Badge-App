@@ -86,7 +86,7 @@
       async function init() {
         try {
           var data = await API.listAdminBadges(eid);
-          var ev = data.event;
+          var ev = data.event || data.evento;
           var blist = data.badges || [];
 
           var statusLabel = STATUS_MAP[ev.status] ? STATUS_MAP[ev.status].label : (ev.status || '');
