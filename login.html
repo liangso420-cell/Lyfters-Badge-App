@@ -233,13 +233,7 @@
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ email: email })
             });
-            var data = await res.json();
-            if (data.reset_link) {
-              await emailjs.send('service_b4pyd5h', 'template_s9ig49o', {
-                email: email,
-                link: data.reset_link
-              });
-            }
+            await res.json();
             modalRoot.innerHTML = '';
             U.toast('Si el email existe, recibirás un correo en breve', 'success');
           } catch(err) {

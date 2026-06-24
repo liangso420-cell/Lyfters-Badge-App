@@ -6,6 +6,8 @@ import secrets
 from datetime import datetime, timedelta
 from collections import defaultdict
 
+import requests as req
+
 import bcrypt
 from bson import ObjectId
 from flask import Blueprint, request, jsonify
@@ -420,9 +422,33 @@ def forgot_password():
         {"$set": {"reset_token": reset_token, "reset_token_expiry": expiry}}
     )
 
-    reset_link = "https://liangso420-cell.github.io/Lyfters-Badge-App/reset-password.html?token=" + reset_token
+    reset_link = os.getenv("FRONTEND_URL", "https://liangso420-cell.github.io/Lyfters-Badge-App") + "/reset-password.html?token=" + reset_token
 
-    return jsonify(ok=True, reset_link=reset_link), 200
+    resend_key = os.getenv("RESEND_API_KEY")
+    if resend_key:
+        req.post(
+            "https://api.resend.com/emails",
+            headers={
+                "Authorization": f"Bearer {resend_key}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "from": "Lyfter <no-reply@lyfter.app>",
+                "to": [email],
+                "subject": "Restablecer contraseña — Lyfter",
+                "html": f"""
+                <div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
+                  <h2>Restablecer contraseña</h2>
+                  <p>Hacé clic en el botón para restablecer tu contraseña. El link expira en 1 hora.</p>
+                  <a href="{reset_link}" style="display:inline-block;padding:12px 24px;background:#e68a8d;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Restablecer contraseña</a>
+                  <p style="color:#888;font-size:12px;margin-top:24px;">Si no solicitaste este cambio, ignorá este email.</p>
+                </div>
+                """
+            },
+            timeout=5
+        )
+
+    return jsonify(ok=True), 200
 
 
 @auth_bp.route("/reset-password", methods=["POST"])

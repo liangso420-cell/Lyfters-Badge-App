@@ -1,10 +1,11 @@
 # backend/routes/redeem.py — rutas /redeem/*
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from bson import ObjectId
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from pymongo.errors import DuplicateKeyError
 
 from db import users, events, badges, scans
 from utils import valid_oid, haversine
@@ -52,41 +53,35 @@ def redeem_badge(event_id, token):
     user_oid  = ObjectId(uid)
     badge_oid = badge["_id"]
 
-    already = scans().find_one({"user_id": user_oid, "badge_id": badge_oid})
+    # ── Insert atómico: el índice único (user_id, badge_id) en MongoDB garantiza
+    # que dos requests simultáneas no puedan insertar el mismo scan dos veces.
+    try:
+        result = scans().update_one(
+            {"user_id": user_oid, "badge_id": badge_oid},
+            {"$setOnInsert": {
+                "user_id":     user_oid,
+                "badge_id":    badge_oid,
+                "event_id":    oid_event,
+                "redeemed_at": datetime.now(timezone.utc),
+            }},
+            upsert=True
+        )
+        if result.matched_count > 0:
+            return jsonify(status="already_redeemed", message="Badge ya canjeado"), 200
+    except DuplicateKeyError:
+        return jsonify(status="already_redeemed", message="Badge ya canjeado"), 200
 
-    if not already:
-        scans().insert_one({
-            "user_id":    user_oid,
-            "badge_id":   badge_oid,
-            "event_id":   oid_event,
-            "scanned_at": datetime.utcnow(),
-        })
-
+    # ── Scan recién insertado — calcular progreso, XP y logros ──
     total_b    = badges().count_documents({"event_id": oid_event})
     user_scns  = scans().count_documents({"user_id": user_oid, "event_id": oid_event, "badge_id": {"$exists": True}})
     completado = user_scns >= total_b
 
-    # ── XP y logros ────────────────────────────────────────
-    # Solo se otorga XP / se evalúan logros en scans NUEVOS (no duplicados).
-    if not already:
-        # recién insertado: si ahora tiene 1 scan en el evento, es el primero
-        is_first_scan = (user_scns == 1)
-        is_completion = completado
-        xp_result = award_xp(user_oid, badge, event, is_first_scan, is_completion)
-        new_achievements = check_and_unlock(user_oid, oid_event)
-    else:
-        u = users().find_one({"_id": user_oid}, {"xp_total": 1})
-        xp_total = int((u or {}).get("xp_total", 0))
-        xp_result = {
-            "xp_gained": 0,
-            "xp_total":  xp_total,
-            "level":     compute_level(xp_total),
-            "level_up":  False,
-        }
-        new_achievements = []
+    is_first_scan = (user_scns == 1)
+    xp_result = award_xp(user_oid, badge, event, is_first_scan, completado)
+    new_achievements = check_and_unlock(user_oid, oid_event)
 
     return jsonify({
-        "status":     "duplicado" if already else "ok",
+        "status":     "ok",
         "badge": {
             "icon":        badge.get("icon", "🏅"),
             "nombre":      badge.get("name", ""),
@@ -95,7 +90,6 @@ def redeem_badge(event_id, token):
         "completado": completado,
         "premio":     event.get("prize") if completado else None,
         "progreso":   {"obtenidos": user_scns, "total": total_b},
-        # Campos del sistema de XP
         "xp_gained":             xp_result["xp_gained"],
         "xp_total":              xp_result["xp_total"],
         "level":                 xp_result["level"],
