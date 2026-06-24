@@ -10,7 +10,7 @@
 #   - Al desbloquear un logro se otorga su XP vía services.xp.grant_xp.
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from pymongo.errors import DuplicateKeyError
 
@@ -54,7 +54,23 @@ def compute_user_stats(user_oid) -> dict:
         "has_rare":         has_rare,
         "xp_total":         xp_total,
         "level":            compute_level(xp_total),
+        "user_oid":         user_oid,
     }
+
+
+def _check_vertigo(user_oid) -> bool:
+    """5 badges escaneados en menos de 1 hora."""
+    recent = list(scans().find(
+        {"user_id": user_oid},
+        {"redeemed_at": 1},
+    ).sort("redeemed_at", -1).limit(5))
+    if len(recent) < 5:
+        return False
+    newest = recent[0].get("redeemed_at")
+    oldest = recent[-1].get("redeemed_at")
+    if not newest or not oldest:
+        return False
+    return (newest - oldest).total_seconds() < 3600
 
 
 # Cada condición recibe el dict de stats y retorna bool.
@@ -68,6 +84,7 @@ _CONDITIONS = {
     "three_completions":    lambda s: s["completed_events"] >= 3,
     "rare_badge":           lambda s: s["has_rare"],
     "legend":               lambda s: s["level"] >= 4,
+    "vertigo":              lambda s: _check_vertigo(s["user_oid"]),
 }
 
 

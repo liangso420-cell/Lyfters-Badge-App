@@ -17,3 +17,9 @@ services:
         sync: false          # la URL de este mismo servicio en Render
       - key: FLASK_ENV
         value: production
+      - key: REDIS_URL
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: FRONTEND_URL
+        value: https://liangso420-cell.github.io/Lyfters-Badge-App

@@ -156,8 +156,8 @@ def event_stats(event_id):
             top_users.append({"nombre": u.get("name", ""), "avatar": u.get("avatar", None), "badges": row["count"]})
 
     pipeline3 = [
-        {"$match": {"event_id": oid, "scanned_at": {"$exists": True}}},
-        {"$group": {"_id": {"$hour": "$scanned_at"}, "count": {"$sum": 1}}},
+        {"$match": {"event_id": oid, "redeemed_at": {"$exists": True}}},
+        {"$group": {"_id": {"$hour": "$redeemed_at"}, "count": {"$sum": 1}}},
         {"$sort": {"_id": 1}}
     ]
     actividad_hora = [{"hora": row["_id"], "count": row["count"]} for row in scans().aggregate(pipeline3)]
