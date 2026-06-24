@@ -221,13 +221,15 @@
   var Mock = {
     async _login(email, password) {
       var u = mockState.users.find(function (x) { return x.email.toLowerCase() === String(email).toLowerCase(); });
-      if (!u || u.password !== password) throw new Error('Credenciales incorrectas');
+      if (!u) { var _noAcc = new Error('No tenemos una cuenta con ese email'); _noAcc.code = 'no_account'; throw _noAcc; }
+      if (u.password !== password) throw new Error('Correo o contraseña incorrectos');
       return { token: 'mock-' + u.id, user: publicUser(u) };
     },
     async _register(data) {
       var email = String(data.email).trim().toLowerCase();
-      if (mockState.users.some(function (u) { return u.email.toLowerCase() === email; }))
-        throw new Error('Ese email ya está registrado');
+      if (mockState.users.some(function (u) { return u.email.toLowerCase() === email; })) {
+        var _dup = new Error('Ya existe una cuenta con ese email, iniciá sesión'); _dup.code = 'email_exists'; throw _dup;
+      }
       var u = { id: uid('u'), name: data.name.trim(), email: email, password: data.password, role: 'participant' };
       mockState.users.push(u); persist();
       return { token: 'mock-' + u.id, user: publicUser(u) };
@@ -237,12 +239,13 @@
       // Si no existe, crear usuario nuevo automáticamente (igual que el backend).
       var email = String(googleUser.email).toLowerCase();
       var u = mockState.users.find(function (x) { return x.email.toLowerCase() === email; });
+      var isNew = !u;
       if (!u) {
         u = { id: uid('u'), name: googleUser.name || email.split('@')[0], email: email,
               password: null, role: 'participant', provider: 'google', avatar: googleUser.photo || '' };
         mockState.users.push(u); persist();
       }
-      return { token: 'mock-google-' + u.id, user: publicUser(u) };
+      return { token: 'mock-google-' + u.id, user: publicUser(u), isNew: isNew };
     },
     async listEvents() { return mockState.events.filter(function(e){ return e.active !== false; }).map(eventDto); },
     async listAdminEvents() { return mockState.events.map(eventDto); },
@@ -677,11 +680,14 @@
       if (!_p.includes('login.html') && !_p.includes('register.html')) {
         window.location.replace('login.html?next=' + encodeURIComponent(_p + window.location.search + window.location.hash));
       }
-      throw new Error(data.error || 'Sesión expirada');
+      var _err401 = new Error(data.error || 'Sesión expirada');
+      if (data.error_code) _err401.code = data.error_code;
+      throw _err401;
     }
     if (!res.ok) {
       var _err = new Error(data.error || ('Error ' + res.status));
       if (data.status) _err.status = data.status;
+      if (data.error_code) _err.code = data.error_code;
       throw _err;
     }
     return data;
@@ -698,8 +704,10 @@
     },
     async _loginWithGoogle(googleUser) {
       // googleUser = { idToken, email, name, photo }
+      // El backend devuelve is_new=true cuando el usuario NO existía en la DB
+      // (se acaba de crear) y false cuando ya estaba registrado.
       var d = await apiRequest('POST', '/auth/google', { idToken: googleUser.idToken });
-      return { token: d.token, user: mapUser(d.user) };
+      return { token: d.token, user: mapUser(d.user), isNew: !!d.is_new };
     },
     async listEvents() { return (await apiRequest('GET', '/events/')).map(mapEvent); },
     async listAdminEvents() { return (await apiRequest('GET', '/admin/events')).map(mapEvent); },
@@ -920,7 +928,8 @@
   async function loginWithGoogle(googleUser) {
     var r = await impl._loginWithGoogle(googleUser);
     saveSession(r);
-    return r.user;
+    // Devuelve también isNew para que login/registro decidan si mostrar el onboarding.
+    return { user: r.user, isNew: !!r.isNew };
   }
   function logout() { clearSession(); }
 

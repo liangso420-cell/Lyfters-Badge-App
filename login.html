@@ -163,12 +163,68 @@
           var _ar = ['admin','superadmin','god_admin'];
           window.location.href = nextUrl || (_ar.indexOf(loggedUser.role) !== -1 ? 'workspace-select.html' : 'profile.html');
         } catch (err) {
-          U.toast('Correo o contraseña incorrectos', 'error');
+          // Si la cuenta no existe, mensaje específico; si no, credenciales incorrectas.
+          U.toast(err && err.code === 'no_account' ? 'No tenemos una cuenta con ese email' : 'Correo o contraseña incorrectos', 'error');
         } finally {
           btn.disabled = false;
           btn.textContent = U.t('enter_btn');
         }
       });
+
+      // ── Onboarding de intereses (idéntico al de register.html) ──
+      // Solo se dispara para usuarios NUEVOS que entran por Google desde esta pantalla.
+      var TAGS = ['Desarrollo Web','Mobile','Inteligencia Artificial','Data Science','Ciberseguridad',
+        'DevOps','Cloud','Blockchain','UX/UI','Product Management','Emprendimiento','Marketing Digital',
+        'Diseño','Videojuegos','Robótica','Fintech','Educación Tech','Open Source','Backend','Frontend'];
+
+      function showInterestsStep() {
+        var selected = [];
+        app.innerHTML =
+          '<section class="device-frame px-4 pt-12 pb-12">' +
+            '<div class="card-soft p-8 anim-fade">' +
+              '<div class="text-center mb-6">' +
+                '<div class="text-4xl mb-2">🎯</div>' +
+                '<h2 class="text-xl font-bold">' + U.t('interests_title') + '</h2>' +
+                '<p class="text-gray-400 text-sm mt-1">' + U.t('interests_desc') + '</p>' +
+              '</div>' +
+              '<div id="tags-container" class="flex flex-wrap gap-2 mb-6">' +
+                TAGS.map(function(tag) {
+                  return '<button type="button" data-tag="' + U.esc(tag) + '" class="tag-btn px-3 py-1.5 rounded-full text-sm border border-gray-200 text-gray-600 hover:border-primary hover:text-primary transition">' + U.esc(tag) + '</button>';
+                }).join('') +
+              '</div>' +
+              '<button id="save-interests" class="w-full py-3 rounded-btn text-white font-semibold mb-3" style="background:#6C63FF;">' + U.t('save_continue') + '</button>' +
+              '<button id="skip-interests" class="w-full py-2 text-sm text-gray-400 hover:text-primary">' + U.t('skip_now') + '</button>' +
+            '</div>' +
+          '</section>';
+        Array.prototype.forEach.call(document.querySelectorAll('.tag-btn'), function(btn) {
+          btn.addEventListener('click', function() {
+            var tag = btn.getAttribute('data-tag');
+            var idx = selected.indexOf(tag);
+            if (idx === -1) {
+              selected.push(tag);
+              btn.style.background = '#6C63FF';
+              btn.style.color = 'white';
+              btn.style.borderColor = '#6C63FF';
+            } else {
+              selected.splice(idx, 1);
+              btn.style.background = '';
+              btn.style.color = '';
+              btn.style.borderColor = '';
+            }
+          });
+        });
+
+        async function saveAndContinue() {
+          try {
+            if (selected.length) await API.updateInterests(selected);
+          } catch(e) {}
+          U.toastNextPage(U.t('account_created'), 'success');
+          window.location.href = 'profile.html';
+        }
+
+        document.getElementById('save-interests').addEventListener('click', saveAndContinue);
+        document.getElementById('skip-interests').addEventListener('click', saveAndContinue);
+      }
 
       // ── Login con Google (Firebase) ──────────────
       if (!firebase.apps.length) {
@@ -185,15 +241,24 @@
           provider.setCustomParameters({ prompt: 'select_account' });
           var result = await firebaseAuth.signInWithPopup(provider);
           var idToken = await result.user.getIdToken();
-          var loggedUser = await API.loginWithGoogle({
+          var gres = await API.loginWithGoogle({
             idToken: idToken,
             email:   result.user.email,
             name:    result.user.displayName,
             photo:   result.user.photoURL
           });
-          U.toastNextPage(U.t('welcome_google'), 'success');
+          var loggedUser = gres.user;
           var _ar2 = ['admin','superadmin','god_admin'];
-          window.location.href = nextUrl || (_ar2.indexOf(loggedUser.role) !== -1 ? 'workspace-select.html' : 'profile.html');
+          // Mismo comportamiento que en la pantalla de registro:
+          // admin → workspace; usuario nuevo → onboarding; existente → directo a la app.
+          if (_ar2.indexOf(loggedUser.role) !== -1) {
+            window.location.href = nextUrl || 'workspace-select.html';
+          } else if (gres.isNew) {
+            showInterestsStep();
+          } else {
+            U.toastNextPage(U.t('welcome_google'), 'success');
+            window.location.href = nextUrl || 'profile.html';
+          }
         } catch (err) {
           var mensajes = {
             'auth/popup-closed-by-user':    'Cerraste la ventana antes de completar el inicio.',

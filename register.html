@@ -168,7 +168,10 @@
             showInterestsStep();
           }
         } catch (err) {
-          U.setFieldError(email, err.message || 'No se pudo crear la cuenta');
+          // Si ya existe una cuenta con ese email, mensaje específico que invita a iniciar sesión.
+          U.setFieldError(email, err && err.code === 'email_exists'
+            ? 'Ya existe una cuenta con ese email, iniciá sesión'
+            : (err.message || 'No se pudo crear la cuenta'));
         } finally {
           btn.disabled = false;
           btn.textContent = U.t('create_account');
@@ -176,8 +179,8 @@
       });
 
       // ── Registro/Login con Google (Firebase) ─────
-      // Google hace login y registro al mismo tiempo: si el usuario no existe,
-      // el backend lo crea automáticamente.
+      // Google sirve para login y registro a la vez: el backend crea el usuario si no existe
+      // y devuelve isNew. El onboarding solo se muestra cuando isNew === true (usuario nuevo).
       if (!firebase.apps.length) {
         firebase.initializeApp(window.FIREBASE_CONFIG);
       }
@@ -192,16 +195,22 @@
           provider.setCustomParameters({ prompt: 'select_account' });
           var result = await firebaseAuth.signInWithPopup(provider);
           var idToken = await result.user.getIdToken();
-          var loggedUser = await API.loginWithGoogle({
+          var gres = await API.loginWithGoogle({
             idToken: idToken,
             email:   result.user.email,
             name:    result.user.displayName,
             photo:   result.user.photoURL
           });
+          var loggedUser = gres.user;
+          // Mismo comportamiento que en la pantalla de login:
+          // admin → workspace; usuario nuevo → onboarding; existente → directo a la app.
           if (['admin','superadmin','god_admin'].indexOf(loggedUser.role) !== -1) {
             window.location.href = 'workspace-select.html';
-          } else {
+          } else if (gres.isNew) {
             showInterestsStep();
+          } else {
+            U.toastNextPage(U.t('welcome_google'), 'success');
+            window.location.href = 'profile.html';
           }
         } catch (err) {
           var mensajes = {

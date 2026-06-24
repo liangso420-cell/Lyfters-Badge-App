@@ -119,7 +119,8 @@ def register():
         return jsonify(error="La contraseña debe tener al menos 8 caracteres"), 400
 
     if users().find_one({"email": email}):
-        return jsonify(error="Email ya registrado"), 409
+        return jsonify(error="Ya existe una cuenta con ese email, iniciá sesión",
+                       error_code="email_exists"), 409
 
     pw_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
     result  = users().insert_one({
@@ -281,7 +282,13 @@ def login():
     password = (data.get("password") or "").encode()
 
     user = users().find_one({"email": email})
-    if not user or not bcrypt.checkpw(password, user["password_hash"].encode()):
+    # Login normal solo funciona si la cuenta YA existe.
+    if not user:
+        return jsonify(error="No tenemos una cuenta con ese email",
+                       error_code="no_account"), 401
+    # Cuentas creadas solo con Google no tienen password_hash: no permitir login por contraseña.
+    pw_hash = user.get("password_hash") or ""
+    if not pw_hash or not bcrypt.checkpw(password, pw_hash.encode()):
         return jsonify(error="Correo o contraseña incorrectos"), 401
 
     # Check account ban
