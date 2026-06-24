@@ -184,7 +184,7 @@
           '<td style="color:#8b93a3;">' + U.esc(u.email || '—') + '</td>' +
           '<td><span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;background:rgba(216,151,231,0.12);color:#d897e7;">' + (u.role || '') + '</span></td>' +
           '<td>' + statusCell + '</td>' +
-          '<td><div style="display:flex;flex-direction:column;align-items:flex-start;gap:6px;">' + modBtns + assignRow + '</div></td>' +
+          '<td><div style="display:flex;flex-direction:row;gap:8px;flex-shrink:0;flex-wrap:wrap;">' + modBtns + assignRow + '</div></td>' +
         '</tr>';
       }).join('');
       container.innerHTML =
