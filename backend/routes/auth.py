@@ -17,7 +17,7 @@ from flask_jwt_extended import (
 from google.oauth2 import id_token
 from google.auth.transport import requests as grequests
 
-from db import users, scans, workspace_members, invitations as invitations_col
+from db import users, scans, workspace_members, invitations as invitations_col, achievements
 from utils import sanitize, fmt_user
 from security.limiter import (
     register_limit, login_participant_limit, login_admin_limit, avatar_limit
@@ -401,6 +401,15 @@ def google_login():
         additional_claims=_workspace_claims(user),
     )
     return jsonify(token=token, user=fmt_user(user), is_new=is_new), 200
+
+
+@auth_bp.route("/achievements/definitions", methods=["GET"])
+def achievement_definitions():
+    defs = list(achievements().find(
+        {},
+        {"_id": 0, "slug": 1, "name": 1, "description": 1, "icon": 1, "rarity": 1, "xp_reward": 1}
+    ))
+    return jsonify(defs), 200
 
 
 @auth_bp.route("/forgot-password", methods=["POST"])

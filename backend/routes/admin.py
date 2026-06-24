@@ -739,6 +739,10 @@ def xp_leaderboard():
     if not require_admin():
         return jsonify(error="Acceso denegado"), 403
     pipeline = [
+        {"$match": {"$or": [
+            {"privacy.show_in_leaderboard": {"$ne": False}},
+            {"privacy": {"$exists": False}},
+        ]}},
         {"$sort": {"xp_total": -1}},
         {"$limit": 8},
         {"$project": {"_id": 1, "name": 1, "avatar": 1, "xp_total": 1, "level": 1}}

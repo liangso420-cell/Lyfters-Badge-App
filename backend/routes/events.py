@@ -187,7 +187,13 @@ def join_event(event_id):
 @leaderboard_bp.route("/leaderboard", methods=["GET"])
 @jwt_required()
 def leaderboard():
-    user_list = list(users().find({}, {"password_hash": 0}))
+    user_list = list(users().find(
+        {"$or": [
+            {"privacy.show_in_leaderboard": {"$ne": False}},
+            {"privacy": {"$exists": False}},
+        ]},
+        {"password_hash": 0}
+    ))
     result = []
     for u in user_list:
         uid = u["_id"]
@@ -228,6 +234,10 @@ def event_leaderboard(event_id):
             "foreignField": "_id", "as": "user",
         }},
         {"$unwind": "$user"},
+        {"$match": {"$or": [
+            {"user.privacy.show_in_leaderboard": {"$ne": False}},
+            {"user.privacy": {"$exists": False}},
+        ]}},
     ]
     rows = list(scans().aggregate(pipeline))
 
@@ -283,8 +293,13 @@ def global_leaderboard():
         achievements_count = user_achievements().count_documents({"user_id": uid})
         return badges_total, events_participated, achievements_count
 
-    # Top 50 por XP total.
-    top = list(users().find({}, {"name": 1, "xp_total": 1}).sort("xp_total", -1).limit(50))
+    _privacy_filter = {"$or": [
+        {"privacy.show_in_leaderboard": {"$ne": False}},
+        {"privacy": {"$exists": False}},
+    ]}
+
+    # Top 50 por XP total — solo usuarios que no ocultaron su perfil.
+    top = list(users().find(_privacy_filter, {"name": 1, "xp_total": 1}).sort("xp_total", -1).limit(50))
 
     ranking = []
     for i, u in enumerate(top):

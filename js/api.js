@@ -80,6 +80,20 @@
     return ACHIEVEMENT_DEFS.filter(function (a) { return a.slug === slug; })[0] || null;
   }
 
+  var _achievementDefs = null;
+  async function loadAchievementDefs() {
+    if (_achievementDefs) return _achievementDefs;
+    try {
+      var res = await apiRequest('GET', '/auth/achievements/definitions');
+      if (Array.isArray(res) && res.length) {
+        _achievementDefs = res;
+        return res;
+      }
+    } catch(e) { /* fallback */ }
+    _achievementDefs = ACHIEVEMENT_DEFS;
+    return ACHIEVEMENT_DEFS;
+  }
+
   /* =========================================================
      MOCK (localStorage)
      ========================================================= */
