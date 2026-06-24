@@ -749,11 +749,12 @@
     },
     async listAdminBadges(eventId) {
       var d = await apiRequest('GET', '/admin/events/' + eventId + '/badges');
+      var ev = d.event || d.evento || {};
       return {
-        event: { id: d.evento.id, name: d.evento.nombre, totalParticipants: undefined, access_qr: d.evento.access_qr || null, photo: d.evento.photo || null },
+        event: { id: ev.id, name: ev.name || ev.nombre, totalParticipants: undefined, access_qr: ev.access_qr || null, photo: ev.photo || null, status: ev.status || null, lat: ev.lat || null, lng: ev.lng || null },
         badges: (d.badges || []).map(function (b) {
           return { id: b.id, emoji: b.icon || '', icon_url: b.icon_url || null, name: b.nombre, desc: b.descripcion,
-            token: b.token, redeemUrl: b.redeem_url || (APP_BASE + 'redeem.html?event=' + d.evento.id + '&token=' + b.token),
+            token: b.token, redeemUrl: b.redeem_url || (APP_BASE + 'redeem.html?event=' + ev.id + '&token=' + b.token),
             redeemed: b.canjeados || 0, qrImage: b.qr_image || null,
             xp_value: b.xp_value != null ? b.xp_value : 10, is_rare: !!b.is_rare };
         })
