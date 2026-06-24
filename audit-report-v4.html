@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lyfter Badge · Auditoría v4</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --gd: #0e1118;
+  --sd: #161924;
+  --bd: rgba(255,255,255,0.07);
+  --td: #e8eaf0;
+  --tdim: rgba(232,234,240,0.50);
+
+  --gl: #f5f6fa;
+  --sl: #ffffff;
+  --bl: #e2e4ec;
+  --tm: #1a1d26;
+  --ts: #5a5f78;
+
+  --accent: #6C63FF;
+  --green:  #3ecf8e;
+  --yellow: #f59e0b;
+  --red:    #ef4444;
+
+  --mono: "Cascadia Code","JetBrains Mono","Fira Code","SF Mono","Consolas",monospace;
+  --sans: "Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --rad: 10px;
+  --radlg: 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+body { font-family: var(--sans); background: var(--gl); color: var(--tm); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+
+/* ── HERO ─────────────────────────────── */
+.hero {
+  background: var(--gd);
+  padding: 56px 40px 52px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(108,99,255,0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(108,99,255,0.045) 1px, transparent 1px);
+  background-size: 36px 36px;
+  pointer-events: none;
+}
+.hero-inner { position: relative; max-width: 900px; margin: 0 auto; }
+
+.hero-eyebrow {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 30px;
+  display: flex; align-items: center; gap: 10px;
+}
+.hero-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent); box-shadow: 0 0 8px var(--accent); flex-shrink: 0;
+}
+
+.hero-score-row {
+  display: flex; align-items: baseline; gap: 14px;
+  margin-bottom: 6px; flex-wrap: wrap;
+}
+.hero-num {
+  font-family: var(--mono);
+  font-size: clamp(72px, 14vw, 140px);
+  font-weight: 700; color: var(--td);
+  letter-spacing: -.03em; line-height: 1;
+}
+.hero-denom {
+  font-family: var(--mono);
+  font-size: clamp(24px, 5vw, 46px);
+  color: var(--tdim); letter-spacing: -.01em; line-height: 1;
+}
+
+.hero-delta {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(62,207,142,.10); border: 1px solid rgba(62,207,142,.28);
+  color: var(--green); font-family: var(--mono); font-size: 12.5px;
+  padding: 4px 12px; border-radius: 20px; margin-bottom: 30px;
+}
+
+.hero-bar-track {
+  height: 5px; background: rgba(255,255,255,.07);
+  border-radius: 3px; overflow: hidden; margin-bottom: 10px;
+}
+.hero-bar-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--accent), var(--green));
+  border-radius: 3px;
+  animation: barFill 1.4s cubic-bezier(.22,.68,0,1.2) .4s forwards;
+}
+@keyframes barFill { to { width: 97%; } }
+.hero-bar-legend {
+  display: flex; justify-content: space-between;
+  font-family: var(--mono); font-size: 10px; color: var(--tdim);
+  letter-spacing: .08em; margin-bottom: 28px;
+}
+
+.hero-cats { display: flex; gap: 10px; flex-wrap: wrap; }
+.hero-cat {
+  font-family: var(--mono); font-size: 12px;
+  background: rgba(255,255,255,.04); border: 1px solid var(--bd);
+  border-radius: 6px; padding: 7px 13px;
+}
+.hc-lbl { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--tdim); }
+.hc-val { color: var(--td); font-size: 15px; font-weight: 600; }
+
+/* perfect badge */
+.perfect-tag {
+  display: inline-block;
+  font-family: var(--mono); font-size: 9px; letter-spacing: .1em;
+  text-transform: uppercase;
+  background: rgba(62,207,142,.18); color: var(--green);
+  border: 1px solid rgba(62,207,142,.35);
+  border-radius: 4px; padding: 2px 6px; margin-left: 6px;
+  vertical-align: middle;
+}
+
+/* ── BODY ─────────────────────────────── */
+.wrap { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
+
+/* ── SCORE RINGS ──────────────────────── */
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px; margin-bottom: 48px;
+}
+.score-card {
+  background: var(--sl); border: 1px solid var(--bl);
+  border-radius: var(--radlg); padding: 28px 20px 22px;
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  position: relative;
+}
+.score-card-perfect { border-color: rgba(62,207,142,.4); box-shadow: 0 0 0 1px rgba(62,207,142,.2); }
+.ring-wrap { position: relative; width: 84px; height: 84px; }
+.ring-wrap svg { width: 84px; height: 84px; transform: rotate(-90deg); overflow: visible; }
+.ring-bg  { fill: none; stroke: #eaecf2; stroke-width: 6; }
+.ring-arc { fill: none; stroke-width: 6; stroke-linecap: round; }
+.ring-label {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.ring-num { font-family: var(--mono); font-size: 24px; font-weight: 700; color: var(--tm); line-height: 1; }
+.ring-den { font-family: var(--mono); font-size: 11px; color: var(--ts); }
+.score-card-ttl {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: .09em; text-transform: uppercase;
+  color: var(--ts); text-align: center;
+}
+.perfect-crown {
+  position: absolute; top: 12px; right: 14px;
+  font-family: var(--mono); font-size: 9px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--green); background: rgba(62,207,142,.10);
+  border: 1px solid rgba(62,207,142,.3); border-radius: 4px; padding: 2px 7px;
+}
+
+/* ── SECTION HEADER ───────────────────── */
+.sh { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; margin-top: 44px; }
+.sh:first-child { margin-top: 0; }
+.sh h2 { font-size: 13px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--ts); white-space: nowrap; }
+.sh-line { flex: 1; height: 1px; background: var(--bl); }
+
+/* ── DELTA PANEL ──────────────────────── */
+.delta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 40px; }
+.delta-card { background: var(--sl); border: 1px solid var(--bl); border-radius: var(--rad); padding: 18px 20px; }
+.delta-ttl { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--ts); margin-bottom: 12px; }
+.delta-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--tm); padding: 5px 0; border-bottom: 1px solid var(--bl); }
+.delta-row:last-child { border-bottom: none; }
+.dico { font-size: 12px; flex-shrink: 0; }
+.dv { font-family: var(--mono); font-size: 11px; color: var(--ts); margin-left: auto; white-space: nowrap; }
+
+/* ── COMPARISON TABLE ─────────────────── */
+.cmp-table {
+  width: 100%; border-collapse: collapse; font-size: 13.5px;
+  background: var(--sl); border: 1px solid var(--bl);
+  border-radius: var(--rad); overflow: hidden; margin-bottom: 32px;
+}
+.cmp-table th {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--ts); padding: 10px 14px;
+  text-align: left; background: #f8f9fc; border-bottom: 1px solid var(--bl); font-weight: 400;
+}
+.cmp-table th:not(:first-child) { text-align: center; }
+.cmp-table td { padding: 10px 14px; border-bottom: 1px solid var(--bl); vertical-align: middle; }
+.cmp-table tr:last-child td { border-bottom: none; font-weight: 600; }
+.cmp-table td:not(:first-child) { text-align: center; font-family: var(--mono); }
+.v3-score { color: var(--ts); }
+.v4-score { color: var(--tm); font-weight: 700; }
+.delta-score { color: var(--green); font-weight: 600; }
+
+/* ── CHECKLIST TABLE ──────────────────── */
+.ct {
+  width: 100%; border-collapse: collapse; font-size: 13.5px;
+  background: var(--sl); border: 1px solid var(--bl);
+  border-radius: var(--rad); overflow: hidden; margin-bottom: 8px;
+}
+.ct th {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--ts); padding: 10px 14px;
+  text-align: left; background: #f8f9fc; border-bottom: 1px solid var(--bl); font-weight: 400;
+}
+.ct td { padding: 10px 14px; border-bottom: 1px solid var(--bl); vertical-align: middle; }
+.ct tr:last-child td { border-bottom: none; }
+.ct tbody tr:hover td { background: rgba(108,99,255,.025); }
+
+.pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: var(--mono); font-size: 11px;
+  padding: 3px 9px; border-radius: 4px; white-space: nowrap;
+}
+.ok   { background: rgba(62,207,142,.10); color: #1a7a4a;  border: 1px solid rgba(62,207,142,.3); }
+.warn { background: rgba(245,158,11,.10); color: #92580a;  border: 1px solid rgba(245,158,11,.3); }
+.fail { background: rgba(239,68,68,.10);  color: #b91c1c;  border: 1px solid rgba(239,68,68,.3); }
+.new  { background: rgba(108,99,255,.10); color: #4338ca;  border: 1px solid rgba(108,99,255,.3); }
+
+.cd { color: var(--tm); }
+.cd small { display: block; font-size: 11.5px; color: var(--ts); margin-top: 1px; }
+.cr { font-family: var(--mono); font-size: 11.5px; color: var(--accent); text-align: right; white-space: nowrap; }
+
+/* ── SECURITY GRID ────────────────────── */
+.sec-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+  gap: 10px; margin-bottom: 40px;
+}
+.sec-item {
+  background: var(--sl); border: 1px solid var(--bl);
+  border-radius: var(--rad); padding: 13px 15px;
+  display: flex; align-items: center; gap: 10px;
+}
+.sec-ico {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; flex-shrink: 0;
+}
+.ico-ok   { background: rgba(62,207,142,.12); }
+.ico-warn { background: rgba(245,158,11,.12); }
+.sec-lbl { font-size: 12.5px; font-weight: 500; color: var(--tm); }
+.sec-st  { font-family: var(--mono); font-size: 10px; color: var(--ts); margin-top: 1px; }
+
+/* ── ERROR CARDS ──────────────────────── */
+.err-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 40px; }
+.err { border-radius: var(--rad); padding: 16px 20px; display: flex; gap: 14px; align-items: flex-start; }
+.err-warn { background: rgba(245,158,11,.055); border: 1px solid rgba(245,158,11,.2); }
+.err-badge {
+  font-family: var(--mono); font-size: 10px; font-weight: 600;
+  padding: 3px 8px; border-radius: 4px; white-space: nowrap;
+  flex-shrink: 0; margin-top: 2px;
+}
+.eb-warn { background: rgba(245,158,11,.15); color: #92580a; }
+.err-ttl { font-size: 14px; font-weight: 600; color: var(--tm); margin-bottom: 4px; }
+.err-dsc { font-size: 13px; color: var(--ts); line-height: 1.5; }
+.err-ref { font-family: var(--mono); font-size: 11px; color: var(--accent); margin-top: 5px; }
+
+/* ── VERDICT ──────────────────────────── */
+.verdict {
+  background: var(--gd); border-radius: var(--radlg);
+  padding: 48px 40px;
+  display: flex; flex-direction: column;
+  align-items: center; text-align: center; gap: 14px;
+  position: relative; overflow: hidden;
+}
+.verdict::before {
+  content: ''; position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(108,99,255,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(108,99,255,.04) 1px, transparent 1px);
+  background-size: 36px 36px; pointer-events: none;
+}
+.verdict > * { position: relative; }
+.verdict-score {
+  font-family: var(--mono); font-size: 58px; font-weight: 700;
+  color: var(--td); letter-spacing: -.02em; line-height: 1;
+}
+.verdict-tag {
+  font-family: var(--mono); font-size: 12px;
+  letter-spacing: .22em; text-transform: uppercase;
+  color: var(--green); border: 1px solid rgba(62,207,142,.3);
+  padding: 5px 16px; border-radius: 20px;
+}
+.verdict-txt { font-size: 13.5px; color: var(--tdim); max-width: 540px; line-height: 1.75; }
+.verdict-meta { font-family: var(--mono); font-size: 10px; color: rgba(232,234,240,.25); letter-spacing: .1em; }
+
+/* ── RESPONSIVE ───────────────────────── */
+@media (max-width: 680px) {
+  .hero { padding: 36px 20px 36px; }
+  .wrap { padding: 24px 16px 60px; }
+  .ct th:nth-child(3), .ct td:nth-child(3) { display: none; }
+  .delta-grid { grid-template-columns: 1fr; }
+  .verdict { padding: 36px 24px; }
+  .verdict-score { font-size: 42px; }
+  .hero-cats { gap: 8px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">
+      <span class="hero-dot"></span>
+      Lyfter Badge App &nbsp;·&nbsp; Tech Lead + QA Audit &nbsp;·&nbsp; 2026-06-23
+    </div>
+    <div class="hero-score-row">
+      <span class="hero-num">97</span>
+      <span class="hero-denom">/ 100</span>
+    </div>
+    <div class="hero-delta">▲ +11 pts desde v3 &nbsp;·&nbsp; 8 fixes verificados</div>
+    <div class="hero-bar-track"><div class="hero-bar-fill"></div></div>
+    <div class="hero-bar-legend">
+      <span>0</span><span>APROBADO ≥ 80</span><span>100</span>
+    </div>
+    <div class="hero-cats">
+      <div class="hero-cat">
+        <div class="hc-lbl">Core</div>
+        <div class="hc-val">39 / 40</div>
+      </div>
+      <div class="hero-cat">
+        <div class="hc-lbl">Frontend</div>
+        <div class="hc-val">19 / 20</div>
+      </div>
+      <div class="hero-cat" style="border-color:rgba(62,207,142,.35);">
+        <div class="hc-lbl">Producción</div>
+        <div class="hc-val" style="color:var(--green);">20 / 20 <span class="perfect-tag">PERFECT</span></div>
+      </div>
+      <div class="hero-cat">
+        <div class="hc-lbl">Calidad</div>
+        <div class="hc-val">19 / 20</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- BODY -->
+<main class="wrap">
+
+  <!-- SCORE RINGS -->
+  <div class="score-grid">
+    <!-- Core 39/40 = 97.5% → circ=213.6, dash=208.3 -->
+    <div class="score-card">
+      <div class="ring-wrap">
+        <svg viewBox="0 0 84 84">
+          <circle class="ring-bg" cx="42" cy="42" r="34"/>
+          <circle class="ring-arc" cx="42" cy="42" r="34" stroke="#6C63FF" stroke-dasharray="208.3 213.6"/>
+        </svg>
+        <div class="ring-label"><span class="ring-num">39</span><span class="ring-den">/ 40</span></div>
+      </div>
+      <div class="score-card-ttl">Funcionalidad Core</div>
+    </div>
+
+    <!-- Frontend 19/20 = 95% → dash=202.9 -->
+    <div class="score-card">
+      <div class="ring-wrap">
+        <svg viewBox="0 0 84 84">
+          <circle class="ring-bg" cx="42" cy="42" r="34"/>
+          <circle class="ring-arc" cx="42" cy="42" r="34" stroke="#6C63FF" stroke-dasharray="202.9 213.6"/>
+        </svg>
+        <div class="ring-label"><span class="ring-num">19</span><span class="ring-den">/ 20</span></div>
+      </div>
+      <div class="score-card-ttl">Frontend</div>
+    </div>
+
+    <!-- Producción 20/20 = 100% → dash=213.6 -->
+    <div class="score-card score-card-perfect">
+      <span class="perfect-crown">PERFECT</span>
+      <div class="ring-wrap">
+        <svg viewBox="0 0 84 84">
+          <circle class="ring-bg" cx="42" cy="42" r="34"/>
+          <circle class="ring-arc" cx="42" cy="42" r="34" stroke="#3ecf8e" stroke-dasharray="213.6 213.6"/>
+        </svg>
+        <div class="ring-label"><span class="ring-num" style="color:#1a7a4a;">20</span><span class="ring-den">/ 20</span></div>
+      </div>
+      <div class="score-card-ttl">Demo / Producción</div>
+    </div>
+
+    <!-- Calidad 19/20 = 95% → dash=202.9 -->
+    <div class="score-card">
+      <div class="ring-wrap">
+        <svg viewBox="0 0 84 84">
+          <circle class="ring-bg" cx="42" cy="42" r="34"/>
+          <circle class="ring-arc" cx="42" cy="42" r="34" stroke="#3ecf8e" stroke-dasharray="202.9 213.6"/>
+        </svg>
+        <div class="ring-label"><span class="ring-num">19</span><span class="ring-den">/ 20</span></div>
+      </div>
+      <div class="score-card-ttl">Calidad de Código</div>
+    </div>
+  </div>
+
+  <!-- COMPARACIÓN v3 → v4 -->
+  <div class="sh"><h2>Comparación v3 → v4</h2><div class="sh-line"></div></div>
+  <table class="cmp-table">
+    <thead>
+      <tr>
+        <th>Categoría</th>
+        <th>v3</th>
+        <th>v4</th>
+        <th>Delta</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Funcionalidad Core (40 pts)</td>
+        <td class="v3-score">37</td>
+        <td class="v4-score">39</td>
+        <td class="delta-score">+2</td>
+      </tr>
+      <tr>
+        <td>Frontend (20 pts)</td>
+        <td class="v3-score">17</td>
+        <td class="v4-score">19</td>
+        <td class="delta-score">+2</td>
+      </tr>
+      <tr>
+        <td>Demo / Producción (20 pts)</td>
+        <td class="v3-score">16</td>
+        <td class="v4-score" style="color:#1a7a4a;">20</td>
+        <td class="delta-score">+4</td>
+      </tr>
+      <tr>
+        <td>Calidad de Código (20 pts)</td>
+        <td class="v3-score">16</td>
+        <td class="v4-score">19</td>
+        <td class="delta-score">+3</td>
+      </tr>
+      <tr>
+        <td>TOTAL</td>
+        <td class="v3-score">86</td>
+        <td class="v4-score">97</td>
+        <td class="delta-score">+11</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- DELTA PANEL -->
+  <div class="sh"><h2>8 Fixes verificados en v4</h2><div class="sh-line"></div></div>
+  <div class="delta-grid">
+    <div class="delta-card">
+      <div class="delta-ttl">Correcciones aplicadas</div>
+      <div class="delta-row"><span class="dico" style="color:#3ecf8e">✓</span> render.yaml — 3 vars faltantes <span class="dv">REDIS/RESEND/FRONTEND</span></div>
+      <div class="delta-row"><span class="dico" style="color:#3ecf8e">✓</span> OPTIONS CORS wildcard eliminado <span class="dv">app.py</span></div>
+      <div class="delta-row"><span class="dico" style="color:#3ecf8e">✓</span> vercel.json rewrite obsoleto <span class="dv">→ {}</span></div>
+      <div class="delta-row"><span class="dico" style="color:#3ecf8e">✓</span> admin.py scanned_at → redeemed_at <span class="dv">:159</span></div>
+    </div>
+    <div class="delta-card">
+      <div class="delta-ttl">Correcciones aplicadas (cont.)</div>
+      <div class="delta-row"><span class="dico" style="color:#3ecf8e">✓</span> join innerHTML → createElement <span class="dv">utils.js:1598</span></div>
+      <div class="delta-row"><span class="dico" style="color:#3ecf8e">✓</span> i18n HTML removido (ES + EN) <span class="dv">utils.js:58</span></div>
+      <div class="delta-row"><span class="dico" style="color:#3ecf8e">✓</span> Logro "vertigo" condición servidor <span class="dv">achievements.py</span></div>
+      <div class="delta-row"><span class="dico" style="color:#3ecf8e">✓</span> twenty_five_badges en cliente <span class="dv">api.js:71</span></div>
+    </div>
+  </div>
+
+  <!-- CAT 1: CORE -->
+  <div class="sh"><h2>1 — Funcionalidad Core &nbsp; 39 / 40</h2><div class="sh-line"></div></div>
+  <table class="ct">
+    <thead><tr><th>Estado</th><th>Check</th><th>Evidencia</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Register — bcrypt, email regex, invite_token, workspace join<small>Validación nombre/email/password; hash bcrypt; invite procesado en el mismo request</small></td>
+        <td class="cr">auth.py:105</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Login — JWT, ban check, IP check, last_login_ip<small>Verifica banned_until y ban_ip; almacena last_login_ip; JWT con workspace claims</small></td>
+        <td class="cr">auth.py:274</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">JWT sin fallback — RuntimeError en startup<small>os.getenv("JWT_SECRET") + if not → raise RuntimeError antes de arrancar</small></td>
+        <td class="cr">app.py:33–35</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Google OAuth — Firebase idToken server-side<small>verify_firebase_token(); upsert de usuario; devuelve JWT propio idéntico al login regular</small></td>
+        <td class="cr">auth.py:318</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Roles — participant / admin / superadmin / god_admin<small>_workspace_claims() embebe rol; _ROLE_RANK completo con admin:2; require_admin() en todas las rutas protegidas</small></td>
+        <td class="cr">auth.py:29 · workspaces.py:268</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Eventos CRUD completo<small>GET, POST, PATCH, DELETE; validación fechas ISO; XP config por evento; workspace filter</small></td>
+        <td class="cr">admin.py:76–334</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Estados — compute_event_status()<small>upcoming / open / ongoing / ended; filtrado en list_events, recommended, admin_list_events</small></td>
+        <td class="cr">utils.py</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Geo-validación haversine 1 km<small>Aplicado en join (/events/:id/join) y en redeem; falla silenciosa si faltan coordenadas</small></td>
+        <td class="cr">redeem.py:41 · events.py:166</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Badges UUID único + índice MongoDB<small>uuid.uuid4() + badges().create_index("token", unique=True)</small></td>
+        <td class="cr">admin.py:441 · db.py:68</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">QR generado y guardado — APP_BASE_URL query string<small>f"{APP_BASE_URL}/redeem.html?event=…&token=…" → qr_base64 guardado en documento del badge</small></td>
+        <td class="cr">admin.py:443</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Regenerar QR — nuevo UUID + nuevo qr_base64<small>POST /admin/badges/:id/regenerate-qr regenera token y QR; scans anteriores con token viejo ya no son válidos</small></td>
+        <td class="cr">admin.py:544</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Redención atómica — $setOnInsert + upsert + DuplicateKeyError<small>Índice único (user_id, badge_id) es la barrera real; dos requests simultáneas → idempotente</small></td>
+        <td class="cr">redeem.py:59–72</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">XP — $inc atómico, xp_log append-only<small>grant_xp() → find_one_and_update $inc + ReturnDocument.AFTER; nunca read-modify-write</small></td>
+        <td class="cr">services/xp.py:119</td>
+      </tr>
+      <tr>
+        <td><span class="pill new">✅ FIXED</span></td>
+        <td class="cd">Logro "vertigo" — condición servidor implementada<small>_check_vertigo(): últimos 5 scans por redeemed_at DESC; True si diff &lt; 3600s</small></td>
+        <td class="cr">achievements.py:61</td>
+      </tr>
+      <tr>
+        <td><span class="pill new">✅ FIXED</span></td>
+        <td class="cd">Logro "twenty_five_badges" — paridad cliente/servidor<small>Definición agregada en ACHIEVEMENT_DEFS (Gran Coleccionista, epic, xp_reward:50)</small></td>
+        <td class="cr">api.js:71</td>
+      </tr>
+      <tr>
+        <td><span class="pill new">✅ FIXED</span></td>
+        <td class="cd">Estadística actividad_por_hora — campo correcto<small>Pipeline de event_stats() ahora filtra y agrupa por redeemed_at (no scanned_at)</small></td>
+        <td class="cr">admin.py:159</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Achievements endpoints — dinámicos con fallback<small>GET /profile/achievements + GET /auth/achievements/definitions; api.js usa loadAchievementDefs() con fallback a ACHIEVEMENT_DEFS local</small></td>
+        <td class="cr">xp.py:34 · auth.py:380</td>
+      </tr>
+      <tr>
+        <td><span class="pill warn">⚠️ WARN</span></td>
+        <td class="cd">Logro "first_event_complete" — campo icon con HTML markup<small>icon: '&lt;img src="assets/icons/ui/icono-reclamado.png" …&gt;' — HTML en campo de dato; no es user-data (riesgo XSS bajo) pero es un patrón inconsistente con el resto</small></td>
+        <td class="cr">api.js:72</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- CAT 2: FRONTEND -->
+  <div class="sh"><h2>2 — Frontend &nbsp; 19 / 20</h2><div class="sh-line"></div></div>
+  <table class="ct">
+    <thead><tr><th>Estado</th><th>Check</th><th>Evidencia</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">27 vistas HTML presentes<small>login, register, profile, scan, redeem, event-detail, admin-event, admin-event-detail, admin-event-create, admin-leaderboard, admin-participation, gestion-usuarios, leaderboard, user-achievements, user-events, user-ranking, workspace-*…</small></td>
+        <td class="cr">/ (raíz)</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Responsive — Tailwind CSS con clases md: y sm:</td>
+        <td class="cr">todas las vistas</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">toast() sin XSS — createElement + span.textContent<small>Reescrito con DOM API puro; sin innerHTML para mensajes de usuario</small></td>
+        <td class="cr">utils.js:389</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">esc() aplicada en todos los bloques innerHTML con datos de usuario<small>Confirmado en confirmModal, errorHtml, showDrawer, nav HTML, modales de cuenta</small></td>
+        <td class="cr">utils.js:380</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">safeAvatarUrl() — whitelist de orígenes Google CDN<small>data: + lh3/lh4/lh5/lh6.googleusercontent.com; origen desconocido → null → icono default</small></td>
+        <td class="cr">utils.js:546</td>
+      </tr>
+      <tr>
+        <td><span class="pill new">✅ FIXED</span></td>
+        <td class="cd">Join workspace — innerHTML reemplazado por DOM<small>result.textContent = ''; createElement img + span; data.workspace y data.role nunca se usan como HTML</small></td>
+        <td class="cr">utils.js:1598</td>
+      </tr>
+      <tr>
+        <td><span class="pill new">✅ FIXED</span></td>
+        <td class="cd">i18n strings sin HTML embebido — ES y EN<small>welcome_google y account_created sin &lt;img&gt; inline; toast() ya usa textContent; tags se mostraban como texto literal</small></td>
+        <td class="cr">utils.js:58 · 220</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Iconos PNG — emojis reemplazados en todo el proyecto<small>assets/icons/ui/ y assets/icons/achievements/ usados en toasts, nav, badges, botones</small></td>
+        <td class="cr">assets/icons/</td>
+      </tr>
+      <tr>
+        <td><span class="pill warn">⚠️ WARN</span></td>
+        <td class="cd">first_event_complete.icon con HTML markup — inconsistencia<small>Mismo issue que Cat 1; si se renderiza con innerHTML muestra una imagen (hardcoded, no exploitable), pero rompe la convención de que icon es texto/emoji</small></td>
+        <td class="cr">api.js:72</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- CAT 3: PRODUCCIÓN -->
+  <div class="sh"><h2>3 — Demo / Producción &nbsp; 20 / 20 ✓ PERFECT</h2><div class="sh-line"></div></div>
+  <table class="ct">
+    <thead><tr><th>Estado</th><th>Check</th><th>Evidencia</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">JWT_SECRET sin fallback — RuntimeError en startup<small>Falla rápido: RuntimeError si JWT_SECRET no está en el entorno</small></td>
+        <td class="cr">app.py:33–35</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">MONGO_URI sin fallback — RuntimeError en get_db()<small>Mismo patrón; falla antes de aceptar tráfico si la DB no está configurada</small></td>
+        <td class="cr">db.py:31–33</td>
+      </tr>
+      <tr>
+        <td><span class="pill new">✅ FIXED</span></td>
+        <td class="cd">render.yaml completo — 8 variables de entorno<small>MONGO_URI, JWT_SECRET (generateValue), CORS_ORIGINS, APP_BASE_URL, FLASK_ENV, REDIS_URL, RESEND_API_KEY, FRONTEND_URL</small></td>
+        <td class="cr">render.yaml</td>
+      </tr>
+      <tr>
+        <td><span class="pill new">✅ FIXED</span></td>
+        <td class="cd">vercel.json limpio — sin rewrite path-based obsoleto<small>Archivo reducido a {}; las URLs de redeem usan query strings (?event=&amp;token=) y no requieren rewrite</small></td>
+        <td class="cr">vercel.json</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">CORS exacto sin wildcards<small>"https://lyfters-badge-app.vercel.app" hardcodeado + dev origins; sin *.vercel.app</small></td>
+        <td class="cr">app.py:47</td>
+      </tr>
+      <tr>
+        <td><span class="pill new">✅ FIXED</span></td>
+        <td class="cd">Sin handlers OPTIONS con Access-Control-Allow-Origin: *<small>Handlers manuales eliminados; Flask-CORS gestiona todos los preflights con la lista _cors_origins</small></td>
+        <td class="cr">app.py (eliminados)</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">QR apunta a APP_BASE_URL — query string ?event=&amp;token=<small>f"{APP_BASE_URL}/redeem.html?event={event_id}&amp;token={token}" en badge, regenerate-qr y access-qr</small></td>
+        <td class="cr">admin.py:443 · 561 · 587</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">ProxyFix configurado — IP real del cliente en rate limiting<small>ProxyFix(x_for=1) confía en exactamente 1 proxy; request.remote_addr es la IP real del cliente</small></td>
+        <td class="cr">app.py:31</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- CAT 4: CALIDAD -->
+  <div class="sh"><h2>4 — Calidad de Código &nbsp; 19 / 20</h2><div class="sh-line"></div></div>
+  <table class="ct">
+    <thead><tr><th>Estado</th><th>Check</th><th>Evidencia</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Sin privilege escalation en invite_member<small>Ambos users().update_one({"$set":{"role":…}}) eliminados; el rol global nunca se sobreescribe al invitar a un workspace</small></td>
+        <td class="cr">workspaces.py:382</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Race condition atómica — $setOnInsert + DuplicateKeyError<small>Índice único (user_id, badge_id) es la barrera; update_one upsert es idempotente bajo concurrencia</small></td>
+        <td class="cr">redeem.py:59</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">_ROLE_RANK completo — {participant:1, admin:2, superadmin:3, god_admin:4}<small>Rank usado en change_role, invite_member y reasignación de miembro</small></td>
+        <td class="cr">workspaces.py:268</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">_PRIVACY_VISIBLE DRY — constante de módulo<small>Usada en leaderboard(), event_leaderboard() y global_leaderboard() sin duplicar el $or filter</small></td>
+        <td class="cr">events.py:17</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Rate limiting solo Redis — sin defaultdict en memoria<small>Flask-Limiter con Redis como único store; auth.py libre de _login_attempts y cualquier dict global</small></td>
+        <td class="cr">security/limiter.py:104</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">XP atómico — $inc + ReturnDocument.AFTER<small>Nunca read-modify-write; xp_log append-only, una entrada por tipo de XP; no hay doble conteo posible</small></td>
+        <td class="cr">services/xp.py:119</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">Logros atómicos — DuplicateKeyError en insert<small>Índice único (user_id, achievement_id); concurrencia resuelta silenciosamente con DuplicateKeyError</small></td>
+        <td class="cr">achievements.py:81</td>
+      </tr>
+      <tr>
+        <td><span class="pill new">✅ FIXED</span></td>
+        <td class="cd">actividad_por_hora — campo redeemed_at correcto<small>Pipeline de event_stats() usaba scanned_at (inexistente); corregido a redeemed_at que es el campo real</small></td>
+        <td class="cr">admin.py:159</td>
+      </tr>
+      <tr>
+        <td><span class="pill new">✅ FIXED</span></td>
+        <td class="cd">Logro "vertigo" — condición implementada en servidor<small>_check_vertigo(user_oid): consulta los últimos 5 scans por redeemed_at; paridad completa cliente/servidor</small></td>
+        <td class="cr">achievements.py:61</td>
+      </tr>
+      <tr>
+        <td><span class="pill ok">✅ OK</span></td>
+        <td class="cd">safeAvatarUrl() — validación de origen en 4 puntos de uso<small>data: + lh3-lh6.googleusercontent.com; origen desconocido → null; aplicado en header drawer, nav drawer, nav dinámico, account panel</small></td>
+        <td class="cr">utils.js:546</td>
+      </tr>
+      <tr>
+        <td><span class="pill warn">⚠️ WARN</span></td>
+        <td class="cd">api.js:873 — twenty_five_badges mapeado a icono incorrecto<small>ACHIEVEMENT_ICONS['twenty_five_badges'] = 'assets/icons/achievements/vertigo.png' — copy-paste de la entrada anterior; debería usar coleccionista.png o un icono dedicado</small></td>
+        <td class="cr">api.js:873</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- SECURITY GRID -->
+  <div class="sh"><h2>Grid de Seguridad — 15 / 16 checks verdes</h2><div class="sh-line"></div></div>
+  <div class="sec-grid">
+    <div class="sec-item">
+      <div class="sec-ico ico-ok">🔐</div>
+      <div><div class="sec-lbl">JWT Secret</div><div class="sec-st">RuntimeError sin fallback</div></div>
+    </div>
+    <div class="sec-item">
+      <div class="sec-ico ico-ok">🍃</div>
+      <div><div class="sec-lbl">MongoDB URI</div><div class="sec-st">RuntimeError sin fallback</div></div>
+    </div>
+    <div class="sec-item">
+      <div class="sec-ico ico-ok">🔒</div>
+      <div><div class="sec-lbl">Passwords</div><div class="sec-st">bcrypt + salt rounds</div></div>
+    </div>
+    <div class="sec-item">
+      <div class="sec-ico ico-ok">⚡</div>
+      <div><div class="sec-lbl">Rate Limiting</div><div class="sec-st">Flask-Limiter + Redis</div></div>
+    </div>
+    <div class="sec-item">
+      <div class="sec-ico ico-ok">🌐</div>
+      <div><div class="sec-lbl">CORS</div><div class="sec-st">Exacto · sin wildcards · sin OPTIONS *</div></div>
+    </div>
+    <div class="sec-item">
+      <div class="sec-ico ico-ok">🧼</div>
+      <div><div class="sec-lbl">Input Sanitize</div><div class="sec-st">sanitize() en todos los endpoints</div></div>
+    </div>
+    <div class="sec-item">
+      <div class="sec-ico ico-ok">🛡️</div>
+      <div><div class="sec-lbl">XSS Toasts</div><div class="sec-st">textContent — sin innerHTML</div></div>
+    </div>
+    <div class="sec-item">
+      <div class="sec-ico ico-ok">🔗</div>
+      <div><div class="sec-lbl">XSS Join</div><div class="sec-st">createElement · data del server como texto</div></div>
+    </div>
+    <div class="sec-item">
+      <div class="sec-ico ico-ok">🖼️</div>
+      <div><div class="sec-lbl">Avatar XSS</div><div class="sec-st">safeAvatarUrl() whitelist</div></div>
+    </div>
+    <div class="sec-item">
+      <div class="sec-ico ico-ok">⚛️</div>
+      <div><div class="sec-lbl">Race Condition</div><div class="sec-st">Atomic upsert + DuplicateKeyError</div></div>
+    </div>
+    <div class="sec-item">
+      <div class="sec-ico ico-ok">👮</div>
+      <div><div class="sec-lbl">Privilege Escal.</div><div class="sec-st">invite_member — sin sync global role</div></div>
+    </div>
+    <div class="sec-item">
+      <div class="sec-ico ico-ok">🔑</div>
+      <div><div class="sec-lbl">Password Reset</div><div class="sec-st">Token server-side · Resend API</div></div>
+    </div>
+    <div class="sec-item">
+      <div class="sec-ico ico-ok">📍</div>
+      <div><div class="sec-lbl">Geo-fence</div><div class="sec-st">haversine 1 km en join y redeem</div></div>
+    </div>
+    <div class="sec-item">
+      <div class="sec-ico ico-ok">🚦</div>
+      <div><div class="sec-lbl">Roles / AuthZ</div><div class="sec-st">_ROLE_RANK + require_admin()</div></div>
+    </div>
+    <div class="sec-item">
+      <div class="sec-ico ico-ok">📈</div>
+      <div><div class="sec-lbl">XP Integrity</div><div class="sec-st">$inc atómico · xp_log append-only</div></div>
+    </div>
+    <div class="sec-item">
+      <div class="sec-ico ico-warn">🏆</div>
+      <div><div class="sec-lbl">Achievement Icons</div><div class="sec-st">twenty_five_badges → icono incorrecto</div></div>
+    </div>
+  </div>
+
+  <!-- PENDIENTES -->
+  <div class="sh"><h2>Pendientes (2 — solo cosméticos)</h2><div class="sh-line"></div></div>
+  <div class="err-list">
+    <div class="err err-warn">
+      <span class="err-badge eb-warn">⚠️ COSMÉTICO</span>
+      <div>
+        <div class="err-ttl">twenty_five_badges mapeado a icono incorrecto</div>
+        <div class="err-dsc">
+          <code>ACHIEVEMENT_ICONS['twenty_five_badges']</code> en api.js apunta a <code>vertigo.png</code> (copy-paste de la entrada anterior). El logro muestra el icono equivocado en pantalla de logros y en redención. Funcionalidad no afectada, solo visual.
+        </div>
+        <div class="err-ref">api.js:873 — Fix: cambiar 'vertigo.png' → 'coleccionista.png' o añadir un icono dedicado</div>
+      </div>
+    </div>
+    <div class="err err-warn">
+      <span class="err-badge eb-warn">⚠️ COSMÉTICO</span>
+      <div>
+        <div class="err-ttl">first_event_complete.icon contiene markup HTML</div>
+        <div class="err-dsc">
+          El campo <code>icon</code> del logro <code>first_event_complete</code> en <code>ACHIEVEMENT_DEFS</code> contiene un tag <code>&lt;img&gt;</code> hardcodeado en vez de un emoji o slug. No es user-data (riesgo XSS nulo), pero rompe la convención del resto de logros y causaría que se muestre literal si se renderiza con <code>textContent</code>.
+        </div>
+        <div class="err-ref">api.js:72 — Fix: reemplazar el tag &lt;img&gt; por un emoji ('🏅') o mover al campo img (como el resto de entries)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VEREDICTO -->
+  <div class="sh"><h2>Veredicto</h2><div class="sh-line"></div></div>
+  <div class="verdict">
+    <div class="verdict-score">97 / 100</div>
+    <div class="verdict-tag">✓ LISTA PARA PRODUCCIÓN</div>
+    <p class="verdict-txt">
+      La aplicación alcanza 97/100 — el nivel más alto de la serie de auditorías. La categoría Demo/Producción logra puntaje perfecto (20/20) por primera vez: render.yaml completo, sin CORS wildcards, sin handlers OPTIONS manuales, y vercel.json limpio. Los 8 bugs reportados en v3 fueron corregidos y verificados. Los 2 issues restantes son puramente cosméticos (icono incorrecto y campo HTML en logro), sin impacto funcional ni de seguridad. El sistema está listo para demo y despliegue en producción.
+    </p>
+    <div class="verdict-meta">v1: 76 · v2: 78 · v3: 86 · v4: 97 &nbsp;·&nbsp; generado 2026-06-23</div>
+  </div>
+
+</main>
+</body>
+</html>
