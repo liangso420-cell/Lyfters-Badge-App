@@ -76,6 +76,7 @@ def redeem_badge(event_id, token):
         )
         print(f"[redeem] user={user_oid} badge={badge_oid} matched={result.matched_count} upserted={result.upserted_id}", flush=True)
         if result.matched_count > 0:
+            print(f"[redeem] DUPLICADO DETECTADO - retornando already_redeemed", flush=True)
             return jsonify(status="already_redeemed", message="Badge ya canjeado", badge={"name": badge.get("name", ""), "icon_url": badge.get("icon_url", "")}), 200
     except DuplicateKeyError:
         return jsonify(status="already_redeemed", message="Badge ya canjeado", badge={"name": badge.get("name", ""), "icon_url": badge.get("icon_url", "")}), 200
