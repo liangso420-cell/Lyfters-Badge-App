@@ -42,6 +42,7 @@ if not _ENABLED:
     register_limit          = _noop
     login_participant_limit = _noop
     login_admin_limit       = _noop
+    forgot_password_limit   = _noop
     redeem_limit            = _noop
     avatar_limit            = _noop
 
@@ -154,6 +155,17 @@ else:
                              exempt_when=_login_target_is_not_admin)(view)
         view = limiter.limit("3 per 20 minutes", key_func=email_key, methods=["POST"],
                              exempt_when=_login_target_is_not_admin)(view)
+        return view
+
+    def forgot_password_limit(view):
+        """
+        POST /auth/forgot-password:
+            - 3 por IP cada 10 minutos
+            - 3 por email cada 10 minutos
+        Evita email bombing y agotar la cuota de Resend.
+        """
+        view = limiter.limit("3 per 10 minutes", key_func=ip_key, methods=["POST"])(view)
+        view = limiter.limit("3 per 10 minutes", key_func=email_key, methods=["POST"])(view)
         return view
 
     # POST /redeem/<event_id>/<token> → 10 por usuario cada 1 minuto

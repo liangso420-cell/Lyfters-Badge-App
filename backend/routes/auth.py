@@ -19,7 +19,8 @@ from google.auth.transport import requests as grequests
 from db import users, scans, workspace_members, invitations as invitations_col, achievements
 from utils import sanitize, fmt_user
 from security.limiter import (
-    register_limit, login_participant_limit, login_admin_limit, avatar_limit
+    register_limit, login_participant_limit, login_admin_limit, avatar_limit,
+    forgot_password_limit
 )
 from security.ip_guard import ip_guard_register, ip_guard_login
 
@@ -425,6 +426,7 @@ def achievement_definitions():
 
 
 @auth_bp.route("/forgot-password", methods=["POST"])
+@forgot_password_limit
 def forgot_password():
     data = request.get_json() or {}
     email = sanitize(data.get("email", ""), max_len=254).lower()
