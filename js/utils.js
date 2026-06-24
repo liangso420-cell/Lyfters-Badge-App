@@ -474,8 +474,8 @@
     setTimeout(function() { ls.style.display = 'none'; }, 400);
   }
   function errorHtml(msg) {
-    return '<div class="device-frame px-4 pt-24 text-center">' +
-      '<div class="text-3xl mb-2"><img src="assets/icons/ui/icono-alerta.png" style="width:20px;height:20px;object-fit:contain;"></div>' +
+    return '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;padding:24px;">' +
+      '<img src="assets/icons/ui/icono-alerta.png" style="width:48px;height:48px;object-fit:contain;display:block;margin:0 auto 12px;opacity:0.9;" />' +
       '<p class="text-sm text-gray-400">' + esc(msg) + '</p>' +
       '<button id="err-retry" class="mt-4 px-5 py-2.5 rounded-btn text-white font-medium text-sm" style="background:#6C63FF;">Reintentar</button>' +
       '</div>';
