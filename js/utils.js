@@ -543,14 +543,30 @@
   }
 
   /* ----- Drawer lateral ----- */
+  function safeAvatarUrl(url) {
+    if (!url) return null;
+    var allowed = [
+      'data:',
+      'https://lh3.googleusercontent.com',
+      'https://lh4.googleusercontent.com',
+      'https://lh5.googleusercontent.com',
+      'https://lh6.googleusercontent.com'
+    ];
+    for (var i = 0; i < allowed.length; i++) {
+      if (url.indexOf(allowed[i]) === 0) return url;
+    }
+    return null;
+  }
+
   function showDrawer(avatarUrl, userName, onAvatarSave, isAdmin, userRole) {
     try {
       var savedTheme = localStorage.getItem('lyfter_theme');
       if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
     } catch(e) {}
     var root = document.getElementById('modal-root');
-    var avatarHtml = avatarUrl
-      ? '<img src="' + avatarUrl + '" class="w-16 h-16 rounded-full object-cover" style="border:2px solid rgba(216,151,231,0.5);" />'
+    var _safeAv = safeAvatarUrl(avatarUrl);
+    var avatarHtml = _safeAv
+      ? '<img src="' + _safeAv + '" class="w-16 h-16 rounded-full object-cover" style="border:2px solid rgba(216,151,231,0.5);" />'
       : '<div class="w-16 h-16 rounded-full flex items-center justify-center" style="background:rgba(216,151,231,0.15);"><img src="assets/icons/ui/icono-perfil.png" alt="perfil" style="width:32px;height:32px;object-fit:contain;vertical-align:middle;" /></div>';
     var dBtn = 'style="background:transparent;border:none;width:100%;display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1.25rem;font-size:0.875rem;color:rgba(240,234,242,0.75);text-align:left;cursor:pointer;transition:background 0.15s;"';
     var dBtnHover = 'onmouseover="this.style.background=\'rgba(255,255,255,0.04)\'" onmouseout="this.style.background=\'transparent\'"';
@@ -577,7 +593,7 @@
             '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2" style="color:rgba(240,234,242,0.35);">Configuración</p>' +
             '<button id="drawer-account-btn" ' + dBtn + ' ' + dBtnHover + ' style="background:transparent;border:none;width:100%;display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1.25rem;font-size:0.875rem;color:rgba(240,234,242,0.75);cursor:pointer;">' +
               '<div class="flex items-center gap-3">' +
-                (avatarUrl ? '<img src="' + avatarUrl + '" class="w-8 h-8 rounded-full object-cover" />' : '<img src="assets/icons/ui/icono-perfil.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:4px;">') +
+                (_safeAv ? '<img src="' + _safeAv + '" class="w-8 h-8 rounded-full object-cover" />' : '<img src="assets/icons/ui/icono-perfil.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:4px;">') +
                 '<span>Centro de cuenta</span>' +
               '</div>' +
               '<span style="color:rgba(240,234,242,0.25);">›</span>' +
@@ -654,7 +670,7 @@
           '<p class="text-xs font-semibold uppercase tracking-wider px-5 mb-2" style="color:rgba(240,234,242,0.35);">Configuración</p>' +
           '<button id="drawer-account-btn-2" ' + dBtn + ' ' + dBtnHover + ' style="background:transparent;border:none;width:100%;display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1.25rem;font-size:0.875rem;color:rgba(240,234,242,0.75);cursor:pointer;">' +
             '<div class="flex items-center gap-3">' +
-              (p2.avatar ? '<img src="' + p2.avatar + '" class="w-8 h-8 rounded-full object-cover" />' : '<div class="w-8 h-8 rounded-full flex items-center justify-center text-sm" style="background:rgba(216,151,231,0.15);"><img src="assets/icons/ui/icono-perfil.png" style="width:18px;height:18px;object-fit:contain;"></div>') +
+              (function(){var _a=safeAvatarUrl(p2.avatar);return _a?'<img src="'+_a+'" class="w-8 h-8 rounded-full object-cover" />':'<div class="w-8 h-8 rounded-full flex items-center justify-center text-sm" style="background:rgba(216,151,231,0.15);"><img src="assets/icons/ui/icono-perfil.png" style="width:18px;height:18px;object-fit:contain;"></div>';}()) +
               '<span>Centro de cuenta</span>' +
             '</div>' +
             '<span style="color:rgba(240,234,242,0.25);">›</span>' +
@@ -728,8 +744,9 @@
       accountBtn.addEventListener('click', function() {
         var nav = document.getElementById('drawer-panel').querySelector('nav');
         window.LyfterAPI.getProfile().then(function(p) {
-          var avatarEl = p.avatar
-            ? '<img src="' + p.avatar + '" class="w-20 h-20 rounded-full object-cover border-2 border-gray-100 cursor-pointer" id="account-avatar-img" />'
+          var _pav = safeAvatarUrl(p.avatar);
+          var avatarEl = _pav
+            ? '<img src="' + _pav + '" class="w-20 h-20 rounded-full object-cover border-2 border-gray-100 cursor-pointer" id="account-avatar-img" />'
             : '<div class="w-20 h-20 rounded-full bg-primary-soft flex items-center justify-center cursor-pointer" id="account-avatar-img"><img src="assets/icons/ui/icono-perfil.png" alt="perfil" style="width:40px;height:40px;object-fit:contain;vertical-align:middle;" /></div>';
 
           nav.innerHTML =

@@ -14,6 +14,11 @@ events_bp = Blueprint("events", __name__)
 # /leaderboard no cuelga de /events, va en su propio blueprint sin prefix
 leaderboard_bp = Blueprint("leaderboard", __name__)
 
+_PRIVACY_VISIBLE = {"$or": [
+    {"privacy.show_in_leaderboard": {"$ne": False}},
+    {"privacy": {"$exists": False}},
+]}
+
 
 def _get_ws_id_optional():
     """Devuelve workspace_id del JWT como ObjectId si hay sesión activa, sino None."""
@@ -187,13 +192,7 @@ def join_event(event_id):
 @leaderboard_bp.route("/leaderboard", methods=["GET"])
 @jwt_required()
 def leaderboard():
-    user_list = list(users().find(
-        {"$or": [
-            {"privacy.show_in_leaderboard": {"$ne": False}},
-            {"privacy": {"$exists": False}},
-        ]},
-        {"password_hash": 0}
-    ))
+    user_list = list(users().find(_PRIVACY_VISIBLE, {"password_hash": 0}))
     result = []
     for u in user_list:
         uid = u["_id"]
@@ -234,10 +233,7 @@ def event_leaderboard(event_id):
             "foreignField": "_id", "as": "user",
         }},
         {"$unwind": "$user"},
-        {"$match": {"$or": [
-            {"user.privacy.show_in_leaderboard": {"$ne": False}},
-            {"user.privacy": {"$exists": False}},
-        ]}},
+        {"$match": {"$or": _PRIVACY_VISIBLE["$or"]}},
     ]
     rows = list(scans().aggregate(pipeline))
 
@@ -293,13 +289,8 @@ def global_leaderboard():
         achievements_count = user_achievements().count_documents({"user_id": uid})
         return badges_total, events_participated, achievements_count
 
-    _privacy_filter = {"$or": [
-        {"privacy.show_in_leaderboard": {"$ne": False}},
-        {"privacy": {"$exists": False}},
-    ]}
-
     # Top 50 por XP total — solo usuarios que no ocultaron su perfil.
-    top = list(users().find(_privacy_filter, {"name": 1, "xp_total": 1}).sort("xp_total", -1).limit(50))
+    top = list(users().find(_PRIVACY_VISIBLE, {"name": 1, "xp_total": 1}).sort("xp_total", -1).limit(50))
 
     ranking = []
     for i, u in enumerate(top):

@@ -4,7 +4,6 @@ import os
 import re
 import secrets
 from datetime import datetime, timedelta
-from collections import defaultdict
 
 import requests as req
 
@@ -38,26 +37,7 @@ def _workspace_claims(user_doc):
     }
 
 
-# ──────────────────────────────────────────────
-# RATE LIMITING (en memoria)
-# ──────────────────────────────────────────────
-_login_attempts = defaultdict(list)
 EMAIL_RE = re.compile(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
-
-
-def check_rate_limit(email):
-    now = datetime.utcnow()
-    cutoff = now - timedelta(minutes=5)
-    _login_attempts[email] = [t for t in _login_attempts[email] if t > cutoff]
-    return len(_login_attempts[email]) < 5
-
-
-def record_failed_attempt(email):
-    _login_attempts[email].append(datetime.utcnow())
-
-
-def clear_attempts(email):
-    _login_attempts.pop(email, None)
 
 
 # ──────────────────────────────────────────────
@@ -300,15 +280,9 @@ def login():
     email    = sanitize(data.get("email") or "", max_len=254).lower()
     password = (data.get("password") or "").encode()
 
-    if not check_rate_limit(email):
-        return jsonify(error="Demasiados intentos. Esperá 5 minutos."), 429
-
     user = users().find_one({"email": email})
     if not user or not bcrypt.checkpw(password, user["password_hash"].encode()):
-        record_failed_attempt(email)
         return jsonify(error="Correo o contraseña incorrectos"), 401
-
-    clear_attempts(email)
 
     # Check account ban
     now_dt = datetime.utcnow()
