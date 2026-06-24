@@ -1290,16 +1290,16 @@
     var mobileNav =
       '<nav id="mobile-bottom-nav">' +
         '<a href="admin-event.html" class="' + (activeTab === 'event' ? 'active' : '') + '">' +
-          '<span class="icon">🎟️</span>' +
           '<span>Eventos</span>' +
         '</a>' +
         '<a href="admin-participation.html" class="' + (activeTab === 'participation' ? 'active' : '') + '">' +
-          '<span class="icon">📊</span>' +
           '<span>Dashboard</span>' +
         '</a>' +
         '<a href="admin-leaderboard.html" class="' + (activeTab === 'leaderboard' ? 'active' : '') + '">' +
-          '<span class="icon">🏆</span>' +
           '<span>Ranking</span>' +
+        '</a>' +
+        '<a href="workspace-select.html" class="">' +
+          '<span>Workspaces</span>' +
         '</a>' +
       '</nav>';
 

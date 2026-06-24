@@ -263,16 +263,16 @@
         var roleColors = { god_admin: '#ffc850', superadmin: '#d897e7', admin: '#70cfff', participant: '#8b93a3' };
         var roleColor = roleColors[displayRole] || '#8b93a3';
 
-        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid #2a2e38;gap:12px;flex-wrap:wrap;">' +
-          '<div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">' +
+        return '<div class="we-member-row" style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid #2a2e38;gap:12px;flex-wrap:wrap;">' +
+          '<div class="we-member-info" style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">' +
             '<div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#d897e7,#e68a8d);display:flex;align-items:center;justify-content:center;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;color:#1c1f27;flex-shrink:0;">' + initials + '</div>' +
             '<div style="min-width:0;">' +
               '<div style="font-family:Poppins,sans-serif;font-size:13px;font-weight:700;color:#f4f6f9;">' + U.esc(m.name || '') + '</div>' +
+              '<span class="we-member-role" style="display:inline-flex;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:' + roleColor + '22;color:' + roleColor + ';white-space:nowrap;margin:3px 0;">' + displayRole + '</span>' +
               '<div style="font-size:11px;color:#8b93a3;">' + U.esc(m.email || '') + '</div>' +
             '</div>' +
           '</div>' +
-          '<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:' + roleColor + '22;color:' + roleColor + ';white-space:nowrap;">' + displayRole + '</span>' +
-          '<div style="display:flex;gap:8px;flex-shrink:0;">' +
+          '<div class="we-member-actions" style="display:flex;gap:8px;flex-shrink:0;">' +
             (isGod
               ? '<span style="font-size:11px;color:#ffc850;padding:6px 12px;background:rgba(255,200,80,0.1);border:1px solid rgba(255,200,80,0.2);border-radius:8px;">Protegido</span>'
               : (isSuperOrGod && myRole !== 'god_admin')

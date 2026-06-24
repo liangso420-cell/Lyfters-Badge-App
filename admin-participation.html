@@ -78,7 +78,7 @@
           var activeId = U.ensureActive(events);
 
           var metrics =
-            '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;">' +
+            '<div class="dashboard-stat-cards" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;">' +
               metricCard('assets/icons/ui/icono-participantes.png',  dash.total_participantes,    U.t('admin_participants'),    '#6C63FF') +
               metricCard('assets/icons/ui/icono-evento.png',         dash.total_eventos,          U.t('admin_events'),          '#43D9AD') +
               metricCard('assets/icons/ui/icono-badges-creados.png', dash.total_badges_creados,   U.t('admin_badges_created'),  '#FF8C42') +

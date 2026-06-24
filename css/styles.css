@@ -705,6 +705,24 @@ body {
   .ws-table { font-size: 12px !important; }
   .ws-table td, .ws-table th { padding: 8px 10px !important; }
 
+  /* Dashboard: stat cards en grid 2×2 (sin scroll horizontal) */
+  .dashboard-stat-cards {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* Workspace: fila de miembro en dos filas limpias */
+  .we-member-row {
+    flex-wrap: wrap !important;
+    align-items: center !important;
+  }
+  .we-member-info {
+    flex: 1 1 100% !important;
+  }
+  .we-member-actions {
+    width: 100% !important;
+    justify-content: flex-end !important;
+  }
+
 }
 
 /* Admin: header superior solo-móvil (≤768px) — reemplaza al sidebar oculto */
