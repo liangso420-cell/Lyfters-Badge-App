@@ -83,9 +83,9 @@
         var isDup  = r.status === 'duplicate';
         var isLast = r.complete && !isDup;
         var badge  = r.badge || {};
-        var icon = badge.icon_url
-          ? '<img src="' + badge.icon_url + '" style="width:64px;height:64px;object-fit:contain;display:block;margin:0 auto;">'
-          : '<img src="assets/icons/ui/icono-reclamado.png" style="width:64px;height:64px;object-fit:contain;display:block;margin:0 auto;">';
+        var badgeIcon = badge.icon_url
+          ? '<img src="' + badge.icon_url + '" style="width:72px;height:72px;object-fit:contain;display:block;margin:0 auto 12px;" />'
+          : '<img src="assets/icons/badges/sitio-web.png" style="width:72px;height:72px;object-fit:contain;display:block;margin:0 auto 12px;opacity:0.7;" />';
         var user   = API.currentUser() || {};
         var userName = user.name ? user.name.split(' ')[0] : '';
 
@@ -130,14 +130,14 @@
         }
 
         var xpBlock = '';
-        if (r.xp && r.xp.gained > 0 && !isDup) {
-          xpBlock =
-            '<div style="margin:16px 0;display:flex;justify-content:center;">' +
-              '<span style="display:inline-flex;align-items:center;gap:8px;background:#EAFBF3;border-radius:999px;padding:8px 16px;">' +
-                '<span style="font-size:15px;font-weight:800;color:#16a34a;">+' + r.xp.gained + ' XP</span>' +
-                '<span style="font-size:12px;color:#9CA3AF;">· Nivel ' + r.xp.level + '</span>' +
-              '</span>' +
-            '</div>';
+        if (!isDup) {
+          var xpVal = r.xp_gained || r.xp_earned || 0;
+          if (xpVal > 0) {
+            xpBlock =
+              '<div style="text-align:center;margin:12px auto;">' +
+                '<span style="display:inline-block;padding:6px 18px;border-radius:999px;border:1.5px solid #4ade80;color:#4ade80;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;">+' + xpVal + ' XP</span>' +
+              '</div>';
+          }
         }
 
         var shareUrl  = window.location.origin + '/profile.html';
@@ -201,7 +201,7 @@
           '<section style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;box-sizing:border-box;background:' + bgGradient + ';">' +
             '<div class="redeem-card anim-pop">' +
               animBlock +
-              '<div style="text-align:center;margin-bottom:16px;">' + icon + '</div>' +
+              '<div style="text-align:center;margin-bottom:16px;">' + badgeIcon + '</div>' +
               '<h2 class="redeem-title" style="color:' + accentColor + ';">' + title + '</h2>' +
               '<p class="redeem-sub">' + subtitle + '</p>' +
               xpBlock +
