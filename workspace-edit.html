@@ -21,6 +21,7 @@
     var U   = window.LyfterUtils;
 
     var user = API.currentUser();
+  
     if (!user) { window.location.replace('login.html'); return; }
     if (['god_admin','superadmin'].indexOf(user.role) === -1) {
       window.location.replace('workspace-select.html'); return;

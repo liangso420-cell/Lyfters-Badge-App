@@ -63,11 +63,19 @@ def get_my_workspaces_all():
     ws_ids  = [m["workspace_id"] for m in memberships]
     role_map = {str(m["workspace_id"]): m["role"] for m in memberships}
     ws_list = list(workspaces().find({"_id": {"$in": ws_ids}}))
+    # Conteo de miembros por workspace en una sola agregación (en vez de un count por ws).
+    member_counts = {
+        row["_id"]: row["n"]
+        for row in workspace_members().aggregate([
+            {"$match": {"workspace_id": {"$in": ws_ids}}},
+            {"$group": {"_id": "$workspace_id", "n": {"$sum": 1}}},
+        ])
+    }
     result = []
     for ws in ws_list:
         d = _ws_to_dict(ws)
-        d["my_role"]     = role_map.get(str(ws["_id"]), "participant")
-        d["member_count"] = workspace_members().count_documents({"workspace_id": ws["_id"]})
+        d["my_role"]      = role_map.get(str(ws["_id"]), "participant")
+        d["member_count"] = member_counts.get(ws["_id"], 0)
         result.append(d)
     return jsonify(result), 200
 
@@ -168,11 +176,27 @@ def list_workspaces():
     if claims.get("role") != "god_admin":
         return jsonify(error="Solo god_admin puede listar todos los workspaces"), 403
     ws_list = list(workspaces().find({}).sort("created_at", -1))
+    ws_ids = [ws["_id"] for ws in ws_list]
+    # Conteos de miembros y eventos por workspace en 2 agregaciones (en vez de 2 por ws).
+    member_counts = {
+        row["_id"]: row["n"]
+        for row in workspace_members().aggregate([
+            {"$match": {"workspace_id": {"$in": ws_ids}}},
+            {"$group": {"_id": "$workspace_id", "n": {"$sum": 1}}},
+        ])
+    }
+    event_counts = {
+        row["_id"]: row["n"]
+        for row in events().aggregate([
+            {"$match": {"workspace_id": {"$in": ws_ids}}},
+            {"$group": {"_id": "$workspace_id", "n": {"$sum": 1}}},
+        ])
+    }
     result = []
     for ws in ws_list:
         d = _ws_to_dict(ws)
-        d["member_count"] = workspace_members().count_documents({"workspace_id": ws["_id"]})
-        d["event_count"]  = events().count_documents({"workspace_id": ws["_id"]})
+        d["member_count"] = member_counts.get(ws["_id"], 0)
+        d["event_count"]  = event_counts.get(ws["_id"], 0)
         result.append(d)
     return jsonify(result)
 
@@ -247,10 +271,14 @@ def list_members(ws_id):
             return jsonify(error="No autorizado"), 403
 
     members = list(workspace_members().find({"workspace_id": oid}))
-    result = []
-    for m in members:
-        user_doc = users().find_one({"_id": m["user_id"]}, {"password_hash": 0})
-        result.append(_member_to_dict(m, user_doc))
+    # Un solo find para todos los usuarios (en vez de un find_one por miembro).
+    user_map = {
+        u["_id"]: u
+        for u in users().find(
+            {"_id": {"$in": [m["user_id"] for m in members]}}, {"password_hash": 0}
+        )
+    }
+    result = [_member_to_dict(m, user_map.get(m["user_id"])) for m in members]
     return jsonify(result)
 
 

@@ -137,23 +137,40 @@ def event_stats(event_id):
     total_canjeados = scans().count_documents({"event_id": oid})
     pct_canjeados = round((total_canjeados / (total_badges * max(participantes_activos, 1))) * 100, 1) if total_badges > 0 else 0
 
-    badge_ranking = []
-    for b in badge_docs:
-        count = scans().count_documents({"badge_id": b["_id"]})
-        badge_ranking.append({"id": str(b["_id"]), "nombre": b.get("name", ""), "icon": b.get("icon", "🏅"), "count": count})
+    # Conteo de scans por badge en una sola agregación (en vez de un count por badge).
+    scan_counts = {
+        row["_id"]: row["count"]
+        for row in scans().aggregate([
+            {"$match": {"event_id": oid}},
+            {"$group": {"_id": "$badge_id", "count": {"$sum": 1}}},
+        ])
+    }
+    badge_ranking = [
+        {"id": str(b["_id"]), "nombre": b.get("name", ""), "icon": b.get("icon", "🏅"),
+         "count": scan_counts.get(b["_id"], 0)}
+        for b in badge_docs
+    ]
     badge_ranking.sort(key=lambda x: x["count"], reverse=True)
 
-    top_users = []
-    pipeline2 = [
+    top_rows = list(scans().aggregate([
         {"$match": {"event_id": oid}},
         {"$group": {"_id": "$user_id", "count": {"$sum": 1}}},
         {"$sort": {"count": -1}},
-        {"$limit": 10}
+        {"$limit": 10},
+    ]))
+    # Un solo find para los 10 usuarios (en vez de un find_one por fila).
+    user_map = {
+        u["_id"]: u
+        for u in users().find(
+            {"_id": {"$in": [r["_id"] for r in top_rows]}}, {"name": 1, "avatar": 1}
+        )
+    }
+    top_users = [
+        {"nombre": user_map[r["_id"]].get("name", ""),
+         "avatar": user_map[r["_id"]].get("avatar", None),
+         "badges": r["count"]}
+        for r in top_rows if r["_id"] in user_map
     ]
-    for row in scans().aggregate(pipeline2):
-        u = users().find_one({"_id": row["_id"]}, {"name": 1, "avatar": 1})
-        if u:
-            top_users.append({"nombre": u.get("name", ""), "avatar": u.get("avatar", None), "badges": row["count"]})
 
     pipeline3 = [
         {"$match": {"event_id": oid, "scanned_at": {"$exists": True}}},
@@ -393,10 +410,18 @@ def admin_list_badges(event_id):
     base_url   = os.getenv("APP_BASE_URL", "http://localhost:5500")
     badge_docs = list(badges().find({"event_id": oid}))
 
-    result_badges = []
-    for b in badge_docs:
-        canjeados = scans().count_documents({"badge_id": b["_id"]})
-        result_badges.append(fmt_admin_badge(b, canjeados=canjeados, base_url=base_url))
+    # Conteo de canjes por badge en una sola agregación (en vez de un count por badge).
+    canje_counts = {
+        row["_id"]: row["count"]
+        for row in scans().aggregate([
+            {"$match": {"event_id": oid}},
+            {"$group": {"_id": "$badge_id", "count": {"$sum": 1}}},
+        ])
+    }
+    result_badges = [
+        fmt_admin_badge(b, canjeados=canje_counts.get(b["_id"], 0), base_url=base_url)
+        for b in badge_docs
+    ]
 
     return jsonify({
         "evento": {
@@ -640,9 +665,8 @@ def admin_dashboard():
     ws_filter = {"workspace_id": ws_id} if ws_id else {}
 
     if ws_id:
-        # Contar solo participantes del workspace
-        member_ids = [m["user_id"] for m in workspace_members().find({"workspace_id": ws_id})]
-        total_participantes = len([m for m in workspace_members().find({"workspace_id": ws_id}) if True])
+        # Contar solo participantes del workspace (una sola consulta).
+        total_participantes = workspace_members().count_documents({"workspace_id": ws_id})
     else:
         total_participantes = users().count_documents({"role": "participant"})
 
@@ -650,12 +674,35 @@ def admin_dashboard():
     total_badges_creados   = badges().count_documents(ws_filter)
     total_badges_canjeados = scans().count_documents(ws_filter)
 
+    # Pre-agrega badges y scans por evento en 2 consultas, en vez de 3 por evento.
+    event_list = list(events().find(ws_filter))
+    eids = [e["_id"] for e in event_list]
+    badge_totals = {
+        row["_id"]: row["total"]
+        for row in badges().aggregate([
+            {"$match": {"event_id": {"$in": eids}}},
+            {"$group": {"_id": "$event_id", "total": {"$sum": 1}}},
+        ])
+    }
+    scan_agg = {
+        row["_id"]: row
+        for row in scans().aggregate([
+            {"$match": {"event_id": {"$in": eids}}},
+            {"$group": {
+                "_id": "$event_id",
+                "total": {"$sum": 1},
+                "users": {"$addToSet": "$user_id"},
+            }},
+        ])
+    }
+
     progreso = []
-    for e in events().find(ws_filter):
+    for e in event_list:
         eid     = e["_id"]
-        total_b = badges().count_documents({"event_id": eid})
-        total_c = scans().count_documents({"event_id": eid})
-        unicos  = len(scans().distinct("user_id", {"event_id": eid}))
+        sa      = scan_agg.get(eid)
+        total_b = badge_totals.get(eid, 0)
+        total_c = sa["total"] if sa else 0
+        unicos  = len(sa["users"]) if sa else 0
         pct     = round((total_c / total_b) * 100, 1) if total_b > 0 else 0.0
         progreso.append({
             "id":                   str(eid),

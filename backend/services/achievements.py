@@ -28,15 +28,28 @@ def compute_user_stats(user_oid) -> dict:
     distinct_events = len(event_ids)
 
     # Eventos completados: scans del usuario por evento vs total de badges.
+    # Se cuentan los badges de TODOS los eventos del usuario en una sola
+    # agregación, en lugar de un count_documents por evento (evita N+1).
+    user_event_counts = {
+        row["_id"]: row["count"]
+        for row in scans().aggregate([
+            {"$match": {"user_id": user_oid}},
+            {"$group": {"_id": "$event_id", "count": {"$sum": 1}}},
+        ])
+    }
     completed_events = 0
-    pipeline = [
-        {"$match": {"user_id": user_oid}},
-        {"$group": {"_id": "$event_id", "count": {"$sum": 1}}},
-    ]
-    for row in scans().aggregate(pipeline):
-        total = badges().count_documents({"event_id": row["_id"]})
-        if total > 0 and row["count"] >= total:
-            completed_events += 1
+    if user_event_counts:
+        badge_totals = {
+            row["_id"]: row["total"]
+            for row in badges().aggregate([
+                {"$match": {"event_id": {"$in": list(user_event_counts.keys())}}},
+                {"$group": {"_id": "$event_id", "total": {"$sum": 1}}},
+            ])
+        }
+        for eid, scanned in user_event_counts.items():
+            total = badge_totals.get(eid, 0)
+            if total > 0 and scanned >= total:
+                completed_events += 1
 
     # ¿Escaneó algún badge marcado is_rare?
     rare_ids = [b["_id"] for b in badges().find({"is_rare": True}, {"_id": 1})]

@@ -62,6 +62,8 @@ def init_indexes():
     from pymongo import ASCENDING
     # Email único por usuario
     users().create_index("email", unique=True)
+    # Ranking global por XP: ordena y cuenta por xp_total.
+    users().create_index([("xp_total", ASCENDING)])
     # Token único por badge
     badges().create_index("token", unique=True)
     # Un usuario no puede escanear el mismo badge dos veces

@@ -57,13 +57,11 @@ def list_events():
 def joined_events():
     uid = get_jwt_identity()
     user_oid = ObjectId(uid)
-    joined = event_joins().find({"user_id": user_oid})
+    joined = list(event_joins().find({"user_id": user_oid}))
     event_ids = [j["event_id"] for j in joined]
-    result = []
-    for eid in event_ids:
-        e = events().find_one({"_id": eid, "active": True})
-        if e:
-            result.append(fmt_event(e))
+    # Una sola consulta en lugar de un find_one por evento (evita N+1).
+    docs = {e["_id"]: e for e in events().find({"_id": {"$in": event_ids}, "active": True})}
+    result = [fmt_event(docs[eid]) for eid in event_ids if eid in docs]
     return jsonify(result), 200
 
 
@@ -187,18 +185,32 @@ def join_event(event_id):
 @leaderboard_bp.route("/leaderboard", methods=["GET"])
 @jwt_required()
 def leaderboard():
-    user_list = list(users().find({}, {"password_hash": 0}))
-    result = []
-    for u in user_list:
-        uid = u["_id"]
-        total_badges = scans().count_documents({"user_id": uid})
-        result.append({
-            "id":     str(uid),
+    # Una sola agregación: cuenta los badges (scans) de cada usuario sin N+1.
+    # El $count va en un sub-pipeline para no traer los documentos de scans.
+    # Se incluyen usuarios sin badges (badges = 0), igual que antes.
+    pipeline = [
+        {"$lookup": {
+            "from": "scans",
+            "let": {"uid": "$_id"},
+            "pipeline": [
+                {"$match": {"$expr": {"$eq": ["$user_id", "$$uid"]}}},
+                {"$count": "n"},
+            ],
+            "as": "_sc",
+        }},
+        {"$addFields": {"badges": {"$ifNull": [{"$arrayElemAt": ["$_sc.n", 0]}, 0]}}},
+        {"$sort": {"badges": -1}},
+        {"$project": {"name": 1, "avatar": 1, "badges": 1}},
+    ]
+    result = [
+        {
+            "id":     str(u["_id"]),
             "nombre": u.get("name", ""),
             "avatar": u.get("avatar", None),
-            "badges": total_badges
-        })
-    result.sort(key=lambda x: x["badges"], reverse=True)
+            "badges": u.get("badges", 0),
+        }
+        for u in users().aggregate(pipeline)
+    ]
     return jsonify(result), 200
 
 
@@ -228,6 +240,18 @@ def event_leaderboard(event_id):
             "foreignField": "_id", "as": "user",
         }},
         {"$unwind": "$user"},
+        # Total de badges del usuario en TODO el sistema (no solo este evento),
+        # contado dentro de la misma agregación para evitar un count por fila.
+        {"$lookup": {
+            "from": "scans",
+            "let": {"uid": "$_id"},
+            "pipeline": [
+                {"$match": {"$expr": {"$eq": ["$user_id", "$$uid"]}}},
+                {"$count": "n"},
+            ],
+            "as": "_all",
+        }},
+        {"$addFields": {"badges_total": {"$ifNull": [{"$arrayElemAt": ["$_all.n", 0]}, 0]}}},
     ]
     rows = list(scans().aggregate(pipeline))
 
@@ -241,7 +265,7 @@ def event_leaderboard(event_id):
             "user_id":         str(uid),
             "name":            u.get("name", ""),
             "badges_in_event": badges_in_event,
-            "badges_total":    scans().count_documents({"user_id": uid}),
+            "badges_total":    r.get("badges_total", 0),
             "completed":       total_badges > 0 and badges_in_event >= total_badges,
             "xp_total":        xp_total,
             "level":           compute_level(xp_total),
@@ -276,21 +300,50 @@ def event_leaderboard(event_id):
 @leaderboard_bp.route("/leaderboard/global", methods=["GET"])
 @jwt_required(optional=True)
 def global_leaderboard():
-    def stats_for(uid):
-        """badges_total, events_participated y achievements_count de un usuario."""
-        badges_total = scans().count_documents({"user_id": uid})
-        events_participated = len(scans().distinct("event_id", {"user_id": uid}))
-        achievements_count = user_achievements().count_documents({"user_id": uid})
-        return badges_total, events_participated, achievements_count
+    def bulk_stats(uids):
+        """badges_total, events_participated y achievements_count para varios usuarios.
+
+        Dos agregaciones en total (una sobre scans, otra sobre user_achievements),
+        en lugar de 3 consultas por usuario.
+        """
+        stats = {}
+        if not uids:
+            return stats
+        for r in scans().aggregate([
+            {"$match": {"user_id": {"$in": uids}}},
+            {"$group": {
+                "_id": "$user_id",
+                "badges_total": {"$sum": 1},
+                "events": {"$addToSet": "$event_id"},
+            }},
+        ]):
+            stats[r["_id"]] = {
+                "badges_total":        r.get("badges_total", 0),
+                "events_participated": len(r.get("events", [])),
+                "achievements_count":  0,
+            }
+        for r in user_achievements().aggregate([
+            {"$match": {"user_id": {"$in": uids}}},
+            {"$group": {"_id": "$user_id", "n": {"$sum": 1}}},
+        ]):
+            stats.setdefault(r["_id"], {"badges_total": 0, "events_participated": 0, "achievements_count": 0})
+            stats[r["_id"]]["achievements_count"] = r.get("n", 0)
+        return stats
+
+    _EMPTY = {"badges_total": 0, "events_participated": 0, "achievements_count": 0}
 
     # Top 50 por XP total.
     top = list(users().find({}, {"name": 1, "xp_total": 1}).sort("xp_total", -1).limit(50))
+    stats_map = bulk_stats([u["_id"] for u in top])
 
     ranking = []
     for i, u in enumerate(top):
         uid = u["_id"]
         xp_total = int(u.get("xp_total", 0))
-        badges_total, events_participated, achievements_count = stats_for(uid)
+        s = stats_map.get(uid, _EMPTY)
+        badges_total = s["badges_total"]
+        events_participated = s["events_participated"]
+        achievements_count = s["achievements_count"]
         lvl = compute_level(xp_total)
         ranking.append({
             "position":            i + 1,
@@ -313,7 +366,7 @@ def global_leaderboard():
             my_xp = int(u.get("xp_total", 0))
             # Posición global = cuántos usuarios tienen estrictamente más XP + 1.
             ahead = users().count_documents({"xp_total": {"$gt": my_xp}})
-            badges_total, _ev, _ac = stats_for(me_oid)
+            badges_total = bulk_stats([me_oid]).get(me_oid, _EMPTY)["badges_total"]
             my_position = {
                 "position": ahead + 1,
                 "xp_total": my_xp,

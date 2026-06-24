@@ -1,0 +1,1 @@
+{"nodes":[{"id":"js_config","label":"js/config.js","file_type":"document","source_file":"js/config.js","source_location":null,"source_url":null,"captured_at":null,"author":null,"contributor":null,"rationale":"Shared config (FIREBASE_CONFIG, API base) referenced by nearly all pages"}],"edges":[],"hyperedges":[]}

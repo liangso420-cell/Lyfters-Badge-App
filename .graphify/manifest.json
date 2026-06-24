@@ -1,0 +1,402 @@
+{
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/backend/app.py": {
+    "mtime": 1782233362288.1062,
+    "hash": "9ebf101ff1e9a2a7a7f6f823e48be46d"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/backend/cleanup_membership.py": {
+    "mtime": 1782233362289.6792,
+    "hash": "9dbec3c41b7df77562f0f6f0e993aa25"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/backend/db.py": {
+    "mtime": 1782240537316.4702,
+    "hash": "2ba17e9f1e8182e1e0ef3c71773cc810"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/backend/migrate_workspaces.py": {
+    "mtime": 1782233362548.553,
+    "hash": "1c482970a329c0f9f7dda9109458d974"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/backend/routes/__init__.py": {
+    "mtime": 1782233362719.2527,
+    "hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/backend/routes/admin.py": {
+    "mtime": 1782240476387.5208,
+    "hash": "9cba2c542030dbfec46c353158351313"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/backend/routes/auth.py": {
+    "mtime": 1782233362726.8164,
+    "hash": "e608118ccbf199f0e78911460641719a"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/backend/routes/events.py": {
+    "mtime": 1782240389894.5132,
+    "hash": "dd2c9c2f173d375ab318528c8777fcb2"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/backend/routes/redeem.py": {
+    "mtime": 1782233362782.5112,
+    "hash": "4abc8ba196db3cc280c4012b0dc5bbb3"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/backend/routes/workspaces.py": {
+    "mtime": 1782240519021.3066,
+    "hash": "984b74d1ac372cbc371eb1c423611d5f"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/backend/routes/xp.py": {
+    "mtime": 1782233363460.6262,
+    "hash": "70b07eb04bc54540535e815b31455147"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/backend/security/__init__.py": {
+    "mtime": 1782233363967.8953,
+    "hash": "47f7c81ec071fb7027852aaaf336ae1f"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/backend/security/ip_guard.py": {
+    "mtime": 1782233364468.458,
+    "hash": "1245b33916640d781350384d7620beaa"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/backend/security/limiter.py": {
+    "mtime": 1782233364694.8037,
+    "hash": "584bd43842fa30a96eb756f4d1ce8ebf"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/backend/security/middleware.py": {
+    "mtime": 1782233364934.3599,
+    "hash": "dc3e4ba66b9939cd7690d13a9365b02d"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/backend/seed_achievements.py": {
+    "mtime": 1782233364938.0479,
+    "hash": "170f4fb07360c3a5c29c2c86b67cdacc"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/backend/services/__init__.py": {
+    "mtime": 1782233365188.6643,
+    "hash": "d91a2b074fa1e447afddd452836ccf39"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/backend/services/achievements.py": {
+    "mtime": 1782240407564.6023,
+    "hash": "264ba0fcbc8f387e32e37da3727a7788"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/backend/services/xp.py": {
+    "mtime": 1782233365729.232,
+    "hash": "e63721b76ff5811eeba7bde0ce2083b7"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/backend/utils.py": {
+    "mtime": 1782233365737.234,
+    "hash": "91d9c331fc883519d1978a4630f79a99"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/backend/workspace_utils.py": {
+    "mtime": 1782233365785.6929,
+    "hash": "fb63c366fae04223eb6b7ecf65bb4440"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/db/seed.js": {
+    "mtime": 1782233366246.5945,
+    "hash": "3c980d595725646eea85dcf4ed73c376"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/js/api.js": {
+    "mtime": 1782233367407.0068,
+    "hash": "5dd5fb5a2e14d82a134351d8f0bd1bff"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/js/config.js": {
+    "mtime": 1782233367416.6194,
+    "hash": "b36479d9d5a7b4a9e47f595ff2507f86"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/js/lottie.min.js": {
+    "mtime": 1782241137592.4043,
+    "hash": "fe5073c03a9c1ab9bd31e55d9367149a"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/js/particles.js": {
+    "mtime": 1782233367701.708,
+    "hash": "9bbe655736e6099b05bc64698a8047a4"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/js/stars.js": {
+    "mtime": 1782233368012.5955,
+    "hash": "056687659b304f59e0f469dbb9a221d4"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/js/utils.js": {
+    "mtime": 1782233368036.5632,
+    "hash": "608c29b0eb27552f2709a0b0a33aabdc"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/README.md": {
+    "mtime": 1782233359061.439,
+    "hash": "bb590ae19d2159eb7c2ca3c0128890d7"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/admin-event-create.html": {
+    "mtime": 1782241137020.3843,
+    "hash": "d7b1a48352e756a9ad5c87cb8c0f3602"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/admin-event-detail.html": {
+    "mtime": 1782241137032.7966,
+    "hash": "2ac114ecf87f117d0833f6e4b20adb2f"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/admin-event.html": {
+    "mtime": 1782241137045.3857,
+    "hash": "46130b700a2aa04d43ddb9079097054c"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/admin-leaderboard.html": {
+    "mtime": 1782241137046.9602,
+    "hash": "8c5bbe6387b2519852c881ded0ff11a3"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/admin-participation.html": {
+    "mtime": 1782241137048.5344,
+    "hash": "6e685e323424d41e4142de8da5aec46d"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/backend/requirements.txt": {
+    "mtime": 1782233362550.1343,
+    "hash": "d98ed26d3557dd2ceca2168c16171afd"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/docs/01-prd.md": {
+    "mtime": 1782233366582.7112,
+    "hash": "5664afcc9b6e012dbdf075a49f7b707c"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/docs/02-diseno-tecnico.md": {
+    "mtime": 1782233366723.6084,
+    "hash": "85d74a54e40dfbf006e46779b53a3839"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/docs/03-tareas.md": {
+    "mtime": 1782233366889.39,
+    "hash": "046f92ddef93a2a8331787845017f944"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/docs/04-resumen-implementacion.md": {
+    "mtime": 1782233367006.4592,
+    "hash": "be8d673d1fe3c10eb4c0e25ade4fb6c8"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/event-detail.html": {
+    "mtime": 1782241137510.3564,
+    "hash": "972c6c55f0b446f6e460be2e429d320d"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/events.html": {
+    "mtime": 1782241137512.9702,
+    "hash": "76e4a9b69f7b394f69204f7a29dc799a"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/gestion-usuarios.html": {
+    "mtime": 1782241137517.6865,
+    "hash": "8c4fff0afe6f0b0106b4b0f3f4cfccb2"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/index.html": {
+    "mtime": 1782241137540.843,
+    "hash": "797ae4faa9db81420a02cdd05f6bdf59"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/join.html": {
+    "mtime": 1782241137542.9373,
+    "hash": "26d8fa76e995726c5b1f7e7d528ff541"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/landing.html": {
+    "mtime": 1782241137619.755,
+    "hash": "9724b52ba4bb10475b98850572f843e1"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/leaderboard.html": {
+    "mtime": 1782241137654.5337,
+    "hash": "89ce3f24879a9e3a4ffcf026ce6bf2bc"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/login.html": {
+    "mtime": 1782241332484.0002,
+    "hash": "039ace482e8d51dc99b68fbc702cabfa"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/privacy.html": {
+    "mtime": 1782241137690.9133,
+    "hash": "d11dcff12ddc47c3dfd404c990c76169"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/profile.html": {
+    "mtime": 1782241137695.6404,
+    "hash": "88df9f7a71d75fab1dde6f08ca4c5009"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/redeem.html": {
+    "mtime": 1782241137702.9998,
+    "hash": "6782b07466b7c3a4581b7ad9bf05a0e5"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/register.html": {
+    "mtime": 1782241137706.176,
+    "hash": "786c304b50be8cc0f71a6775675c45bb"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/render.yaml": {
+    "mtime": 1782233369448.6152,
+    "hash": "4b62ff2938c4f5e39c73a4dc125f7cf0"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/scan.html": {
+    "mtime": 1782241137716.6794,
+    "hash": "251154af42372c8d0b42e8b1371389d9"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/terms.html": {
+    "mtime": 1782241137745.6243,
+    "hash": "144796c4ed709578eee3c9cde06fa720"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/user-achievements.html": {
+    "mtime": 1782241137748.2686,
+    "hash": "f4db5a52095e37797475ccb32ae5c456"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/user-events.html": {
+    "mtime": 1782241137749.8926,
+    "hash": "5df8eb86f9fbc4c281919b6f255bab53"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/user-ranking.html": {
+    "mtime": 1782241137755.8372,
+    "hash": "d577c95618e6be1935b93feff2849ada"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/workspace-create.html": {
+    "mtime": 1782241137757.9216,
+    "hash": "dec82d2f43d441d3eb06bfa03ef20510"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/workspace-edit.html": {
+    "mtime": 1782241137763.707,
+    "hash": "f66dabaf3c8c91741989a3e03e2215ef"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/workspace-select.html": {
+    "mtime": 1782241137774.2893,
+    "hash": "4c186031706741a1c0c8a7410f110907"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/workspace.html": {
+    "mtime": 1782241137790.6838,
+    "hash": "e1255bac66bf2076b47738a3d340e14f"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/anadir-imagen.png": {
+    "mtime": 1782246426558.2188,
+    "hash": "7211fa7378ee749c7d34a9969c8fbd55"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/achievements/Completista.png": {
+    "mtime": 1782246424901.0032,
+    "hash": "6f5111fa25d1643bfe351a17dbd80948"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/achievements/coleccionista.png": {
+    "mtime": 1782246424826.9463,
+    "hash": "17444585172c9b2973535c7479129f61"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/achievements/leyenda.png": {
+    "mtime": 1782246425015.231,
+    "hash": "8acd92b5143be2971c41943bb60df5c5"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/achievements/ojo-de-halcon.png": {
+    "mtime": 1782246425142.8645,
+    "hash": "90ea596e4dfdb1a12925f9a4daaff0ca"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/achievements/perfeccionista.png": {
+    "mtime": 1782246425281.8247,
+    "hash": "69e6f3b18a883bc95532366fce26706c"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/achievements/primer-paso.png": {
+    "mtime": 1782246425409.9602,
+    "hash": "a705e17a09a3e4313b70858aa06c8776"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/achievements/vertigo.png": {
+    "mtime": 1782246425543.2727,
+    "hash": "8169a3ca7cfebfcedb61a268fdf20fe4"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/achievements/veterano.png": {
+    "mtime": 1782246425595.0461,
+    "hash": "0ac71c9743a1f397c2b6fe5ed965f0fd"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/achievements/viajero.png": {
+    "mtime": 1782246425644.6833,
+    "hash": "ca3ff45f89daef9d6c6406758d00ec53"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/badges/api.png": {
+    "mtime": 1782246425677.1978,
+    "hash": "5ebb1dc55d03f7a6176462a2fb098f36"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/badges/codificacion.png": {
+    "mtime": 1782246425709.2146,
+    "hash": "0f7c31159c6925590ed4f5f2bb28d4f5"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/badges/computacion-en-la-nube.png": {
+    "mtime": 1782246425741.2156,
+    "hash": "6df1e1dc5dc97b4d52d5970eadb2ae4a"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/badges/diseno.png": {
+    "mtime": 1782246425770.7285,
+    "hash": "56d707c58a7a7245e43e0253377ebdfc"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/badges/error.png": {
+    "mtime": 1782246425797.73,
+    "hash": "37ce14a5b5be2eaa4a47b8605a125e06"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/badges/javascript.png": {
+    "mtime": 1782246425831.7532,
+    "hash": "636856c5e66f32019a2873a0e89b2bd0"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/badges/mundial.png": {
+    "mtime": 1782246425884.288,
+    "hash": "444bc145f6772542aeea59a1e83321a2"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/badges/proteccion-de-archivos.png": {
+    "mtime": 1782246425960.669,
+    "hash": "6824187f14f07aaef9630d051e54cb42"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/badges/sitio-web.png": {
+    "mtime": 1782246426084.3042,
+    "hash": "e15e2524d7db590dc43e4d05198bd389"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/badges/vinculo-de-retroceso.png": {
+    "mtime": 1782246426135.9187,
+    "hash": "299cd4dfb6a31115f7bfd791b9adfd97"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/ui/icono-acerca.png": {
+    "mtime": 1782246426146.4517,
+    "hash": "28bfa215291f1dff5a0fc15f00ad1bf7"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/ui/icono-añadir-imagen.png": {
+    "mtime": 1782246426158.434,
+    "hash": "005db10f59e55127e3fdf6dfcca42467"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/ui/icono-badges-creados.png": {
+    "mtime": 1782246426171.43,
+    "hash": "7afb9de3146c198cc2f775ad87f4c41c"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/ui/icono-basura-blanco.png": {
+    "mtime": 1782246426273.368,
+    "hash": "f2663fb6f2a516343fb4a59d7a5193ec"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/ui/icono-calendario-blanco.png": {
+    "mtime": 1782246426286.3486,
+    "hash": "0817de9d3a122dab0a4abb0fe67d823a"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/ui/icono-candado.png": {
+    "mtime": 1782246426296.3484,
+    "hash": "14cbc854298d9381f9b349cdf1e09c64"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/ui/icono-descarga.png": {
+    "mtime": 1782246426404.156,
+    "hash": "f22f7a4ebe6836beade52e9c2a8e30ac"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/ui/icono-editar.png": {
+    "mtime": 1782246426417.1584,
+    "hash": "62f34bc5b5ff7e5bab35926b0144f469"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/ui/icono-evento.png": {
+    "mtime": 1782246426427.1565,
+    "hash": "ee5bb93bf24fa5d8456fd66f6622ea95"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/ui/icono-participantes.png": {
+    "mtime": 1782246426436.1606,
+    "hash": "9c5439b3d828d03eadf846cedd6fc8fa"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/ui/icono-perfil.png": {
+    "mtime": 1782246426450.6858,
+    "hash": "f09995375b2dcc2afb0dad7ec96e3eb3"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/ui/icono-reclamado.png": {
+    "mtime": 1782246426462.6855,
+    "hash": "029192e834ccee47cfe6cfbe137b6d84"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/ui/icono-traduccion.png": {
+    "mtime": 1782246426499.7036,
+    "hash": "f03784251f90bfc637c4c983a436df24"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/ui/icono-usuarios.png": {
+    "mtime": 1782246426512.7036,
+    "hash": "d9574a04d6464f029eadfdfecf56a8c5"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/ui/logo-lyfter.jpeg": {
+    "mtime": 1782233362141.5408,
+    "hash": "0d51a45ba49b7698c37110b38de86b99"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/assets/icons/ui/lupa.png": {
+    "mtime": 1782246426528.7058,
+    "hash": "f6c62c228e6331b2b97c257e5f54c2a3"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/calendario.png": {
+    "mtime": 1782246426622.223,
+    "hash": "b09cd7b50454585574b28b47f884317d"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/icono-basura.png": {
+    "mtime": 1782246426710.9275,
+    "hash": "ae209c84bbb850e3123c9aa857dfff64"
+  },
+  "C:/Users/Tartarus/Downloads/branch/Lyfters-Badge-App/subir-archivo.png": {
+    "mtime": 1782246426836.9407,
+    "hash": "a0d57b306808a53d530dd7cbf5d87005"
+  }
+}
