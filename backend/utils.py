@@ -3,7 +3,7 @@
 import io
 import math
 import base64
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import qrcode
 from bson import ObjectId
@@ -68,11 +68,12 @@ def compute_event_status(doc):
             start = start.replace(tzinfo=None)
         if hasattr(end, 'tzinfo') and end.tzinfo:
             end = end.replace(tzinfo=None)
+        end_adjusted = end + timedelta(hours=6)
         if now < start:
             return "upcoming"
-        elif start <= now <= end:
+        elif start <= now <= end_adjusted:
             return "ongoing"
-        elif now > end:
+        elif now > end_adjusted:
             return "finished"
     return manual_status or "draft"
 
