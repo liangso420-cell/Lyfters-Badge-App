@@ -1307,7 +1307,7 @@
         eventBlock +
         '<div style="margin-top:16px;border-top:1px solid #262a33;padding-top:16px;display:flex;flex-direction:column;gap:2px;">' +
           '<a href="workspace-select.html" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;color:#8b93a3;text-decoration:none;font-size:14px;font-weight:600;transition:color .15s;" onmouseover="this.style.color=\'#d897e7\'" onmouseout="this.style.color=\'#8b93a3\'">' +
-            '<img src="assets/icons/ui/icono-usuarios.png" style="width:18px;height:18px;object-fit:contain;opacity:.7;" /> Mis Workspaces' +
+            '<img src="assets/icons/ui/icono-usuarios.png" style="width:18px;height:18px;object-fit:contain;opacity:.7;" /> Workspaces' +
           '</a>' +
         '</div>' +
         '<div style="margin-top:auto;padding-top:22px;">' +
