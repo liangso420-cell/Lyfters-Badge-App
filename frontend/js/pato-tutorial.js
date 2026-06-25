@@ -7,9 +7,10 @@
   'use strict';
 
   /* ── State keys ──────────────────────────────────────────── */
-  var KEY_DONE = 'lyfter_pato_done';
-  var pageName = (window.location.pathname.split('/').pop() || 'landing.html').replace('.html', '') || 'landing';
-  var KEY_PAGE = 'lyfter_pato_' + pageName;
+  var KEY_DONE   = 'lyfter_pato_done';
+  var pageName   = (window.location.pathname.split('/').pop() || 'landing.html').replace('.html', '') || 'landing';
+  var KEY_PAGE   = 'lyfter_pato_' + pageName;
+  var FINAL_PAGE = 'user-ranking';   /* completing this page ends the full tour */
 
   /* ── Bail early (zero cost if already seen) ──────────────── */
   try {
@@ -46,7 +47,7 @@
         text: 'Al completar todos los badges de un evento ¡desbloqueás un <strong>premio sorpresa</strong>! 🎁'
       },
       {
-        duck: 'pato1', pos: 'bc', anim: 'celebrate',
+        duck: 'pato1', pos: 'br', anim: 'celebrate',
         text: '¿Listo para empezar? ¡Creá tu cuenta gratis y sumate al juego! 🚀'
       }
     ],
@@ -60,12 +61,12 @@
         text: 'Tocá cualquier evento para ver sus badges y unirte. Los marcados con ✨ son <strong>recomendados para vos</strong>.'
       },
       {
-        duck: 'pato3', pos: 'bc', anim: 'hop',
+        duck: 'pato3', pos: 'bl', anim: 'hop',
         text: '☝️ La barra de arriba tiene todas las secciones: <strong>Eventos, Escanear, Logros y Ranking</strong>. ¡Explorá!'
       },
       {
         duck: 'pato1', pos: 'br', anim: 'celebrate',
-        text: '¡Todo listo! Tocá en Pato en cualquier momento si querés volver a ver este tour. 🦆'
+        text: '¡Ya sabés todo lo básico! Ahora explorá, escaneá badges y subí al ranking. ¡Pato confía en vos! 🦆🚀'
       }
     ],
     'user-events': [
@@ -112,7 +113,7 @@
         text: 'Cada badge y logro te da XP. ¡Apuntá al podio y mostrá de qué estás hecho! 🏆'
       },
       {
-        duck: 'pato1', pos: 'bc', anim: 'celebrate',
+        duck: 'pato1', pos: 'br', anim: 'celebrate',
         text: '¡Completaste el tour con Pato! Ya sabés todo sobre Lyfter. ¡Buena suerte y a coleccionar! 🦆✨'
       }
     ]
@@ -196,7 +197,7 @@
     'box-shadow:0 4px 16px rgba(230,138,141,.45);}',
 
     /* Duck image */
-    '#pato-img{width:110px;height:auto;display:block;',
+    '#pato-img{width:130px;height:auto;display:block;',
     'filter:drop-shadow(0 6px 22px rgba(0,0,0,.55));',
     'pointer-events:all;cursor:pointer;',
     'transition:opacity .28s ease,filter .28s ease;',
@@ -259,7 +260,7 @@
     'left:50%;transform:translateX(-50%);right:auto;top:auto;bottom:20px;align-items:center;}',
     '#pato-wrap.pos-bc{left:50%;transform:translateX(-50%);}',
     '#pato-bubble{max-width:calc(100vw - 44px);min-width:220px;}',
-    '#pato-img{width:82px;}',
+    '#pato-img{width:96px;}',
     /* Re-center tails on mobile */
     '#pato-wrap.pos-br #pato-bubble::after,',
     '#pato-wrap.pos-bl #pato-bubble::after,',
@@ -357,6 +358,9 @@
     } else {
       /* Finished all steps on this page */
       try { localStorage.setItem(KEY_PAGE, '1'); } catch (e) {}
+      if (pageName === FINAL_PAGE) {
+        try { localStorage.setItem(KEY_DONE, '1'); } catch (e) {}
+      }
       destroy();
     }
   }
