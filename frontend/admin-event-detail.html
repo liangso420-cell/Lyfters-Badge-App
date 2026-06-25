@@ -434,27 +434,36 @@
 
           // ── Badges: agregar inline ──
           var ibSelectedIcon = null;
-          var ibSelectedRarity = null;
+          var ibSelectedRarity = 'normal';
 
           var IB_RARITY_COLORS = {
             normal: { border: '#38bdf8', bg: 'rgba(56,189,248,0.1)', color: '#38bdf8' },
             rare:   { border: '#ffc850', bg: 'rgba(255,200,80,0.15)', color: '#ffc850' }
           };
 
+          function ibApplyRarityStyle(btn) {
+            Array.prototype.forEach.call(document.querySelectorAll('.ib-rarity-btn'), function(b) {
+              b.style.border = '1px solid #353a46';
+              b.style.background = '#2e323d';
+              b.style.color = '#f4f6f9';
+            });
+            var rc = IB_RARITY_COLORS[btn.getAttribute('data-ibrarity')];
+            if (!rc) return;
+            btn.style.border = '1px solid ' + rc.border;
+            btn.style.background = rc.bg;
+            btn.style.color = rc.color;
+          }
+
           Array.prototype.forEach.call(document.querySelectorAll('.ib-rarity-btn'), function(btn) {
             btn.addEventListener('click', function() {
               ibSelectedRarity = btn.getAttribute('data-ibrarity');
-              Array.prototype.forEach.call(document.querySelectorAll('.ib-rarity-btn'), function(b) {
-                b.style.border = '1px solid #353a46';
-                b.style.background = '#2e323d';
-                b.style.color = '#f4f6f9';
-              });
-              var rc = IB_RARITY_COLORS[ibSelectedRarity];
-              btn.style.border = '1px solid ' + rc.border;
-              btn.style.background = rc.bg;
-              btn.style.color = rc.color;
+              ibApplyRarityStyle(btn);
             });
           });
+
+          // Estado inicial: "normal" seleccionado y resaltado visualmente.
+          var ibDefaultBtn = document.querySelector('.ib-rarity-btn[data-ibrarity="normal"]');
+          if (ibDefaultBtn) ibApplyRarityStyle(ibDefaultBtn);
 
           var ibIconBtn = document.getElementById('ib-icon-btn');
           if (ibIconBtn) {

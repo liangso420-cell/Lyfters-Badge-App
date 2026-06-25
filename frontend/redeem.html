@@ -84,6 +84,7 @@
         var isDup  = r.status === 'already_redeemed' || r.status === 'duplicate';
         var isLast = r.complete && !isDup;
         var badge  = r.badge || {};
+        var isRare = badge.is_rare || badge.rarity === 'rare';
         var _qp = new URLSearchParams(window.location.search);
         var iconUrl = (r.badge && r.badge.icon_url) || _qp.get('icon_url') || '';
         var badgeIcon = iconUrl
@@ -118,10 +119,12 @@
           accentColor = '#6C63FF';
           bgGradient  = 'linear-gradient(135deg, #EEEDFF 0%, #E0DEFF 100%)';
         } else {
-          title       = U.t('redeem_badge_obtained');
+          title       = isRare ? '¡Badge raro obtenido!' : U.t('redeem_badge_obtained');
           subtitle    = U.esc(badge.desc || badge.name || '');
-          accentColor = '#6C63FF';
-          bgGradient  = 'linear-gradient(135deg, #EEEDFF 0%, #F0EEFF 100%)';
+          accentColor = isRare ? '#ffc850' : '#6C63FF';
+          bgGradient  = isRare
+            ? 'linear-gradient(135deg, #1a1a0a 0%, #2a2200 100%)'
+            : 'linear-gradient(135deg, #EEEDFF 0%, #F0EEFF 100%)';
         }
 
 
@@ -151,13 +154,27 @@
 
         var xpBlock = '';
         if (!isDup) {
-          var xpVal = r.xp_gained || r.xp_earned || 0;
-          if (xpVal > 0) {
-            xpBlock =
-              '<div style="text-align:center;width:100%;margin:12px 0;">' +
-                '<span style="display:inline-block;padding:6px 20px;border-radius:999px;border:1.5px solid #4ade80;color:#4ade80;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;background:rgba(74,222,128,0.08);">+' + xpVal + ' XP</span>' +
-                (r.xp && r.xp.level ? ' <span style="display:inline-block;padding:4px 10px;border-radius:6px;background:#2e323d;color:#f4f6f9;font-family:Poppins,sans-serif;font-size:11px;font-weight:700;">Nv. ' + r.xp.level + '</span>' : '') +
-              '</div>';
+          var xpBase      = badge.xp_value || r.xp_badge || 0;
+          var xpFirstScan = r.xp_first_scan_bonus || 0;
+          var xpRare      = isRare ? (badge.xp_rare_bonus || r.xp_rare_bonus || 0) : 0;
+          var xpEvent     = r.xp_event_bonus || r.xp_completion_bonus || 0;
+          var xpTotal     = r.xp_gained || r.xp_earned || (xpBase + xpFirstScan + xpRare + xpEvent);
+
+          if (xpTotal > 0) {
+            var rows = '';
+            if (xpBase > 0)
+              rows += '<div class="xp-row"><span class="xp-pill xp-cyan">+' + xpBase + ' XP</span><span class="xp-detail">badge</span></div>';
+            if (xpFirstScan > 0)
+              rows += '<div class="xp-row"><span class="xp-pill xp-cyan">+' + xpFirstScan + ' XP</span><span class="xp-detail">primer escaneo del evento ⭐</span></div>';
+            if (xpRare > 0)
+              rows += '<div class="xp-row"><span class="xp-pill xp-gold">+' + xpRare + ' XP</span><span class="xp-detail">bonus raro</span></div>';
+            if (xpEvent > 0)
+              rows += '<div class="xp-row"><span class="xp-pill xp-green">+' + xpEvent + ' XP</span><span class="xp-detail">completaste el evento 🎉</span></div>';
+            rows += '<hr style="border:none;border-top:1px solid #2a2e38;margin:8px 0;"/>';
+            var totalColor = xpEvent > 0 ? '#abd194' : isRare ? '#ffc850' : '#70cfff';
+            rows += '<div style="font-size:12px;color:#8b93a3;">Total <span style="color:' + totalColor + ';font-weight:700;">+' + xpTotal + ' XP</span></div>';
+
+            xpBlock = '<div style="margin:12px 0;">' + rows + '</div>';
           }
         }
 
@@ -209,6 +226,12 @@
           '.redeem-profile-btn{width:100%;padding:14px;border-radius:12px;border:none;font-size:15px;font-weight:600;color:#fff;cursor:pointer;margin-top:16px;font-family:inherit;transition:opacity .15s;}' +
           '.redeem-profile-btn:hover{opacity:.9;}' +
           '@keyframes bounceIn{0%{transform:scale(0);opacity:0;}60%{transform:scale(1.2);}100%{transform:scale(1);opacity:1;}}' +
+          '.xp-row{display:flex;align-items:center;justify-content:center;gap:8px;margin:4px 0;}' +
+          '.xp-pill{border-radius:999px;padding:3px 12px;font-weight:700;font-size:13px;}' +
+          '.xp-cyan{background:rgba(112,207,255,0.15);color:#70cfff;border:1px solid rgba(112,207,255,0.3);}' +
+          '.xp-gold{background:rgba(255,200,80,0.15);color:#ffc850;border:1px solid rgba(255,200,80,0.3);}' +
+          '.xp-green{background:rgba(171,209,148,0.15);color:#abd194;border:1px solid rgba(171,209,148,0.3);}' +
+          '.xp-detail{color:#8b93a3;font-size:12px;}' +
           '</style>';
 
         app.innerHTML =

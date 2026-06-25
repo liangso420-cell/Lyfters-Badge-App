@@ -310,12 +310,19 @@
       var complete = obtained >= e.badges.length;
       var xpTotal = mockState.xp[userId] || 0;
       levelUp = computeLevel(xpTotal) > computeLevel(xpBefore);
+      var mIsRare = !!badge.is_rare || badge.rarity === 'rare';
       return {
         status: dup ? 'duplicate' : 'ok',
-        badge: { emoji: badge.emoji, name: badge.name, desc: badge.desc },
+        badge: { emoji: badge.emoji, icon_url: badge.icon_url || null, name: badge.name, desc: badge.desc,
+          is_rare: mIsRare, rarity: badge.rarity || (mIsRare ? 'rare' : 'normal'), xp_value: badge.xp_value != null ? badge.xp_value : 10 },
         complete: complete, prize: complete ? e.prize : null,
         progress: { obtained: obtained, total: e.badges.length },
         xp: { gained: xpGained, total: xpTotal, level: computeLevel(xpTotal), levelUp: levelUp },
+        xp_gained: xpGained,
+        xp_badge: dup ? 0 : 10,
+        xp_first_scan_bonus: (!dup && wasFirstInEvent) ? 5 : 0,
+        xp_rare_bonus: (!dup && mIsRare) ? 15 : 0,
+        xp_event_bonus: 0,
         achievements: unlocked
       };
     },
@@ -768,10 +775,16 @@
       var d = await apiRequest('POST', '/redeem/' + eventId + '/' + token, body);
       return {
         status: (d.status === 'duplicado' || d.status === 'already_redeemed' || d.status === 'duplicate') ? 'duplicate' : (d.status === 'none' ? 'none' : 'ok'),
-        badge: d.badge ? { emoji: d.badge.icon || '', icon_url: d.badge.icon_url || null, name: d.badge.name || d.badge.nombre || '', desc: d.badge.descripcion || '' } : null,
+        badge: d.badge ? { emoji: d.badge.icon || '', icon_url: d.badge.icon_url || null, name: d.badge.name || d.badge.nombre || '', desc: d.badge.descripcion || '',
+          is_rare: !!d.badge.is_rare, rarity: d.badge.rarity || (d.badge.is_rare ? 'rare' : 'normal'), xp_value: d.badge.xp_value != null ? d.badge.xp_value : null } : null,
         complete: !!d.completado, prize: d.premio || null,
         progress: d.progreso ? { obtained: d.progreso.obtenidos, total: d.progreso.total } : null,
         xp: { gained: d.xp_gained || 0, total: d.xp_total || 0, level: d.level || 1, levelUp: !!d.level_up },
+        xp_gained: d.xp_gained || 0,
+        xp_badge: d.xp_badge || 0,
+        xp_first_scan_bonus: d.xp_first_scan_bonus || 0,
+        xp_rare_bonus: d.xp_rare_bonus || 0,
+        xp_event_bonus: d.xp_event_bonus || d.xp_completion_bonus || 0,
         achievements: d.achievements_unlocked || []
       };
     },

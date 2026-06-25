@@ -90,6 +90,7 @@ def redeem_badge(event_id, token):
     xp_result = award_xp(user_oid, badge, event, is_first_scan, completado)
     new_achievements = check_and_unlock(user_oid, oid_event)
 
+    badge_is_rare = bool(badge.get("is_rare", False))
     return jsonify({
         "status":     "ok",
         "badge": {
@@ -97,6 +98,9 @@ def redeem_badge(event_id, token):
             "icon_url":    badge.get("icon_url", ""),
             "nombre":      badge.get("name", ""),
             "descripcion": badge.get("description", ""),
+            "is_rare":     badge_is_rare,
+            "rarity":      "rare" if badge_is_rare else "normal",
+            "xp_value":    int(badge.get("xp_value", 10)),
         },
         "completado": completado,
         "premio":     event.get("prize") if completado else None,
@@ -105,5 +109,9 @@ def redeem_badge(event_id, token):
         "xp_total":              xp_result["xp_total"],
         "level":                 xp_result["level"],
         "level_up":              xp_result["level_up"],
+        "xp_badge":              xp_result["xp_base"],
+        "xp_first_scan_bonus":   xp_result["xp_first_scan_bonus"],
+        "xp_rare_bonus":         xp_result["xp_rare_bonus"],
+        "xp_event_bonus":        xp_result["xp_completion_bonus"],
         "achievements_unlocked": new_achievements,
     }), 200
