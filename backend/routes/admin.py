@@ -651,6 +651,8 @@ def admin_dashboard():
     total_eventos          = events().count_documents(ws_filter)
     total_badges_creados   = badges().count_documents(ws_filter)
     event_ids_ws           = [e["_id"] for e in events().find(ws_filter, {"_id": 1})]
+    event_ids_ws           = [e["_id"] for e in events().find(ws_filter, {"_id": 1})]
+    total_badges_creados   = badges().count_documents({"event_id": {"$in": event_ids_ws}}) if event_ids_ws else 0
     total_badges_canjeados = scans().count_documents({"event_id": {"$in": event_ids_ws}}) if event_ids_ws else 0
 
     progreso = []
