@@ -35,18 +35,6 @@
 
       var TAGS_LIST = ['Desarrollo Web','Mobile','Inteligencia Artificial','Data Science','Ciberseguridad','DevOps','Cloud','Blockchain','UX/UI','Product Management','Emprendimiento','Marketing Digital','Diseño','Videojuegos','Robótica','Fintech','Educación Tech','Open Source','Backend','Frontend'];
 
-      var BADGE_ICONS = [
-        { file: 'api.png', label: 'API' },
-        { file: 'codificacion.png', label: 'Código' },
-        { file: 'computacion-en-la-nube.png', label: 'Nube' },
-        { file: 'diseno.png', label: 'Diseño' },
-        { file: 'error.png', label: 'Error' },
-        { file: 'javascript.png', label: 'JavaScript' },
-        { file: 'mundial.png', label: 'Web' },
-        { file: 'proteccion-de-archivos.png', label: 'Seguridad' },
-        { file: 'sitio-web.png', label: 'Sitio Web' },
-        { file: 'vinculo-de-retroceso.png', label: 'Backend' },
-      ];
       var selectedBadgeIcon = null;
 
       var API = window.LyfterAPI;
@@ -340,16 +328,6 @@
                   '<p style="font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#f4f6f9;margin:0;">Selecciona un icono</p>' +
                   '<button id="close-icon-picker" style="background:transparent;border:none;color:#8b93a3;font-size:20px;cursor:pointer;line-height:1;">✕</button>' +
                 '</div>' +
-                '<p style="font-size:11px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;letter-spacing:.06em;text-transform:uppercase;margin:0 0 8px;">Imágenes</p>' +
-                '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">' +
-                  BADGE_ICONS.map(function(icon) {
-                    return '<button type="button" data-icon="assets/icons/badges/' + icon.file + '" class="icon-option" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:10px;border:1px solid #353a46;background:#2e323d;cursor:pointer;">' +
-                      '<img src="assets/icons/badges/' + icon.file + '" style="width:36px;height:36px;object-fit:contain;" />' +
-                      '<span style="font-size:10px;color:#8b93a3;font-family:Manrope,sans-serif;text-align:center;">' + icon.label + '</span>' +
-                    '</button>';
-                  }).join('') +
-                '</div>' +
-                '<p style="font-size:11px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;letter-spacing:.06em;text-transform:uppercase;margin:18px 0 8px;">Bootstrap Icons</p>' +
                 '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">' +
                   U.BOOTSTRAP_BADGE_ICONS.map(function(icon) {
                     return '<button type="button" data-icon="bi:' + icon.cls + '" class="icon-option" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:10px;border:1px solid #353a46;background:#2e323d;cursor:pointer;">' +
