@@ -106,7 +106,7 @@
             ? '<img src="' + U.esc(b.icon_url) + '" style="width:36px;height:36px;object-fit:contain;">'
             : '<img src="assets/icons/ui/icono-badges-creados.png" style="width:36px;height:36px;object-fit:contain;filter:brightness(0) invert(1);opacity:0.6;">';
           var isRare = b.rarity === 'rare' || b.is_rare;
-          var inner = '<div style="width:48px;height:48px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:10px;background:#2e323d;opacity:' + (b.obtained ? '1' : '0.3') + ';">' +
+          var inner = '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:10px;background:#2e323d;max-width:56px;opacity:' + (b.obtained ? '1' : '0.3') + ';">' +
             iconHtml +
           '</div>' +
           (b.obtained ? '<span style="display:block;text-align:center;font-size:9px;color:#16a34a;font-weight:700;margin-top:2px;">✓</span>' : '<span style="display:block;text-align:center;font-size:9px;color:#8b93a3;margin-top:2px;">—</span>');
@@ -135,7 +135,7 @@
               '<div style="height:8px;border-radius:999px;background:linear-gradient(90deg,#d897e7,#e68a8d);width:' + pct + '%;transition:width .7s;"></div>' +
             '</div>' +
             '<p style="font-family:Manrope,sans-serif;font-size:12px;color:#8b93a3;margin:0 0 14px;">' + done + ' de ' + total + ' badges obtenidos</p>' +
-            (badgesHtml ? '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;margin-bottom:16px;">' + badgesHtml + '</div>' : '') +
+            (badgesHtml ? '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px;margin-top:12px;margin-bottom:16px;">' + badgesHtml + '</div>' : '') +
             '<a href="scan.html" style="display:block;text-align:center;padding:14px;border-radius:12px;background:linear-gradient(135deg,#d897e7,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;text-decoration:none;">Escanear badge</a>' +
           '</div>' +
         '</div>';
