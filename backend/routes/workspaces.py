@@ -590,7 +590,8 @@ def grant_god_admin():
     if not target:
         return jsonify(error="Usuario no encontrado"), 404
 
-    users().update_one({"_id": target["_id"]}, {"$set": {"role": "god_admin"}})
+    caller_oid = ObjectId(get_jwt_identity())
+    users().update_one({"_id": target["_id"]}, {"$set": {"role": "god_admin", "granted_by": caller_oid}})
     return jsonify(ok=True, name=target.get("name", ""), email=email)
 
 
@@ -634,6 +635,10 @@ def set_participant():
     user = users().find_one({"email": {"$regex": f"^{re.escape(email)}$", "$options": "i"}})
     if not user:
         return jsonify(error="Usuario no encontrado"), 404
+    caller_oid = ObjectId(get_jwt_identity())
+    caller_doc = users().find_one({"_id": caller_oid})
+    if caller_doc and caller_doc.get("granted_by") == user["_id"]:
+        return jsonify(error="No podés modificar al God Admin que te otorgó el permiso"), 403
 
     users().update_one({"_id": user["_id"]}, {"$set": {"role": "participant"}})
     workspace_members().delete_many({"user_id": user["_id"]})
@@ -719,6 +724,7 @@ def list_platform_users():
             "ban_ip":        u.get("ban_ip"),
             "ban_reason":    u.get("ban_reason", ""),
             "last_login_ip": u.get("last_login_ip"),
+            "granted_by":    str(u["granted_by"]) if u.get("granted_by") else None,
         })
     return jsonify(result)
 
@@ -822,6 +828,9 @@ def delete_platform_user(user_id):
         return jsonify(error="Usuario no encontrado"), 404
     if target.get("role") == "god_admin":
         return jsonify(error="No podés eliminar a otro god_admin"), 403
+    caller_doc = users().find_one({"_id": caller_id})
+    if caller_doc and caller_doc.get("granted_by") == target_uid:
+        return jsonify(error="No podés eliminar al God Admin que te otorgó el permiso"), 403
 
     users().delete_one({"_id": target_uid})
     workspace_members().delete_many({"user_id": target_uid})

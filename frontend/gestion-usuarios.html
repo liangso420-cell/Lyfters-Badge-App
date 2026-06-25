@@ -202,11 +202,13 @@
         var safeName = u.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
         var safeEmail = (u.email || '').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
 
+        var isMyGrantor = u.granted_by && u.granted_by === user.id;
         var actions;
         if (u.role === 'god_admin') {
-          actions =
-            '<span style="font-size:11px;color:#ffc850;padding:4px 10px;background:rgba(255,200,80,0.1);border:1px solid rgba(255,200,80,0.2);border-radius:6px;">Protegido</span>' +
-            '<span style="font-size:11px;color:#ffc850;background:rgba(255,200,80,0.1);border:1px solid rgba(255,200,80,0.2);border-radius:6px;padding:4px 10px;">God Admin global</span>';
+          actions = isMyGrantor
+            ? '<span style="font-size:11px;color:#ffc850;padding:4px 10px;background:rgba(255,200,80,0.1);border:1px solid rgba(255,200,80,0.2);border-radius:6px;">Protegido — te otorgó el permiso</span>'
+            : '<span style="font-size:11px;color:#ffc850;padding:4px 10px;background:rgba(255,200,80,0.1);border:1px solid rgba(255,200,80,0.2);border-radius:6px;">Protegido</span>' +
+              '<span style="font-size:11px;color:#ffc850;background:rgba(255,200,80,0.1);border:1px solid rgba(255,200,80,0.2);border-radius:6px;padding:4px 10px;">God Admin global</span>';
         } else {
           var banBtn = u.banned
             ? '<button onclick="unbanPlatformUser(\'' + u.id + '\')" style="width:120px;height:30px;box-sizing:border-box;text-align:center;font-size:12px;padding:0 12px;border-radius:8px;border:1px solid #353a46;background:transparent;color:#aab1bf;cursor:pointer;">Desbanear</button>'
@@ -244,6 +246,23 @@
       var toast = function(msg, type) { window.LyfterUtils.toast(msg, type); };
 
       if (!role) { toast('Seleccioná un rol', 'error'); return; }
+
+      // god_admin — otorgar rol global vía endpoint dedicado
+      if (role === 'god_admin') {
+        if (!confirm('¿Otorgar God Admin a ' + email + '? Tendrá acceso total a la plataforma.')) return;
+        try {
+          var res = await fetch(window.LyfterAPI.base + '/workspaces/grant-god-admin', {
+            method: 'POST',
+            headers: Object.assign({}, window.LyfterAPI.authHeaders(), {'Content-Type': 'application/json'}),
+            body: JSON.stringify({ email: email })
+          });
+          var data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Error');
+          toast(email + ' ahora es God Admin', 'success');
+          setTimeout(function() { loadPlatformUsers(); }, 800);
+        } catch(e) { toast(e.message, 'error'); }
+        return;
+      }
 
       // participant no necesita workspace — solo actualiza rol global
       if (role === 'participant') {
@@ -309,6 +328,7 @@
               '<option value="participant">Participante</option>' +
               '<option value="admin">Admin</option>' +
               '<option value="superadmin">Super Admin</option>' +
+              (user.role === 'god_admin' ? '<option value="god_admin">God Admin</option>' : '') +
             '</select>' +
           '</div>' +
           '<div style="display:flex;gap:10px;">' +
