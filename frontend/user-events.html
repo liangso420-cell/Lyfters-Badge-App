@@ -101,7 +101,8 @@
           ? '<div style="height:180px;overflow:hidden;border-radius:16px 16px 0 0;"><img src="' + U.esc(ev.photo) + '" style="width:100%;height:100%;object-fit:cover;"></div>'
           : '<div style="height:180px;border-radius:16px 16px 0 0;background:linear-gradient(120deg,#d897e7 0%,#e68a8d 60%,#ffcb8a 100%);display:flex;align-items:center;justify-content:center;"><img src="assets/icons/ui/icono-evento.png" style="width:60px;height:60px;object-fit:contain;filter:brightness(0) invert(1);opacity:0.7;"></div>';
         console.log('badges data:', detail.badges);
-        var badgesHtml = (detail.badges || []).map(function(b) {
+        var allBadges = detail.badges || [];
+        var badgesHtml = allBadges.map(function(b) {
           var iconHtml = b.icon_url
             ? '<img src="' + U.esc(b.icon_url) + '" style="width:75%;height:75%;object-fit:contain;">'
             : '<img src="assets/icons/ui/icono-badges-creados.png" style="width:75%;height:75%;object-fit:contain;filter:brightness(0) invert(1);opacity:0.6;">';
@@ -135,7 +136,7 @@
               '<div style="height:8px;border-radius:999px;background:linear-gradient(90deg,#d897e7,#e68a8d);width:' + pct + '%;transition:width .7s;"></div>' +
             '</div>' +
             '<p style="font-family:Manrope,sans-serif;font-size:12px;color:#8b93a3;margin:0 0 14px;">' + done + ' de ' + total + ' badges obtenidos</p>' +
-            (badgesHtml ? '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(36px,1fr));gap:4px;margin-top:12px;margin-bottom:16px;">' + badgesHtml + '</div>' : '') +
+            (badgesHtml ? '<div style="display:grid;grid-template-columns:repeat(' + Math.min(allBadges.length, 10) + ',1fr);gap:4px;margin-top:12px;margin-bottom:16px;">' + badgesHtml + '</div>' : '') +
             '<a href="scan.html" style="display:block;text-align:center;padding:14px;border-radius:12px;background:linear-gradient(135deg,#d897e7,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;text-decoration:none;">Escanear badge</a>' +
           '</div>' +
         '</div>';
