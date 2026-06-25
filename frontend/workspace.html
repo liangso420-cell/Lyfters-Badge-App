@@ -97,13 +97,11 @@
         if (wsData && wsData.id) {
           var memRes = await fetch(API.base + '/workspaces/' + wsData.id + '/members', { headers: API.authHeaders() });
           members = memRes.ok ? await memRes.json() : [];
-          var invRes = await fetch(API.base + '/workspaces/' + wsData.id + '/invitations', { headers: API.authHeaders() });
-          invList = invRes.ok ? await invRes.json() : [];
         } else {
-          members = []; invList = [];
+          members = [];
         }
 
-        renderPage(wsData, members, invList, allWorkspaces, isGod);
+        renderPage(wsData, members, [], allWorkspaces, isGod);
         if (isGod) loadUsersForGrant();
       } catch(err) {
         // Si falla la carga pero es god_admin, igual mostrar el panel de herramientas
@@ -155,16 +153,6 @@
         '</tr>';
       }).join('');
 
-      var pendingInv = invList.filter(function(i){ return i.status === 'pending'; });
-      var invRows = pendingInv.map(function(i) {
-        return '<tr>' +
-          '<td>' + U.esc(i.email || '—') + '</td>' +
-          '<td><code style="background:#20242d;padding:2px 8px;border-radius:6px;font-family:JetBrains Mono,monospace;color:#d897e7;">' + (i.code||'') + '</code></td>' +
-          '<td><span class="ws-badge ' + (i.role||'') + '">' + (i.role||'') + '</span></td>' +
-          '<td style="color:#8b93a3;font-size:12px;">' + (i.status||'') + '</td>' +
-        '</tr>';
-      }).join('');
-
       var allWsHtml = isGod ? '<div class="ws-card">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
           '<div class="ws-card-title" style="margin:0;">Workspaces</div>' +
@@ -200,7 +188,6 @@
 
           '<div class="ws-stat-grid">' +
             '<div class="ws-stat"><div class="ws-stat-num">' + members.length + '</div><div class="ws-stat-label">Miembros</div></div>' +
-            '<div class="ws-stat"><div class="ws-stat-num">' + pendingInv.length + '</div><div class="ws-stat-label">Invitaciones pendientes</div></div>' +
             (isGod ? '<div class="ws-stat"><div class="ws-stat-num">' + allWs.length + '</div><div class="ws-stat-label">Workspaces totales</div></div>' : '') +
           '</div>' +
 
@@ -254,8 +241,8 @@
               '<div style="display:flex;gap:12px;flex-wrap:wrap;">' +
                 '<input id="inv-email" type="email" placeholder="email@empresa.com" class="ws-input" style="flex:1;min-width:200px;" />' +
                 '<select id="inv-role" class="ws-select" style="width:180px;">' +
-                  '<option value="participant">Participante</option>' +
-                  (callerRank >= 3 ? '<option value="admin">Admin</option>' : '') +
+                  '<option value="admin">Admin</option>' +
+                  (callerRank >= 4 ? '<option value="superadmin">Super Admin</option>' : '') +
                 '</select>' +
                 '<button class="ws-btn cta" onclick="sendEmailInvite(\'' + ws.id + '\')">Enviar</button>' +
               '</div>' +
@@ -263,14 +250,13 @@
             '<div id="panel-code" style="display:none;">' +
               '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">' +
                 '<select id="code-role" class="ws-select" style="width:200px;">' +
-                  '<option value="participant">Participante</option>' +
-                  (callerRank >= 3 ? '<option value="admin">Admin</option>' : '') +
+                  '<option value="admin">Admin</option>' +
+                  (callerRank >= 4 ? '<option value="superadmin">Super Admin</option>' : '') +
                 '</select>' +
                 '<button class="ws-btn cta" onclick="generateCode(\'' + ws.id + '\')">Generar código</button>' +
               '</div>' +
               '<div id="code-result"></div>' +
             '</div>' +
-            (invRows ? '<div style="margin-top:20px;"><div style="font-size:13px;font-weight:700;color:#cdd2db;margin-bottom:10px;">Invitaciones pendientes</div><div style="overflow-x:auto;"><table class="ws-table"><thead><tr><th>Email</th><th>Código</th><th>Rol</th><th>Estado</th></tr></thead><tbody>' + invRows + '</tbody></table></div></div>' : '') +
           '</div>' : '') +
 
           (isGod ? '<div class="ws-card" style="border-color:rgba(255,200,80,0.25);background:linear-gradient(135deg,rgba(255,200,80,0.05),rgba(216,151,231,0.03));">' +
@@ -301,7 +287,6 @@
                   '</select>' +
                   '<input id="god-email" type="email" placeholder="o escribí el email directamente" class="ws-input" style="width:100%;" />' +
                   '<select id="grant-role-select" class="ws-select" style="width:100%;">' +
-                    '<option value="participant">Participante</option>' +
                     '<option value="admin">Admin</option>' +
                     '<option value="superadmin">Super Admin</option>' +
                   '</select>' +
