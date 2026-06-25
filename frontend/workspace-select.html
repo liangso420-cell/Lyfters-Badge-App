@@ -358,7 +358,7 @@
         var cardIconHtml = wsData.logo_url
           ? '<img src="' + wsData.logo_url + '" style="width:46px;height:46px;object-fit:contain;" />'
           : '<img src="assets/icons/ui/icono-usuarios.png" style="width:30px;height:30px;object-fit:contain;opacity:.85;" />';
-        html += '<div class="ws-card-main" onclick="enterPanel()">' +
+        html += '<div class="ws-card-main" onclick="enterPanel(\'' + wsData.id + '\')">' +
           '<div class="ws-card-main-top">' +
             '<div class="ws-card-main-icon" style="' + (wsData.logo_url ? 'background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.08);' : '') + '">' + cardIconHtml + '</div>' +
             '<div class="ws-card-main-info">' +
@@ -374,7 +374,7 @@
               : '<div class="ws-stat"><div class="ws-stat-n" style="color:#abd194;">Activo</div><div class="ws-stat-l">Estado</div></div>') +
           '</div>' +
           '<div class="ws-card-actions">' +
-            '<button class="btn-enter" onclick="event.stopPropagation();enterPanel();">Entrar al panel →</button>' +
+            '<button class="btn-enter" onclick="event.stopPropagation();enterPanel(\'' + wsData.id + '\');">Entrar al panel →</button>' +
             (myRole === 'superadmin' ? '<a href="workspace-edit.html?ws=' + wsData.id + '" class="btn-manage" onclick="event.stopPropagation();"><img src="assets/icons/ui/icono-usuarios.png" style="width:14px;height:14px;object-fit:contain;opacity:.8;" /> Gestionar miembros</a>' : '') +
           '</div>' +
         '</div>';
@@ -549,7 +549,8 @@
     }
 
 
-    window.enterPanel = function() {
+    window.enterPanel = function(wsId) {
+      if (wsId) { enterWorkspace(wsId); return; }
       try { sessionStorage.setItem('lyfter_ws_entered', '1'); } catch(e) {}
       window.location.href = 'admin-event.html';
     };
@@ -573,6 +574,15 @@
         });
         API.setToken(res.token);
         try { sessionStorage.setItem('lyfter_ws_entered', '1'); } catch(e) {}
+
+        // Auto-join all active workspace events so admin/superadmin never hit "not_joined"
+        try {
+          var wsEvents = await API.listEvents();
+          await Promise.all(wsEvents.filter(function(e) { return e.active !== false; }).map(function(e) {
+            return API.joinEvent(e.id, null).catch(function() {});
+          }));
+        } catch(e) {}
+
         window.location.href = 'admin-event.html';
       } catch(e) {
         U.toast('Error al entrar al workspace: ' + e.message, 'error');
