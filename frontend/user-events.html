@@ -104,10 +104,18 @@
           var iconHtml = b.icon_url
             ? '<img src="' + U.esc(b.icon_url) + '" style="width:32px;height:32px;object-fit:contain;">'
             : '<img src="assets/icons/ui/icono-badges-creados.png" style="width:32px;height:32px;object-fit:contain;filter:brightness(0) invert(1);opacity:0.6;">';
-          return '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;opacity:' + (b.obtained ? '1' : '0.3') + ';">' +
+          var isRare = b.rarity === 'rare' || b.is_rare;
+          var inner = '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;opacity:' + (b.obtained ? '1' : '0.3') + ';">' +
             iconHtml +
             (b.obtained ? '<span style="font-size:9px;color:#16a34a;font-weight:700;">✓</span>' : '<span style="font-size:9px;color:#8b93a3;">—</span>') +
           '</div>';
+          if (isRare) {
+            var rareStyle = b.obtained
+              ? 'box-shadow:0 0 10px rgba(255,200,80,0.6);border:1px solid rgba(255,200,80,0.8);border-radius:8px;padding:3px;'
+              : 'box-shadow:0 0 6px rgba(255,200,80,0.2);border:1px solid rgba(255,200,80,0.3);border-radius:8px;padding:3px;';
+            return '<div style="' + rareStyle + '">' + inner + '</div>';
+          }
+          return inner;
         }).join('');
         return '<div style="background:#1c1f27;border:2px solid rgba(216,151,231,0.4);border-radius:16px;overflow:hidden;margin-bottom:24px;box-shadow:0 0 24px rgba(216,151,231,0.12);">' +
           photoHtml +

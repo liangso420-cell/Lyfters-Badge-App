@@ -141,9 +141,9 @@
                   : '<div style="width:40px;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-align:center;"><img src="assets/icons/ui/icono-badges-creados.png" style="width:32px;height:32px;object-fit:contain;filter:brightness(0) invert(1);display:block;margin:0 auto;"></div>';
                 var bxp    = b.xp_value != null ? b.xp_value : 10;
                 var bRarity = b.rarity || (b.is_rare ? 'rare' : 'normal');
-                var bBg = bRarity === 'rare' ? 'rgba(34,197,94,0.1)' : '#20242d';
-                var bBorder = bRarity === 'rare' ? '#22c55e' : '#2f343f';
-                var bRarityLabel = bRarity === 'rare' ? '<span style="font-size:10px;color:#22c55e;font-weight:700;margin-left:6px;">RARO</span>' : '';
+                var bBg = bRarity === 'rare' ? 'rgba(255,200,80,0.08)' : '#20242d';
+                var bBorder = bRarity === 'rare' ? '#ffc850' : '#38bdf8';
+                var bRarityLabel = bRarity === 'rare' ? '<span style="font-size:10px;color:#ffc850;font-weight:700;margin-left:6px;background:rgba(255,200,80,0.15);padding:2px 8px;border-radius:999px;">RARO</span>' : '';
                 return (
                   '<div style="border-radius:12px;border:1px solid ' + bBorder + ';background:' + bBg + ';overflow:hidden;margin-bottom:10px;">' +
                     '<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;">' +
@@ -425,11 +425,11 @@
 
           // ── Badges: agregar inline ──
           var ibSelectedIcon = null;
-          var ibSelectedRarity = 'normal';
+          var ibSelectedRarity = null;
 
           var IB_RARITY_COLORS = {
-            normal: { border: '#353a46', bg: '#2e323d', color: '#f4f6f9' },
-            rare:   { border: '#22c55e', bg: 'rgba(34,197,94,0.15)', color: '#22c55e' }
+            normal: { border: '#38bdf8', bg: 'rgba(56,189,248,0.1)', color: '#38bdf8' },
+            rare:   { border: '#ffc850', bg: 'rgba(255,200,80,0.15)', color: '#ffc850' }
           };
 
           Array.prototype.forEach.call(document.querySelectorAll('.ib-rarity-btn'), function(btn) {
