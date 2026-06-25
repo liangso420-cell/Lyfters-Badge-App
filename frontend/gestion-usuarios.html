@@ -333,11 +333,55 @@
           '</div>' +
           '<div style="display:flex;gap:10px;">' +
             '<button onclick="closeRoleModal()" style="flex:1;height:44px;border-radius:10px;border:1px solid #353a46;background:transparent;color:#aab1bf;font-family:Poppins,sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Cancelar</button>' +
-            '<button onclick="assignUserToWorkspace(\'' + userId + '\',\'' + emailJs + '\');closeRoleModal();" style="flex:2;height:44px;border-radius:10px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Asignar</button>' +
+            '<button onclick="handleRoleAssign(\'' + userId + '\',\'' + emailJs + '\')" style="flex:2;height:44px;border-radius:10px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Asignar</button>' +
           '</div>' +
         '</div>';
       document.body.appendChild(overlay);
       overlay.addEventListener('click', function(e) { if (e.target === overlay) closeRoleModal(); });
+    };
+
+    window.handleRoleAssign = async function(userId, email) {
+      var wsId = (document.getElementById('ws-for-' + userId) || {}).value || '';
+      var role = (document.getElementById('role-for-' + userId) || {}).value || '';
+      var toast = function(msg, type) { window.LyfterUtils.toast(msg, type); };
+
+      if (!role) { toast('Seleccioná un rol', 'error'); return; }
+
+      try {
+        if (role === 'participant') {
+          var res = await fetch(window.LyfterAPI.base + '/workspaces/set-participant', {
+            method: 'POST',
+            headers: Object.assign({}, window.LyfterAPI.authHeaders(), {'Content-Type': 'application/json'}),
+            body: JSON.stringify({ email: email })
+          });
+          var data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Error');
+          toast(email + ' ahora es participante', 'success');
+        } else if (role === 'god_admin') {
+          var res = await fetch(window.LyfterAPI.base + '/workspaces/set-role', {
+            method: 'POST',
+            headers: Object.assign({}, window.LyfterAPI.authHeaders(), {'Content-Type': 'application/json'}),
+            body: JSON.stringify({ user_id: userId, role: 'god_admin' })
+          });
+          var data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Error');
+          toast(email + ' ahora es God Admin', 'success');
+        } else {
+          if (!wsId) { toast('Seleccioná un workspace', 'error'); return; }
+          var res = await fetch(window.LyfterAPI.base + '/workspaces/' + wsId + '/invite', {
+            method: 'POST',
+            headers: Object.assign({}, window.LyfterAPI.authHeaders(), {'Content-Type': 'application/json'}),
+            body: JSON.stringify({ email: email, role: role, method: 'direct' })
+          });
+          var data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Error');
+          toast(email + ' asignado como ' + role, 'success');
+        }
+        closeRoleModal();
+        setTimeout(function() { loadPlatformUsers(); }, 600);
+      } catch(e) {
+        toast(e.message || 'Error al asignar', 'error');
+      }
     };
 
     window.closeRoleModal = function() {
