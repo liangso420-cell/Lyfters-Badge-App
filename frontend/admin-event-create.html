@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
@@ -334,15 +335,25 @@
           var modalRoot = document.getElementById('modal-root');
           modalRoot.innerHTML =
             '<div class="fixed inset-0 z-50 flex items-center justify-center p-6" style="background:rgba(0,0,0,0.75);" id="icon-picker-overlay">' +
-              '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:16px;padding:24px;width:100%;max-width:420px;">' +
+              '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:16px;padding:24px;width:100%;max-width:420px;max-height:85vh;overflow-y:auto;">' +
                 '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">' +
                   '<p style="font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#f4f6f9;margin:0;">Selecciona un icono</p>' +
                   '<button id="close-icon-picker" style="background:transparent;border:none;color:#8b93a3;font-size:20px;cursor:pointer;line-height:1;">✕</button>' +
                 '</div>' +
+                '<p style="font-size:11px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;letter-spacing:.06em;text-transform:uppercase;margin:0 0 8px;">Imágenes</p>' +
                 '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">' +
                   BADGE_ICONS.map(function(icon) {
                     return '<button type="button" data-icon="assets/icons/badges/' + icon.file + '" class="icon-option" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:10px;border:1px solid #353a46;background:#2e323d;cursor:pointer;">' +
                       '<img src="assets/icons/badges/' + icon.file + '" style="width:36px;height:36px;object-fit:contain;" />' +
+                      '<span style="font-size:10px;color:#8b93a3;font-family:Manrope,sans-serif;text-align:center;">' + icon.label + '</span>' +
+                    '</button>';
+                  }).join('') +
+                '</div>' +
+                '<p style="font-size:11px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;letter-spacing:.06em;text-transform:uppercase;margin:18px 0 8px;">Bootstrap Icons</p>' +
+                '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">' +
+                  U.BOOTSTRAP_BADGE_ICONS.map(function(icon) {
+                    return '<button type="button" data-icon="bi:' + icon.cls + '" class="icon-option" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:10px;border:1px solid #353a46;background:#2e323d;cursor:pointer;">' +
+                      '<i class="bi ' + icon.cls + '" style="font-size:30px;line-height:1;color:#f4f6f9;"></i>' +
                       '<span style="font-size:10px;color:#8b93a3;font-family:Manrope,sans-serif;text-align:center;">' + icon.label + '</span>' +
                     '</button>';
                   }).join('') +
@@ -358,7 +369,7 @@
           Array.prototype.forEach.call(document.querySelectorAll('.icon-option'), function(btn) {
             btn.addEventListener('click', function() {
               selectedBadgeIcon = btn.getAttribute('data-icon');
-              document.getElementById('selected-icon-preview').innerHTML = '<img src="' + selectedBadgeIcon + '" style="width:36px;height:36px;object-fit:contain;" />';
+              document.getElementById('selected-icon-preview').innerHTML = U.badgeIcon(selectedBadgeIcon, 36);
               modalRoot.innerHTML = '';
             });
           });
@@ -388,7 +399,7 @@
             var brc = rarityColors[b.rarity] || rarityColors.normal;
             return '<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;border:1px solid ' + brc.border + ';background:' + brc.bg + ';">' +
               '<div style="width:36px;height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">' +
-                (b.icon_url ? '<img src="' + b.icon_url + '" style="width:32px;height:32px;object-fit:contain;" />' : '<img src="assets/icons/ui/icono-reclamado.png" style="width:24px;height:24px;object-fit:contain;">') +
+                (b.icon_url ? U.badgeIcon(b.icon_url, 32) : '<img src="assets/icons/ui/icono-reclamado.png" style="width:24px;height:24px;object-fit:contain;">') +
               '</div>' +
               '<div style="flex:1;min-width:0;">' +
                 '<p style="font-family:Poppins,sans-serif;font-size:13px;font-weight:600;color:#f4f6f9;margin:0;">' + U.esc(b.name) + '</p>' +

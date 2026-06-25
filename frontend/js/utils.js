@@ -383,6 +383,59 @@
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
+  /* ── Iconos de badge (Bootstrap Icons + imágenes) ──
+     Un badge guarda su icono en `icon_url`. Si el valor empieza con "bi:"
+     es un icono de Bootstrap (https://icons.getbootstrap.com), p.ej.
+     "bi:bi-trophy"; cualquier otro valor se trata como ruta de imagen. */
+  function isBootstrapIcon(iconUrl) {
+    return typeof iconUrl === 'string' && iconUrl.indexOf('bi:') === 0;
+  }
+
+  function badgeIcon(iconUrl, size, extraStyle) {
+    size = size || 32;
+    extraStyle = extraStyle || '';
+    var s = String(iconUrl == null ? '' : iconUrl);
+    if (isBootstrapIcon(s)) {
+      var cls = s.slice(3); // p.ej. "bi-trophy"
+      return '<i class="bi ' + esc(cls) + '" style="font-size:' + size + 'px;line-height:1;display:inline-block;color:#f4f6f9;' + extraStyle + '"></i>';
+    }
+    return '<img src="' + esc(s) + '" style="width:' + size + 'px;height:' + size + 'px;object-fit:contain;' + extraStyle + '" />';
+  }
+
+  // Catálogo curado de Bootstrap Icons disponibles en el selector de iconos.
+  var BOOTSTRAP_BADGE_ICONS = [
+    { cls: 'bi-trophy-fill', label: 'Trofeo' },
+    { cls: 'bi-award-fill', label: 'Premio' },
+    { cls: 'bi-star-fill', label: 'Estrella' },
+    { cls: 'bi-patch-check-fill', label: 'Verificado' },
+    { cls: 'bi-medal-fill', label: 'Medalla' },
+    { cls: 'bi-gem', label: 'Gema' },
+    { cls: 'bi-fire', label: 'Fuego' },
+    { cls: 'bi-lightning-charge-fill', label: 'Energía' },
+    { cls: 'bi-rocket-takeoff-fill', label: 'Cohete' },
+    { cls: 'bi-bullseye', label: 'Diana' },
+    { cls: 'bi-code-slash', label: 'Código' },
+    { cls: 'bi-terminal-fill', label: 'Terminal' },
+    { cls: 'bi-bug-fill', label: 'Bug' },
+    { cls: 'bi-cpu-fill', label: 'CPU' },
+    { cls: 'bi-cloud-fill', label: 'Nube' },
+    { cls: 'bi-database-fill', label: 'Datos' },
+    { cls: 'bi-shield-lock-fill', label: 'Seguridad' },
+    { cls: 'bi-globe2', label: 'Web' },
+    { cls: 'bi-puzzle-fill', label: 'Puzzle' },
+    { cls: 'bi-graph-up-arrow', label: 'Crecimiento' },
+    { cls: 'bi-people-fill', label: 'Equipo' },
+    { cls: 'bi-mortarboard-fill', label: 'Educación' },
+    { cls: 'bi-palette-fill', label: 'Diseño' },
+    { cls: 'bi-controller', label: 'Gaming' },
+    { cls: 'bi-robot', label: 'Robot' },
+    { cls: 'bi-camera-fill', label: 'Cámara' },
+    { cls: 'bi-music-note-beamed', label: 'Música' },
+    { cls: 'bi-book-fill', label: 'Libro' },
+    { cls: 'bi-gift-fill', label: 'Regalo' },
+    { cls: 'bi-flag-fill', label: 'Bandera' }
+  ];
+
   /* ── Toast ── */
   var TOAST_COLORS = { success: '#16a34a', error: '#ef4444', warning: '#d97706', info: '#6C63FF' };
 
@@ -1532,6 +1585,9 @@
   window.LyfterUtils = {
     EMAIL_RE: EMAIL_RE,
     esc: esc,
+    badgeIcon: badgeIcon,
+    isBootstrapIcon: isBootstrapIcon,
+    BOOTSTRAP_BADGE_ICONS: BOOTSTRAP_BADGE_ICONS,
     toast: toast,
     toastNextPage: toastNextPage,
     showPendingToast: showPendingToast,

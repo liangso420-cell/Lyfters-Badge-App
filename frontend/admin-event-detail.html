@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
@@ -138,7 +139,7 @@
                 var bname  = b.name || b.nombre || '';
                 var bdesc  = b.desc || b.descripcion || '';
                 var iconHtml = b.icon_url
-                  ? '<div style="width:40px;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-align:center;"><img src="' + U.esc(b.icon_url) + '" style="width:32px;height:32px;object-fit:contain;display:block;margin:0 auto;"></div>'
+                  ? '<div style="width:40px;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-align:center;">' + U.badgeIcon(b.icon_url, 32, 'display:block;margin:0 auto;') + '</div>'
                   : '<div style="width:40px;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-align:center;"><img src="assets/icons/ui/icono-badges-creados.png" style="width:32px;height:32px;object-fit:contain;filter:brightness(0) invert(1);display:block;margin:0 auto;"></div>';
                 var bxp    = b.xp_value != null ? b.xp_value : 10;
                 var bRarity = b.rarity || (b.is_rare ? 'rare' : 'normal');
@@ -461,15 +462,25 @@
               var modalRoot = document.getElementById('modal-root');
               modalRoot.innerHTML =
                 '<div class="fixed inset-0 z-50 flex items-center justify-center p-6" style="background:rgba(0,0,0,0.75);" id="ib-icon-overlay">' +
-                  '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:16px;padding:24px;width:100%;max-width:420px;">' +
+                  '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:16px;padding:24px;width:100%;max-width:420px;max-height:85vh;overflow-y:auto;">' +
                     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">' +
                       '<p style="font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#f4f6f9;margin:0;">Selecciona un icono</p>' +
                       '<button id="close-ib-icon" style="background:transparent;border:none;color:#8b93a3;font-size:20px;cursor:pointer;line-height:1;">✕</button>' +
                     '</div>' +
+                    '<p style="font-size:11px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;letter-spacing:.06em;text-transform:uppercase;margin:0 0 8px;">Imágenes</p>' +
                     '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">' +
                       IB_BADGE_ICONS.map(function(icon) {
                         return '<button type="button" data-ibicon="assets/icons/badges/' + icon.file + '" class="ib-icon-option" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:10px;border:1px solid #353a46;background:#2e323d;cursor:pointer;">' +
                           '<img src="assets/icons/badges/' + icon.file + '" style="width:36px;height:36px;object-fit:contain;" />' +
+                          '<span style="font-size:10px;color:#8b93a3;font-family:Manrope,sans-serif;text-align:center;">' + icon.label + '</span>' +
+                        '</button>';
+                      }).join('') +
+                    '</div>' +
+                    '<p style="font-size:11px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;letter-spacing:.06em;text-transform:uppercase;margin:18px 0 8px;">Bootstrap Icons</p>' +
+                    '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">' +
+                      U.BOOTSTRAP_BADGE_ICONS.map(function(icon) {
+                        return '<button type="button" data-ibicon="bi:' + icon.cls + '" class="ib-icon-option" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:10px;border:1px solid #353a46;background:#2e323d;cursor:pointer;">' +
+                          '<i class="bi ' + icon.cls + '" style="font-size:30px;line-height:1;color:#f4f6f9;"></i>' +
                           '<span style="font-size:10px;color:#8b93a3;font-family:Manrope,sans-serif;text-align:center;">' + icon.label + '</span>' +
                         '</button>';
                       }).join('') +
@@ -483,7 +494,7 @@
               Array.prototype.forEach.call(document.querySelectorAll('.ib-icon-option'), function(btn) {
                 btn.addEventListener('click', function() {
                   ibSelectedIcon = btn.getAttribute('data-ibicon');
-                  document.getElementById('ib-icon-preview').innerHTML = '<img src="' + ibSelectedIcon + '" style="width:36px;height:36px;object-fit:contain;" />';
+                  document.getElementById('ib-icon-preview').innerHTML = U.badgeIcon(ibSelectedIcon, 36);
                   modalRoot.innerHTML = '';
                 });
               });
