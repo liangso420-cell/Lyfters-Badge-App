@@ -9,7 +9,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt, get_jwt_identity
 from bson import ObjectId
 
-from db import users, events, badges, scans, workspace_members, workspaces, event_joins
+from db import users, events, badges, scans, workspace_members, workspaces, event_joins, reviews
 from utils import (
     require_admin, valid_oid, sanitize,
     generate_qr_base64, fmt_event, fmt_admin_badge, fmt_user, compute_event_status
@@ -822,8 +822,18 @@ def event_stats_detail(event_id):
             hourly[s["redeemed_at"].hour] += 1
     hourly_stats = [{"hour": h, "count": hourly[h]} for h in range(24) if hourly[h] > 0]
 
+    event_reviews = list(reviews().find({"event_id": oid}))
+    total_reviews = len(event_reviews)
+    avg_rating = round(sum(r.get("rating", 0) for r in event_reviews) / total_reviews, 1) if total_reviews else 0
+    rating_distribution = {i: sum(1 for r in event_reviews if r.get("rating") == i) for i in range(1, 6)}
+
     return jsonify(
         participants=participants,
         badge_stats=badge_stats,
-        hourly_scans=hourly_stats
+        hourly_scans=hourly_stats,
+        reviews={
+            "total": total_reviews,
+            "avg_rating": avg_rating,
+            "distribution": rating_distribution
+        }
     ), 200

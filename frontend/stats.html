@@ -76,6 +76,43 @@
           renderLineChart('chart-users', stats.users_by_month.labels, stats.users_by_month.data, '#d897e7');
         }
 
+        app.innerHTML +=
+          '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:14px;padding:20px;margin-bottom:16px;">' +
+            '<h3 style="font-family:Poppins,sans-serif;font-size:14px;font-weight:700;color:#f4f6f9;margin:0 0 12px;">Ver estadísticas de workspace</h3>' +
+            '<select id="ws-selector" onchange="loadWorkspaceStats(this.value)" style="width:100%;height:44px;border-radius:10px;border:1px solid #2f343f;background:#2e323d;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:14px;padding:0 12px;">' +
+              '<option value="">Seleccioná un workspace...</option>' +
+              wsRes.map(function(w) { return '<option value="' + (w.id||w._id) + '">' + U.esc(w.name) + '</option>'; }).join('') +
+            '</select>' +
+            '<div id="ws-stats-container"></div>' +
+          '</div>';
+
+        window.loadWorkspaceStats = async function(wsId) {
+          if (!wsId) return;
+          var container = document.getElementById('ws-stats-container');
+          container.innerHTML = '<p style="color:#8b93a3;font-size:13px;padding:16px;text-align:center;">Cargando...</p>';
+          try {
+            var eventsRes = await fetch(API.base + '/admin/events?ws_override=' + wsId, { headers: API.authHeaders() }).then(function(r){ return r.json(); });
+            container.innerHTML = '';
+            if (!eventsRes.length) {
+              container.innerHTML = '<p style="color:#8b93a3;font-size:13px;padding:16px;text-align:center;">Sin eventos en este workspace.</p>';
+              return;
+            }
+            eventsRes.forEach(function(ev) {
+              var card = document.createElement('div');
+              card.style.cssText = 'background:#2e323d;border-radius:12px;padding:14px;margin-top:10px;display:flex;justify-content:space-between;align-items:center;';
+              var evId = ev.id || ev._id;
+              var evName = U.esc(ev.name || ev.nombre || '');
+              card.innerHTML =
+                '<div style="font-family:Poppins,sans-serif;font-size:14px;font-weight:600;color:#f4f6f9;">' + evName + '</div>' +
+                '<button onclick="loadEventStats(\'' + evId + '\',\'' + evName + '\')" style="padding:6px 14px;border-radius:8px;border:none;background:rgba(112,207,255,0.15);color:#70cfff;font-family:Poppins,sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Ver stats</button>';
+              card.innerHTML += '<div id="event-stats-' + evId + '"></div>';
+              container.appendChild(card);
+            });
+          } catch(e) {
+            container.innerHTML = '<p style="color:#e68a8d;font-size:13px;padding:16px;text-align:center;">Error al cargar eventos.</p>';
+          }
+        };
+
       } catch(e) {
         app.innerHTML += errorCard('No se pudieron cargar las estadísticas globales.');
       }
@@ -126,6 +163,19 @@
         var participants = stats.participants || [];
         var badgeStats = stats.badge_stats || [];
         var hourlyStats = stats.hourly_scans || [];
+        var reviewData = stats.reviews || {};
+
+        var reviewHtml = reviewData.total > 0
+          ? '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:14px;padding:20px;margin-bottom:16px;">' +
+              '<h3 style="font-family:Poppins,sans-serif;font-size:14px;font-weight:700;color:#f4f6f9;margin:0 0 16px;">Reseñas del evento</h3>' +
+              '<div style="text-align:center;margin-bottom:16px;">' +
+                '<div style="font-size:48px;font-weight:800;color:#ffc850;font-family:Poppins,sans-serif;">' + reviewData.avg_rating + '</div>' +
+                '<div style="font-size:20px;color:#ffc850;">' + '★'.repeat(Math.round(reviewData.avg_rating)) + '☆'.repeat(5 - Math.round(reviewData.avg_rating)) + '</div>' +
+                '<div style="font-size:12px;color:#8b93a3;margin-top:4px;">' + reviewData.total + ' reseñas</div>' +
+              '</div>' +
+              chartCard('chart-reviews-' + eventId, 'Distribución de calificaciones') +
+            '</div>'
+          : '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:14px;padding:20px;margin-bottom:16px;text-align:center;color:#8b93a3;font-size:13px;">Sin reseñas aún</div>';
 
         container.innerHTML =
           '<div style="margin-top:12px;">' +
@@ -136,12 +186,17 @@
           ]) +
           (badgeStats.length ? chartCard('chart-badges-' + eventId, 'Badges más escaneados') : '') +
           (hourlyStats.length ? chartCard('chart-hours-' + eventId, 'Hora pico de escaneos') : '') +
+          reviewHtml +
           participantsTable(participants) +
           '<button onclick="exportToExcel(\'' + eventId + '\',\'' + eventName + '\')" style="width:100%;margin-top:16px;padding:14px;border-radius:12px;border:1px solid rgba(74,222,128,0.3);background:rgba(74,222,128,0.15);color:#4ade80;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Exportar a Excel</button>' +
           '</div>';
 
         if (badgeStats.length) renderBarChart('chart-badges-' + eventId, badgeStats.map(function(b){ return b.name; }), badgeStats.map(function(b){ return b.count; }), '#d897e7');
         if (hourlyStats.length) renderBarChart('chart-hours-' + eventId, hourlyStats.map(function(h){ return h.hour + 'h'; }), hourlyStats.map(function(h){ return h.count; }), '#70cfff');
+        if (reviewData.total > 0) {
+          var dist = reviewData.distribution || {};
+          renderBarChart('chart-reviews-' + eventId, ['1 ★', '2 ★', '3 ★', '4 ★', '5 ★'], [dist[1]||0, dist[2]||0, dist[3]||0, dist[4]||0, dist[5]||0], '#ffc850');
+        }
 
         window['_eventStats_' + eventId] = { participants: participants, badgeStats: badgeStats, eventName: eventName };
 
