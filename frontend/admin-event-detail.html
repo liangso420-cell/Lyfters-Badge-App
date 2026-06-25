@@ -144,13 +144,16 @@
                 var bRarity = b.rarity || (b.is_rare ? 'rare' : 'normal');
                 var bBg = bRarity === 'rare' ? 'rgba(255,200,80,0.08)' : '#20242d';
                 var bBorder = bRarity === 'rare' ? '#ffc850' : '#38bdf8';
-                var bRarityLabel = bRarity === 'rare' ? '<span style="font-size:10px;color:#ffc850;font-weight:700;margin-left:6px;background:rgba(255,200,80,0.15);padding:2px 8px;border-radius:999px;">RARO</span>' : '';
+                var bRarityLabel = bRarity === 'rare' ? '<span style="font-size:10px;color:#ffc850;font-weight:700;background:rgba(255,200,80,0.15);padding:2px 8px;border-radius:999px;white-space:nowrap;">RARO</span>' : '';
                 return (
                   '<div style="border-radius:12px;border:1px solid ' + bBorder + ';background:' + bBg + ';overflow:hidden;margin-bottom:10px;">' +
                     '<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;">' +
                       iconHtml +
                       '<div style="flex:1;min-width:0;">' +
-                        '<p style="font-family:Manrope,sans-serif;font-size:14px;font-weight:700;color:#f4f6f9;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + U.esc(bname) + bRarityLabel + '</p>' +
+                        '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+                          '<span style="font-family:Manrope,sans-serif;font-size:14px;font-weight:700;color:#f4f6f9;overflow:hidden;text-overflow:ellipsis;">' + U.esc(bname) + '</span>' +
+                          bRarityLabel +
+                        '</div>' +
                         '<p style="font-size:11px;color:#8b93a3;font-family:Manrope,sans-serif;margin:2px 0 0;">' + (b.redeemed || 0) + ' canjes · ' + bxp + ' XP</p>' +
                       '</div>' +
                       '<div style="display:flex;gap:6px;flex-shrink:0;">' +
