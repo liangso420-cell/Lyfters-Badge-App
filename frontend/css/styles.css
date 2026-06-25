@@ -723,6 +723,39 @@ body {
     justify-content: flex-end !important;
   }
 
+  /* User home: botones de nav en grid 2 columnas */
+  #user-action-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+    padding: 16px !important;
+    margin: 0 !important;
+    background: transparent !important;
+    border: none !important;
+  }
+  .user-action-btn {
+    aspect-ratio: 1 !important;
+    width: 100% !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    flex: unset !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid #2f343f !important;
+    border-radius: 12px !important;
+  }
+  #user-page-main {
+    padding: 16px !important;
+    padding-bottom: 80px !important;
+    margin: 0 !important;
+  }
+  #user-page-header {
+    margin-bottom: 12px !important;
+  }
+
 }
 
 /* ── Fila de miembro (compartida: workspace-edit, gestión de usuarios) ── */

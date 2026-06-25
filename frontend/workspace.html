@@ -173,7 +173,7 @@
           return '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:#15171d;border-radius:12px;margin-bottom:10px;border:1px solid #2f343f;">' +
             '<div>' +
               '<div style="font-size:14px;font-weight:700;color:#f4f6f9;">' + U.esc(w.name||'') + '</div>' +
-              '<div style="font-size:12px;color:#8b93a3;margin-top:2px;">/' + U.esc(w.slug||'') + ' · ' + (w.plan||'free') + ' · ' + (w.member_count||0) + ' miembros</div>' +
+              '<div style="font-size:12px;color:#8b93a3;margin-top:2px;">/' + U.esc(w.slug||'') + ' · ' + (w.member_count||0) + ' miembros</div>' +
             '</div>' +
             '<div style="display:flex;gap:8px;">' +
               '<a href="workspace.html?ws=' + w.id + '" class="ws-btn cta" style="display:inline-flex;align-items:center;text-decoration:none;height:34px;padding:0 14px;font-size:12px;">Entrar</a>' +
@@ -191,7 +191,7 @@
             : '<img src="assets/icons/ui/icono-usuarios.png" style="width:28px;height:28px;object-fit:contain;opacity:.8;" />') +
           '<div style="flex:1;">' +
             '<div class="ws-title">' + (isGod ? 'Gestionar plataforma' : (ws.name ? U.esc(ws.name) : 'Mis Workspaces')) + '</div>' +
-            (!isGod && ws.slug ? '<div style="font-size:12px;color:#8b93a3;">/' + U.esc(ws.slug) + ' · ' + (ws.plan||'free') + (ws.my_role ? ' · ' + ws.my_role : '') + '</div>' : '') +
+            (!isGod && ws.slug ? '<div style="font-size:12px;color:#8b93a3;">/' + U.esc(ws.slug) + (ws.my_role ? ' · ' + ws.my_role : '') + '</div>' : '') +
           '</div>' +
           '<a href="landing.html" style="font-size:12px;font-weight:600;color:#8b93a3;text-decoration:none;padding:5px 10px;border-radius:8px;border:1px solid transparent;transition:color .15s,border-color .15s;font-family:Manrope,sans-serif;flex-shrink:0;" onmouseover="this.style.color=\'#d897e7\';this.style.borderColor=\'rgba(216,151,231,0.25)\'" onmouseout="this.style.color=\'#8b93a3\';this.style.borderColor=\'transparent\'">← Inicio</a>' +
         '</div>' +
@@ -293,7 +293,7 @@
                 '<div style="display:flex;flex-direction:column;gap:10px;">' +
                   '<select id="grant-ws-select" class="ws-select" style="width:100%;">' +
                     '<option value="">— Seleccionar workspace —</option>' +
-                    allWs.map(function(w) { return \'<option value="\' + w.id + \'">\' + U.esc(w.name) + \' (\' + (w.plan||\'free\') + \')</option>\'; }).join(\'\') +
+                    allWs.map(function(w) { return \'<option value="\' + w.id + \'">\' + U.esc(w.name) + \'</option>\'; }).join(\'\') +
                   '</select>' +
                   '<select id="god-user-select" class="ws-select" style="width:100%;" onchange="this.value && (document.getElementById(\'god-email\').value=this.value)">' +
                     '<option value="">— Seleccionar usuario —</option>' +
