@@ -148,7 +148,9 @@
                 : '<img src="' + U.esc(b.icon_url) + '" style="width:75%;height:75%;object-fit:contain;">')
             : '<img src="assets/icons/ui/icono-badges-creados.png" style="width:75%;height:75%;object-fit:contain;filter:brightness(0) invert(1);opacity:0.6;">';
           var isRare = b.rarity === 'rare' || b.is_rare;
-          var inner = '<div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:#2e323d;flex-shrink:0;opacity:' + (b.obtained ? '1' : '0.3') + ';">' +
+          var rarityBorder = { 'rare': '2px solid #d897e7', 'ultra_rare': '2px solid #ffc850', 'normal': '2px solid #70cfff' };
+          var border = rarityBorder[b.rarity] || rarityBorder['normal'];
+          var inner = '<div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:#2e323d;flex-shrink:0;opacity:' + (b.obtained ? '1' : '0.3') + ';border:' + border + ';">' +
             iconHtml +
           '</div>' +
           (b.obtained ? '<span style="display:block;text-align:center;font-size:9px;color:#16a34a;font-weight:700;margin-top:2px;">✓</span>' : '<span style="display:block;text-align:center;font-size:9px;color:#8b93a3;margin-top:2px;">—</span>');
