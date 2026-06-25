@@ -275,14 +275,6 @@
     }
 
     function render(wsData, members, allWs) {
-      if (!isGod && allWs.length === 0) {
-        main.innerHTML =
-          '<div class="ws-empty">' +
-            '<p class="ws-empty-text">No tenés ningún workspace asignado aún.</p>' +
-            '<p class="ws-empty-sub">Contactá al God Admin para que te asigne a una empresa.</p>' +
-          '</div>';
-        return;
-      }
       var html = '';
 
       html += '<div style="display:flex;align-items:center;gap:14px;margin-bottom:' + (isGod ? '24px' : '36px') + ';">' +
@@ -379,15 +371,20 @@
           '</div>' +
         '</div>';
       } else if (!isGod) {
-        html += '<div class="ws-empty">' +
-          '<div class="ws-empty-icon"><img src="assets/icons/ui/icono-usuarios.png" style="width:56px;height:56px;object-fit:contain;opacity:.4;" /></div>' +
-          '<p class="ws-empty-text">No estás en ningún workspace todavía</p>' +
-          '<p class="ws-empty-sub">Ingresá un código de invitación para unirte, o creá uno nuevo.</p>' +
+        html += '<div style="text-align:center;padding:32px 16px 20px;">' +
+          '<img src="assets/icons/ui/icono-usuarios.png" style="width:52px;height:52px;object-fit:contain;opacity:.35;margin-bottom:14px;" />' +
+          '<p style="font-family:Poppins,sans-serif;font-size:17px;font-weight:700;color:#f4f6f9;margin:0 0 8px;">Todavía no estás en ningún workspace</p>' +
+          '<p style="font-family:Manrope,sans-serif;font-size:13px;color:#8b93a3;margin:0;">Usá un código de invitación para unirte' + (user.role === 'superadmin' ? ', o creá uno nuevo si tenés un código de god admin.' : '.') + '</p>' +
         '</div>';
       }
 
-      // Unirse con código solo si el usuario no tiene workspaces aún
-      if (!isGod && allWs.length === 0) html += joinSectionHtml();
+      if (!isGod && allWs.length === 0) {
+        html += joinSectionHtml();
+        if (user.role === 'superadmin') {
+          html += '<div class="ws-divider">o bien</div>';
+          html += createWsFormHtml(false);
+        }
+      }
 
       main.innerHTML = html;
       bindJoin();
