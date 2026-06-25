@@ -101,20 +101,20 @@
           ? '<div style="height:180px;overflow:hidden;border-radius:16px 16px 0 0;"><img src="' + U.esc(ev.photo) + '" style="width:100%;height:100%;object-fit:cover;"></div>'
           : '<div style="height:180px;border-radius:16px 16px 0 0;background:linear-gradient(120deg,#d897e7 0%,#e68a8d 60%,#ffcb8a 100%);display:flex;align-items:center;justify-content:center;"><img src="assets/icons/ui/icono-evento.png" style="width:60px;height:60px;object-fit:contain;filter:brightness(0) invert(1);opacity:0.7;"></div>';
         console.log('badges data:', detail.badges);
-        var badgesHtml = (detail.badges || []).slice(0, 8).map(function(b) {
+        var badgesHtml = (detail.badges || []).slice(0, 12).map(function(b) {
           var iconHtml = b.icon_url
-            ? '<img src="' + U.esc(b.icon_url) + '" style="width:32px;height:32px;object-fit:contain;">'
-            : '<img src="assets/icons/ui/icono-badges-creados.png" style="width:32px;height:32px;object-fit:contain;filter:brightness(0) invert(1);opacity:0.6;">';
+            ? '<img src="' + U.esc(b.icon_url) + '" style="width:100%;height:100%;object-fit:contain;">'
+            : '<img src="assets/icons/ui/icono-badges-creados.png" style="width:100%;height:100%;object-fit:contain;filter:brightness(0) invert(1);opacity:0.6;">';
           var isRare = b.rarity === 'rare' || b.is_rare;
-          var inner = '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;opacity:' + (b.obtained ? '1' : '0.3') + ';">' +
+          var inner = '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:10px;background:#2e323d;width:100%;opacity:' + (b.obtained ? '1' : '0.3') + ';">' +
             iconHtml +
-            (b.obtained ? '<span style="font-size:9px;color:#16a34a;font-weight:700;">✓</span>' : '<span style="font-size:9px;color:#8b93a3;">—</span>') +
-          '</div>';
+          '</div>' +
+          (b.obtained ? '<span style="display:block;text-align:center;font-size:9px;color:#16a34a;font-weight:700;margin-top:2px;">✓</span>' : '<span style="display:block;text-align:center;font-size:9px;color:#8b93a3;margin-top:2px;">—</span>');
           var wrapperStyle = isRare
             ? (b.obtained
-                ? 'box-shadow:0 0 10px rgba(255,200,80,0.6);border:1px solid rgba(255,200,80,0.8);border-radius:8px;padding:3px;'
-                : 'box-shadow:0 0 6px rgba(255,200,80,0.2);border:1px solid rgba(255,200,80,0.3);border-radius:8px;padding:3px;')
-            : 'border:1px solid transparent;border-radius:8px;padding:3px;';
+                ? 'box-shadow:0 0 10px rgba(255,200,80,0.6);border:1px solid rgba(255,200,80,0.8);border-radius:10px;padding:2px;'
+                : 'box-shadow:0 0 6px rgba(255,200,80,0.2);border:1px solid rgba(255,200,80,0.3);border-radius:10px;padding:2px;')
+            : 'border:1px solid transparent;border-radius:10px;padding:2px;';
           return '<div style="' + wrapperStyle + '">' + inner + '</div>';
         }).join('');
         return '<div style="background:#1c1f27;border:2px solid rgba(216,151,231,0.4);border-radius:16px;overflow:hidden;margin-bottom:24px;box-shadow:0 0 24px rgba(216,151,231,0.12);">' +
@@ -135,7 +135,7 @@
               '<div style="height:8px;border-radius:999px;background:linear-gradient(90deg,#d897e7,#e68a8d);width:' + pct + '%;transition:width .7s;"></div>' +
             '</div>' +
             '<p style="font-family:Manrope,sans-serif;font-size:12px;color:#8b93a3;margin:0 0 14px;">' + done + ' de ' + total + ' badges obtenidos</p>' +
-            (badgesHtml ? '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">' + badgesHtml + '</div>' : '') +
+            (badgesHtml ? '<div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin-top:12px;margin-bottom:16px;">' + badgesHtml + '</div>' : '') +
             '<a href="scan.html" style="display:block;text-align:center;padding:14px;border-radius:12px;background:linear-gradient(135deg,#d897e7,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;text-decoration:none;">Escanear badge</a>' +
           '</div>' +
         '</div>';
