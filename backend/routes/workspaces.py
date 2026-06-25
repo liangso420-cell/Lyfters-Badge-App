@@ -4,7 +4,7 @@ from bson import ObjectId
 from datetime import datetime, timezone, timedelta
 import bcrypt, uuid, os, re
 
-from db import workspaces, workspace_members, users, invitations, events, badges, scans
+from db import workspaces, workspace_members, users, invitations, events, badges, scans, event_joins
 from workspace_utils import (
     get_user_workspace, generate_invite_code, slugify, workspace_filter
 )
@@ -250,6 +250,7 @@ def delete_workspace(ws_id):
         scans().delete_many({"badge_id": {"$in": badge_ids}})
     if event_ids:
         badges().delete_many({"event_id": {"$in": event_ids}})
+        event_joins().delete_many({"event_id": {"$in": event_ids}})
 
     events().delete_many({"workspace_id": oid})
     workspace_members().delete_many({"workspace_id": oid})

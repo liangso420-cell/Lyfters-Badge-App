@@ -231,12 +231,18 @@
 
         var igBtn = document.getElementById('share-instagram');
         if (igBtn) {
-          igBtn.addEventListener('click', function () {
-            navigator.share({
-              title: 'Obtuve el badge "' + badgeName + '"',
-              text: shareText,
-              url: shareUrl
-            }).catch(function () {});
+          igBtn.addEventListener('click', async function () {
+            if (navigator.share) {
+              try {
+                await navigator.share({ title: 'Lyfter Badge', text: shareText, url: shareUrl });
+              } catch(e) {}
+            } else {
+              navigator.clipboard.writeText(shareUrl + ' — ' + shareText).then(function() {
+                U.toast('Link copiado al portapapeles', 'success');
+              }).catch(function() {
+                window.open('https://www.instagram.com/', '_blank');
+              });
+            }
           });
         }
 

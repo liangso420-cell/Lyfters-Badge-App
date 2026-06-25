@@ -199,7 +199,7 @@ def leaderboard():
             "badges": total_badges
         })
     result.sort(key=lambda x: x["badges"], reverse=True)
-    return jsonify(result), 200
+    return jsonify(result[:8]), 200
 
 
 # ──────────────────────────────────────────────
