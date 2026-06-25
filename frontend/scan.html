@@ -37,6 +37,12 @@
     .corner-tr { top: 0; right: 0; border-width: 3px 3px 0 0; }
     .corner-bl { bottom: 0; left: 0; border-width: 0 0 3px 3px; }
     .corner-br { bottom: 0; right: 0; border-width: 0 3px 3px 0; }
+    .xp-row{display:flex;align-items:center;justify-content:center;gap:8px;margin:4px 0;}
+    .xp-pill{border-radius:999px;padding:3px 12px;font-weight:700;font-size:13px;}
+    .xp-cyan{background:rgba(112,207,255,0.15);color:#70cfff;border:1px solid rgba(112,207,255,0.3);}
+    .xp-gold{background:rgba(255,200,80,0.15);color:#ffc850;border:1px solid rgba(255,200,80,0.3);}
+    .xp-green{background:rgba(171,209,148,0.15);color:#abd194;border:1px solid rgba(171,209,148,0.3);}
+    .xp-detail{color:#8b93a3;font-size:12px;}
   </style>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
   <link rel="stylesheet" href="css/styles.css" />
@@ -385,9 +391,12 @@
       }
 
       function showCelebration(r) {
+        console.log('scan response:', r);
         launchConfetti();
         var modalRoot = document.getElementById('modal-root');
         var isLast = r.complete;
+        var badge  = r.badge || {};
+        var isRare = badge.is_rare || badge.rarity === 'rare';
         var badgeName = r.badge ? r.badge.name : '';
         var badgeEmoji = r.badge ? r.badge.emoji : '<img src="assets/icons/ui/icono-reclamado.png" style="width:40px;height:40px;object-fit:contain;">';
 
@@ -404,12 +413,28 @@
             '<p class="text-xs text-gray-400 mt-1">' + r.progress.obtained + ' de ' + r.progress.total + ' badges</p>'
           : '';
 
-        var xpBlock = (r.xp && r.xp.gained > 0)
-          ? '<div style="margin:12px auto;display:flex;flex-direction:column;align-items:center;gap:6px;">' +
-              '<span style="display:inline-block;padding:6px 20px;border-radius:999px;border:1.5px solid #4ade80;color:#4ade80;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;background:rgba(74,222,128,0.08);">+' + r.xp.gained + ' XP</span>' +
-              (r.xp.level ? '<span style="display:inline-block;padding:4px 10px;border-radius:6px;background:#2e323d;color:#f4f6f9;font-family:Poppins,sans-serif;font-size:11px;font-weight:700;">Nv. ' + r.xp.level + '</span>' : '') +
-            '</div>'
-          : '';
+        var xpBase      = badge.xp_value || r.xp_badge || 0;
+        var xpFirstScan = r.xp_first_scan_bonus || 0;
+        var xpRare      = isRare ? (badge.xp_rare_bonus || r.xp_rare_bonus || 0) : 0;
+        var xpEvent     = r.xp_event_bonus || r.xp_completion_bonus || 0;
+        var xpTotal     = r.xp_gained || (r.xp && r.xp.gained) || (xpBase + xpFirstScan + xpRare + xpEvent);
+
+        var xpBlock = '';
+        if (xpTotal > 0) {
+          var xpRows = '';
+          if (xpBase > 0)
+            xpRows += '<div class="xp-row"><span class="xp-pill xp-cyan">+' + xpBase + ' XP</span><span class="xp-detail">badge</span></div>';
+          if (xpFirstScan > 0)
+            xpRows += '<div class="xp-row"><span class="xp-pill xp-cyan">+' + xpFirstScan + ' XP</span><span class="xp-detail">primer escaneo del evento ⭐</span></div>';
+          if (xpRare > 0)
+            xpRows += '<div class="xp-row"><span class="xp-pill xp-gold">+' + xpRare + ' XP</span><span class="xp-detail">bonus raro</span></div>';
+          if (xpEvent > 0)
+            xpRows += '<div class="xp-row"><span class="xp-pill xp-green">+' + xpEvent + ' XP</span><span class="xp-detail">completaste el evento 🎉</span></div>';
+          xpRows += '<hr style="border:none;border-top:1px solid #2a2e38;margin:8px 0;"/>';
+          var xpTotalColor = xpEvent > 0 ? '#abd194' : isRare ? '#ffc850' : '#70cfff';
+          xpRows += '<div style="font-size:12px;color:#8b93a3;">Total <span style="color:' + xpTotalColor + ';font-weight:700;">+' + xpTotal + ' XP</span></div>';
+          xpBlock = '<div style="margin:12px 0;">' + xpRows + '</div>';
+        }
 
         var linkedinShareUrl = 'https://www.linkedin.com/sharing/share-offsite/?url=' +
           encodeURIComponent(window.location.origin + '/profile.html') +
@@ -421,7 +446,7 @@
             '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:20px;padding:32px 24px;max-width:320px;width:100%;text-align:center;" class="anim-pop">' +
               '<div style="margin:0 auto 12px;text-align:center;animation:bounceIn 0.6s ease;"><img src="assets/icons/ui/icono-celebracion.png" style="width:24px;height:24px;object-fit:contain;"></div>' +
               '<div class="text-4xl mb-2">' + badgeEmoji + '</div>' +
-              '<h3 class="text-xl font-bold text-primary">' + (isLast ? U.t('completed_event') : U.t('badge_obtained')) + '</h3>' +
+              '<h3 class="text-xl font-bold" style="color:' + (isRare ? '#ffc850' : '#d897e7') + ';">' + (isLast ? U.t('completed_event') : (isRare ? '¡Badge raro obtenido!' : '¡Badge obtenido!')) + '</h3>' +
               '<p style="font-size:17px;font-weight:600;color:#f4f6f9;margin:4px 0 0;">' + U.esc(badgeName) + '</p>' +
               '<p style="font-size:13px;color:#8b93a3;margin:4px 0 0;">' + U.esc(r.badge ? (r.badge.desc || '') : '') + '</p>' +
               xpBlock +
