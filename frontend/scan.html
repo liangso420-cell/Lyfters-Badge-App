@@ -419,22 +419,35 @@
         var xpEvent     = r.xp_event_bonus || r.xp_completion_bonus || 0;
         var xpTotal     = r.xp_gained || (r.xp && r.xp.gained) || (xpBase + xpFirstScan + xpRare + xpEvent);
 
-        var xpBlock = '';
-        if (xpTotal > 0) {
-          var xpRows = '';
-          if (xpBase > 0)
-            xpRows += '<div class="xp-row"><span class="xp-pill xp-cyan">+' + xpBase + ' XP</span><span class="xp-detail">badge</span></div>';
-          if (xpFirstScan > 0)
-            xpRows += '<div class="xp-row"><span class="xp-pill xp-cyan">+' + xpFirstScan + ' XP</span><span class="xp-detail">primer escaneo del evento ⭐</span></div>';
-          if (xpRare > 0)
-            xpRows += '<div class="xp-row"><span class="xp-pill xp-gold">+' + xpRare + ' XP</span><span class="xp-detail">bonus raro</span></div>';
-          if (xpEvent > 0)
-            xpRows += '<div class="xp-row"><span class="xp-pill xp-green">+' + xpEvent + ' XP</span><span class="xp-detail">completaste el evento 🎉</span></div>';
-          xpRows += '<hr style="border:none;border-top:1px solid #2a2e38;margin:8px 0;"/>';
-          var xpTotalColor = xpEvent > 0 ? '#abd194' : isRare ? '#ffc850' : '#70cfff';
-          xpRows += '<div style="font-size:12px;color:#8b93a3;">Total <span style="color:' + xpTotalColor + ';font-weight:700;">+' + xpTotal + ' XP</span></div>';
-          xpBlock = '<div style="margin:12px 0;">' + xpRows + '</div>';
-        }
+        var xpBlock = (r.xp && r.xp.gained > 0)
+          ? '<div style="margin:12px auto;display:flex;flex-direction:column;align-items:center;gap:6px;">' +
+              '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">' +
+                '<span style="padding:5px 14px;border-radius:999px;border:1.5px solid #4ade80;color:#4ade80;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;background:rgba(74,222,128,0.08);">+' + (r.xp.badge_xp || r.xp.gained) + ' XP</span>' +
+                '<span style="font-size:11px;color:#8b93a3;">badge</span>' +
+              '</div>' +
+              (r.xp.rare_bonus ?
+                '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">' +
+                  '<span style="padding:5px 14px;border-radius:999px;border:1.5px solid #ffc850;color:#ffc850;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;background:rgba(255,200,80,0.08);">+' + r.xp.rare_bonus + ' XP</span>' +
+                  '<span style="font-size:11px;color:#8b93a3;">bonus raro</span>' +
+                '</div>' : '') +
+              (r.xp.first_scan_bonus ?
+                '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">' +
+                  '<span style="padding:5px 14px;border-radius:999px;border:1.5px solid #70cfff;color:#70cfff;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;background:rgba(112,207,255,0.08);">+' + r.xp.first_scan_bonus + ' XP</span>' +
+                  '<span style="font-size:11px;color:#8b93a3;">primer escaneo</span>' +
+                '</div>' : '') +
+              (r.xp.completion_bonus ?
+                '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">' +
+                  '<span style="padding:5px 14px;border-radius:999px;border:1.5px solid #d897e7;color:#d897e7;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;background:rgba(216,151,231,0.08);">+' + r.xp.completion_bonus + ' XP</span>' +
+                  '<span style="font-size:11px;color:#8b93a3;">completaste el evento 🎉</span>' +
+                '</div>' : '') +
+              '<div style="border-top:1px solid #2f343f;padding-top:8px;margin-top:4px;">' +
+                '<span style="font-family:Poppins,sans-serif;font-size:14px;font-weight:700;color:#f4f6f9;">Total +' + r.xp.gained + ' XP</span>' +
+                (r.xp.level ? ' <span style="padding:3px 8px;border-radius:6px;background:#2e323d;color:#8b93a3;font-size:11px;font-weight:700;">Nv. ' + r.xp.level + '</span>' : '') +
+              '</div>' +
+            '</div>'
+          : (xpTotal > 0
+              ? '<div style="text-align:center;margin:12px 0;"><span style="padding:5px 14px;border-radius:999px;border:1.5px solid #4ade80;color:#4ade80;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;background:rgba(74,222,128,0.08);">+' + xpTotal + ' XP</span></div>'
+              : '');
 
         var linkedinShareUrl = 'https://www.linkedin.com/sharing/share-offsite/?url=' +
           encodeURIComponent(window.location.origin + '/profile.html') +

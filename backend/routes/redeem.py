@@ -113,5 +113,13 @@ def redeem_badge(event_id, token):
         "xp_first_scan_bonus":   xp_result["xp_first_scan_bonus"],
         "xp_rare_bonus":         xp_result["xp_rare_bonus"],
         "xp_event_bonus":        xp_result["xp_completion_bonus"],
+        "xp": {
+            "gained":          xp_result["xp_gained"],
+            "badge_xp":        xp_result["xp_base"],
+            "rare_bonus":      xp_result["xp_rare_bonus"],
+            "first_scan_bonus": xp_result["xp_first_scan_bonus"],
+            "completion_bonus": xp_result["xp_completion_bonus"],
+            "level":           xp_result["level"],
+        },
         "achievements_unlocked": new_achievements,
     }), 200
