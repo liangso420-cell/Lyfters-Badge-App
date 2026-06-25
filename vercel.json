@@ -1,1 +1,8 @@
-{}
+{
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/frontend/$1" }
+  ],
+  "github": {
+    "silent": true
+  }
+}
