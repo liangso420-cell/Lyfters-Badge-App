@@ -69,6 +69,44 @@
       })();
 
       var app = document.getElementById('app');
+      var _pastPage = 0, PAST_PAGE = 5, _pastPairs = [];
+
+      function pagerHtml(total, page, size, gotoFn) {
+        if (total <= size) return '';
+        var totalPages = Math.ceil(total / size);
+        var from = page * size + 1;
+        var to = Math.min((page + 1) * size, total);
+        var btns = '';
+        for (var p = 0; p < totalPages; p++) {
+          if (totalPages > 7 && p !== 0 && p !== totalPages - 1 && Math.abs(p - page) > 1) {
+            if (p === page - 2 || p === page + 2) btns += '<span style="color:#4a5060;align-self:center;padding:0 2px;">…</span>';
+            continue;
+          }
+          var active = p === page;
+          btns += '<button onclick="' + gotoFn + '(' + p + ')" style="min-width:32px;height:32px;padding:0 6px;border-radius:8px;border:1px solid ' + (active ? '#d897e7' : '#2f343f') + ';background:' + (active ? 'rgba(216,151,231,0.15)' : 'transparent') + ';color:' + (active ? '#d897e7' : '#8b93a3') + ';font-family:Poppins,sans-serif;font-size:13px;font-weight:' + (active ? '700' : '500') + ';cursor:pointer;">' + (p + 1) + '</button>';
+        }
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0 4px;border-top:1px solid #2f343f;margin-top:8px;flex-wrap:wrap;gap:8px;">' +
+          '<span style="font-size:12px;color:#8b93a3;font-family:Manrope,sans-serif;">' + from + '–' + to + ' de ' + total + '</span>' +
+          '<div style="display:flex;gap:4px;flex-wrap:wrap;">' +
+            (page > 0 ? '<button onclick="' + gotoFn + '(' + (page-1) + ')" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid #2f343f;background:transparent;color:#8b93a3;font-size:13px;cursor:pointer;">←</button>' : '') +
+            btns +
+            (page < totalPages - 1 ? '<button onclick="' + gotoFn + '(' + (page+1) + ')" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid #2f343f;background:transparent;color:#8b93a3;font-size:13px;cursor:pointer;">→</button>' : '') +
+          '</div>' +
+        '</div>';
+      }
+
+      function renderPastList(page) {
+        var container = document.getElementById('past-list');
+        if (!container) return;
+        var list = _pastPairs;
+        if (!list.length) return;
+        var slice = list.slice(page * PAST_PAGE, (page + 1) * PAST_PAGE);
+        container.innerHTML = slice.map(function(pair) {
+          return renderPastCard(pair.ev, pair.detail);
+        }).join('') + pagerHtml(list.length, page, PAST_PAGE, '_goPastPage');
+      }
+
+      window._goPastPage = function(p) { _pastPage = p; renderPastList(p); window.scrollTo(0, 0); };
 
       function fmtDate(iso) {
         if (!iso) return '';
@@ -233,13 +271,13 @@
                 renderActiveCard(activeEv, allDetails[activeIdx]);
             }
             var pastEvents = myEvents.filter(function(ev) { return ev !== activeEv; });
+            _pastPairs = pastEvents.map(function(ev) {
+              return { ev: ev, detail: allDetails[myEvents.indexOf(ev)] };
+            });
             if (pastEvents.length) {
-              var pastCards = pastEvents.map(function(ev) {
-                return renderPastCard(ev, allDetails[myEvents.indexOf(ev)]);
-              }).join('');
               pastSectionHtml =
                 '<p style="font-family:Poppins,sans-serif;font-size:12px;font-weight:700;color:#8b93a3;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 12px;">Mis eventos</p>' +
-                pastCards;
+                '<div id="past-list"></div>';
             }
           }
 
@@ -253,6 +291,8 @@
               activeSectionHtml +
               pastSectionHtml +
             '</div>';
+
+          if (_pastPairs.length) renderPastList(0);
 
           document.getElementById('profile-menu-btn').addEventListener('click', async function() {
             try {

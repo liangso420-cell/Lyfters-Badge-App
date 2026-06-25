@@ -43,6 +43,34 @@
 
       var app = document.getElementById('app');
       var _rankCache = null, _rankCacheTime = 0;
+      var _lbPage = 0, _xpPage = 0, RANK_PAGE = 15;
+
+      function pagerHtml(total, page, size, gotoFn) {
+        if (total <= size) return '';
+        var totalPages = Math.ceil(total / size);
+        var from = page * size + 1;
+        var to = Math.min((page + 1) * size, total);
+        var btns = '';
+        for (var p = 0; p < totalPages; p++) {
+          if (totalPages > 7 && p !== 0 && p !== totalPages - 1 && Math.abs(p - page) > 1) {
+            if (p === page - 2 || p === page + 2) btns += '<span style="color:#4a5060;align-self:center;padding:0 2px;">…</span>';
+            continue;
+          }
+          var active = p === page;
+          btns += '<button onclick="' + gotoFn + '(' + p + ')" style="min-width:32px;height:32px;padding:0 6px;border-radius:8px;border:1px solid ' + (active ? '#d897e7' : '#2f343f') + ';background:' + (active ? 'rgba(216,151,231,0.15)' : 'transparent') + ';color:' + (active ? '#d897e7' : '#8b93a3') + ';font-family:Poppins,sans-serif;font-size:13px;font-weight:' + (active ? '700' : '500') + ';cursor:pointer;">' + (p + 1) + '</button>';
+        }
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0 4px;border-top:1px solid #2f343f;margin-top:8px;flex-wrap:wrap;gap:8px;">' +
+          '<span style="font-size:12px;color:#8b93a3;font-family:Manrope,sans-serif;">' + from + '–' + to + ' de ' + total + '</span>' +
+          '<div style="display:flex;gap:4px;flex-wrap:wrap;">' +
+            (page > 0 ? '<button onclick="' + gotoFn + '(' + (page-1) + ')" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid #2f343f;background:transparent;color:#8b93a3;font-size:13px;cursor:pointer;">←</button>' : '') +
+            btns +
+            (page < totalPages - 1 ? '<button onclick="' + gotoFn + '(' + (page+1) + ')" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid #2f343f;background:transparent;color:#8b93a3;font-size:13px;cursor:pointer;">→</button>' : '') +
+          '</div>' +
+        '</div>';
+      }
+
+      window._goLbPage = function(p) { _lbPage = p; var el = document.getElementById('panel-leaderboard'); if (el) el.innerHTML = buildBadgeTable(_rankCache.lb, p); window.scrollTo(0, 0); };
+      window._goXpPage = function(p) { _xpPage = p; var el = document.getElementById('panel-ranking'); if (el) el.innerHTML = buildXpTable(_rankCache.xp, p); window.scrollTo(0, 0); };
 
       function skeletonRows(n) {
         var rows = '';
@@ -62,8 +90,8 @@
       async function load() {
         var now = Date.now();
         if (_rankCache && now - _rankCacheTime < 60000) {
-          document.getElementById('panel-leaderboard').innerHTML = buildBadgeTable(_rankCache.lb);
-          document.getElementById('panel-ranking').innerHTML = buildXpTable(_rankCache.xp);
+          document.getElementById('panel-leaderboard').innerHTML = buildBadgeTable(_rankCache.lb, _lbPage);
+          document.getElementById('panel-ranking').innerHTML = buildXpTable(_rankCache.xp, _xpPage);
           return;
         }
         try {
@@ -71,10 +99,11 @@
             API.getLeaderboard(),
             API.getXpLeaderboard()
           ]);
-          _rankCache = { lb: leaderboard.slice(0, 8), xp: xpLeaderboard.slice(0, 8) };
+          _rankCache = { lb: leaderboard, xp: xpLeaderboard };
           _rankCacheTime = now;
-          document.getElementById('panel-leaderboard').innerHTML = buildBadgeTable(_rankCache.lb);
-          document.getElementById('panel-ranking').innerHTML = buildXpTable(_rankCache.xp);
+          _lbPage = 0; _xpPage = 0;
+          document.getElementById('panel-leaderboard').innerHTML = buildBadgeTable(_rankCache.lb, 0);
+          document.getElementById('panel-ranking').innerHTML = buildXpTable(_rankCache.xp, 0);
         } catch(e) {
           document.getElementById('panel-leaderboard').innerHTML =
             '<p style="color:#e68a8d;text-align:center;padding:24px;font-family:Manrope,sans-serif;">Error al cargar.</p>';
@@ -129,34 +158,39 @@
         '</table>';
       }
 
-      function buildBadgeTable(data) {
+      function buildBadgeTable(data, page) {
+        page = page || 0;
         if (!data.length) return '<p style="color:#8b93a3;text-align:center;padding:32px;font-family:Manrope,sans-serif;">Sin datos todavía.</p>';
         var medals = ['<span style="font-size:18px;font-weight:900;color:#FFD700;">1°</span>','<span style="font-size:18px;font-weight:900;color:#C0C0C0;">2°</span>','<span style="font-size:18px;font-weight:900;color:#CD7F32;">3°</span>'];
+        var slice = data.slice(page * RANK_PAGE, (page + 1) * RANK_PAGE);
         return '<table style="width:100%;border-collapse:collapse;">' +
           '<thead><tr style="border-bottom:1px solid #2f343f;">' +
             '<th style="padding:12px 8px;text-align:left;font-family:Manrope,sans-serif;font-size:11px;font-weight:700;color:#8b93a3;">#</th>' +
             '<th style="padding:12px 8px;text-align:left;font-family:Manrope,sans-serif;font-size:11px;font-weight:700;color:#8b93a3;">Usuario</th>' +
             '<th style="padding:12px 8px;text-align:right;font-family:Manrope,sans-serif;font-size:11px;font-weight:700;color:#8b93a3;">Badges</th>' +
           '</tr></thead><tbody>' +
-          data.map(function(entry, i) {
-            var rank = medals[i] || (i+1);
+          slice.map(function(entry, i) {
+            var gi = page * RANK_PAGE + i;
+            var rank = medals[gi] || (gi+1);
             var avatarHtml = entry.avatar
               ? '<img src="' + U.esc(entry.avatar) + '" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">'
               : '<img src="assets/icons/ui/icono-perfil.png" style="width:36px;height:36px;border-radius:50%;object-fit:contain;background:#2e323d;padding:4px;">';
             var isMe = user && entry.id === user.id;
-            return '<tr style="border-bottom:1px solid #2f343f;' + (i < 3 ? 'background:rgba(216,151,231,0.04);' : '') + (isMe ? 'background:rgba(108,99,255,0.08);' : '') + '">' +
+            return '<tr style="border-bottom:1px solid #2f343f;' + (gi < 3 ? 'background:rgba(216,151,231,0.04);' : '') + (isMe ? 'background:rgba(108,99,255,0.08);' : '') + '">' +
               '<td style="padding:14px 8px;font-size:18px;">' + rank + '</td>' +
               '<td style="padding:14px 8px;"><div style="display:flex;align-items:center;gap:10px;">' + avatarHtml +
                 '<p style="font-family:Poppins,sans-serif;font-size:14px;font-weight:600;color:#f4f6f9;margin:0;">' + U.esc(entry.nombre) + (isMe ? ' <span style="font-size:11px;color:#d897e7;">(tú)</span>' : '') + '</p>' +
               '</div></td>' +
               '<td style="padding:14px 8px;text-align:right;font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#d897e7;">' + (entry.badges || 0) + '</td>' +
             '</tr>';
-          }).join('') + '</tbody></table>';
+          }).join('') + '</tbody></table>' + pagerHtml(data.length, page, RANK_PAGE, '_goLbPage');
       }
 
-      function buildXpTable(data) {
+      function buildXpTable(data, page) {
+        page = page || 0;
         if (!data.length) return '<p style="color:#8b93a3;text-align:center;padding:32px;font-family:Manrope,sans-serif;">Sin datos todavía.</p>';
         var medals = ['<span style="font-size:18px;font-weight:900;color:#FFD700;">1°</span>','<span style="font-size:18px;font-weight:900;color:#C0C0C0;">2°</span>','<span style="font-size:18px;font-weight:900;color:#CD7F32;">3°</span>'];
+        var slice = data.slice(page * RANK_PAGE, (page + 1) * RANK_PAGE);
         return '<table style="width:100%;border-collapse:collapse;">' +
           '<thead><tr style="border-bottom:1px solid #2f343f;">' +
             '<th style="padding:12px 8px;text-align:left;font-family:Manrope,sans-serif;font-size:11px;font-weight:700;color:#8b93a3;">#</th>' +
@@ -164,13 +198,14 @@
             '<th style="padding:12px 8px;text-align:center;font-family:Manrope,sans-serif;font-size:11px;font-weight:700;color:#8b93a3;width:64px;">Nivel</th>' +
             '<th style="padding:12px 8px;text-align:right;font-family:Manrope,sans-serif;font-size:11px;font-weight:700;color:#8b93a3;">XP Total</th>' +
           '</tr></thead><tbody>' +
-          data.map(function(entry, i) {
-            var rank = medals[i] || (i+1);
+          slice.map(function(entry, i) {
+            var gi = page * RANK_PAGE + i;
+            var rank = medals[gi] || (gi+1);
             var avatarHtml = entry.avatar
               ? '<img src="' + U.esc(entry.avatar) + '" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">'
               : '<img src="assets/icons/ui/icono-perfil.png" style="width:36px;height:36px;border-radius:50%;object-fit:contain;background:#2e323d;padding:4px;">';
             var isMe = user && entry.id === user.id;
-            return '<tr style="border-bottom:1px solid #2f343f;' + (i < 3 ? 'background:rgba(216,151,231,0.04);' : '') + (isMe ? 'background:rgba(108,99,255,0.08);' : '') + '">' +
+            return '<tr style="border-bottom:1px solid #2f343f;' + (gi < 3 ? 'background:rgba(216,151,231,0.04);' : '') + (isMe ? 'background:rgba(108,99,255,0.08);' : '') + '">' +
               '<td style="padding:14px 8px;font-size:18px;">' + rank + '</td>' +
               '<td style="padding:14px 8px;"><div style="display:flex;align-items:center;gap:10px;">' + avatarHtml +
                 '<p style="font-family:Poppins,sans-serif;font-size:14px;font-weight:600;color:#f4f6f9;margin:0;">' + U.esc(entry.nombre) + (isMe ? ' <span style="font-size:11px;color:#d897e7;">(tú)</span>' : '') + '</p>' +
@@ -180,7 +215,7 @@
               '</td>' +
               '<td style="padding:14px 8px;text-align:right;font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#d897e7;">' + (entry.xp || 0) + ' XP</td>' +
             '</tr>';
-          }).join('') + '</tbody></table>';
+          }).join('') + '</tbody></table>' + pagerHtml(data.length, page, RANK_PAGE, '_goXpPage');
       }
 
       async function init() {

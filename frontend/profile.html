@@ -39,6 +39,31 @@
       if (['admin','superadmin','god_admin'].indexOf(user.role) !== -1) { window.location.replace('workspace-select.html'); return; }
 
       var app = document.getElementById('app');
+      var _eventsPage = 0, EVENTS_PAGE = 8, _filteredOtherEvents = [];
+
+      function pagerHtml(total, page, size, gotoFn) {
+        if (total <= size) return '';
+        var totalPages = Math.ceil(total / size);
+        var from = page * size + 1;
+        var to = Math.min((page + 1) * size, total);
+        var btns = '';
+        for (var p = 0; p < totalPages; p++) {
+          if (totalPages > 7 && p !== 0 && p !== totalPages - 1 && Math.abs(p - page) > 1) {
+            if (p === page - 2 || p === page + 2) btns += '<span style="color:#4a5060;align-self:center;padding:0 2px;">…</span>';
+            continue;
+          }
+          var active = p === page;
+          btns += '<button onclick="' + gotoFn + '(' + p + ')" style="min-width:32px;height:32px;padding:0 6px;border-radius:8px;border:1px solid ' + (active ? '#d897e7' : '#2f343f') + ';background:' + (active ? 'rgba(216,151,231,0.15)' : 'transparent') + ';color:' + (active ? '#d897e7' : '#8b93a3') + ';font-family:Poppins,sans-serif;font-size:13px;font-weight:' + (active ? '700' : '500') + ';cursor:pointer;">' + (p + 1) + '</button>';
+        }
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0 4px;border-top:1px solid #2f343f;margin-top:8px;flex-wrap:wrap;gap:8px;">' +
+          '<span style="font-size:12px;color:#8b93a3;font-family:Manrope,sans-serif;">' + from + '–' + to + ' de ' + total + '</span>' +
+          '<div style="display:flex;gap:4px;flex-wrap:wrap;">' +
+            (page > 0 ? '<button onclick="' + gotoFn + '(' + (page-1) + ')" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid #2f343f;background:transparent;color:#8b93a3;font-size:13px;cursor:pointer;">←</button>' : '') +
+            btns +
+            (page < totalPages - 1 ? '<button onclick="' + gotoFn + '(' + (page+1) + ')" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid #2f343f;background:transparent;color:#8b93a3;font-size:13px;cursor:pointer;">→</button>' : '') +
+          '</div>' +
+        '</div>';
+      }
 
       function fmtDate(iso) {
         if (!iso) return '';
@@ -98,6 +123,31 @@
             '</div>';
           }
 
+          _filteredOtherEvents = otherEvents;
+
+          function renderEventsGrid(page) {
+            var container = document.getElementById('all-events-grid');
+            if (!container) return;
+            var list = _filteredOtherEvents;
+            var html;
+            if (!list.length) {
+              html = '<p style="color:#8b93a3;font-family:Manrope,sans-serif;">No hay más eventos disponibles.</p>';
+            } else {
+              var slice = list.slice(page * EVENTS_PAGE, (page + 1) * EVENTS_PAGE);
+              html = slice.map(function(e) { return eventCard(e, false); }).join('') +
+                pagerHtml(list.length, page, EVENTS_PAGE, '_goEventsPage');
+            }
+            container.innerHTML = html;
+            Array.prototype.forEach.call(container.querySelectorAll('.event-card'), function(card) {
+              card.addEventListener('click', function() {
+                var eid = card.getAttribute('data-eid');
+                if (eid) window.location.href = 'event-detail.html?id=' + eid;
+              });
+            });
+          }
+
+          window._goEventsPage = function(p) { _eventsPage = p; renderEventsGrid(p); window.scrollTo(0, 0); };
+
           var inner =
             '<div style="min-height:100vh;padding:20px 16px 40px;">' +
               '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">' +
@@ -119,14 +169,11 @@
                   '</div>'
                 : '') +
               '<h3 style="font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#f4f6f9;margin:0 0 12px;">Todos los eventos</h3>' +
-              '<div id="all-events-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:16px;">' +
-                (otherEvents.length
-                  ? otherEvents.map(function(e) { return eventCard(e, false); }).join('')
-                  : '<p style="color:#8b93a3;font-family:Manrope,sans-serif;">No hay más eventos disponibles.</p>') +
-              '</div>' +
+              '<div id="all-events-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:16px;"></div>' +
             '</div>';
 
           app.innerHTML = inner;
+          renderEventsGrid(0);
 
           document.getElementById('profile-menu-btn').addEventListener('click', async function() {
             try {
@@ -135,26 +182,31 @@
             } catch(e) { U.showDrawer(null, null, null, false); }
           });
 
-          var searchInput = document.getElementById('events-search');
-          if (searchInput) {
-            searchInput.addEventListener('input', function() {
-              var q = searchInput.value.trim().toLowerCase();
-              Array.prototype.forEach.call(document.querySelectorAll('.event-card'), function(card) {
-                var eid = card.getAttribute('data-eid');
-                var ev = events.concat(recommended).find(function(e) { return e.id === eid; });
-                if (!ev) return;
-                var match = !q || ev.name.toLowerCase().includes(q) || (ev.tags || []).join(' ').toLowerCase().includes(q);
-                card.style.display = match ? '' : 'none';
-              });
-            });
-          }
-
-          Array.prototype.forEach.call(document.querySelectorAll('.event-card'), function(card) {
+          Array.prototype.forEach.call(document.querySelectorAll('#recommended-grid .event-card'), function(card) {
             card.addEventListener('click', function() {
               var eid = card.getAttribute('data-eid');
               if (eid) window.location.href = 'event-detail.html?id=' + eid;
             });
           });
+
+          var searchInput = document.getElementById('events-search');
+          if (searchInput) {
+            searchInput.addEventListener('input', function() {
+              var q = searchInput.value.trim().toLowerCase();
+              Array.prototype.forEach.call(document.querySelectorAll('#recommended-grid .event-card'), function(card) {
+                var eid = card.getAttribute('data-eid');
+                var ev = recommended.find(function(e) { return e.id === eid; });
+                if (!ev) return;
+                var match = !q || ev.name.toLowerCase().indexOf(q) !== -1 || (ev.tags || []).join(' ').toLowerCase().indexOf(q) !== -1;
+                card.style.display = match ? '' : 'none';
+              });
+              _filteredOtherEvents = !q ? otherEvents : otherEvents.filter(function(e) {
+                return e.name.toLowerCase().indexOf(q) !== -1 || (e.tags || []).join(' ').toLowerCase().indexOf(q) !== -1;
+              });
+              _eventsPage = 0;
+              renderEventsGrid(0);
+            });
+          }
 
         } catch(err) {
           app.innerHTML = U.errorHtml(err && err.message ? err.message : 'Error inesperado');

@@ -66,27 +66,50 @@
 
       var app = document.getElementById('app');
       U.showPendingToast();
+      var _evPage = 0, EV_PAGE = 10, _adminEvents = [], _filteredAdminEvents = [];
+      var _CARD_GRADIENTS = [
+        'linear-gradient(120deg,#d897e7 0%,#e68a8d 60%,#ffcb8a 100%)',
+        'linear-gradient(120deg,#70cfff 0%,#abd194 100%)',
+        'linear-gradient(120deg,#ffcb8a 0%,#e68a8d 100%)',
+        'linear-gradient(120deg,#abd194 0%,#70cfff 100%)',
+      ];
 
-      function fmtDate(iso) {
-        if (!iso) return '—';
-        try { return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }); }
-        catch(e) { return iso; }
+      function pagerHtml(total, page, size, gotoFn) {
+        if (total <= size) return '';
+        var totalPages = Math.ceil(total / size);
+        var from = page * size + 1;
+        var to = Math.min((page + 1) * size, total);
+        var btns = '';
+        for (var p = 0; p < totalPages; p++) {
+          if (totalPages > 7 && p !== 0 && p !== totalPages - 1 && Math.abs(p - page) > 1) {
+            if (p === page - 2 || p === page + 2) btns += '<span style="color:#4a5060;align-self:center;padding:0 2px;">…</span>';
+            continue;
+          }
+          var active = p === page;
+          btns += '<button onclick="' + gotoFn + '(' + p + ')" style="min-width:32px;height:32px;padding:0 6px;border-radius:8px;border:1px solid ' + (active ? '#d897e7' : '#2f343f') + ';background:' + (active ? 'rgba(216,151,231,0.15)' : 'transparent') + ';color:' + (active ? '#d897e7' : '#8b93a3') + ';font-family:Poppins,sans-serif;font-size:13px;font-weight:' + (active ? '700' : '500') + ';cursor:pointer;">' + (p + 1) + '</button>';
+        }
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0 4px;border-top:1px solid #2f343f;margin-top:8px;flex-wrap:wrap;gap:8px;">' +
+          '<span style="font-size:12px;color:#8b93a3;font-family:Manrope,sans-serif;">' + from + '–' + to + ' de ' + total + '</span>' +
+          '<div style="display:flex;gap:4px;flex-wrap:wrap;">' +
+            (page > 0 ? '<button onclick="' + gotoFn + '(' + (page-1) + ')" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid #2f343f;background:transparent;color:#8b93a3;font-size:13px;cursor:pointer;">←</button>' : '') +
+            btns +
+            (page < totalPages - 1 ? '<button onclick="' + gotoFn + '(' + (page+1) + ')" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid #2f343f;background:transparent;color:#8b93a3;font-size:13px;cursor:pointer;">→</button>' : '') +
+          '</div>' +
+        '</div>';
       }
 
-      async function init() {
-        try {
-          var events = await API.listAdminEvents();
-          var activeId = U.ensureActive(events);
-
-          var CARD_GRADIENTS = [
-            'linear-gradient(120deg,#d897e7 0%,#e68a8d 60%,#ffcb8a 100%)',
-            'linear-gradient(120deg,#70cfff 0%,#abd194 100%)',
-            'linear-gradient(120deg,#ffcb8a 0%,#e68a8d 100%)',
-            'linear-gradient(120deg,#abd194 0%,#70cfff 100%)',
-          ];
-
-          var eventCards = events.length ? events.map(function(e, i) {
-            var grad = CARD_GRADIENTS[i % CARD_GRADIENTS.length];
+      function renderAdminEvents(page) {
+        var container = document.getElementById('events-list');
+        if (!container) return;
+        var list = _filteredAdminEvents;
+        var html;
+        if (!list.length) {
+          html = '<p style="color:#8b93a3;font-size:14px;text-align:center;padding:40px;">No hay eventos. Crea el primero con el botón + New</p>';
+        } else {
+          var slice = list.slice(page * EV_PAGE, (page + 1) * EV_PAGE);
+          html = slice.map(function(e, i) {
+            var gi = list.indexOf(e);
+            var grad = _CARD_GRADIENTS[gi % _CARD_GRADIENTS.length];
             var bgImg = e.photo ? 'background-image:url(' + U.esc(e.photo) + ');background-size:cover;background-position:center;' : '';
             var statusLabel = STATUS_MAP[e.status] ? STATUS_MAP[e.status].label : (e.status || 'draft');
             return '<div style="border-radius:16px;overflow:hidden;border:1px solid #2f343f;background:#20242d;margin-bottom:16px;" class="anim-fade">' +
@@ -122,7 +145,87 @@
                 : '') +
             '</div>' +
           '</div>';
-          }).join('') : '<p style="color:#8b93a3;font-size:14px;text-align:center;padding:40px;">No hay eventos. Crea el primero con el botón + New</p>';
+          }).join('') + pagerHtml(list.length, page, EV_PAGE, '_goEvPage');
+        }
+        container.innerHTML = html;
+
+        var eventSearch = document.getElementById('event-search');
+        Array.prototype.forEach.call(container.querySelectorAll('[data-tag]'), function(chip) {
+          chip.addEventListener('click', function() {
+            if (eventSearch) { eventSearch.value = chip.getAttribute('data-tag'); _applyAdminSearch(eventSearch.value); }
+          });
+        });
+        Array.prototype.forEach.call(container.querySelectorAll('.enter-btn'), function(btn) {
+          btn.addEventListener('click', function() {
+            window.location.href = 'admin-event-detail.html?id=' + btn.getAttribute('data-enter');
+          });
+        });
+        Array.prototype.forEach.call(container.querySelectorAll('[id^="photo-area-"]'), function(area) {
+          area.addEventListener('click', function(ev) {
+            ev.stopPropagation();
+            var eid = area.id.replace('photo-area-', '');
+            var input = document.createElement('input');
+            input.type = 'file'; input.accept = 'image/*';
+            input.onchange = function() {
+              var file = input.files[0];
+              if (!file) return;
+              if (file.size > 3 * 1024 * 1024) { U.toast('Máximo 3MB', 'error'); return; }
+              var reader = new FileReader();
+              reader.onload = async function(evr) {
+                try { await API.updateEventPhoto(eid, evr.target.result); U.toast('Foto actualizada', 'success'); init(); }
+                catch(err) { U.toast(err.message || 'Error', 'error'); }
+              };
+              reader.readAsDataURL(file);
+            };
+            input.click();
+          });
+        });
+        Array.prototype.forEach.call(container.querySelectorAll('.status-sel'), function(sel) {
+          sel.addEventListener('change', async function() {
+            var eid = sel.getAttribute('data-status-sel');
+            var newStatus = sel.value;
+            var active = ['upcoming','open','ongoing','closed'].indexOf(newStatus) !== -1;
+            sel.disabled = true;
+            try { await API.updateEvent(eid, { status: newStatus, activo: active }); U.toast('Estado actualizado', 'success'); init(); }
+            catch(err) { U.toast(err.message || 'Error', 'error'); sel.disabled = false; }
+          });
+        });
+        Array.prototype.forEach.call(container.querySelectorAll('.del-btn'), function(btn) {
+          btn.addEventListener('click', function() {
+            var eid = btn.getAttribute('data-del');
+            var ename = btn.getAttribute('data-name');
+            U.showConfirm('¿Eliminar "' + ename + '"? Se eliminarán todos sus badges y canjes.', async function() {
+              btn.disabled = true;
+              try { await API.deleteEvent(eid); U.toast('Evento eliminado', 'success'); init(); }
+              catch(err) { U.toast(err.message || 'Error', 'error'); btn.disabled = false; }
+            });
+          });
+        });
+      }
+
+      function _applyAdminSearch(q) {
+        q = (q || '').trim().toLowerCase();
+        _filteredAdminEvents = !q ? _adminEvents : _adminEvents.filter(function(e) {
+          return e.name.toLowerCase().indexOf(q) !== -1 || (e.tags || []).some(function(t) { return t.toLowerCase().indexOf(q) !== -1; });
+        });
+        _evPage = 0;
+        renderAdminEvents(0);
+      }
+
+      window._goEvPage = function(p) { _evPage = p; renderAdminEvents(p); window.scrollTo(0, 0); };
+
+      function fmtDate(iso) {
+        if (!iso) return '—';
+        try { return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }); }
+        catch(e) { return iso; }
+      }
+
+      async function init() {
+        try {
+          var events = await API.listAdminEvents();
+          var activeId = U.ensureActive(events);
+          _adminEvents = events;
+          _filteredAdminEvents = events;
 
           var inner =
             '<div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">' +
@@ -132,108 +235,21 @@
               '</div>' +
               '<button id="btn-new-event" style="height:50px;padding:0 22px;border-radius:13px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:8px;">+ New</button>' +
             '</div>' +
-            '<div id="events-list">' + eventCards + '</div>';
+            '<div id="events-list"></div>';
 
           app.innerHTML = U.adminShell('event', inner, events, activeId);
           U.mountAdminShell();
           U.hideLoading();
-
-          // Buscador
-          function applySearch(q) {
-            q = (q || '').trim().toLowerCase();
-            Array.prototype.forEach.call(document.querySelectorAll('#events-list > div'), function(card) {
-              if (!q) { card.style.display = ''; return; }
-              var nameEl = card.querySelector('p');
-              var name = nameEl ? nameEl.textContent.toLowerCase() : '';
-              var eid = card.querySelector('[data-enter]') ? card.querySelector('[data-enter]').getAttribute('data-enter') : null;
-              var eventData = eid ? events.find(function(e) { return e.id === eid; }) : null;
-              var eventTags = eventData ? (Array.isArray(eventData.tags) ? eventData.tags : []) : [];
-              var matchesTags = eventTags.some(function(t) { return t.toLowerCase().includes(q); });
-              card.style.display = (name.includes(q) || matchesTags) ? '' : 'none';
-            });
-          }
+          renderAdminEvents(0);
 
           var eventSearch = document.getElementById('event-search');
           if (eventSearch) {
-            eventSearch.addEventListener('input', function() { applySearch(eventSearch.value); });
+            eventSearch.addEventListener('input', function() { _applyAdminSearch(eventSearch.value); });
           }
-
-          // Chips de tags clicables
-          Array.prototype.forEach.call(document.querySelectorAll('#events-list [data-tag]'), function(chip) {
-            chip.addEventListener('click', function() {
-              if (eventSearch) {
-                eventSearch.value = chip.getAttribute('data-tag');
-                applySearch(eventSearch.value);
-              }
-            });
-          });
 
           // Botón New
           document.getElementById('btn-new-event').addEventListener('click', function() {
             window.location.href = 'admin-event-create.html';
-          });
-
-          // Entrar al evento
-          Array.prototype.forEach.call(document.querySelectorAll('.enter-btn'), function(btn) {
-            btn.addEventListener('click', function() {
-              window.location.href = 'admin-event-detail.html?id=' + btn.getAttribute('data-enter');
-            });
-          });
-
-          // Cambiar foto
-          Array.prototype.forEach.call(document.querySelectorAll('[id^="photo-area-"]'), function(area) {
-            area.addEventListener('click', function(ev) {
-              ev.stopPropagation();
-              var eid = area.id.replace('photo-area-', '');
-              var input = document.createElement('input');
-              input.type = 'file'; input.accept = 'image/*';
-              input.onchange = function() {
-                var file = input.files[0];
-                if (!file) return;
-                if (file.size > 3 * 1024 * 1024) { U.toast('Máximo 3MB', 'error'); return; }
-                var reader = new FileReader();
-                reader.onload = async function(ev) {
-                  try {
-                    await API.updateEventPhoto(eid, ev.target.result);
-                    U.toast('Foto actualizada', 'success');
-                    init();
-                  } catch(err) { U.toast(err.message || 'Error', 'error'); }
-                };
-                reader.readAsDataURL(file);
-              };
-              input.click();
-            });
-          });
-
-          // Cambiar estado
-          Array.prototype.forEach.call(document.querySelectorAll('.status-sel'), function(sel) {
-            sel.addEventListener('change', async function() {
-              var eid = sel.getAttribute('data-status-sel');
-              var newStatus = sel.value;
-              var active = ['upcoming','open','ongoing','closed'].indexOf(newStatus) !== -1;
-              sel.disabled = true;
-              try {
-                await API.updateEvent(eid, { status: newStatus, activo: active });
-                U.toast('Estado actualizado', 'success');
-                init();
-              } catch(err) {
-                U.toast(err.message || 'Error', 'error');
-                sel.disabled = false;
-              }
-            });
-          });
-
-          // Eliminar
-          Array.prototype.forEach.call(document.querySelectorAll('.del-btn'), function(btn) {
-            btn.addEventListener('click', function() {
-              var eid = btn.getAttribute('data-del');
-              var ename = btn.getAttribute('data-name');
-              U.showConfirm('¿Eliminar "' + ename + '"? Se eliminarán todos sus badges y canjes.', async function() {
-                btn.disabled = true;
-                try { await API.deleteEvent(eid); U.toast('Evento eliminado', 'success'); init(); }
-                catch(err) { U.toast(err.message || 'Error', 'error'); btn.disabled = false; }
-              });
-            });
           });
 
         } catch(err) {
