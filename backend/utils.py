@@ -113,13 +113,17 @@ def fmt_event(doc, ws_name=None):
 
 
 def fmt_badge(doc, obtenido=False, scanned_at=None):
+    is_rare = bool(doc.get("is_rare", False))
     return {
         "id":          str(doc["_id"]),
         "icon":        doc.get("icon", "🏅"),
+        "icon_url":    doc.get("icon_url", None),
         "nombre":      doc.get("name", ""),
         "descripcion": doc.get("description", ""),
         "obtenido":    obtenido,
         "scanned_at":  scanned_at.isoformat() if scanned_at else None,
+        "is_rare":     is_rare,
+        "rarity":      "rare" if is_rare else "normal",
     }
 
 

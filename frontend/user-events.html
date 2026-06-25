@@ -100,6 +100,7 @@
         var photoHtml = ev.photo
           ? '<div style="height:180px;overflow:hidden;border-radius:16px 16px 0 0;"><img src="' + U.esc(ev.photo) + '" style="width:100%;height:100%;object-fit:cover;"></div>'
           : '<div style="height:180px;border-radius:16px 16px 0 0;background:linear-gradient(120deg,#d897e7 0%,#e68a8d 60%,#ffcb8a 100%);display:flex;align-items:center;justify-content:center;"><img src="assets/icons/ui/icono-evento.png" style="width:60px;height:60px;object-fit:contain;filter:brightness(0) invert(1);opacity:0.7;"></div>';
+        console.log('badges data:', detail.badges);
         var badgesHtml = (detail.badges || []).slice(0, 8).map(function(b) {
           var iconHtml = b.icon_url
             ? '<img src="' + U.esc(b.icon_url) + '" style="width:32px;height:32px;object-fit:contain;">'

@@ -257,7 +257,8 @@
       var sess = getSession();
       var done = sess ? redeemedIds(sess.user.id, eventId) : [];
       var blist = e.badges.map(function (b) {
-        return { id: b.id, emoji: b.emoji, name: b.name, desc: b.desc, obtained: done.indexOf(b.id) !== -1, scannedAt: done.indexOf(b.id) !== -1 ? new Date().toISOString() : null };
+        return { id: b.id, emoji: b.emoji, icon_url: b.icon_url || null, name: b.name, desc: b.desc, obtained: done.indexOf(b.id) !== -1, scannedAt: done.indexOf(b.id) !== -1 ? new Date().toISOString() : null,
+          is_rare: !!b.is_rare, rarity: b.rarity || (b.is_rare ? 'rare' : 'normal') };
       });
       var complete = blist.length > 0 && done.length >= blist.length;
       return { id: e.id, name: e.name, prize: e.prize, badges: blist,
@@ -753,8 +754,9 @@
       return {
         id: d.id, name: d.nombre, prize: d.premio,
         badges: (d.badges || []).map(function (b) {
-          return { id: b.id, emoji: b.icon || '', name: b.nombre, desc: b.descripcion,
-            obtained: !!b.obtenido, scannedAt: b.scanned_at || null };
+          return { id: b.id, emoji: b.icon || '', icon_url: b.icon_url || null, name: b.nombre, desc: b.descripcion,
+            obtained: !!b.obtenido, scannedAt: b.scanned_at || null,
+            is_rare: !!b.is_rare, rarity: b.rarity || (b.is_rare ? 'rare' : 'normal') };
         }),
         total: d.total_badges, obtained: d.obtenidos, complete: !!d.completado,
         prizeRevealed: d.premio_revelado || null
