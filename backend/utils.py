@@ -61,8 +61,8 @@ def compute_event_status(doc):
     if manual_status in ("draft", "pending", "cancelled", "postponed", "archived", "paused", "open", "closed"):
         return manual_status
     now = datetime.utcnow()
-    start = doc.get("start_date")
-    end = doc.get("end_date")
+    start = doc.get("start_date") or doc.get("fecha_inicio")
+    end   = doc.get("end_date")   or doc.get("fecha_fin")
     if start and end:
         if hasattr(start, 'tzinfo') and start.tzinfo:
             start = start.replace(tzinfo=None)
