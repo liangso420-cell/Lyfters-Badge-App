@@ -350,10 +350,19 @@ def update_member_role(ws_id, uid):
     if _ROLE_RANK.get(new_role, 0) >= caller_rank:
         return jsonify(error="No podés asignar un rol mayor o igual al tuyo"), 403
 
+    print(f"[setMemberRole] ws={ws_id} user={uid} new_role={new_role} caller={caller_ws_role}", flush=True)
+
     workspace_members().update_one(
         {"workspace_id": oid, "user_id": target_uid},
         {"$set": {"role": new_role}}
     )
+
+    if new_role in ("admin", "superadmin"):
+        users().update_one({"_id": target_uid}, {"$set": {"role": new_role}})
+    elif new_role == "participant":
+        users().update_one({"_id": target_uid}, {"$set": {"role": "participant"}})
+        workspace_members().delete_many({"user_id": target_uid})
+
     return jsonify(mensaje="Rol actualizado")
 
 
