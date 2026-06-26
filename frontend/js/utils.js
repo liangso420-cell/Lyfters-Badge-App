@@ -798,7 +798,7 @@
 
     function openReportModal() {
       if (document.getElementById('report-modal-overlay')) return;
-      var _rpt = {ws: null, user: null, backFn: null};
+      var _rpt = {event: null, user: null, backFn: null};
       var overlay = document.createElement('div');
       overlay.id = 'report-modal-overlay';
       overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);';
@@ -824,65 +824,61 @@
         _rpt.backFn = null;
         setContent(
           modalHead('Reportar usuario', false) +
-          '<p style="font-size:13px;color:#8b93a3;margin-bottom:18px;">Paso 1 de 3 — ¿En qué workspace ocurrió el problema?</p>' +
-          '<div id="rpt-ws-list"><p style="color:#6f7686;font-size:13px;text-align:center;padding:20px;">Cargando...</p></div>'
+          '<p style="font-size:13px;color:#8b93a3;margin-bottom:18px;">Paso 1 de 3 — ¿En qué evento ocurrió el problema?</p>' +
+          '<div id="rpt-event-list"><p style="color:#6f7686;font-size:13px;text-align:center;padding:20px;">Cargando...</p></div>'
         );
-        fetch(window.LyfterAPI.base + '/workspaces/mine-all', {headers: window.LyfterAPI.authHeaders()})
+        fetch(window.LyfterAPI.base + '/events/joined', {headers: window.LyfterAPI.authHeaders()})
           .then(function(r) { return r.ok ? r.json() : Promise.reject(r.status); })
           .then(function(list) {
-            var el = document.getElementById('rpt-ws-list');
+            var el = document.getElementById('rpt-event-list');
             if (!el) return;
             var arr = Array.isArray(list) ? list : [];
             if (!arr.length) {
-              el.innerHTML = '<p style="color:#6f7686;font-size:13px;text-align:center;padding:20px;">No estás en ningún workspace.</p>';
+              el.innerHTML = '<p style="color:#6f7686;font-size:13px;text-align:center;padding:20px;">No estás en ningún evento todavía.</p>';
               return;
             }
             el.innerHTML = '';
-            arr.forEach(function(w) {
+            arr.forEach(function(ev) {
               var btn = document.createElement('button');
-              btn.style.cssText = 'text-align:left;width:100%;padding:14px 16px;border-radius:12px;border:1px solid #2f343f;background:#15171d;cursor:pointer;margin-bottom:8px;transition:border-color .15s;';
-              btn.innerHTML = '<div style="font-family:Poppins,sans-serif;font-size:14px;font-weight:700;color:#f4f6f9;">' + esc(w.name || '') + '</div>' + (w.slug ? '<div style="font-size:12px;color:#8b93a3;margin-top:2px;">/' + esc(w.slug) + '</div>' : '');
+              btn.style.cssText = 'text-align:left;width:100%;padding:14px 16px;border-radius:12px;border:1px solid #2f343f;background:#15171d;cursor:pointer;margin-bottom:8px;transition:border-color .15s;display:flex;align-items:center;gap:12px;';
+              var thumb = ev.photo
+                ? '<img src="' + esc(ev.photo) + '" style="width:36px;height:36px;border-radius:8px;object-fit:cover;flex-shrink:0;" />'
+                : '<div style="width:36px;height:36px;border-radius:8px;background:rgba(216,151,231,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><img src="assets/icons/ui/icono-evento.png" style="width:18px;height:18px;object-fit:contain;" /></div>';
+              btn.innerHTML = thumb + '<div style="min-width:0;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;color:#f4f6f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(ev.nombre || '') + '</div>';
               btn.addEventListener('mouseover', function() { btn.style.borderColor = '#d897e7'; });
               btn.addEventListener('mouseout', function() { btn.style.borderColor = '#2f343f'; });
-              btn.addEventListener('click', function() { _rpt.ws = {id: w.id, name: w.name}; step2(w.id); });
+              btn.addEventListener('click', function() { _rpt.event = {id: ev.id, name: ev.nombre}; step2(ev.id); });
               el.appendChild(btn);
             });
           })
           .catch(function() {
-            var el = document.getElementById('rpt-ws-list');
-            if (el) el.innerHTML = '<p style="color:#e68a8d;font-size:13px;text-align:center;padding:20px;">Error al cargar workspaces.</p>';
+            var el = document.getElementById('rpt-event-list');
+            if (el) el.innerHTML = '<p style="color:#e68a8d;font-size:13px;text-align:center;padding:20px;">Error al cargar eventos.</p>';
           });
       }
-      function step2(wsId) {
+      function step2(eventId) {
         _rpt.backFn = step1;
         setContent(
           modalHead('Reportar usuario', true) +
-          '<p style="font-size:13px;color:#8b93a3;margin-bottom:18px;">Paso 2 de 3 — ¿A quién querés reportar en <strong style="color:#cdd2db;">' + esc(_rpt.ws.name || '') + '</strong>?</p>' +
+          '<p style="font-size:13px;color:#8b93a3;margin-bottom:18px;">Paso 2 de 3 — ¿A quién querés reportar en <strong style="color:#cdd2db;">' + esc(_rpt.event.name || '') + '</strong>?</p>' +
           '<div id="rpt-member-list"><p style="color:#6f7686;font-size:13px;text-align:center;padding:20px;">Cargando...</p></div>'
         );
-        var cu = window.LyfterAPI.currentUser ? window.LyfterAPI.currentUser() : null;
-        var cuId = cu ? (cu.id || cu._id || '') : '';
-        fetch(window.LyfterAPI.base + '/workspaces/' + wsId + '/reportable', {headers: window.LyfterAPI.authHeaders()})
+        fetch(window.LyfterAPI.base + '/events/' + eventId + '/participants', {headers: window.LyfterAPI.authHeaders()})
           .then(function(r) { return r.ok ? r.json() : Promise.reject(r.status); })
           .then(function(members) {
             var el = document.getElementById('rpt-member-list');
             if (!el) return;
-            var filtered = (Array.isArray(members) ? members : []).filter(function(m) {
-              return (m.user_id || '') !== cuId && m.role !== 'god_admin';
-            });
-            if (!filtered.length) {
-              el.innerHTML = '<p style="color:#6f7686;font-size:13px;text-align:center;padding:20px;">No hay otros usuarios en este workspace.</p>';
+            var arr = Array.isArray(members) ? members : [];
+            if (!arr.length) {
+              el.innerHTML = '<p style="color:#6f7686;font-size:13px;text-align:center;padding:20px;">No hay otros participantes en este evento.</p>';
               return;
             }
-            var roleColors = {admin:'#70cfff', superadmin:'#d897e7', participant:'#abd194'};
             el.innerHTML = '';
-            filtered.forEach(function(m) {
+            arr.forEach(function(m) {
               var btn = document.createElement('button');
               btn.style.cssText = 'text-align:left;width:100%;padding:12px 16px;border-radius:12px;border:1px solid #2f343f;background:#15171d;cursor:pointer;display:flex;align-items:center;gap:12px;margin-bottom:8px;transition:border-color .15s;';
-              var rc = roleColors[m.role] || '#8b93a3';
               btn.innerHTML = '<div style="width:34px;height:34px;border-radius:50%;background:rgba(216,151,231,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><img src="assets/icons/ui/icono-perfil.png" style="width:16px;height:16px;object-fit:contain;" /></div>' +
-                '<div><div style="font-family:Poppins,sans-serif;font-size:14px;font-weight:700;color:#f4f6f9;">' + esc(m.name || '—') + '</div>' +
-                '<div style="font-size:11px;color:' + rc + ';margin-top:2px;text-transform:capitalize;">' + esc(m.role || '') + '</div></div>';
+                '<div style="font-family:Poppins,sans-serif;font-size:14px;font-weight:700;color:#f4f6f9;">' + esc(m.name || '—') + '</div>';
               btn.addEventListener('mouseover', function() { btn.style.borderColor = '#d897e7'; });
               btn.addEventListener('mouseout', function() { btn.style.borderColor = '#2f343f'; });
               btn.addEventListener('click', function() { _rpt.user = {id: m.user_id, name: m.name}; step3(); });
@@ -891,11 +887,11 @@
           })
           .catch(function() {
             var el = document.getElementById('rpt-member-list');
-            if (el) el.innerHTML = '<p style="color:#e68a8d;font-size:13px;text-align:center;padding:20px;">Error al cargar miembros. Intentá más tarde.</p>';
+            if (el) el.innerHTML = '<p style="color:#e68a8d;font-size:13px;text-align:center;padding:20px;">Error al cargar participantes. Intentá más tarde.</p>';
           });
       }
       function step3() {
-        _rpt.backFn = function() { step2(_rpt.ws.id); };
+        _rpt.backFn = function() { step2(_rpt.event.id); };
         var reasons = [
           {value:'spam', label:'Spam o publicidad no deseada'},
           {value:'abuso', label:'Comportamiento abusivo o acoso'},

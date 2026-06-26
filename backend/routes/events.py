@@ -446,6 +446,34 @@ def save_status(event_id):
     return jsonify(saved=bool(existing)), 200
 
 
+@events_bp.route("/<event_id>/participants", methods=["GET"])
+@jwt_required()
+def event_participants(event_id):
+    """Return participants of an event for reporting purposes.
+    Accessible to any user who has joined the event."""
+    uid = get_jwt_identity()
+    oid = valid_oid(event_id)
+    if not oid:
+        return jsonify(error="ID inválido"), 400
+
+    caller_join = event_joins().find_one({"event_id": oid, "user_id": ObjectId(uid)})
+    if not caller_join:
+        return jsonify(error="No estás en este evento"), 403
+
+    joins = list(event_joins().find({"event_id": oid}))
+    result = []
+    for j in joins:
+        if j["user_id"] == ObjectId(uid):
+            continue
+        user_doc = users().find_one({"_id": j["user_id"]}, {"name": 1})
+        if user_doc:
+            result.append({
+                "user_id": str(j["user_id"]),
+                "name":    user_doc.get("name", ""),
+            })
+    return jsonify(result), 200
+
+
 @events_bp.route("/saved", methods=["GET"])
 @jwt_required()
 def get_saved_events():
