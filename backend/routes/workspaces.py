@@ -354,6 +354,14 @@ def update_member_role(ws_id, uid):
         {"workspace_id": oid, "user_id": target_uid},
         {"$set": {"role": new_role}}
     )
+
+    # El frontend lee users.role para decidir acceso de admin/superadmin,
+    # así que el rol global debe quedar sincronizado con el del workspace.
+    # No degradamos a un god_admin (mismo guard que en /accept-invite).
+    target_user = users().find_one({"_id": target_uid})
+    if (target_user or {}).get("role") != "god_admin":
+        users().update_one({"_id": target_uid}, {"$set": {"role": new_role}})
+
     return jsonify(mensaje="Rol actualizado")
 
 
