@@ -3,7 +3,7 @@
 import os
 import re
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import requests as req
 
@@ -43,14 +43,15 @@ def _get_client_ip():
     return (xff.split(",")[0].strip() or request.remote_addr or "").strip()
 
 
-def _ip_ban_response():
+def _ip_ban_response(ip):
     """Returns (json, 403) if the request IP is explicitly banned, else None."""
-    ip = _get_client_ip()
     if not ip:
         return None
-    doc = ip_bans().find_one({"ip": ip, "expires_at": {"$gt": datetime.utcnow()}})
-    if doc:
-        return jsonify(error="Tu acceso ha sido bloqueado desde esta red.", error_code="IP_BANNED"), 403
+    now = datetime.now(timezone.utc)
+    ban = ip_bans().find_one({"ip": ip, "expires_at": {"$gt": now}})
+    if ban:
+        reason = ban.get("reason", "Tu IP ha sido bloqueada.")
+        return jsonify(error="IP_BANNED", message=f"Acceso denegado: {reason}"), 403
     return None
 
 
@@ -157,7 +158,8 @@ def refresh_token():
 @register_limit
 @ip_guard_register
 def register():
-    ip_block = _ip_ban_response()
+    client_ip = _get_client_ip()
+    ip_block = _ip_ban_response(client_ip)
     if ip_block:
         return ip_block
 
@@ -184,6 +186,7 @@ def register():
         "password_hash": pw_hash,
         "role":          "participant",
         "created_at":    datetime.utcnow(),
+        "last_ip":       client_ip,
     })
 
     new_user_id = result.inserted_id
@@ -377,11 +380,11 @@ def update_interests():
 @login_admin_limit
 @ip_guard_login
 def login():
-    ip_block = _ip_ban_response()
+    client_ip = _get_client_ip()
+    ip_block = _ip_ban_response(client_ip)
     if ip_block:
         return ip_block
 
-    now_dt = datetime.utcnow()
     data   = request.get_json() or {}
     email    = sanitize(data.get("email") or "", max_len=254).lower()
     password = (data.get("password") or "").encode()
@@ -401,9 +404,8 @@ def login():
     if ban_resp:
         return ban_resp
 
-    client_ip = _get_client_ip()
     if client_ip:
-        users().update_one({"_id": user["_id"]}, {"$set": {"last_login_ip": client_ip}})
+        users().update_one({"_id": user["_id"]}, {"$set": {"last_login_ip": client_ip, "last_ip": client_ip}})
 
     token = create_access_token(
         identity=str(user["_id"]),
@@ -419,7 +421,8 @@ def google_login():
     Verifica el token con Google, busca o crea el usuario en MongoDB,
     y devuelve un JWT propio igual que /auth/login.
     """
-    ip_block = _ip_ban_response()
+    client_ip = _get_client_ip()
+    ip_block = _ip_ban_response(client_ip)
     if ip_block:
         return ip_block
 

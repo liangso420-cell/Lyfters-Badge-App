@@ -4,7 +4,7 @@ from bson import ObjectId
 from datetime import datetime, timezone, timedelta
 import bcrypt, uuid, os, re
 
-from db import workspaces, workspace_members, users, invitations, events, badges, scans, event_joins
+from db import workspaces, workspace_members, users, invitations, events, badges, scans, event_joins, ip_bans
 from workspace_utils import (
     get_user_workspace, generate_invite_code, slugify, workspace_filter
 )
@@ -830,10 +830,29 @@ def ban_platform_user(user_id):
         "banned_at":    datetime.utcnow(),
         "ban_ip":       None,
     }
+
     if ban_scope == "account_ip":
-        last_ip = target.get("last_login_ip")
-        if last_ip:
-            update["ban_ip"] = last_ip
+        target_ip = target.get("last_ip") or target.get("last_login_ip")
+        if target_ip:
+            update["ban_ip"] = target_ip
+            now_ip = datetime.now(timezone.utc)
+            ip_expires_at = (now_ip + timedelta(hours=int(duration_hours))) if duration_hours is not None else datetime(9999, 12, 31, 23, 59, 59)
+            ip_bans().update_one(
+                {"ip": target_ip},
+                {"$set": {
+                    "ip":             target_ip,
+                    "reason":         reason or "Baneo por IP",
+                    "expires_at":     ip_expires_at,
+                    "banned_user_id": target_uid,
+                    "created_at":     now_ip,
+                }},
+                upsert=True
+            )
+            users().update_one({"_id": target_uid}, {"$set": update})
+            return jsonify(ok=True, banned_until=banned_until.isoformat(), ban_ip=target_ip)
+        else:
+            users().update_one({"_id": target_uid}, {"$set": update})
+            return jsonify(ok=True, warning="El usuario no tiene IP registrada aún (nunca hizo login desde que se implementó el sistema)")
 
     users().update_one({"_id": target_uid}, {"$set": update})
     return jsonify(ok=True, banned_until=banned_until.isoformat(), ban_ip=update.get("ban_ip"))

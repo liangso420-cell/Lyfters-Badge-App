@@ -475,6 +475,7 @@
         if (!res.ok) throw new Error(data.error || 'Error');
         closeBanModal();
         toast('Usuario baneado', 'success');
+        if (data.warning) toast(data.warning, 'warning');
         loadPlatformUsers();
       } catch(e) {
         toast(e.message, 'error');

@@ -1,4 +1,4 @@
-# PRD — Lyfter Badge App
+﻿# PRD — Lyfter Badge App
 **Versión:** 2.0  
 **Última actualización:** Junio 2026  
 **Estado:** En desarrollo activo
@@ -107,26 +107,31 @@ actividad y monitorea la participación durante el evento. Usa principalmente
 - Edición de eventos ya publicados (CRUD parcial — solo creación en P0).
 ---
  
-## 6. Stack tecnológico (según especificaciones del programa)
+## 6. Stack tecnológico (implementado)
  
 ### Backend
-- **Flask** — framework web Python: rutas y lógica de negocio.
-- **JWT** — autenticación y protección de rutas por rol. Tiempo de expiración
-  configurado a **8 horas** (duración típica de un evento Lyfter).
-- **MongoDB** — base de datos NoSQL: eventos, badges, usuarios, redenciones.
-- **PyMongo** — conector Flask ↔ MongoDB.
+- **Flask 3** — blueprints por dominio (auth, events, admin, redeem, xp, workspaces).
+- **flask-jwt-extended** — JWT con claims extendidos (rol, workspace). Expiración: **8 horas**.
+- **MongoDB Atlas** — 12 colecciones: users, events, badges, scans, event_joins, achievements, user_achievements, xp_log, workspaces, workspace_members, invitations, reviews.
+- **PyMongo** — CRUD con índices únicos como barrera contra race conditions.
+- **flask-limiter + Redis** — rate limiting por IP y por usuario (Upstash en producción).
+- **google-auth** — verificación de idTokens de Firebase para login con Google.
+- **Resend / SendGrid** — emails de reset de contraseña e invitaciones de workspace.
+
 ### Frontend
-- **Vue.js** — framework JS para pantallas reactivas (SPA).
-- **Tailwind CSS + DaisyUI** — estilos utilitarios y componentes visuales.
-- **html5-qrcode** o **jsQR** — escaneo de cámara en el cliente.
-- **Vue Router** — gestión de navegación incluyendo parámetro `?next=` para
-  flujo post-login.
+- **HTML + JS vanilla** — 38 páginas HTML independientes (sin framework SPA).
+- **Tailwind CSS + DaisyUI** — vía CDN, sin build step.
+- **jsQR** — escaneo de cámara en el cliente (`getUserMedia` + canvas).
+- **Firebase Web SDK** — login social con Google (idToken intercambiado por JWT propio).
+- **Lottie + Particles.js** — animaciones de celebración y fondo.
+- **i18n propio** — 5 idiomas (es, en, de, fr, pt) via `frontend/locales/`.
+
 ### Deploy
-- **Render** — backend Flask.
-- **Vercel** — frontend Vue.
+- **Render** — backend Flask (Root Directory: `backend`, start: `gunicorn app:app`).
+- **GitHub Pages** — frontend (CI/CD via GitHub Actions desde `frontend/`).
 - **MongoDB Atlas** — base de datos gestionada.
----
- 
+- **Redis (Upstash)** — rate limiting persistente en producción.
+
 ## 7. Criterios de aceptación
  
 Formato: *Dado [contexto] → Cuando [acción] → Entonces [resultado]*
