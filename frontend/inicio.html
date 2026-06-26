@@ -83,8 +83,8 @@
 
     var LEVEL_NAMES  = ['','Explorador','Coleccionista','Maestro Badge','Leyenda Lyfter'];
     var LEVEL_COLORS = ['','#70cfff','#d897e7','#ffc850','#e68a8d'];
-    var LEVELS_XP    = [0, 0, 100, 300, 600];
-    var LEVELS_XP_MAX= [100, 100, 300, 600, 9999];
+    var LEVELS_XP    = [0, 0, 500, 1500, 3000];
+    var LEVELS_XP_MAX= [500, 500, 1500, 3000, 9999];
 
     function fmtDate(iso) {
       if (!iso) return '';
@@ -176,7 +176,7 @@
                 '<span>Nv.' + level + ' — ' + xpCur.toLocaleString() + ' XP</span>' +
                 '<span>Nv.' + (level+1) + ' — ' + xpNext.toLocaleString() + ' XP</span>' +
               '</div>' +
-              (level < 4 ? '<p style="font-family:Manrope,sans-serif;font-size:10px;color:#8b93a3;text-align:center;margin:0;">' + xpLeft.toLocaleString() + ' XP para el siguiente nivel</p>' : '<p style="font-family:Manrope,sans-serif;font-size:10px;color:#d897e7;text-align:center;margin:0;">¡Nivel máximo alcanzado! 👑</p>') +
+              (level < 4 ? '<p style="font-family:Manrope,sans-serif;font-size:10px;color:#8b93a3;text-align:center;margin:0;">' + xpLeft.toLocaleString() + ' XP para el siguiente nivel</p>' : '<p style="font-family:Manrope,sans-serif;font-size:10px;color:#d897e7;text-align:center;margin:0;">¡Nivel máximo alcanzado!</p>') +
             '</div>' +
 
             // Stats row
