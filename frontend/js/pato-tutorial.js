@@ -68,8 +68,8 @@
       },
       {
         duck: 'pato3', pos: 'bl', anim: 'hop',
-        target: null,
-        text: '☝️ La barra de arriba tiene todas las secciones: <strong>Eventos, Escanear, Logros y Ranking</strong>. ¡Explorá!'
+        target: '.lyfter-bottom-nav',
+        text: '👇 La barra inferior tiene todas las secciones: <strong>Inicio, Explorar, Escanear, Eventos y Perfil</strong>. ¡Explorá la app!'
       },
       {
         duck: 'pato1', pos: 'br', anim: 'celebrate',
@@ -198,8 +198,8 @@
 
     /* Speech bubble */
     '#pato-bubble{position:relative;background:#1e2130;',
-    'border:1px solid rgba(216,151,231,.35);border-radius:18px;',
-    'padding:17px 20px 15px;max-width:340px;min-width:230px;margin-bottom:12px;',
+    'border:1px solid rgba(216,151,231,.35);border-radius:24px;',
+    'padding:26px 30px 22px;max-width:480px;min-width:290px;margin-bottom:20px;',
     'box-shadow:0 8px 32px rgba(0,0,0,.55),0 0 0 1px rgba(216,151,231,.1),',
     '           0 0 60px rgba(216,151,231,.08);',
     'pointer-events:all;',
@@ -222,32 +222,32 @@
     '#pato-wrap.pos-bl #pato-bubble::before{left:21px;transform:none;}',
 
     /* Close (X) button */
-    '#pato-x{position:absolute;top:8px;right:10px;background:none;border:none;color:#6f7686;',
-    'font-size:14px;line-height:1;padding:2px;cursor:pointer;pointer-events:all;',
+    '#pato-x{position:absolute;top:10px;right:14px;background:none;border:none;color:#6f7686;',
+    'font-size:19px;line-height:1;padding:2px;cursor:pointer;pointer-events:all;',
     'transition:color .15s;}',
     '#pato-x:hover{color:#e68a8d;}',
 
     /* Body text */
-    '#pato-txt{font-family:Manrope,sans-serif;font-size:14.5px;line-height:1.65;',
-    'color:#cdd2db;margin:0 20px 10px 0;}',
+    '#pato-txt{font-family:Manrope,sans-serif;font-size:20px;line-height:1.65;',
+    'color:#cdd2db;margin:0 28px 14px 0;}',
     '#pato-txt strong{color:#d897e7;font-weight:700;}',
     '#pato-txt br{line-height:2;}',
 
     /* Step dots */
-    '#pato-dots{display:flex;gap:5px;align-items:center;margin-bottom:10px;}',
-    '.pato-dot{width:6px;height:6px;border-radius:50%;background:#2f343f;',
+    '#pato-dots{display:flex;gap:7px;align-items:center;margin-bottom:14px;}',
+    '.pato-dot{width:9px;height:9px;border-radius:50%;background:#2f343f;',
     'transition:background .2s,transform .2s;}',
     '.pato-dot.on{background:#d897e7;transform:scale(1.4);}',
     '.pato-dot.was{background:#6f7686;}',
 
     /* Controls row */
     '#pato-ctrls{display:flex;justify-content:space-between;align-items:center;}',
-    '#pato-skip{background:none;border:none;font-family:Manrope,sans-serif;font-size:11px;',
+    '#pato-skip{background:none;border:none;font-family:Manrope,sans-serif;font-size:15px;',
     'color:#6f7686;cursor:pointer;pointer-events:all;padding:0;transition:color .15s;}',
     '#pato-skip:hover{color:#e68a8d;}',
-    '#pato-next{height:32px;padding:0 16px;',
+    '#pato-next{height:46px;padding:0 22px;',
     'background:linear-gradient(135deg,#d897e7,#e68a8d);border:none;border-radius:999px;',
-    'font-family:Poppins,sans-serif;font-size:12px;font-weight:700;color:#3a1f20;',
+    'font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#3a1f20;',
     'cursor:pointer;pointer-events:all;',
     'transition:opacity .15s,transform .1s,box-shadow .15s;',
     'box-shadow:0 2px 12px rgba(230,138,141,.35);}',
@@ -255,7 +255,7 @@
     'box-shadow:0 4px 18px rgba(230,138,141,.5);}',
 
     /* Duck image */
-    '#pato-img{width:172px;height:auto;display:block;',
+    '#pato-img{width:344px;height:auto;display:block;',
     'filter:drop-shadow(0 8px 28px rgba(0,0,0,.65)) drop-shadow(0 0 2px rgba(216,151,231,.2));',
     'pointer-events:all;cursor:pointer;',
     'transition:opacity .28s ease,filter .28s ease;',
@@ -317,8 +317,8 @@
     '#pato-wrap.pos-br,#pato-wrap.pos-bl,#pato-wrap.pos-tr{',
     'left:50%;transform:translateX(-50%);right:auto;top:auto;bottom:20px;align-items:center;}',
     '#pato-wrap.pos-bc{left:50%;transform:translateX(-50%);}',
-    '#pato-bubble{max-width:calc(100vw - 44px);min-width:220px;}',
-    '#pato-img{width:128px;}',
+    '#pato-bubble{max-width:calc(100vw - 32px);min-width:240px;}',
+    '#pato-img{width:256px;}',
     /* Re-center tails on mobile */
     '#pato-wrap.pos-br #pato-bubble::after,',
     '#pato-wrap.pos-bl #pato-bubble::after,',
