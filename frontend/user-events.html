@@ -194,9 +194,11 @@
         var isFinished = ev.status === 'finished';
         var alreadyReviewed = localStorage.getItem('reviewed_' + ev.id);
         var reviewBtn = isFinished && !alreadyReviewed
-          ? '<button onclick="openReviewModal(\'' + ev.id + '\',\'' + U.esc(ev.name||'') + '\')" style="width:100%;margin-top:12px;padding:10px;border-radius:10px;border:1px solid rgba(216,151,231,0.3);background:rgba(216,151,231,0.15);color:#d897e7;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⭐ Calificar evento</button>'
+          ? '<button onclick="openReviewModal(\'' + ev.id + '\',\'' + U.esc(ev.name||'') + '\')" style="width:100%;margin-top:12px;padding:10px;border-radius:10px;border:1px solid rgba(216,151,231,0.3);background:rgba(216,151,231,0.15);color:#d897e7;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⭐ Calificar evento</button>' +
+            '<a href="reviews.html?event=' + ev.id + '&name=' + encodeURIComponent(ev.name||ev.nombre||'') + '" style="display:block;width:100%;margin-top:8px;padding:10px;border-radius:10px;border:1px solid rgba(112,207,255,0.3);background:rgba(112,207,255,0.08);color:#70cfff;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;">Ver reseñas</a>'
           : isFinished && alreadyReviewed
-            ? '<p style="text-align:center;font-size:12px;color:#4ade80;margin-top:8px;">✓ Ya calificaste este evento</p>'
+            ? '<p style="text-align:center;font-size:12px;color:#4ade80;margin-top:8px;">✓ Ya calificaste este evento</p>' +
+              '<a href="reviews.html?event=' + ev.id + '&name=' + encodeURIComponent(ev.name||ev.nombre||'') + '" style="display:block;width:100%;margin-top:8px;padding:10px;border-radius:10px;border:1px solid rgba(112,207,255,0.3);background:rgba(112,207,255,0.08);color:#70cfff;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;">Ver reseñas</a>'
             : '';
         return '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:12px;overflow:hidden;margin-bottom:12px;">' +
           photoTop +
