@@ -127,12 +127,12 @@
         }
 
         renderPage(wsData, members, [], allWorkspaces, isGod);
-        if (isGod) { loadUsersForGrant(); }
+        if (isGod) { loadUsersForGrant(); loadReportsBadge(); }
       } catch(err) {
         // Si falla la carga pero es god_admin, igual mostrar el panel de herramientas
         if (user.role === 'god_admin') {
           renderPage({ id: null, name: '', slug: '', plan: '' }, [], [], [], true);
-          loadUsersForGrant();
+          loadUsersForGrant(); loadReportsBadge();
         } else {
           app.innerHTML = styles + U.errorHtml('Error cargando el workspace: ' + err.message);
         }
@@ -301,7 +301,7 @@
                 '<div style="display:flex;flex-direction:column;gap:10px;">' +
                   '<select id="grant-ws-select" class="ws-select" style="width:100%;">' +
                     '<option value="">— Seleccionar workspace —</option>' +
-                    allWs.map(function(w) { return \'<option value="\' + w.id + \'">\' + U.esc(w.name) + \'</option>\'; }).join(\'\') +
+                    allWs.map(function(w) { return '<option value="' + w.id + '">' + U.esc(w.name) + '</option>'; }).join('') +
                   '</select>' +
                   '<select id="god-user-select" class="ws-select" style="width:100%;" onchange="this.value && (document.getElementById(\'god-email\').value=this.value)">' +
                     '<option value="">— Seleccionar usuario —</option>' +
@@ -333,12 +333,13 @@
           '</div>' : '') +
 
           (isGod ? '<div class="ws-card" id="reports-section-card" style="margin-top:4px;border-color:rgba(251,191,36,0.25);">' +
-            '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">' +
+            '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px;">' +
               '<div class="ws-card-title" style="margin-bottom:0;color:#fbbf24;display:flex;align-items:center;gap:8px;">' +
                 '<img src="assets/icons/ui/icono-alerta.png" style="width:20px;height:20px;object-fit:contain;" /> Reportes de usuarios' +
               '</div>' +
               '<a href="admin-reports.html" style="height:36px;display:inline-flex;align-items:center;padding:0 16px;border-radius:8px;border:1px solid rgba(251,191,36,0.35);background:rgba(251,191,36,0.1);color:#fbbf24;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;text-decoration:none;cursor:pointer;">Gestionar reportes →</a>' +
             '</div>' +
+            '<div id="reports-pending-summary" style="font-size:13px;color:#8b93a3;">Cargando reportes pendientes…</div>' +
           '</div>' : '') +
 
         '</div>';
@@ -494,6 +495,25 @@
         U.toast(eligible.length + ' usuarios cargados', 'success');
       } catch(e) { U.toast('No se pudo cargar la lista', 'error'); }
       sel.disabled = false;
+    };
+
+    window.loadReportsBadge = async function() {
+      var el = document.getElementById('reports-pending-summary');
+      if (!el) return;
+      try {
+        var res = await fetch(API.base + '/reports/?status=pending', { headers: API.authHeaders() });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error');
+        var count = Array.isArray(data) ? data.length : 0;
+        el.innerHTML = count > 0
+          ? '<span style="display:inline-flex;align-items:center;gap:6px;">' +
+              '<span style="display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;border-radius:999px;background:rgba(251,191,36,0.2);border:1px solid rgba(251,191,36,0.4);color:#fbbf24;font-family:Poppins,sans-serif;font-size:12px;font-weight:700;padding:0 6px;">' + count + '</span>' +
+              'reporte' + (count === 1 ? '' : 's') + ' pendiente' + (count === 1 ? '' : 's') + ' de revisión' +
+            '</span>'
+          : 'No hay reportes pendientes.';
+      } catch(e) {
+        el.innerHTML = '<span style="color:#e68a8d;font-size:12px;">No se pudo cargar el conteo.</span>';
+      }
     };
 
     window.grantWorkspaceRole = async function() {
