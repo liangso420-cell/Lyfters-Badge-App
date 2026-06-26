@@ -407,8 +407,10 @@
         window._celebrateData = {
           complete: r.complete,
           eventId: activeId || '',
-          eventName: r.event_name || ''
+          eventName: r.event_name || '',
+          workspaceName: r.workspace_name || ''
         };
+        var workspaceName = r.workspace_name || '';
         var badge  = r.badge || {};
         var isRare = badge.is_rare || badge.rarity === 'rare';
         var badgeName = r.badge ? r.badge.name : '';
@@ -507,70 +509,217 @@
           btn.textContent = U.t('generating');
 
           try {
-            var canvas = document.createElement('canvas');
-            canvas.width = 1080;
-            canvas.height = 1920;
-            var ctx = canvas.getContext('2d');
+            // Dibuja la share card del badge (1080×1920, formato story). El ícono puede
+            // requerir cargar una imagen async, por eso devuelve una Promise<canvas>.
+            async function buildShareCanvas() {
+              var canvas = document.createElement('canvas');
+              canvas.width = 1080;
+              canvas.height = 1920;
+              var ctx = canvas.getContext('2d');
 
-            var grad = ctx.createLinearGradient(0, 0, 1080, 1920);
-            grad.addColorStop(0, '#6C63FF');
-            grad.addColorStop(1, '#EEEDFF');
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, 1080, 1920);
-
-            ctx.fillStyle = 'white';
-            roundRect(ctx, 80, 600, 920, 720, 60);
-            ctx.fill();
-
-            ctx.font = '200px serif';
-            ctx.textAlign = 'center';
-            ctx.fillText(badgeEmoji, 540, 820);
-
-            ctx.fillStyle = '#6C63FF';
-            ctx.font = 'bold 64px sans-serif';
-            ctx.fillText(U.t('got_badge'), 540, 950);
-
-            ctx.fillStyle = '#1f2937';
-            ctx.font = 'bold 80px sans-serif';
-            ctx.fillText(U.esc(badgeName), 540, 1060);
-
-            ctx.strokeStyle = '#6C63FF';
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            ctx.moveTo(200, 1110);
-            ctx.lineTo(880, 1110);
-            ctx.stroke();
-
-            ctx.fillStyle = '#6b7280';
-            ctx.font = '48px sans-serif';
-            ctx.fillText('Lyfter Badge App', 540, 1200);
-
-            ctx.fillStyle = 'rgba(255,255,255,0.3)';
-            ctx.font = 'bold 36px sans-serif';
-            ctx.fillText('liangso420-cell.github.io/Lyfters-Badge-App', 540, 1820);
-
-            canvas.toBlob(async function(blob) {
-              var file = new File([blob], 'badge-' + badgeName + '.png', { type: 'image/png' });
-
-              if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({
-                  title: '¡Obtuve el badge ' + badgeName + '!',
-                  text: 'Obtuve el badge "' + badgeName + '" en Lyfter Badge App',
-                  files: [file]
-                });
-                U.toast('¡Compartido!', 'success');
-              } else {
-                var url = URL.createObjectURL(blob);
-                var a = document.createElement('a');
-                a.href = url;
-                a.download = 'badge-' + badgeName + '.png';
-                a.click();
-                URL.revokeObjectURL(url);
-                U.toast('Imagen guardada — súbela a tu story de Instagram', 'success');
+              // ── FONDO: oscuro + ~60 estrellas ──
+              ctx.fillStyle = '#09090f';
+              ctx.fillRect(0, 0, 1080, 1920);
+              var starCols = ['#F9A8D4', '#C084FC', '#67E8F9'];
+              for (var st = 0; st < 60; st++) {
+                ctx.globalAlpha = 0.1 + Math.random() * 0.4;
+                ctx.fillStyle = (Math.random() < 0.2) ? starCols[Math.floor(Math.random() * 3)] : '#ffffff';
+                ctx.beginPath();
+                ctx.arc(Math.random() * 1080, Math.random() * 1920, 1 + Math.random() * 2, 0, Math.PI * 2);
+                ctx.fill();
               }
+              ctx.globalAlpha = 1;
+
+              // ── CARD CENTRAL (900×1050, top y=435) ──
+              var cardX = 90, cardY = 435, cardW = 900, cardH = 1050;
+              ctx.fillStyle = 'rgba(255,255,255,0.06)';
+              roundRect(ctx, cardX, cardY, cardW, cardH, 80); ctx.fill();
+              ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+              ctx.lineWidth = 3;
+              roundRect(ctx, cardX, cardY, cardW, cardH, 80); ctx.stroke();
+
+              // ── 1. RIBBON (3 barras, centros separados 32px, y=490) ──
+              var ribW = 18, ribH = 70, ribY = 490;
+              var ribCenters = [540 - 32, 540, 540 + 32];
+              var ribCols = ['#F9A8D4', '#C084FC', '#67E8F9'];
+              for (var rb = 0; rb < 3; rb++) {
+                ctx.fillStyle = ribCols[rb];
+                roundRect(ctx, ribCenters[rb] - ribW / 2, ribY, ribW, ribH, 6); ctx.fill();
+              }
+
+              // ── 2. ÍCONO: círculo x=540, cy=720, r=115 (borde degradado simulado) ──
+              var iconCX = 540, iconCY = 720;
+              ctx.fillStyle = '#C084FC';
+              ctx.beginPath(); ctx.arc(iconCX, iconCY, 115, 0, Math.PI * 2); ctx.fill();
+              ctx.fillStyle = '#09090f';
+              ctx.beginPath(); ctx.arc(iconCX, iconCY, 109, 0, Math.PI * 2); ctx.fill();
+
+              // ── 3. TAG "★ BADGE DESBLOQUEADO" (centro x=540, y=875) ──
+              var tagText = '★ BADGE DESBLOQUEADO';
+              ctx.font = '600 36px Manrope, sans-serif';
+              var tagH = 72, tagW = ctx.measureText(tagText).width + 80;
+              var tagY = 875 - tagH / 2;
+              ctx.fillStyle = 'rgba(249,168,212,0.15)';
+              roundRect(ctx, 540 - tagW / 2, tagY, tagW, tagH, 36); ctx.fill();
+              ctx.strokeStyle = 'rgba(249,168,212,0.3)'; ctx.lineWidth = 2;
+              roundRect(ctx, 540 - tagW / 2, tagY, tagW, tagH, 36); ctx.stroke();
+              ctx.fillStyle = '#F9A8D4';
+              ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+              ctx.fillText(tagText, 540, 875);
+              ctx.textBaseline = 'alphabetic';
+
+              // ── 4. NOMBRE DEL BADGE (degradado rosa→lila→celeste, y=990) ──
+              var nameGrad = ctx.createLinearGradient(140, 0, 940, 0);
+              nameGrad.addColorStop(0, '#F9A8D4');
+              nameGrad.addColorStop(0.5, '#C084FC');
+              nameGrad.addColorStop(1, '#67E8F9');
+              ctx.fillStyle = nameGrad;
+              ctx.font = 'bold 88px Poppins, sans-serif';
+              ctx.textAlign = 'center';
+              ctx.fillText(badgeName || '', 540, 990);
+
+              // ── 5. DESCRIPCIÓN (1–2 líneas, partir en el espacio más cercano al medio) ──
+              ctx.font = '42px Manrope, sans-serif';
+              ctx.fillStyle = 'rgba(255,255,255,0.45)';
+              ctx.textAlign = 'center';
+              var descText = (r.badge && r.badge.desc) ? r.badge.desc : '';
+              var descLineCount = 0;
+              if (descText) {
+                if (ctx.measureText(descText).width <= 700) {
+                  ctx.fillText(descText, 540, 1075);
+                  descLineCount = 1;
+                } else {
+                  var mid = Math.floor(descText.length / 2);
+                  var left = descText.lastIndexOf(' ', mid);
+                  var right = descText.indexOf(' ', mid);
+                  var splitIdx;
+                  if (left === -1) splitIdx = right;
+                  else if (right === -1) splitIdx = left;
+                  else splitIdx = (mid - left <= right - mid) ? left : right;
+                  if (splitIdx === -1) {
+                    ctx.fillText(descText, 540, 1075);
+                    descLineCount = 1;
+                  } else {
+                    ctx.fillText(descText.slice(0, splitIdx).trim(), 540, 1075);
+                    ctx.fillText(descText.slice(splitIdx + 1).trim(), 540, 1130);
+                    descLineCount = 2;
+                  }
+                }
+              }
+
+              // ── 6. WORKSPACE PILL (solo si hay nombre; y según nº de líneas de desc) ──
+              if (workspaceName) {
+                var wsY = (descLineCount === 2) ? 1220 : 1180;
+                var enText = 'En ';
+                ctx.font = '38px Manrope, sans-serif';
+                var enW = ctx.measureText(enText).width;
+                ctx.font = 'bold 38px Manrope, sans-serif';
+                var wsNameW = ctx.measureText(workspaceName).width;
+                var wsContentW = enW + wsNameW;
+                var wsH = 72, wsPillW = wsContentW + 80;
+                var wsTop = wsY - wsH / 2;
+                ctx.fillStyle = 'rgba(192,132,252,0.12)';
+                roundRect(ctx, 540 - wsPillW / 2, wsTop, wsPillW, wsH, 36); ctx.fill();
+                ctx.strokeStyle = 'rgba(192,132,252,0.25)'; ctx.lineWidth = 2;
+                roundRect(ctx, 540 - wsPillW / 2, wsTop, wsPillW, wsH, 36); ctx.stroke();
+                var wsContentX = 540 - wsContentW / 2;
+                ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+                ctx.font = '38px Manrope, sans-serif';
+                ctx.fillStyle = 'rgba(255,255,255,0.45)';
+                ctx.fillText(enText, wsContentX, wsY);
+                ctx.font = 'bold 38px Manrope, sans-serif';
+                ctx.fillStyle = '#C084FC';
+                ctx.fillText(workspaceName, wsContentX + enW, wsY);
+                ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+              }
+
+              // ── 7. DIVISOR (700px centrado, y=1295) ──
+              ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1;
+              ctx.beginPath(); ctx.moveTo(190, 1295); ctx.lineTo(890, 1295); ctx.stroke();
+
+              // ── 8. BRANDING (cuadrado + texto, centrado, y=1360) ──
+              ctx.font = '38px Manrope, sans-serif';
+              var brandText = 'Lyfter Badge App';
+              var brandTextW = ctx.measureText(brandText).width;
+              var sq = 44, sqGap = 16;
+              var groupX = 540 - (sq + sqGap + brandTextW) / 2;
+              var brandY = 1360;
+              var sqGrad = ctx.createLinearGradient(groupX, brandY - sq / 2, groupX + sq, brandY + sq / 2);
+              sqGrad.addColorStop(0, '#F9A8D4');
+              sqGrad.addColorStop(1, '#C084FC');
+              ctx.fillStyle = sqGrad;
+              roundRect(ctx, groupX, brandY - sq / 2, sq, sq, 8); ctx.fill();
+              ctx.fillStyle = '#ffffff';
+              ctx.font = '22px serif';
+              ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+              ctx.fillText('✦', groupX + sq / 2, brandY);
+              ctx.textAlign = 'left';
+              ctx.fillStyle = 'rgba(255,255,255,0.35)';
+              ctx.font = '38px Manrope, sans-serif';
+              ctx.fillText(brandText, groupX + sq + sqGap, brandY);
+              ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+
+              // ── ÍCONO (async): imagen recortada en círculo r=100, o emoji fallback ──
+              if (badge.icon_url && badge.icon_url.indexOf('bi:') !== 0) {
+                await new Promise(function(resolve) {
+                  var img = new Image();
+                  img.crossOrigin = 'anonymous';
+                  img.onload = function() {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(iconCX, iconCY, 100, 0, Math.PI * 2);
+                    ctx.clip();
+                    ctx.drawImage(img, iconCX - 100, iconCY - 100, 200, 200);
+                    ctx.restore();
+                    resolve();
+                  };
+                  img.onerror = function() {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = '130px serif';
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+                    ctx.fillText(badge.emoji || '🏅', 540, 760);
+                    resolve();
+                  };
+                  img.src = badge.icon_url;
+                });
+              } else {
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '130px serif';
+                ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+                ctx.fillText(badge.emoji || '🏅', 540, 760);
+              }
+
+              return canvas;
+            }
+
+            buildShareCanvas().then(function(canvas) {
+              canvas.toBlob(async function(blob) {
+                var file = new File([blob], 'badge-' + badgeName + '.png', { type: 'image/png' });
+
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                  await navigator.share({
+                    title: '¡Obtuve el badge ' + badgeName + '!',
+                    text: 'Obtuve el badge "' + badgeName + '" en Lyfter Badge App',
+                    files: [file]
+                  });
+                  U.toast('¡Compartido!', 'success');
+                } else {
+                  var url = URL.createObjectURL(blob);
+                  var a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'badge-' + badgeName + '.png';
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  U.toast('Imagen guardada — súbela a tu story de Instagram', 'success');
+                }
+                btn.disabled = false;
+                btn.innerHTML = U.t('share_instagram');
+              }, 'image/png');
+            }).catch(function() {
+              U.toast('No se pudo compartir', 'error');
               btn.disabled = false;
-              btn.innerHTML = U.t('share_instagram');
-            }, 'image/png');
+              btn.innerHTML = '<img src="assets/icons/ui/Instagram-Logo.png" style="width:28px;height:28px;flex-shrink:0;object-fit:contain;" />Compartir en Instagram';
+            });
 
           } catch(err) {
             U.toast('No se pudo compartir', 'error');

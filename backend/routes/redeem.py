@@ -7,7 +7,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from pymongo.errors import DuplicateKeyError
 
-from db import users, events, badges, scans, event_joins
+from db import users, events, badges, scans, event_joins, workspaces
 from utils import valid_oid, haversine
 from security.limiter import redeem_limit
 from services.xp import award_xp, compute_level
@@ -91,8 +91,15 @@ def redeem_badge(event_id, token):
     new_achievements = check_and_unlock(user_oid, oid_event)
 
     badge_is_rare = bool(badge.get("is_rare", False))
+
+    # Nombre del workspace para la share card (puede venir denormalizado en el evento;
+    # si no, lo resolvemos desde la colección workspaces).
+    ws_doc = workspaces().find_one({"_id": event.get("workspace_id")}, {"name": 1}) if event.get("workspace_id") else None
+    workspace_name = event.get("workspace_name", "") or (ws_doc or {}).get("name", "")
+
     return jsonify({
         "status":     "ok",
+        "workspace_name": workspace_name,
         "badge": {
             "icon":        badge.get("icon", "🏅"),
             "icon_url":    badge.get("icon_url", ""),
