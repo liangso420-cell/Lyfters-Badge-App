@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Workspace — Lyfter Badge App</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body style="margin:0;font-family:Manrope,system-ui,sans-serif;">
@@ -26,6 +27,31 @@
 
     var app = document.getElementById('app');
     app.innerHTML = U.loadingHtml();
+    var _membersPage = 0, MEMBERS_PAGE = 15, _allMembers = [];
+
+    function pagerHtml(total, page, size, gotoFn) {
+      if (total <= size) return '';
+      var totalPages = Math.ceil(total / size);
+      var from = page * size + 1;
+      var to = Math.min((page + 1) * size, total);
+      var btns = '';
+      for (var p = 0; p < totalPages; p++) {
+        if (totalPages > 7 && p !== 0 && p !== totalPages - 1 && Math.abs(p - page) > 1) {
+          if (p === page - 2 || p === page + 2) btns += '<span style="color:#4a5060;align-self:center;padding:0 2px;">…</span>';
+          continue;
+        }
+        var active = p === page;
+        btns += '<button onclick="' + gotoFn + '(' + p + ')" style="min-width:32px;height:32px;padding:0 6px;border-radius:8px;border:1px solid ' + (active ? '#d897e7' : '#2f343f') + ';background:' + (active ? 'rgba(216,151,231,0.15)' : 'transparent') + ';color:' + (active ? '#d897e7' : '#8b93a3') + ';font-family:Poppins,sans-serif;font-size:13px;font-weight:' + (active ? '700' : '500') + ';cursor:pointer;">' + (p + 1) + '</button>';
+      }
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0 4px;border-top:1px solid #2f343f;margin-top:8px;flex-wrap:wrap;gap:8px;">' +
+        '<span style="font-size:12px;color:#8b93a3;font-family:Manrope,sans-serif;">' + from + '–' + to + ' de ' + total + '</span>' +
+        '<div style="display:flex;gap:4px;flex-wrap:wrap;">' +
+          (page > 0 ? '<button onclick="' + gotoFn + '(' + (page-1) + ')" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid #2f343f;background:transparent;color:#8b93a3;font-size:13px;cursor:pointer;">←</button>' : '') +
+          btns +
+          (page < totalPages - 1 ? '<button onclick="' + gotoFn + '(' + (page+1) + ')" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid #2f343f;background:transparent;color:#8b93a3;font-size:13px;cursor:pointer;">→</button>' : '') +
+        '</div>' +
+      '</div>';
+    }
 
     var styles = '<style>' +
       '.ws-header{background:rgba(26,29,36,0.88);backdrop-filter:blur(20px) saturate(1.5);-webkit-backdrop-filter:blur(20px) saturate(1.5);border-bottom:1px solid rgba(216,151,231,0.10);padding:16px 28px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:10;}' +
@@ -96,19 +122,18 @@
         if (wsData && wsData.id) {
           var memRes = await fetch(API.base + '/workspaces/' + wsData.id + '/members', { headers: API.authHeaders() });
           members = memRes.ok ? await memRes.json() : [];
-          var invRes = await fetch(API.base + '/workspaces/' + wsData.id + '/invitations', { headers: API.authHeaders() });
-          invList = invRes.ok ? await invRes.json() : [];
         } else {
-          members = []; invList = [];
+          members = [];
         }
 
-        renderPage(wsData, members, invList, allWorkspaces, isGod);
-        if (isGod) loadUsersForGrant();
+        renderPage(wsData, members, [], allWorkspaces, isGod);
+        if (isGod) { loadUsersForGrant(); appendReportsSection(); }
       } catch(err) {
         // Si falla la carga pero es god_admin, igual mostrar el panel de herramientas
         if (user.role === 'god_admin') {
           renderPage({ id: null, name: '', slug: '', plan: '' }, [], [], [], true);
           loadUsersForGrant();
+          appendReportsSection();
         } else {
           app.innerHTML = styles + U.errorHtml('Error cargando el workspace: ' + err.message);
         }
@@ -121,16 +146,15 @@
       var callerRole = isGod ? 'god_admin' : (ws.my_role || user.role);
       var callerRank = ROLE_RANK[callerRole] || 0;
 
-      var memberRows = members.map(function(m) {
+      _allMembers = members;
+
+      function buildMemberRow(m) {
         var initials   = (m.name || '?').split(' ').map(function(w){ return w[0] || ''; }).join('').slice(0,2).toUpperCase();
         var targetRank = ROLE_RANK[m.role] || 0;
-        var canEdit    = callerRank > targetRank;  // solo si tenés mayor rango
-
-        // Roles que puede asignar: solo menores al propio, nunca god_admin
+        var canEdit    = callerRank > targetRank;
         var assignableRoles = ['participant','admin','superadmin'].filter(function(r) {
           return ROLE_RANK[r] < callerRank;
         });
-
         var roleCell = m.role === 'god_admin'
           ? '<span class="ws-badge god_admin">God Admin</span>'
           : canEdit
@@ -141,28 +165,16 @@
                 }).join('') +
               '</select>'
             : '<span class="ws-badge ' + (m.role||'') + '" title="Sin permiso para editar este rol">' + (m.role||'') + '</span>';
-
         var removeBtn = canEdit
           ? '<button onclick="removeMember(\'' + ws.id + '\',\'' + m.user_id + '\')" class="ws-btn danger" style="height:34px;font-size:12px;padding:0 12px;">Remover</button>'
           : '<span style="font-size:11px;color:#4a5060;">—</span>';
-
         return '<tr id="row-' + m.user_id + '">' +
           '<td><span class="ws-avatar">' + initials + '</span>' + U.esc(m.name || '—') + '</td>' +
           '<td style="color:#8b93a3;">' + U.esc(m.email || '—') + '</td>' +
           '<td>' + roleCell + '</td>' +
           '<td>' + removeBtn + '</td>' +
         '</tr>';
-      }).join('');
-
-      var pendingInv = invList.filter(function(i){ return i.status === 'pending'; });
-      var invRows = pendingInv.map(function(i) {
-        return '<tr>' +
-          '<td>' + U.esc(i.email || '—') + '</td>' +
-          '<td><code style="background:#20242d;padding:2px 8px;border-radius:6px;font-family:JetBrains Mono,monospace;color:#d897e7;">' + (i.code||'') + '</code></td>' +
-          '<td><span class="ws-badge ' + (i.role||'') + '">' + (i.role||'') + '</span></td>' +
-          '<td style="color:#8b93a3;font-size:12px;">' + (i.status||'') + '</td>' +
-        '</tr>';
-      }).join('');
+      }
 
       var allWsHtml = isGod ? '<div class="ws-card">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
@@ -199,7 +211,6 @@
 
           '<div class="ws-stat-grid">' +
             '<div class="ws-stat"><div class="ws-stat-num">' + members.length + '</div><div class="ws-stat-label">Miembros</div></div>' +
-            '<div class="ws-stat"><div class="ws-stat-num">' + pendingInv.length + '</div><div class="ws-stat-label">Invitaciones pendientes</div></div>' +
             (isGod ? '<div class="ws-stat"><div class="ws-stat-num">' + allWs.length + '</div><div class="ws-stat-label">Workspaces totales</div></div>' : '') +
           '</div>' +
 
@@ -238,9 +249,8 @@
 
           (ws.id && callerRank >= 3 ? '<div class="ws-card">' +
             '<div class="ws-card-title">Miembros del workspace</div>' +
-            (memberRows
-              ? '<div style="overflow-x:auto;"><table class="ws-table"><thead><tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Acciones</th></tr></thead><tbody>' + memberRows + '</tbody></table></div>'
-              : '<p style="color:#8b93a3;text-align:center;padding:24px;">No hay miembros</p>') +
+            '<div style="overflow-x:auto;"><table class="ws-table"><thead><tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Acciones</th></tr></thead><tbody id="members-tbody"></tbody></table></div>' +
+            '<div id="members-pager"></div>' +
           '</div>' : '') +
 
           (ws.id && callerRank >= 3 ? '<div class="ws-card">' +
@@ -253,8 +263,8 @@
               '<div style="display:flex;gap:12px;flex-wrap:wrap;">' +
                 '<input id="inv-email" type="email" placeholder="email@empresa.com" class="ws-input" style="flex:1;min-width:200px;" />' +
                 '<select id="inv-role" class="ws-select" style="width:180px;">' +
-                  '<option value="participant">Participante</option>' +
-                  (callerRank >= 3 ? '<option value="admin">Admin</option>' : '') +
+                  '<option value="admin">Admin</option>' +
+                  (callerRank >= 4 ? '<option value="superadmin">Super Admin</option>' : '') +
                 '</select>' +
                 '<button class="ws-btn cta" onclick="sendEmailInvite(\'' + ws.id + '\')">Enviar</button>' +
               '</div>' +
@@ -262,14 +272,13 @@
             '<div id="panel-code" style="display:none;">' +
               '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">' +
                 '<select id="code-role" class="ws-select" style="width:200px;">' +
-                  '<option value="participant">Participante</option>' +
-                  (callerRank >= 3 ? '<option value="admin">Admin</option>' : '') +
+                  '<option value="admin">Admin</option>' +
+                  (callerRank >= 4 ? '<option value="superadmin">Super Admin</option>' : '') +
                 '</select>' +
                 '<button class="ws-btn cta" onclick="generateCode(\'' + ws.id + '\')">Generar código</button>' +
               '</div>' +
               '<div id="code-result"></div>' +
             '</div>' +
-            (invRows ? '<div style="margin-top:20px;"><div style="font-size:13px;font-weight:700;color:#cdd2db;margin-bottom:10px;">Invitaciones pendientes</div><div style="overflow-x:auto;"><table class="ws-table"><thead><tr><th>Email</th><th>Código</th><th>Rol</th><th>Estado</th></tr></thead><tbody>' + invRows + '</tbody></table></div></div>' : '') +
           '</div>' : '') +
 
           (isGod ? '<div class="ws-card" style="border-color:rgba(255,200,80,0.25);background:linear-gradient(135deg,rgba(255,200,80,0.05),rgba(216,151,231,0.03));">' +
@@ -300,7 +309,6 @@
                   '</select>' +
                   '<input id="god-email" type="email" placeholder="o escribí el email directamente" class="ws-input" style="width:100%;" />' +
                   '<select id="grant-role-select" class="ws-select" style="width:100%;">' +
-                    '<option value="participant">Participante</option>' +
                     '<option value="admin">Admin</option>' +
                     '<option value="superadmin">Super Admin</option>' +
                   '</select>' +
@@ -326,6 +334,26 @@
           '</div>' : '') +
 
         '</div>';
+
+      if (ws.id && callerRank >= 3) {
+        _membersPage = 0;
+        var renderMembersTable = function(page) {
+          var tbody = document.getElementById('members-tbody');
+          var pagerEl = document.getElementById('members-pager');
+          if (!tbody) return;
+          var list = _allMembers;
+          if (!list.length) {
+            tbody.innerHTML = '<tr><td colspan="4" style="color:#8b93a3;text-align:center;padding:24px;">No hay miembros</td></tr>';
+            if (pagerEl) pagerEl.innerHTML = '';
+            return;
+          }
+          var slice = list.slice(page * MEMBERS_PAGE, (page + 1) * MEMBERS_PAGE);
+          tbody.innerHTML = slice.map(buildMemberRow).join('');
+          if (pagerEl) pagerEl.innerHTML = pagerHtml(list.length, page, MEMBERS_PAGE, '_goMembersPage');
+        };
+        window._goMembersPage = function(p) { _membersPage = p; renderMembersTable(p); window.scrollTo(0, 0); };
+        renderMembersTable(0);
+      }
     }
 
     window.switchTab = function(tab) {
@@ -544,6 +572,7 @@
 
     // ── Platform user management (god_admin) ──────────────────
     var _platformUsersCache = [];
+    var _puList = [], _puPage = 0, PU_PAGE = 15;
 
     window.loadPlatformUsers = async function() {
       var container = document.getElementById('platform-users-list');
@@ -566,23 +595,30 @@
       var filtered = q.length < 2 ? _platformUsersCache : _platformUsersCache.filter(function(u) {
         return (u.name + ' ' + u.email).toLowerCase().indexOf(lq) !== -1;
       });
+      _puPage = 0;
       renderPlatformUsers(filtered);
     };
 
     function renderPlatformUsers(list) {
+      _puList = list;
+      _puPage = 0;
+      renderPuPage(list, 0);
+    }
+
+    function renderPuPage(list, page) {
       var container = document.getElementById('platform-users-list');
       if (!container) return;
       if (!list.length) {
         container.innerHTML = '<p style="font-size:13px;color:#6f7686;text-align:center;padding:20px;">No se encontraron usuarios.</p>';
         return;
       }
-      var rows = list.map(function(u) {
+      var slice = list.slice(page * PU_PAGE, (page + 1) * PU_PAGE);
+      var rows = slice.map(function(u) {
         var initials = (u.name || '?').split(' ').map(function(w){ return w[0]||''; }).join('').slice(0,2).toUpperCase();
         var statusCell = u.banned
           ? '<span class="ws-badge" style="background:rgba(230,138,141,0.15);color:#e68a8d;border:1px solid rgba(230,138,141,0.2);">Baneado' + (u.ban_permanent ? ' ∞' : '') + '</span>' +
             (u.ban_ip ? '<br/><span style="font-size:10px;color:#6f7686;margin-top:3px;display:block;">IP: ' + U.esc(u.ban_ip) + '</span>' : '')
           : '<span class="ws-badge" style="background:rgba(171,209,148,0.15);color:#abd194;">Activo</span>';
-
         var safeName = u.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
         var actions = '';
         if (!u.banned) {
@@ -594,7 +630,6 @@
         }
         actions += '<button onclick="deletePlatformUser(\'' + u.id + '\',\'' + safeName + '\')" ' +
           'class="ws-btn danger" style="height:30px;font-size:12px;padding:0 12px;">Eliminar</button>';
-
         return '<tr>' +
           '<td><span class="ws-avatar">' + initials + '</span>' + U.esc(u.name || '—') + '</td>' +
           '<td style="color:#8b93a3;">' + U.esc(u.email || '—') + '</td>' +
@@ -603,15 +638,17 @@
           '<td style="white-space:nowrap;">' + actions + '</td>' +
         '</tr>';
       }).join('');
-
       container.innerHTML =
         '<div style="overflow-x:auto;">' +
           '<table class="ws-table"><thead><tr>' +
             '<th>Nombre</th><th>Email</th><th>Rol</th><th>Estado</th><th>Acciones</th>' +
           '</tr></thead><tbody>' + rows + '</tbody></table>' +
         '</div>' +
+        pagerHtml(list.length, page, PU_PAGE, '_goPuPage') +
         '<p style="font-size:11px;color:#4a5060;margin-top:10px;">' + list.length + ' usuario(s)</p>';
     }
+
+    window._goPuPage = function(p) { _puPage = p; renderPuPage(_puList, p); window.scrollTo(0, 0); };
 
     var _banModalTarget = null;
 
@@ -740,6 +777,195 @@
         U.toast('Cuenta eliminada', 'success');
         loadPlatformUsers();
       } catch(e) { U.toast(e.message, 'error'); }
+    };
+
+    // ── Reports (god_admin) ───────────────────────────────────
+    var _reportsCache = [], _repPage = 0, REP_PAGE = 15;
+
+    function appendReportsSection() {
+      var wsMain = document.querySelector('.ws-main');
+      if (!wsMain || document.getElementById('reports-section-card')) return;
+      var card = document.createElement('div');
+      card.id = 'reports-section-card';
+      card.className = 'ws-card';
+      card.style.cssText = 'margin-top:4px;border-color:rgba(251,191,36,0.25);';
+      card.innerHTML =
+        '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px;">' +
+          '<div class="ws-card-title" style="margin-bottom:0;color:#fbbf24;display:flex;align-items:center;gap:8px;">' +
+            '<img src="assets/icons/ui/icono-alerta.png" style="width:20px;height:20px;object-fit:contain;" /> Reportes de usuarios' +
+          '</div>' +
+          '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' +
+            '<select id="reports-status-filter" style="height:36px;padding:0 10px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:13px;outline:none;">' +
+              '<option value="">Todos</option>' +
+              '<option value="pending" selected>Pendientes</option>' +
+              '<option value="confirmed">Confirmados</option>' +
+              '<option value="dismissed">Descartados</option>' +
+            '</select>' +
+            '<button onclick="loadReports()" style="height:36px;padding:0 16px;border-radius:8px;border:1px solid rgba(251,191,36,0.35);background:rgba(251,191,36,0.1);color:#fbbf24;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Cargar reportes</button>' +
+          '</div>' +
+        '</div>' +
+        '<div id="reports-list"><p style="font-size:13px;color:#6f7686;text-align:center;padding:24px 0;">Hacé clic en "Cargar reportes" para ver la lista.</p></div>';
+      wsMain.appendChild(card);
+      document.getElementById('reports-status-filter').addEventListener('change', function() { loadReports(); });
+    }
+
+    window.loadReports = async function() {
+      var container = document.getElementById('reports-list');
+      if (!container) return;
+      container.innerHTML = '<p style="font-size:13px;color:#8b93a3;text-align:center;padding:20px;">Cargando...</p>';
+      var statusSel = document.getElementById('reports-status-filter');
+      var status = statusSel ? statusSel.value : '';
+      try {
+        var url = API.base + '/reports/' + (status ? '?status=' + status : '');
+        var res = await fetch(url, { headers: API.authHeaders() });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error');
+        _reportsCache = data;
+        _repPage = 0;
+        renderReportsPage(data, 0);
+        if (!data.length) container.innerHTML = '<p style="font-size:13px;color:#6f7686;text-align:center;padding:24px 0;">No hay reportes con ese filtro.</p>';
+      } catch(e) {
+        container.innerHTML = '<p style="color:#e68a8d;font-size:13px;text-align:center;padding:20px;">Error: ' + U.esc(e.message) + '</p>';
+      }
+    };
+
+    function renderReportsPage(list, page) {
+      var container = document.getElementById('reports-list');
+      if (!container) return;
+      if (!list.length) return;
+      var slice = list.slice(page * REP_PAGE, (page + 1) * REP_PAGE);
+      var STATUS_LABELS = { pending: 'Pendiente', confirmed: 'Confirmado', dismissed: 'Descartado' };
+      var STATUS_COLORS = { pending: '#fbbf24', confirmed: '#e68a8d', dismissed: '#6f7686' };
+      var rows = slice.map(function(r) {
+        var statusColor = STATUS_COLORS[r.status] || '#8b93a3';
+        var statusLabel = STATUS_LABELS[r.status] || r.status;
+        var safeId = U.esc(r.id);
+        var safeName = U.esc(r.reported_name || '?');
+        var actions = '';
+        if (r.status === 'pending') {
+          actions =
+            '<button onclick="dismissReport(\'' + safeId + '\')" ' +
+              'style="height:28px;font-size:11px;padding:0 10px;border-radius:6px;border:1px solid #353a46;background:transparent;color:#8b93a3;cursor:pointer;margin-right:6px;">Descartar</button>' +
+            '<button onclick="openConfirmReportModal(\'' + safeId + '\',\'' + safeName + '\')" ' +
+              'style="height:28px;font-size:11px;padding:0 10px;border-radius:6px;border:1px solid rgba(230,138,141,0.35);background:rgba(230,138,141,0.12);color:#e68a8d;cursor:pointer;">Confirmar</button>';
+        }
+        return '<tr>' +
+          '<td style="font-size:12px;color:#8b93a3;">' + (r.reported_name ? U.esc(r.reported_name) : '—') + '<br/><span style="font-size:10px;opacity:.7;">' + U.esc(r.reported_email || '') + '</span></td>' +
+          '<td style="font-size:12px;">' + U.esc(r.reason || '') + '</td>' +
+          '<td style="font-size:12px;color:#8b93a3;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="' + U.esc(r.description || '') + '">' + U.esc((r.description || '').slice(0, 60)) + (r.description && r.description.length > 60 ? '…' : '') + '</td>' +
+          '<td><span style="font-size:11px;font-weight:700;color:' + statusColor + ';">' + statusLabel + '</span></td>' +
+          '<td style="font-size:11px;color:#6f7686;">' + (r.created_at ? r.created_at.slice(0, 10) : '') + '</td>' +
+          '<td style="white-space:nowrap;">' + actions + '</td>' +
+        '</tr>';
+      }).join('');
+      container.innerHTML =
+        '<div style="overflow-x:auto;">' +
+          '<table class="ws-table"><thead><tr>' +
+            '<th>Reportado</th><th>Razón</th><th>Descripción</th><th>Estado</th><th>Fecha</th><th>Acciones</th>' +
+          '</tr></thead><tbody>' + rows + '</tbody></table>' +
+        '</div>' +
+        pagerHtml(list.length, page, REP_PAGE, '_goRepPage');
+    }
+
+    window._goRepPage = function(p) { _repPage = p; renderReportsPage(_reportsCache, p); window.scrollTo(0, 0); };
+
+    window.dismissReport = async function(reportId) {
+      if (!confirm('¿Descartar este reporte?')) return;
+      try {
+        var res = await fetch(API.base + '/reports/' + reportId + '/dismiss', {
+          method: 'POST',
+          headers: Object.assign({}, API.authHeaders(), {'Content-Type': 'application/json'}),
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error');
+        U.toast('Reporte descartado', 'success');
+        loadReports();
+      } catch(e) { U.toast(e.message, 'error'); }
+    };
+
+    var _reportModalTarget = null;
+
+    window.openConfirmReportModal = function(reportId, reportedName) {
+      _reportModalTarget = reportId;
+      var old = document.getElementById('confirm-report-modal');
+      if (old) old.remove();
+      var overlay = document.createElement('div');
+      overlay.id = 'confirm-report-modal';
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;';
+      overlay.innerHTML =
+        '<div style="background:#1c1f27;border:1px solid rgba(230,138,141,0.3);border-radius:20px;padding:28px 30px;max-width:440px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,0.5);">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">' +
+            '<div style="font-family:Poppins,sans-serif;font-size:17px;font-weight:700;color:#e68a8d;">Confirmar reporte · ' + U.esc(reportedName) + '</div>' +
+            '<button onclick="document.getElementById(\'confirm-report-modal\').remove();_reportModalTarget=null;" style="background:none;border:none;color:#6f7686;font-size:22px;cursor:pointer;line-height:1;padding:0 4px;">×</button>' +
+          '</div>' +
+          '<div style="margin-bottom:16px;">' +
+            '<div style="font-size:11px;font-weight:700;color:#8b93a3;margin-bottom:8px;letter-spacing:.06em;text-transform:uppercase;">Acción</div>' +
+            '<div style="display:flex;flex-direction:column;gap:8px;">' +
+              '<label style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:1px solid #353a46;cursor:pointer;font-size:13px;color:#cdd2db;"><input type="radio" name="rep-action" value="warn" checked style="accent-color:#e68a8d;"/> Solo registrar (sin ban)</label>' +
+              '<label style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:1px solid #353a46;cursor:pointer;font-size:13px;color:#cdd2db;"><input type="radio" name="rep-action" value="ban" style="accent-color:#e68a8d;"/> Banear usuario</label>' +
+            '</div>' +
+          '</div>' +
+          '<div id="rep-ban-opts" style="display:none;margin-bottom:16px;">' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;">' +
+              ['1 día|1','3 días|3','7 días|7','30 días|30','Permanente|perm'].map(function(d) {
+                var parts = d.split('|');
+                return '<label style="display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:10px;border:1px solid #353a46;cursor:pointer;font-size:12px;color:#cdd2db;"><input type="radio" name="rep-ban-dur" value="' + parts[1] + '"' + (parts[1]==='7'?' checked':'') + ' style="accent-color:#e68a8d;flex-shrink:0;"/> ' + parts[0] + '</label>';
+              }).join('') +
+            '</div>' +
+          '</div>' +
+          '<div style="margin-bottom:18px;">' +
+            '<div style="font-size:11px;font-weight:700;color:#8b93a3;margin-bottom:8px;letter-spacing:.06em;text-transform:uppercase;">Razón del ban (opcional)</div>' +
+            '<input id="rep-ban-reason" type="text" placeholder="Motivo..." style="width:100%;height:40px;border-radius:10px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:14px;padding:0 14px;outline:none;box-sizing:border-box;" />' +
+          '</div>' +
+          '<div style="display:flex;gap:10px;">' +
+            '<button onclick="document.getElementById(\'confirm-report-modal\').remove();_reportModalTarget=null;" style="flex:1;height:44px;border-radius:10px;border:1px solid #353a46;background:transparent;color:#aab1bf;font-family:Poppins,sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Cancelar</button>' +
+            '<button id="rep-confirm-btn" onclick="submitConfirmReport()" style="flex:2;height:44px;border-radius:10px;border:1px solid rgba(230,138,141,0.4);background:rgba(230,138,141,0.15);color:#e68a8d;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Confirmar reporte</button>' +
+          '</div>' +
+        '</div>';
+      document.body.appendChild(overlay);
+      overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) { overlay.remove(); _reportModalTarget = null; }
+      });
+      Array.prototype.forEach.call(overlay.querySelectorAll('input[name="rep-action"]'), function(radio) {
+        radio.addEventListener('change', function() {
+          var opts = document.getElementById('rep-ban-opts');
+          if (opts) opts.style.display = radio.value === 'ban' ? '' : 'none';
+        });
+      });
+    };
+
+    window.submitConfirmReport = async function() {
+      if (!_reportModalTarget) return;
+      var actionEl = document.querySelector('input[name="rep-action"]:checked');
+      var action   = actionEl ? actionEl.value : 'warn';
+      var payload  = { action: action };
+      if (action === 'ban') {
+        var durEl   = document.querySelector('input[name="rep-ban-dur"]:checked');
+        var dur     = durEl ? durEl.value : '7';
+        var reason  = (document.getElementById('rep-ban-reason').value || '').trim();
+        if (dur === 'perm') { payload.permanent = true; }
+        else { payload.ban_days = parseInt(dur, 10); }
+        payload.ban_reason = reason || 'Reporte confirmado por administrador';
+      }
+      var btn = document.getElementById('rep-confirm-btn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Procesando...'; }
+      try {
+        var res = await fetch(API.base + '/reports/' + _reportModalTarget + '/confirm', {
+          method: 'POST',
+          headers: Object.assign({}, API.authHeaders(), {'Content-Type': 'application/json'}),
+          body: JSON.stringify(payload),
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error');
+        var modal = document.getElementById('confirm-report-modal');
+        if (modal) modal.remove();
+        _reportModalTarget = null;
+        U.toast('Reporte confirmado' + (action === 'ban' ? ' · Usuario baneado' : ''), 'success');
+        loadReports();
+      } catch(e) {
+        U.toast(e.message, 'error');
+        if (btn) { btn.disabled = false; btn.textContent = 'Confirmar reporte'; }
+      }
     };
 
     init();

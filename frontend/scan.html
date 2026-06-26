@@ -37,7 +37,15 @@
     .corner-tr { top: 0; right: 0; border-width: 3px 3px 0 0; }
     .corner-bl { bottom: 0; left: 0; border-width: 0 0 3px 3px; }
     .corner-br { bottom: 0; right: 0; border-width: 0 3px 3px 0; }
+    .xp-section{display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:8px;}
+    .xp-row{display:flex;flex-direction:column;align-items:center;gap:1px;}
+    .xp-pill{border-radius:999px;padding:3px 12px;font-weight:700;font-size:12px;}
+    .xp-cyan{background:rgba(112,207,255,0.15);color:#70cfff;border:1px solid rgba(112,207,255,0.3);}
+    .xp-gold{background:rgba(255,200,80,0.15);color:#ffc850;border:1px solid rgba(255,200,80,0.3);}
+    .xp-green{background:rgba(171,209,148,0.15);color:#abd194;border:1px solid rgba(171,209,148,0.3);}
+    .xp-detail{color:#8b93a3;font-size:10px;}
   </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
@@ -69,7 +77,7 @@
 
       var user = API.currentUser();
       if (!user) { window.location.replace('login.html?next=' + encodeURIComponent(window.location.pathname + window.location.search)); return; }
-      if (['admin','superadmin','god_admin'].indexOf(user.role) !== -1) { window.location.replace('workspace-select.html'); return; }
+      if (user.role === 'god_admin') { window.location.replace('workspace-select.html'); return; }
 
       var app = document.getElementById('app');
       var scanning = false;
@@ -284,7 +292,7 @@
           if (r.xp && r.xp.gained > 0) {
             U.showXpGain(r.xp.gained, { levelUp: r.xp.levelUp, level: r.xp.level });
           }
-          showCelebration(r);
+          showCelebration(r, activeId);
         } catch (err) {
           processing = false;
           if (err.status === 'not_joined') {
@@ -305,11 +313,115 @@
         }
       }
 
-      function showCelebration(r) {
+      function launchConfetti() {
+        var canvas = document.createElement('canvas');
+        canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:99999;pointer-events:none;';
+        canvas.width  = window.innerWidth;
+        canvas.height = window.innerHeight;
+        document.body.appendChild(canvas);
+        var ctx = canvas.getContext('2d');
+
+        var COLORS = ['#d897e7','#e68a8d','#ffc850','#70cfff','#f4f6f9','#ec9799','#a8d8a0','#ffb347','#c084fc','#fb923c','#38bdf8'];
+        var particles = [];
+        var cx = canvas.width / 2;
+        var originY = canvas.height * 0.52;
+
+        for (var i = 0; i < 160; i++) {
+          var spread = (Math.random() - 0.5) * Math.PI * 1.1;
+          var spd    = 5 + Math.random() * 14;
+          var size   = 5 + Math.random() * 10;
+          particles.push({
+            x:        cx + (Math.random() - 0.5) * 80,
+            y:        originY,
+            vx:       Math.sin(spread) * spd,
+            vy:       -Math.abs(Math.cos(spread)) * spd - 2,
+            gravity:  0.22 + Math.random() * 0.18,
+            w:        size,
+            h:        size * (0.35 + Math.random() * 0.45),
+            color:    COLORS[Math.floor(Math.random() * COLORS.length)],
+            rot:      Math.random() * Math.PI * 2,
+            rotSpd:   (Math.random() - 0.5) * 0.28,
+            opacity:  1,
+            type:     Math.random() > 0.65 ? 'circle' : 'rect',
+            wobble:   Math.random() * Math.PI * 2,
+            wobbleSpd: 0.06 + Math.random() * 0.06,
+          });
+        }
+
+        var t0 = null;
+        var LIFE = 3000;
+
+        function frame(ts) {
+          if (!t0) t0 = ts;
+          var elapsed = ts - t0;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          var alive = 0;
+          for (var i = 0; i < particles.length; i++) {
+            var p = particles[i];
+            p.wobble += p.wobbleSpd;
+            p.vy  += p.gravity;
+            p.vx  += Math.sin(p.wobble) * 0.08;
+            p.x   += p.vx;
+            p.y   += p.vy;
+            p.rot += p.rotSpd;
+            if (elapsed > LIFE * 0.45) p.opacity = Math.max(0, p.opacity - 0.015);
+            if (p.opacity > 0 && p.y < canvas.height + 40) {
+              alive++;
+              ctx.save();
+              ctx.globalAlpha = p.opacity;
+              ctx.translate(p.x, p.y);
+              ctx.rotate(p.rot);
+              ctx.fillStyle = p.color;
+              ctx.shadowColor = p.color;
+              ctx.shadowBlur = 4;
+              if (p.type === 'circle') {
+                ctx.beginPath();
+                ctx.arc(0, 0, p.w * 0.5, 0, Math.PI * 2);
+                ctx.fill();
+              } else {
+                ctx.fillRect(-p.w * 0.5, -p.h * 0.5, p.w, p.h);
+              }
+              ctx.restore();
+            }
+          }
+          if (alive > 0 && elapsed < LIFE + 800) requestAnimationFrame(frame);
+          else canvas.remove();
+        }
+
+        requestAnimationFrame(frame);
+      }
+
+      function showCelebration(r, activeId) {
+        scanning = false;
+        stopCamera();
+        window._scanDone = true;
+        console.log('scan response:', r);
+        launchConfetti();
+        // El botón "← Salir" global (fixed, z-100) flotaría sobre el card;
+        // lo ocultamos porque ahora vive dentro del propio redeem-card.
+        var _exitBtn = document.getElementById('btn-exit-scan');
+        if (_exitBtn) _exitBtn.style.display = 'none';
         var modalRoot = document.getElementById('modal-root');
         var isLast = r.complete;
+
+        window._celebrateData = {
+          complete: r.complete,
+          eventId: activeId || '',
+          eventName: r.event_name || '',
+          workspaceName: r.workspace_name || ''
+        };
+        var workspaceName = r.workspace_name || '';
+        var badge  = r.badge || {};
+        var isRare = badge.is_rare || badge.rarity === 'rare';
         var badgeName = r.badge ? r.badge.name : '';
         var badgeEmoji = r.badge ? r.badge.emoji : '<img src="assets/icons/ui/icono-reclamado.png" style="width:40px;height:40px;object-fit:contain;">';
+        // Ícono real del badge (mismo patrón que user-events.html / admin-event-detail.html).
+        // icon_url puede ser un Bootstrap Icon ("bi:...") o una ruta/URL de imagen; fallback local.
+        var badgeIconHtml = badge.icon_url
+          ? (U.isBootstrapIcon(badge.icon_url)
+              ? U.badgeIcon(badge.icon_url, 72)
+              : '<img src="' + U.esc(badge.icon_url) + '" style="width:72px;height:72px;object-fit:contain;" />')
+          : '<img src="assets/icons/ui/icono-badges-creados.png" style="width:72px;height:72px;object-fit:contain;" />';
 
         var prizeBlock = (isLast && r.prize)
           ? '<div class="mt-4 p-4 rounded-card" style="background:#EEEDFF;">' +
@@ -324,10 +436,28 @@
             '<p class="text-xs text-gray-400 mt-1">' + r.progress.obtained + ' de ' + r.progress.total + ' badges</p>'
           : '';
 
-        var xpBlock = (r.xp && r.xp.gained > 0)
-          ? '<div style="margin:12px auto;display:flex;flex-direction:column;align-items:center;gap:6px;">' +
-              '<span style="display:inline-block;padding:6px 20px;border-radius:999px;border:1.5px solid #4ade80;color:#4ade80;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;background:rgba(74,222,128,0.08);">+' + r.xp.gained + ' XP</span>' +
-              (r.xp.level ? '<span style="display:inline-block;padding:4px 10px;border-radius:6px;background:#2e323d;color:#f4f6f9;font-family:Poppins,sans-serif;font-size:11px;font-weight:700;">Nv. ' + r.xp.level + '</span>' : '') +
+        var xpBadge     = r.xp_badge || 0;
+        var xpFirstScan = r.xp_first_scan_bonus || 0;
+        var xpRare      = r.xp_rare_bonus || 0;
+        var xpEvent     = r.xp_event_bonus || 0;
+        var xpTotal     = r.xp_gained || (r.xp && r.xp.gained) || (xpBadge + xpFirstScan + xpRare + xpEvent);
+
+        var xpBlock = xpTotal > 0
+          ? '<div class="xp-section">' +
+              '<div class="xp-row"><span class="xp-pill xp-cyan">+' + xpBadge + ' XP</span><span class="xp-detail">badge</span></div>' +
+              (xpFirstScan > 0
+                ? '<div class="xp-row"><span class="xp-pill xp-cyan">+' + xpFirstScan + ' XP</span><span class="xp-detail">primer escaneo del evento</span></div>'
+                : '') +
+              (xpRare > 0
+                ? '<div class="xp-row"><span class="xp-pill xp-gold">+' + xpRare + ' XP</span><span class="xp-detail">bonus raro</span></div>'
+                : '') +
+              (xpEvent > 0
+                ? '<div class="xp-row"><span class="xp-pill xp-green">+' + xpEvent + ' XP</span><span class="xp-detail">completaste el evento</span></div>'
+                : '') +
+              '<div style="border-top:1px solid #2f343f;padding-top:8px;margin-top:2px;width:100%;text-align:center;">' +
+                '<span style="font-family:Poppins,sans-serif;font-size:14px;font-weight:700;color:' + (isRare ? '#ffc850' : '#70cfff') + ';">Total +' + xpTotal + ' XP</span>' +
+                ((r.xp && r.xp.level) ? ' <span style="padding:3px 8px;border-radius:6px;background:#2e323d;color:#8b93a3;font-size:11px;font-weight:700;">Nv. ' + r.xp.level + '</span>' : '') +
+              '</div>' +
             '</div>'
           : '';
 
@@ -338,21 +468,22 @@
 
         modalRoot.innerHTML =
           '<div class="fixed inset-0 z-50 flex items-center justify-center p-6 anim-fade" style="background:rgba(17,24,39,0.75);">' +
-            '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:20px;padding:32px 24px;max-width:320px;width:100%;text-align:center;" class="anim-pop">' +
+            '<div class="redeem-card anim-pop" style="position:relative;background:#1c1f27;border:2px solid ' + (isRare ? '#ffc850' : '#38bdf8') + ';' + (isRare ? 'box-shadow:0 0 20px rgba(255,200,80,0.25);' : '') + 'border-radius:20px;padding:32px 24px;max-width:320px;width:100%;text-align:center;">' +
+              '<button onclick="history.back()" style="position:absolute;top:14px;right:14px;font-size:13px;padding:5px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#8b93a3;cursor:pointer;">← Salir</button>' +
               '<div style="margin:0 auto 12px;text-align:center;animation:bounceIn 0.6s ease;"><img src="assets/icons/ui/icono-celebracion.png" style="width:24px;height:24px;object-fit:contain;"></div>' +
-              '<div class="text-4xl mb-2">' + badgeEmoji + '</div>' +
-              '<h3 class="text-xl font-bold text-primary">' + (isLast ? U.t('completed_event') : U.t('badge_obtained')) + '</h3>' +
+              '<div style="display:flex;justify-content:center;margin-bottom:8px;">' + badgeIconHtml + '</div>' +
+              '<h3 class="text-xl font-bold" style="color:' + (isRare ? '#ffc850' : '#d897e7') + ';">' + (isLast ? U.t('completed_event') : (isRare ? '¡Badge raro obtenido!' : '¡Badge obtenido!')) + '</h3>' +
               '<p style="font-size:17px;font-weight:600;color:#f4f6f9;margin:4px 0 0;">' + U.esc(badgeName) + '</p>' +
               '<p style="font-size:13px;color:#8b93a3;margin:4px 0 0;">' + U.esc(r.badge ? (r.badge.desc || '') : '') + '</p>' +
               xpBlock +
               progressBlock +
               prizeBlock +
               '<div class="mt-5 space-y-3">' +
-                '<a href="' + linkedinShareUrl + '" target="_blank" rel="noopener" class="w-full py-3 rounded-btn font-semibold text-white flex items-center justify-center gap-2 block" style="background:#0A66C2;text-decoration:none;">' +
-                  '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>' +
+                '<a href="' + linkedinShareUrl + '" target="_blank" rel="noopener" class="w-full py-3 rounded-btn font-semibold text-white block" style="background:#0A66C2;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:10px;">' +
+                  '<svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>' +
                   'Compartir en LinkedIn' +
                 '</a>' +
-                '<button id="celebrate-share" class="w-full py-3 rounded-btn font-semibold text-white flex items-center justify-center gap-2" style="background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);"><img src="assets/icons/ui/Instagram-Logo.png" style="width:28px;height:28px;object-fit:contain;vertical-align:middle;margin-right:8px;" />Compartir en Instagram</button>' +
+                '<button id="celebrate-share" class="w-full py-3 rounded-btn font-semibold text-white" style="background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);display:flex;align-items:center;justify-content:center;gap:10px;"><img src="assets/icons/ui/Instagram-Logo.png" style="width:28px;height:28px;flex-shrink:0;object-fit:contain;" />Compartir en Instagram</button>' +
                 '<button id="celebrate-ok" style="width:100%;padding:12px;border-radius:12px;border:1px solid #2f343f;background:transparent;color:#8b93a3;font-family:Poppins,sans-serif;font-size:14px;font-weight:600;cursor:pointer;">¡Genial!</button>' +
               '</div>' +
             '</div>' +
@@ -361,6 +492,13 @@
         document.getElementById('celebrate-ok').addEventListener('click', function() {
           U.closeModal();
           U.showAchievementUnlocks(r.achievements || [], function() {
+            if (window._celebrateData && window._celebrateData.complete && window._celebrateData.eventId) {
+              var alreadyReviewed = localStorage.getItem('reviewed_' + window._celebrateData.eventId);
+              if (!alreadyReviewed) {
+                openReviewModal(window._celebrateData.eventId, window._celebrateData.eventName);
+                return;
+              }
+            }
             window.location.href = 'user-events.html';
           });
         });
@@ -371,75 +509,222 @@
           btn.textContent = U.t('generating');
 
           try {
-            var canvas = document.createElement('canvas');
-            canvas.width = 1080;
-            canvas.height = 1920;
-            var ctx = canvas.getContext('2d');
+            // Dibuja la share card del badge (1080×1920, formato story). El ícono puede
+            // requerir cargar una imagen async, por eso devuelve una Promise<canvas>.
+            async function buildShareCanvas() {
+              var canvas = document.createElement('canvas');
+              canvas.width = 1080;
+              canvas.height = 1920;
+              var ctx = canvas.getContext('2d');
 
-            var grad = ctx.createLinearGradient(0, 0, 1080, 1920);
-            grad.addColorStop(0, '#6C63FF');
-            grad.addColorStop(1, '#EEEDFF');
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, 1080, 1920);
-
-            ctx.fillStyle = 'white';
-            roundRect(ctx, 80, 600, 920, 720, 60);
-            ctx.fill();
-
-            ctx.font = '200px serif';
-            ctx.textAlign = 'center';
-            ctx.fillText(badgeEmoji, 540, 820);
-
-            ctx.fillStyle = '#6C63FF';
-            ctx.font = 'bold 64px sans-serif';
-            ctx.fillText(U.t('got_badge'), 540, 950);
-
-            ctx.fillStyle = '#1f2937';
-            ctx.font = 'bold 80px sans-serif';
-            ctx.fillText(U.esc(badgeName), 540, 1060);
-
-            ctx.strokeStyle = '#6C63FF';
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            ctx.moveTo(200, 1110);
-            ctx.lineTo(880, 1110);
-            ctx.stroke();
-
-            ctx.fillStyle = '#6b7280';
-            ctx.font = '48px sans-serif';
-            ctx.fillText('Lyfter Badge App', 540, 1200);
-
-            ctx.fillStyle = 'rgba(255,255,255,0.3)';
-            ctx.font = 'bold 36px sans-serif';
-            ctx.fillText('liangso420-cell.github.io/Lyfters-Badge-App', 540, 1820);
-
-            canvas.toBlob(async function(blob) {
-              var file = new File([blob], 'badge-' + badgeName + '.png', { type: 'image/png' });
-
-              if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({
-                  title: '¡Obtuve el badge ' + badgeName + '!',
-                  text: 'Obtuve el badge "' + badgeName + '" en Lyfter Badge App',
-                  files: [file]
-                });
-                U.toast('¡Compartido!', 'success');
-              } else {
-                var url = URL.createObjectURL(blob);
-                var a = document.createElement('a');
-                a.href = url;
-                a.download = 'badge-' + badgeName + '.png';
-                a.click();
-                URL.revokeObjectURL(url);
-                U.toast('Imagen guardada — súbela a tu story de Instagram', 'success');
+              // ── FONDO: oscuro + ~60 estrellas ──
+              ctx.fillStyle = '#09090f';
+              ctx.fillRect(0, 0, 1080, 1920);
+              var starCols = ['#F9A8D4', '#C084FC', '#67E8F9'];
+              for (var st = 0; st < 60; st++) {
+                ctx.globalAlpha = 0.1 + Math.random() * 0.4;
+                ctx.fillStyle = (Math.random() < 0.2) ? starCols[Math.floor(Math.random() * 3)] : '#ffffff';
+                ctx.beginPath();
+                ctx.arc(Math.random() * 1080, Math.random() * 1920, 1 + Math.random() * 2, 0, Math.PI * 2);
+                ctx.fill();
               }
+              ctx.globalAlpha = 1;
+
+              // ── CARD CENTRAL (900×1050, top y=435) ──
+              var cardX = 90, cardY = 435, cardW = 900, cardH = 1050;
+              ctx.fillStyle = 'rgba(255,255,255,0.06)';
+              roundRect(ctx, cardX, cardY, cardW, cardH, 80); ctx.fill();
+              ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+              ctx.lineWidth = 3;
+              roundRect(ctx, cardX, cardY, cardW, cardH, 80); ctx.stroke();
+
+              // ── 1. RIBBON (3 barras, centros separados 32px, y=490) ──
+              var ribW = 18, ribH = 70, ribY = 490;
+              var ribCenters = [540 - 32, 540, 540 + 32];
+              var ribCols = ['#F9A8D4', '#C084FC', '#67E8F9'];
+              for (var rb = 0; rb < 3; rb++) {
+                ctx.fillStyle = ribCols[rb];
+                roundRect(ctx, ribCenters[rb] - ribW / 2, ribY, ribW, ribH, 6); ctx.fill();
+              }
+
+              // ── 2. ÍCONO: círculo x=540, cy=720, r=115 (borde degradado simulado) ──
+              var iconCX = 540, iconCY = 720;
+              ctx.fillStyle = '#C084FC';
+              ctx.beginPath(); ctx.arc(iconCX, iconCY, 115, 0, Math.PI * 2); ctx.fill();
+              ctx.fillStyle = '#09090f';
+              ctx.beginPath(); ctx.arc(iconCX, iconCY, 109, 0, Math.PI * 2); ctx.fill();
+
+              // ── 3. TAG "★ BADGE DESBLOQUEADO" (centro x=540, y=875) ──
+              var tagText = '★ BADGE DESBLOQUEADO';
+              ctx.font = '600 36px Manrope, sans-serif';
+              var tagH = 72, tagW = ctx.measureText(tagText).width + 80;
+              var tagY = 875 - tagH / 2;
+              ctx.fillStyle = 'rgba(249,168,212,0.15)';
+              roundRect(ctx, 540 - tagW / 2, tagY, tagW, tagH, 36); ctx.fill();
+              ctx.strokeStyle = 'rgba(249,168,212,0.3)'; ctx.lineWidth = 2;
+              roundRect(ctx, 540 - tagW / 2, tagY, tagW, tagH, 36); ctx.stroke();
+              ctx.fillStyle = '#F9A8D4';
+              ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+              ctx.fillText(tagText, 540, 875);
+              ctx.textBaseline = 'alphabetic';
+
+              // ── 4. NOMBRE DEL BADGE (degradado rosa→lila→celeste, y=990) ──
+              var nameGrad = ctx.createLinearGradient(140, 0, 940, 0);
+              nameGrad.addColorStop(0, '#F9A8D4');
+              nameGrad.addColorStop(0.5, '#C084FC');
+              nameGrad.addColorStop(1, '#67E8F9');
+              ctx.fillStyle = nameGrad;
+              ctx.font = 'bold 88px Poppins, sans-serif';
+              ctx.textAlign = 'center';
+              ctx.fillText(badgeName || '', 540, 990);
+
+              // ── 5. DESCRIPCIÓN (1–2 líneas, partir en el espacio más cercano al medio) ──
+              ctx.font = '42px Manrope, sans-serif';
+              ctx.fillStyle = 'rgba(255,255,255,0.45)';
+              ctx.textAlign = 'center';
+              var descText = (r.badge && r.badge.desc) ? r.badge.desc : '';
+              var descLineCount = 0;
+              if (descText) {
+                if (ctx.measureText(descText).width <= 700) {
+                  ctx.fillText(descText, 540, 1075);
+                  descLineCount = 1;
+                } else {
+                  var mid = Math.floor(descText.length / 2);
+                  var left = descText.lastIndexOf(' ', mid);
+                  var right = descText.indexOf(' ', mid);
+                  var splitIdx;
+                  if (left === -1) splitIdx = right;
+                  else if (right === -1) splitIdx = left;
+                  else splitIdx = (mid - left <= right - mid) ? left : right;
+                  if (splitIdx === -1) {
+                    ctx.fillText(descText, 540, 1075);
+                    descLineCount = 1;
+                  } else {
+                    ctx.fillText(descText.slice(0, splitIdx).trim(), 540, 1075);
+                    ctx.fillText(descText.slice(splitIdx + 1).trim(), 540, 1130);
+                    descLineCount = 2;
+                  }
+                }
+              }
+
+              // ── 6. WORKSPACE PILL (solo si hay nombre; y según nº de líneas de desc) ──
+              if (workspaceName) {
+                var wsY = (descLineCount === 2) ? 1220 : 1180;
+                var enText = 'En ';
+                ctx.font = '38px Manrope, sans-serif';
+                var enW = ctx.measureText(enText).width;
+                ctx.font = 'bold 38px Manrope, sans-serif';
+                var wsNameW = ctx.measureText(workspaceName).width;
+                var wsContentW = enW + wsNameW;
+                var wsH = 72, wsPillW = wsContentW + 80;
+                var wsTop = wsY - wsH / 2;
+                ctx.fillStyle = 'rgba(192,132,252,0.12)';
+                roundRect(ctx, 540 - wsPillW / 2, wsTop, wsPillW, wsH, 36); ctx.fill();
+                ctx.strokeStyle = 'rgba(192,132,252,0.25)'; ctx.lineWidth = 2;
+                roundRect(ctx, 540 - wsPillW / 2, wsTop, wsPillW, wsH, 36); ctx.stroke();
+                var wsContentX = 540 - wsContentW / 2;
+                ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+                ctx.font = '38px Manrope, sans-serif';
+                ctx.fillStyle = 'rgba(255,255,255,0.45)';
+                ctx.fillText(enText, wsContentX, wsY);
+                ctx.font = 'bold 38px Manrope, sans-serif';
+                ctx.fillStyle = '#C084FC';
+                ctx.fillText(workspaceName, wsContentX + enW, wsY);
+                ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+              }
+
+              // ── 7. DIVISOR (700px centrado, y=1295) ──
+              ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1;
+              ctx.beginPath(); ctx.moveTo(190, 1295); ctx.lineTo(890, 1295); ctx.stroke();
+
+              // ── 8. BRANDING (cuadrado + texto, centrado, y=1360) ──
+              ctx.font = '38px Manrope, sans-serif';
+              var brandText = 'Lyfter Badge App';
+              var brandTextW = ctx.measureText(brandText).width;
+              var sq = 44, sqGap = 16;
+              var groupX = 540 - (sq + sqGap + brandTextW) / 2;
+              var brandY = 1360;
+              var sqGrad = ctx.createLinearGradient(groupX, brandY - sq / 2, groupX + sq, brandY + sq / 2);
+              sqGrad.addColorStop(0, '#F9A8D4');
+              sqGrad.addColorStop(1, '#C084FC');
+              ctx.fillStyle = sqGrad;
+              roundRect(ctx, groupX, brandY - sq / 2, sq, sq, 8); ctx.fill();
+              ctx.fillStyle = '#ffffff';
+              ctx.font = '22px serif';
+              ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+              ctx.fillText('✦', groupX + sq / 2, brandY);
+              ctx.textAlign = 'left';
+              ctx.fillStyle = 'rgba(255,255,255,0.35)';
+              ctx.font = '38px Manrope, sans-serif';
+              ctx.fillText(brandText, groupX + sq + sqGap, brandY);
+              ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+
+              // ── ÍCONO (async): imagen recortada en círculo r=100, o emoji fallback ──
+              if (badge.icon_url && badge.icon_url.indexOf('bi:') !== 0) {
+                await new Promise(function(resolve) {
+                  var img = new Image();
+                  img.crossOrigin = 'anonymous';
+                  img.onload = function() {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(iconCX, iconCY, 100, 0, Math.PI * 2);
+                    ctx.clip();
+                    ctx.drawImage(img, iconCX - 100, iconCY - 100, 200, 200);
+                    ctx.restore();
+                    resolve();
+                  };
+                  img.onerror = function() {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = '130px serif';
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+                    ctx.fillText(badge.emoji || '🏅', 540, 760);
+                    resolve();
+                  };
+                  img.src = badge.icon_url;
+                });
+              } else {
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '130px serif';
+                ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+                ctx.fillText(badge.emoji || '🏅', 540, 760);
+              }
+
+              return canvas;
+            }
+
+            buildShareCanvas().then(function(canvas) {
+              canvas.toBlob(async function(blob) {
+                var file = new File([blob], 'badge-' + badgeName + '.png', { type: 'image/png' });
+
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                  await navigator.share({
+                    title: '¡Obtuve el badge ' + badgeName + '!',
+                    text: 'Obtuve el badge "' + badgeName + '" en Lyfter Badge App',
+                    files: [file]
+                  });
+                  U.toast('¡Compartido!', 'success');
+                } else {
+                  var url = URL.createObjectURL(blob);
+                  var a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'badge-' + badgeName + '.png';
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  U.toast('Imagen guardada — súbela a tu story de Instagram', 'success');
+                }
+                btn.disabled = false;
+                btn.innerHTML = U.t('share_instagram');
+              }, 'image/png');
+            }).catch(function() {
+              U.toast('No se pudo compartir', 'error');
               btn.disabled = false;
-              btn.innerHTML = U.t('share_instagram');
-            }, 'image/png');
+              btn.innerHTML = '<img src="assets/icons/ui/Instagram-Logo.png" style="width:28px;height:28px;flex-shrink:0;object-fit:contain;" />Compartir en Instagram';
+            });
 
           } catch(err) {
             U.toast('No se pudo compartir', 'error');
             btn.disabled = false;
-            btn.innerHTML = '<img src="assets/icons/ui/Instagram-Logo.png" style="width:28px;height:28px;object-fit:contain;vertical-align:middle;margin-right:8px;" />Compartir en Instagram';
+            btn.innerHTML = '<img src="assets/icons/ui/Instagram-Logo.png" style="width:28px;height:28px;flex-shrink:0;object-fit:contain;" />Compartir en Instagram';
           }
         });
       }
@@ -457,6 +742,143 @@
         ctx.quadraticCurveTo(x, y, x + r, y);
         ctx.closePath();
       }
+
+      window.openReviewModal = function(eventId, eventName) {
+        var modal = document.getElementById('modal-root');
+        window._reviewData = { eventId: eventId, rating: 0, recommend: null, best_part: null, return_again: null };
+
+        function starsHtml(selected) {
+          return [1,2,3,4,5].map(function(i) {
+            return '<span id="star-' + i + '" onclick="selectStar(' + i + ')" ' +
+              'onmouseover="hoverStar(' + i + ')" onmouseout="resetStars()" ' +
+              'style="font-size:36px;cursor:pointer;transition:transform 0.1s;display:inline-block;color:' + (i <= selected ? '#ffc850' : '#2e323d') + ';">★</span>';
+          }).join('');
+        }
+
+        modal.innerHTML =
+          '<div style="position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;" onclick="if(event.target===this)closeReview()">' +
+            '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:20px;padding:28px 24px;max-width:380px;width:100%;" onclick="event.stopPropagation()">' +
+              '<h3 style="font-family:Poppins,sans-serif;font-size:18px;font-weight:700;color:#f4f6f9;margin:0 0 4px;">Calificá el evento</h3>' +
+              '<p style="font-family:Manrope,sans-serif;font-size:13px;color:#8b93a3;margin:0 0 20px;">' + U.esc(eventName || '') + '</p>' +
+
+              '<div style="text-align:center;margin-bottom:20px;">' +
+                '<p style="font-size:12px;font-weight:700;color:#8b93a3;margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em;">¿Cómo calificarías el evento?</p>' +
+                '<div id="stars-container">' + starsHtml(0) + '</div>' +
+                '<p id="rating-label" style="font-size:12px;color:#8b93a3;margin-top:8px;height:16px;"></p>' +
+              '</div>' +
+
+              '<div style="margin-bottom:16px;">' +
+                '<p style="font-size:12px;font-weight:700;color:#8b93a3;margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">¿Lo recomendarías?</p>' +
+                '<div style="display:flex;gap:8px;">' +
+                  ['Sí|si', 'No|no', 'Tal vez|talvez'].map(function(opt) {
+                    var parts = opt.split('|');
+                    return '<button onclick="selectOption(this,\'recommend\')" data-val="' + parts[1] + '" ' +
+                      'style="flex:1;padding:10px;border-radius:10px;border:1px solid #2f343f;background:transparent;color:#8b93a3;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;">' +
+                      parts[0] + '</button>';
+                  }).join('') +
+                '</div>' +
+              '</div>' +
+
+              '<div style="margin-bottom:16px;">' +
+                '<p style="font-size:12px;font-weight:700;color:#8b93a3;margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">¿Qué fue lo mejor?</p>' +
+                '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
+                  ['Organización|organizacion', 'Contenido|contenido', 'Networking|networking', 'Badges|badges', 'Otro|otro'].map(function(opt) {
+                    var parts = opt.split('|');
+                    return '<button onclick="selectOption(this,\'best_part\')" data-val="' + parts[1] + '" ' +
+                      'style="padding:10px;border-radius:10px;border:1px solid #2f343f;background:transparent;color:#8b93a3;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;">' +
+                      parts[0] + '</button>';
+                  }).join('') +
+                '</div>' +
+              '</div>' +
+
+              '<div style="margin-bottom:24px;">' +
+                '<p style="font-size:12px;font-weight:700;color:#8b93a3;margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">¿Volverías a participar?</p>' +
+                '<div style="display:flex;gap:8px;">' +
+                  ['Sí|si', 'No|no', 'Depende|depende'].map(function(opt) {
+                    var parts = opt.split('|');
+                    return '<button onclick="selectOption(this,\'return_again\')" data-val="' + parts[1] + '" ' +
+                      'style="flex:1;padding:10px;border-radius:10px;border:1px solid #2f343f;background:transparent;color:#8b93a3;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;">' +
+                      parts[0] + '</button>';
+                  }).join('') +
+                '</div>' +
+              '</div>' +
+
+              '<div style="display:flex;gap:10px;">' +
+                '<button onclick="closeReview()" style="flex:1;padding:12px;border-radius:12px;border:1px solid #2f343f;background:transparent;color:#8b93a3;font-family:Poppins,sans-serif;font-size:14px;cursor:pointer;">Omitir</button>' +
+                '<button onclick="submitReview(\'' + eventId + '\')" style="flex:2;padding:12px;border-radius:12px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Enviar reseña</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+
+        window.hoverStar = function(n) {
+          [1,2,3,4,5].forEach(function(i) {
+            var s = document.getElementById('star-' + i);
+            if (s) { s.style.color = i <= n ? '#ffc850' : '#2e323d'; s.style.transform = i === n ? 'scale(1.2)' : 'scale(1)'; }
+          });
+          var labels = ['', 'Muy malo', 'Malo', 'Regular', 'Bueno', 'Excelente'];
+          var lbl = document.getElementById('rating-label');
+          if (lbl) lbl.textContent = labels[n];
+        };
+
+        window.resetStars = function() {
+          var sel = window._reviewData.rating;
+          [1,2,3,4,5].forEach(function(i) {
+            var s = document.getElementById('star-' + i);
+            if (s) { s.style.color = i <= sel ? '#ffc850' : '#2e323d'; s.style.transform = 'scale(1)'; }
+          });
+          var labels = ['', 'Muy malo', 'Malo', 'Regular', 'Bueno', 'Excelente'];
+          var lbl = document.getElementById('rating-label');
+          if (lbl) lbl.textContent = sel ? labels[sel] : '';
+        };
+
+        window.selectStar = function(n) {
+          window._reviewData.rating = n;
+          resetStars();
+        };
+
+        window.selectOption = function(btn, field) {
+          var siblings = btn.parentElement.querySelectorAll('button');
+          siblings.forEach(function(b) {
+            b.style.background = 'transparent';
+            b.style.color = '#8b93a3';
+            b.style.borderColor = '#2f343f';
+          });
+          btn.style.background = 'rgba(216,151,231,0.15)';
+          btn.style.color = '#d897e7';
+          btn.style.borderColor = '#d897e7';
+          window._reviewData[field] = btn.getAttribute('data-val');
+        };
+      };
+
+      window.closeReview = function() {
+        var modal = document.getElementById('modal-root');
+        if (modal) modal.innerHTML = '';
+        window.location.href = 'user-events.html';
+      };
+
+      window.submitReview = async function(eventId) {
+        var d = window._reviewData;
+        if (!d.rating) { U.toast('Seleccioná una calificación con estrellas', 'error'); return; }
+        if (!d.recommend) { U.toast('Respondé todas las preguntas', 'error'); return; }
+        if (!d.best_part) { U.toast('Respondé todas las preguntas', 'error'); return; }
+        if (!d.return_again) { U.toast('Respondé todas las preguntas', 'error'); return; }
+
+        try {
+          var res = await fetch(API.base + '/events/' + eventId + '/review', {
+            method: 'POST',
+            headers: Object.assign({}, API.authHeaders(), {'Content-Type': 'application/json'}),
+            body: JSON.stringify({ rating: d.rating, recommend: d.recommend, best_part: d.best_part, return_again: d.return_again })
+          });
+          var data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Error');
+          closeReview();
+          U.toast('¡Gracias por tu reseña!', 'success');
+          localStorage.setItem('reviewed_' + eventId, '1');
+          setTimeout(function() { window.location.href = 'user-events.html'; }, 800);
+        } catch(e) {
+          U.toast(e.message, 'error');
+        }
+      };
 
       startCamera();
     })();

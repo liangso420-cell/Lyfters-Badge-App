@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stats — Lyfter</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div id="loading-screen">
+    <img src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" />
+    <div class="loader"></div>
+    <span>Cargando stats...</span>
+  </div>
+  <div id="app" style="position:relative;z-index:1;max-width:600px;margin:0 auto;padding:0 16px 80px;"></div>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/particles.js"></script>
+  <script>
+  (function() {
+    var API = window.LyfterAPI;
+    var U = window.LyfterUtils;
+    var user = API.currentUser();
+    if (!user) { window.location.replace('login.html'); return; }
+
+    var app = document.getElementById('app');
+
+    async function init() {
+      var profile = await API.getProfile();
+      U.hideLoading();
+
+      var events = profile.events || [];
+
+      // Tags favoritos
+      var tagCount = {};
+      events.forEach(function(ev) {
+        (ev.tags||[]).forEach(function(tag) { tagCount[tag] = (tagCount[tag]||0) + 1; });
+      });
+      var tagEntries = Object.entries(tagCount).sort(function(a,b){return b[1]-a[1];}).slice(0,6);
+      var totalTags = tagEntries.reduce(function(s,e){return s+e[1];},0);
+
+      // Top 3 eventos por progreso
+      var topEvents = events.slice().sort(function(a,b){return (b.obtained||0)-(a.obtained||0);}).slice(0,3);
+
+      // Eventos por workspace
+      var wsCount = {};
+      events.forEach(function(ev) {
+        var ws = ev.workspace_name || 'Sin empresa';
+        wsCount[ws] = (wsCount[ws]||0) + 1;
+      });
+
+      app.innerHTML =
+        '<div style="display:flex;align-items:center;gap:12px;margin:24px 0 20px;">' +
+          '<button onclick="history.back()" style="width:36px;height:36px;border-radius:10px;border:none;background:rgba(255,255,255,0.06);color:#f4f6f9;font-size:18px;cursor:pointer;">←</button>' +
+          '<h1 style="font-family:Poppins,sans-serif;font-size:20px;font-weight:700;color:#f4f6f9;margin:0;">Stats</h1>' +
+        '</div>' +
+
+        // Donut tags
+        '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:16px;padding:20px;margin-bottom:14px;">' +
+          '<h3 style="font-family:Poppins,sans-serif;font-size:14px;font-weight:700;color:#f4f6f9;margin:0 0 16px;">Tags favoritos</h3>' +
+          (tagEntries.length
+            ? '<div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">' +
+                '<div style="position:relative;width:140px;height:140px;flex-shrink:0;"><canvas id="chart-tags" width="140" height="140"></canvas></div>' +
+                '<div style="display:flex;flex-direction:column;gap:6px;">' +
+                  tagEntries.map(function(e, i) {
+                    var colors = ['#d897e7','#70cfff','#ffc850','#4ade80','#e68a8d','#f97316'];
+                    var pct = totalTags ? Math.round(e[1]/totalTags*100) : 0;
+                    return '<div style="display:flex;align-items:center;gap:6px;">' +
+                      '<span style="width:10px;height:10px;border-radius:50%;background:' + colors[i] + ';flex-shrink:0;display:inline-block;"></span>' +
+                      '<span style="font-size:12px;color:#8b93a3;font-family:Manrope,sans-serif;">' + U.esc(e[0]) + ' <strong style="color:#f4f6f9;">' + pct + '%</strong></span>' +
+                    '</div>';
+                  }).join('') +
+                '</div>' +
+              '</div>'
+            : '<p style="text-align:center;color:#8b93a3;font-size:13px;">Sin datos aún</p>') +
+        '</div>' +
+
+        // Top 3 eventos
+        '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:16px;padding:20px;margin-bottom:14px;">' +
+          '<h3 style="font-family:Poppins,sans-serif;font-size:14px;font-weight:700;color:#f4f6f9;margin:0 0 12px;">Top eventos</h3>' +
+          (topEvents.length
+            ? topEvents.map(function(ev, i) {
+                var medals = ['<img src="assets/icons/ui/icono-badges-creados.png" style="width:22px;height:22px;object-fit:contain;">','<img src="assets/icons/ui/icono-badges-creados.png" style="width:22px;height:22px;object-fit:contain;opacity:0.7;">','<img src="assets/icons/ui/icono-badges-creados.png" style="width:22px;height:22px;object-fit:contain;opacity:0.5;">'];
+                var pct = ev.total ? Math.round((ev.obtained||0)/ev.total*100) : 0;
+                return '<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #2f343f;">' +
+                  '<span style="font-size:22px;">' + (medals[i]||'') + '</span>' +
+                  '<div style="flex:1;min-width:0;">' +
+                    '<div style="font-family:Poppins,sans-serif;font-size:13px;font-weight:600;color:#f4f6f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + U.esc(ev.name||ev.nombre||'') + '</div>' +
+                    '<div style="font-size:11px;color:#8b93a3;margin-top:2px;">' + (ev.obtained||0) + '/' + (ev.total||0) + ' badges · ' + U.esc(ev.workspace_name||'') + '</div>' +
+                  '</div>' +
+                  '<span style="font-family:Poppins,sans-serif;font-size:14px;font-weight:700;color:#d897e7;">' + pct + '%</span>' +
+                '</div>';
+              }).join('')
+            : '<p style="text-align:center;color:#8b93a3;font-size:13px;">Sin eventos aún</p>') +
+        '</div>' +
+
+        // Barras por empresa
+        '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:16px;padding:20px;margin-bottom:14px;">' +
+          '<h3 style="font-family:Poppins,sans-serif;font-size:14px;font-weight:700;color:#f4f6f9;margin:0 0 16px;">Eventos por empresa</h3>' +
+          (Object.keys(wsCount).length
+            ? '<canvas id="chart-ws" height="200"></canvas>'
+            : '<p style="text-align:center;color:#8b93a3;font-size:13px;">Sin datos aún</p>') +
+        '</div>';
+
+      setTimeout(function() {
+        var colors6 = ['#d897e7','#70cfff','#ffc850','#4ade80','#e68a8d','#f97316'];
+        if (tagEntries.length) {
+          new Chart(document.getElementById('chart-tags'), {
+            type: 'doughnut',
+            data: { labels: tagEntries.map(function(e){return e[0];}), datasets: [{ data: tagEntries.map(function(e){return e[1];}), backgroundColor: colors6.slice(0,tagEntries.length), borderWidth: 0 }] },
+            options: { responsive: false, plugins: { legend: { display: false } }, cutout: '65%' }
+          });
+        }
+        if (Object.keys(wsCount).length) {
+          var wsLabels = Object.keys(wsCount);
+          new Chart(document.getElementById('chart-ws'), {
+            type: 'bar',
+            data: { labels: wsLabels, datasets: [{ data: wsLabels.map(function(k){return wsCount[k];}), backgroundColor: '#d897e766', borderColor: '#d897e7', borderWidth: 2, borderRadius: 6 }] },
+            options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#8b93a3' }, grid: { color: '#2f343f' } }, y: { ticks: { color: '#8b93a3', stepSize: 1 }, grid: { color: '#2f343f' } } } }
+          });
+        }
+      }, 100);
+    }
+
+    setTimeout(function() { U.hideLoading(); }, 6000);
+    init();
+  })();
+  </script>
+</body>
+</html>

@@ -1,12 +1,12 @@
 # backend/routes/events.py — rutas /events/* y /leaderboard
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from bson import ObjectId
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt, verify_jwt_in_request
 
-from db import users, events, badges, scans, event_joins, user_achievements, workspaces
+from db import users, events, badges, scans, event_joins, user_achievements, workspaces, reviews, saved_events
 from utils import valid_oid, fmt_event, fmt_badge, compute_event_status, haversine
 from services.xp import compute_level, level_name
 
@@ -323,3 +323,137 @@ def global_leaderboard():
             }
 
     return jsonify({"ranking": ranking, "my_position": my_position}), 200
+
+
+@events_bp.route("/<event_id>/review", methods=["POST"])
+@jwt_required()
+def submit_review(event_id):
+    user_id = ObjectId(get_jwt_identity())
+    try:
+        oid = ObjectId(event_id)
+    except Exception:
+        return jsonify(error="ID inválido"), 400
+
+    event = events().find_one({"_id": oid})
+    if not event:
+        return jsonify(error="Evento no encontrado"), 404
+
+    existing = reviews().find_one({"user_id": user_id, "event_id": oid})
+    if existing:
+        return jsonify(error="Ya enviaste una reseña para este evento"), 400
+
+    data = request.get_json() or {}
+    rating = data.get("rating")
+    recommend = data.get("recommend")
+    best_part = data.get("best_part")
+    return_again = data.get("return_again")
+
+    if not rating or rating not in [1, 2, 3, 4, 5]:
+        return jsonify(error="Calificación inválida"), 400
+
+    reviews().insert_one({
+        "user_id": user_id,
+        "event_id": oid,
+        "rating": rating,
+        "recommend": recommend,
+        "best_part": best_part,
+        "return_again": return_again,
+        "created_at": datetime.now(timezone.utc)
+    })
+
+    return jsonify(message="Reseña enviada correctamente"), 201
+
+
+@events_bp.route("/<event_id>/reviews", methods=["GET"])
+@jwt_required()
+def get_reviews(event_id):
+    try:
+        oid = ObjectId(event_id)
+    except Exception:
+        return jsonify(error="ID inválido"), 400
+
+    event_reviews = list(reviews().find(
+        {"event_id": oid},
+        {"user_id": 1, "rating": 1, "recommend": 1, "best_part": 1, "return_again": 1, "created_at": 1}
+    ).sort("created_at", -1).limit(50))
+
+    result = []
+    for r in event_reviews:
+        user_doc = users().find_one({"_id": r["user_id"]}, {"name": 1})
+        result.append({
+            "id": str(r["_id"]),
+            "user_name": user_doc.get("name", "Usuario") if user_doc else "Usuario",
+            "rating": r.get("rating", 0),
+            "recommend": r.get("recommend"),
+            "best_part": r.get("best_part"),
+            "return_again": r.get("return_again"),
+            "created_at": r.get("created_at", "").isoformat() if hasattr(r.get("created_at"), "isoformat") else ""
+        })
+
+    avg_rating = round(sum(r["rating"] for r in result) / len(result), 1) if result else 0
+
+    return jsonify(reviews=result, total=len(result), avg_rating=avg_rating), 200
+
+
+@events_bp.route("/reviews/<review_id>", methods=["DELETE"])
+@jwt_required()
+def delete_review(review_id):
+    claims = get_jwt()
+    if claims.get("role") not in ("admin", "superadmin", "god_admin"):
+        return jsonify(error="Sin permisos"), 403
+    try:
+        oid = ObjectId(review_id)
+    except Exception:
+        return jsonify(error="ID inválido"), 400
+
+    result = reviews().delete_one({"_id": oid})
+    if result.deleted_count == 0:
+        return jsonify(error="Reseña no encontrada"), 404
+    return jsonify(message="Reseña eliminada"), 200
+
+
+@events_bp.route("/<event_id>/save", methods=["POST"])
+@jwt_required()
+def save_event(event_id):
+    user_oid = ObjectId(get_jwt_identity())
+    try:
+        oid = ObjectId(event_id)
+    except Exception:
+        return jsonify(error="ID inválido"), 400
+
+    existing = saved_events().find_one({"user_id": user_oid, "event_id": oid})
+    if existing:
+        saved_events().delete_one({"_id": existing["_id"]})
+        return jsonify(saved=False, message="Evento eliminado de guardados"), 200
+
+    saved_events().insert_one({
+        "user_id": user_oid,
+        "event_id": oid,
+        "saved_at": datetime.now(timezone.utc)
+    })
+    return jsonify(saved=True, message="Evento guardado"), 200
+
+
+@events_bp.route("/<event_id>/save/status", methods=["GET"])
+@jwt_required()
+def save_status(event_id):
+    user_oid = ObjectId(get_jwt_identity())
+    try:
+        oid = ObjectId(event_id)
+    except Exception:
+        return jsonify(saved=False), 200
+    existing = saved_events().find_one({"user_id": user_oid, "event_id": oid})
+    return jsonify(saved=bool(existing)), 200
+
+
+@events_bp.route("/saved", methods=["GET"])
+@jwt_required()
+def get_saved_events():
+    user_oid = ObjectId(get_jwt_identity())
+    saves = list(saved_events().find({"user_id": user_oid}))
+    result = []
+    for s in saves:
+        ev = events().find_one({"_id": s["event_id"]})
+        if ev:
+            result.append(fmt_event(ev))
+    return jsonify(result), 200

@@ -74,7 +74,7 @@
       redeem_badge: 'Canjear badge',
       redeeming: 'Canjeando...',
       badge_obtained: '¡Badge obtenido!',
-      share_instagram: '📸 Compartir en Instagram',
+      share_instagram: 'Compartir en Instagram',
       awesome: '¡Genial!',
       generating: 'Generando...',
       got_badge: '¡Obtuve el badge!',
@@ -110,7 +110,7 @@
       admin_access_qr_desc: 'Los usuarios escanean este QR para unirse al evento',
       admin_generate_qr: 'Generar QR de acceso',
       admin_generating: 'Generando...',
-      admin_download: '⬇️ Descargar',
+      admin_download: '⬇ Descargar',
       admin_badges_count: 'Badges',
       admin_no_badges: 'Sin badges. Agrega el primero abajo.',
       admin_no_events: 'No hay eventos. Crea el primero arriba.',
@@ -236,7 +236,7 @@
       redeem_badge: 'Redeem badge',
       redeeming: 'Redeeming...',
       badge_obtained: 'Badge obtained!',
-      share_instagram: '📸 Share on Instagram',
+      share_instagram: ' Share on Instagram',
       awesome: 'Awesome!',
       generating: 'Generating...',
       got_badge: 'I got the badge!',
@@ -262,7 +262,7 @@
       admin_create_btn: 'Create event',
       admin_creating: 'Creating...',
       admin_events_title: 'Events',
-      admin_search_placeholder: '🔍 Search event...',
+      admin_search_placeholder: ' Search event...',
       admin_finish: 'Finish',
       admin_adding: 'Adding...',
       admin_save: 'Save',
@@ -272,7 +272,7 @@
       admin_access_qr_desc: 'Users scan this QR to join the event',
       admin_generate_qr: 'Generate access QR',
       admin_generating: 'Generating...',
-      admin_download: '⬇️ Download',
+      admin_download: '⬇ Download',
       admin_badges_count: 'Badges',
       admin_no_badges: 'No badges. Add the first one below.',
       admin_no_events: 'No events. Create the first one above.',
@@ -294,7 +294,7 @@
       admin_completion: 'Completion',
       admin_top_badges: 'Most obtained badges',
       admin_top_users: '<img src="assets/icons/ui/icono-usuarios.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:4px;"> Top participants',
-      admin_activity: '⏰ Activity by hour',
+      admin_activity: ' Activity by hour',
       admin_no_data: 'No data',
       admin_no_activity: 'No activity data',
       admin_completed: 'completed',
@@ -382,6 +382,59 @@
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
+
+  /* ── Iconos de badge (Bootstrap Icons + imágenes) ──
+     Un badge guarda su icono en `icon_url`. Si el valor empieza con "bi:"
+     es un icono de Bootstrap (https://icons.getbootstrap.com), p.ej.
+     "bi:bi-trophy"; cualquier otro valor se trata como ruta de imagen. */
+  function isBootstrapIcon(iconUrl) {
+    return typeof iconUrl === 'string' && iconUrl.indexOf('bi:') === 0;
+  }
+
+  function badgeIcon(iconUrl, size, extraStyle) {
+    size = size || 32;
+    extraStyle = extraStyle || '';
+    var s = String(iconUrl == null ? '' : iconUrl);
+    if (isBootstrapIcon(s)) {
+      var cls = s.slice(3); // p.ej. "bi-trophy"
+      return '<i class="bi ' + esc(cls) + '" style="font-size:' + size + 'px;line-height:1;display:inline-block;color:#f4f6f9;' + extraStyle + '"></i>';
+    }
+    return '<img src="' + esc(s) + '" style="width:' + size + 'px;height:' + size + 'px;object-fit:contain;' + extraStyle + '" />';
+  }
+
+  // Catálogo curado de Bootstrap Icons disponibles en el selector de iconos.
+  var BOOTSTRAP_BADGE_ICONS = [
+    { cls: 'bi-trophy-fill', label: 'Trofeo' },
+    { cls: 'bi-award-fill', label: 'Premio' },
+    { cls: 'bi-star-fill', label: 'Estrella' },
+    { cls: 'bi-patch-check-fill', label: 'Verificado' },
+    { cls: 'bi-medal-fill', label: 'Medalla' },
+    { cls: 'bi-gem', label: 'Gema' },
+    { cls: 'bi-fire', label: 'Fuego' },
+    { cls: 'bi-lightning-charge-fill', label: 'Energía' },
+    { cls: 'bi-rocket-takeoff-fill', label: 'Cohete' },
+    { cls: 'bi-bullseye', label: 'Diana' },
+    { cls: 'bi-code-slash', label: 'Código' },
+    { cls: 'bi-terminal-fill', label: 'Terminal' },
+    { cls: 'bi-bug-fill', label: 'Bug' },
+    { cls: 'bi-cpu-fill', label: 'CPU' },
+    { cls: 'bi-cloud-fill', label: 'Nube' },
+    { cls: 'bi-database-fill', label: 'Datos' },
+    { cls: 'bi-shield-lock-fill', label: 'Seguridad' },
+    { cls: 'bi-globe2', label: 'Web' },
+    { cls: 'bi-puzzle-fill', label: 'Puzzle' },
+    { cls: 'bi-graph-up-arrow', label: 'Crecimiento' },
+    { cls: 'bi-people-fill', label: 'Equipo' },
+    { cls: 'bi-mortarboard-fill', label: 'Educación' },
+    { cls: 'bi-palette-fill', label: 'Diseño' },
+    { cls: 'bi-controller', label: 'Gaming' },
+    { cls: 'bi-robot', label: 'Robot' },
+    { cls: 'bi-camera-fill', label: 'Cámara' },
+    { cls: 'bi-music-note-beamed', label: 'Música' },
+    { cls: 'bi-book-fill', label: 'Libro' },
+    { cls: 'bi-gift-fill', label: 'Regalo' },
+    { cls: 'bi-flag-fill', label: 'Bandera' }
+  ];
 
   /* ── Toast ── */
   var TOAST_COLORS = { success: '#16a34a', error: '#ef4444', warning: '#d97706', info: '#6C63FF' };
@@ -1254,7 +1307,7 @@
         eventBlock +
         '<div style="margin-top:16px;border-top:1px solid #262a33;padding-top:16px;display:flex;flex-direction:column;gap:2px;">' +
           '<a href="workspace-select.html" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;color:#8b93a3;text-decoration:none;font-size:14px;font-weight:600;transition:color .15s;" onmouseover="this.style.color=\'#d897e7\'" onmouseout="this.style.color=\'#8b93a3\'">' +
-            '<img src="assets/icons/ui/icono-usuarios.png" style="width:18px;height:18px;object-fit:contain;opacity:.7;" /> Mis Workspaces' +
+            '<img src="assets/icons/ui/icono-usuarios.png" style="width:18px;height:18px;object-fit:contain;opacity:.7;" /> Workspaces' +
           '</a>' +
         '</div>' +
         '<div style="margin-top:auto;padding-top:22px;">' +
@@ -1532,6 +1585,9 @@
   window.LyfterUtils = {
     EMAIL_RE: EMAIL_RE,
     esc: esc,
+    badgeIcon: badgeIcon,
+    isBootstrapIcon: isBootstrapIcon,
+    BOOTSTRAP_BADGE_ICONS: BOOTSTRAP_BADGE_ICONS,
     toast: toast,
     toastNextPage: toastNextPage,
     showPendingToast: showPendingToast,

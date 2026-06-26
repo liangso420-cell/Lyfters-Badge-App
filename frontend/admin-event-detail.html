@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
@@ -31,18 +32,6 @@
       'use strict';
 
       var TAGS_LIST = ['Desarrollo Web','Mobile','Inteligencia Artificial','Data Science','Ciberseguridad','DevOps','Cloud','Blockchain','UX/UI','Product Management','Emprendimiento','Marketing Digital','Diseño','Videojuegos','Robótica','Fintech','Educación Tech','Open Source','Backend','Frontend'];
-      var IB_BADGE_ICONS = [
-        { file: 'api.png', label: 'API' },
-        { file: 'codificacion.png', label: 'Código' },
-        { file: 'computacion-en-la-nube.png', label: 'Nube' },
-        { file: 'diseno.png', label: 'Diseño' },
-        { file: 'error.png', label: 'Error' },
-        { file: 'javascript.png', label: 'JavaScript' },
-        { file: 'mundial.png', label: 'Web' },
-        { file: 'proteccion-de-archivos.png', label: 'Seguridad' },
-        { file: 'sitio-web.png', label: 'Sitio Web' },
-        { file: 'vinculo-de-retroceso.png', label: 'Backend' },
-      ];
       var STATUS_MAP = {
         draft:     { label: 'Borrador' },
         pending:   { label: 'Pendiente aprobación' },
@@ -138,20 +127,20 @@
                 var bname  = b.name || b.nombre || '';
                 var bdesc  = b.desc || b.descripcion || '';
                 var iconHtml = b.icon_url
-                  ? '<div style="width:40px;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-align:center;"><img src="' + U.esc(b.icon_url) + '" style="width:32px;height:32px;object-fit:contain;display:block;margin:0 auto;"></div>'
+                  ? '<div style="width:40px;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-align:center;">' + U.badgeIcon(b.icon_url, 32, 'display:block;margin:0 auto;') + '</div>'
                   : '<div style="width:40px;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-align:center;"><img src="assets/icons/ui/icono-badges-creados.png" style="width:32px;height:32px;object-fit:contain;filter:brightness(0) invert(1);display:block;margin:0 auto;"></div>';
                 var bxp    = b.xp_value != null ? b.xp_value : 10;
                 var bRarity = b.rarity || (b.is_rare ? 'rare' : 'normal');
                 var bBg = bRarity === 'rare' ? 'rgba(255,200,80,0.08)' : '#20242d';
                 var bBorder = bRarity === 'rare' ? '#ffc850' : '#38bdf8';
-                var bRarityLabel = bRarity === 'rare' ? '<span style="font-size:10px;color:#ffc850;font-weight:700;background:rgba(255,200,80,0.15);padding:2px 8px;border-radius:999px;white-space:nowrap;">RARO</span>' : '';
+                var bRarityLabel = bRarity === 'rare' ? '<span style="font-size:10px;color:#ffc850;font-weight:700;background:rgba(255,200,80,0.15);padding:2px 8px;border-radius:999px;white-space:nowrap;flex-shrink:0;">RARO</span>' : '';
                 return (
                   '<div style="border-radius:12px;border:1px solid ' + bBorder + ';background:' + bBg + ';overflow:hidden;margin-bottom:10px;">' +
                     '<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;">' +
                       iconHtml +
                       '<div style="flex:1;min-width:0;">' +
-                        '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
-                          '<span style="font-family:Manrope,sans-serif;font-size:14px;font-weight:700;color:#f4f6f9;overflow:hidden;text-overflow:ellipsis;">' + U.esc(bname) + '</span>' +
+                        '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0;">' +
+                          '<span style="font-family:Manrope,sans-serif;font-size:14px;font-weight:700;color:#f4f6f9;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + U.esc(bname) + '</span>' +
                           bRarityLabel +
                         '</div>' +
                         '<p style="font-size:11px;color:#8b93a3;font-family:Manrope,sans-serif;margin:2px 0 0;">' + (b.redeemed || 0) + ' canjes · ' + bxp + ' XP</p>' +
@@ -283,9 +272,10 @@
             '</div>';
 
           var inner =
-            '<div style="display:flex;align-items:center;gap:16px;margin-bottom:28px;">' +
+            '<div style="display:flex;align-items:center;gap:12px;margin-bottom:28px;flex-wrap:wrap;">' +
               '<a href="admin-event.html" style="display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 16px;border-radius:10px;border:1px solid #353a46;background:transparent;color:#8b93a3;font-family:Manrope,sans-serif;font-size:14px;font-weight:600;text-decoration:none;">← Volver</a>' +
-              '<h1 style="font-family:Poppins,sans-serif;font-size:20px;font-weight:700;color:#f4f6f9;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + U.esc(ev.name) + '</h1>' +
+              '<h1 style="font-family:Poppins,sans-serif;font-size:20px;font-weight:700;color:#f4f6f9;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;">' + U.esc(ev.name) + '</h1>' +
+              '<a href="admin-reviews.html?event=' + eid + '&name=' + encodeURIComponent(ev.name||ev.nombre||'') + '" style="display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:8px;border:1px solid rgba(255,200,80,0.3);background:rgba(255,200,80,0.08);color:#ffc850;font-family:Poppins,sans-serif;font-size:12px;font-weight:700;text-decoration:none;flex-shrink:0;">⭐ Ver reseñas</a>' +
             '</div>' +
             headerCard +
             qrCard +
@@ -433,27 +423,36 @@
 
           // ── Badges: agregar inline ──
           var ibSelectedIcon = null;
-          var ibSelectedRarity = null;
+          var ibSelectedRarity = 'normal';
 
           var IB_RARITY_COLORS = {
             normal: { border: '#38bdf8', bg: 'rgba(56,189,248,0.1)', color: '#38bdf8' },
             rare:   { border: '#ffc850', bg: 'rgba(255,200,80,0.15)', color: '#ffc850' }
           };
 
+          function ibApplyRarityStyle(btn) {
+            Array.prototype.forEach.call(document.querySelectorAll('.ib-rarity-btn'), function(b) {
+              b.style.border = '1px solid #353a46';
+              b.style.background = '#2e323d';
+              b.style.color = '#f4f6f9';
+            });
+            var rc = IB_RARITY_COLORS[btn.getAttribute('data-ibrarity')];
+            if (!rc) return;
+            btn.style.border = '1px solid ' + rc.border;
+            btn.style.background = rc.bg;
+            btn.style.color = rc.color;
+          }
+
           Array.prototype.forEach.call(document.querySelectorAll('.ib-rarity-btn'), function(btn) {
             btn.addEventListener('click', function() {
               ibSelectedRarity = btn.getAttribute('data-ibrarity');
-              Array.prototype.forEach.call(document.querySelectorAll('.ib-rarity-btn'), function(b) {
-                b.style.border = '1px solid #353a46';
-                b.style.background = '#2e323d';
-                b.style.color = '#f4f6f9';
-              });
-              var rc = IB_RARITY_COLORS[ibSelectedRarity];
-              btn.style.border = '1px solid ' + rc.border;
-              btn.style.background = rc.bg;
-              btn.style.color = rc.color;
+              ibApplyRarityStyle(btn);
             });
           });
+
+          // Estado inicial: "normal" seleccionado y resaltado visualmente.
+          var ibDefaultBtn = document.querySelector('.ib-rarity-btn[data-ibrarity="normal"]');
+          if (ibDefaultBtn) ibApplyRarityStyle(ibDefaultBtn);
 
           var ibIconBtn = document.getElementById('ib-icon-btn');
           if (ibIconBtn) {
@@ -461,15 +460,15 @@
               var modalRoot = document.getElementById('modal-root');
               modalRoot.innerHTML =
                 '<div class="fixed inset-0 z-50 flex items-center justify-center p-6" style="background:rgba(0,0,0,0.75);" id="ib-icon-overlay">' +
-                  '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:16px;padding:24px;width:100%;max-width:420px;">' +
+                  '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:16px;padding:24px;width:100%;max-width:420px;max-height:85vh;overflow-y:auto;">' +
                     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">' +
                       '<p style="font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#f4f6f9;margin:0;">Selecciona un icono</p>' +
                       '<button id="close-ib-icon" style="background:transparent;border:none;color:#8b93a3;font-size:20px;cursor:pointer;line-height:1;">✕</button>' +
                     '</div>' +
                     '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">' +
-                      IB_BADGE_ICONS.map(function(icon) {
-                        return '<button type="button" data-ibicon="assets/icons/badges/' + icon.file + '" class="ib-icon-option" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:10px;border:1px solid #353a46;background:#2e323d;cursor:pointer;">' +
-                          '<img src="assets/icons/badges/' + icon.file + '" style="width:36px;height:36px;object-fit:contain;" />' +
+                      U.BOOTSTRAP_BADGE_ICONS.map(function(icon) {
+                        return '<button type="button" data-ibicon="bi:' + icon.cls + '" class="ib-icon-option" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:10px;border:1px solid #353a46;background:#2e323d;cursor:pointer;">' +
+                          '<i class="bi ' + icon.cls + '" style="font-size:30px;line-height:1;color:#f4f6f9;"></i>' +
                           '<span style="font-size:10px;color:#8b93a3;font-family:Manrope,sans-serif;text-align:center;">' + icon.label + '</span>' +
                         '</button>';
                       }).join('') +
@@ -483,7 +482,7 @@
               Array.prototype.forEach.call(document.querySelectorAll('.ib-icon-option'), function(btn) {
                 btn.addEventListener('click', function() {
                   ibSelectedIcon = btn.getAttribute('data-ibicon');
-                  document.getElementById('ib-icon-preview').innerHTML = '<img src="' + ibSelectedIcon + '" style="width:36px;height:36px;object-fit:contain;" />';
+                  document.getElementById('ib-icon-preview').innerHTML = U.badgeIcon(ibSelectedIcon, 36);
                   modalRoot.innerHTML = '';
                 });
               });

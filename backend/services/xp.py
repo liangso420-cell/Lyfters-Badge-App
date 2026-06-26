@@ -162,18 +162,24 @@ def award_xp(user_oid, badge_doc, event_doc, is_first_scan, is_completion) -> di
 
     xp_total = xp_before
     xp_gained = 0
+    components = {"scan": 0, "first_scan_bonus": 0, "rare_bonus": 0, "completion_bonus": 0}
     for amount, reason in grants:
         if amount <= 0:
             continue
         ref = badge_oid if reason == "scan" else badge_oid
         xp_total = grant_xp(user_oid, amount, reason, ref_id=ref, event_id=event_oid)
         xp_gained += amount
+        components[reason] = components.get(reason, 0) + amount
 
     level_after = compute_level(xp_total)
 
     return {
-        "xp_gained": xp_gained,
-        "xp_total":  xp_total,
-        "level":     level_after,
-        "level_up":  level_after > level_before,
+        "xp_gained":            xp_gained,
+        "xp_total":             xp_total,
+        "level":                level_after,
+        "level_up":             level_after > level_before,
+        "xp_base":              components["scan"],
+        "xp_first_scan_bonus":  components["first_scan_bonus"],
+        "xp_rare_bonus":        components["rare_bonus"],
+        "xp_completion_bonus":  components["completion_bonus"],
     }

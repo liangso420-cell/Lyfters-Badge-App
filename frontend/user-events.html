@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
   <link rel="stylesheet" href="css/styles.css" />
   <style>
     @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
@@ -38,7 +39,7 @@
 
       var user = API.currentUser();
       if (!user) { window.location.replace('login.html?next=' + encodeURIComponent(window.location.pathname + window.location.search)); return; }
-      if (['admin','superadmin','god_admin'].indexOf(user.role) !== -1) { window.location.replace('workspace-select.html'); return; }
+      if (user.role === 'god_admin') { window.location.replace('workspace-select.html'); return; }
 
       // Banner de bienvenida al unirse a un evento desde QR
       (function() {
@@ -68,6 +69,44 @@
       })();
 
       var app = document.getElementById('app');
+      var _pastPage = 0, PAST_PAGE = 5, _pastPairs = [];
+
+      function pagerHtml(total, page, size, gotoFn) {
+        if (total <= size) return '';
+        var totalPages = Math.ceil(total / size);
+        var from = page * size + 1;
+        var to = Math.min((page + 1) * size, total);
+        var btns = '';
+        for (var p = 0; p < totalPages; p++) {
+          if (totalPages > 7 && p !== 0 && p !== totalPages - 1 && Math.abs(p - page) > 1) {
+            if (p === page - 2 || p === page + 2) btns += '<span style="color:#4a5060;align-self:center;padding:0 2px;">…</span>';
+            continue;
+          }
+          var active = p === page;
+          btns += '<button onclick="' + gotoFn + '(' + p + ')" style="min-width:32px;height:32px;padding:0 6px;border-radius:8px;border:1px solid ' + (active ? '#d897e7' : '#2f343f') + ';background:' + (active ? 'rgba(216,151,231,0.15)' : 'transparent') + ';color:' + (active ? '#d897e7' : '#8b93a3') + ';font-family:Poppins,sans-serif;font-size:13px;font-weight:' + (active ? '700' : '500') + ';cursor:pointer;">' + (p + 1) + '</button>';
+        }
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0 4px;border-top:1px solid #2f343f;margin-top:8px;flex-wrap:wrap;gap:8px;">' +
+          '<span style="font-size:12px;color:#8b93a3;font-family:Manrope,sans-serif;">' + from + '–' + to + ' de ' + total + '</span>' +
+          '<div style="display:flex;gap:4px;flex-wrap:wrap;">' +
+            (page > 0 ? '<button onclick="' + gotoFn + '(' + (page-1) + ')" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid #2f343f;background:transparent;color:#8b93a3;font-size:13px;cursor:pointer;">←</button>' : '') +
+            btns +
+            (page < totalPages - 1 ? '<button onclick="' + gotoFn + '(' + (page+1) + ')" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid #2f343f;background:transparent;color:#8b93a3;font-size:13px;cursor:pointer;">→</button>' : '') +
+          '</div>' +
+        '</div>';
+      }
+
+      function renderPastList(page) {
+        var container = document.getElementById('past-list');
+        if (!container) return;
+        var list = _pastPairs;
+        if (!list.length) return;
+        var slice = list.slice(page * PAST_PAGE, (page + 1) * PAST_PAGE);
+        container.innerHTML = slice.map(function(pair) {
+          return renderPastCard(pair.ev, pair.detail);
+        }).join('') + pagerHtml(list.length, page, PAST_PAGE, '_goPastPage');
+      }
+
+      window._goPastPage = function(p) { _pastPage = p; renderPastList(p); window.scrollTo(0, 0); };
 
       function fmtDate(iso) {
         if (!iso) return '';
@@ -88,8 +127,8 @@
           '<a href="profile.html" style="flex:1;padding:8px 4px;border-radius:8px;text-decoration:none;text-align:center;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;background:transparent;color:#8b93a3;">Explorar</a>' +
           '<a href="user-events.html" style="flex:1;padding:8px 4px;border-radius:8px;text-decoration:none;text-align:center;font-family:Manrope,sans-serif;font-size:12px;font-weight:700;background:linear-gradient(135deg,rgba(216,151,231,0.3),rgba(230,138,141,0.2));color:#f4f6f9;">Eventos</a>' +
           '<a href="scan.html" style="flex:1;padding:8px 4px;border-radius:8px;text-decoration:none;text-align:center;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;background:transparent;color:#8b93a3;">Escanear</a>' +
-          '<a href="user-achievements.html" style="flex:1;padding:8px 4px;border-radius:8px;text-decoration:none;text-align:center;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;background:transparent;color:#8b93a3;">Logros</a>' +
           '<a href="user-ranking.html" style="flex:1;padding:8px 4px;border-radius:8px;text-decoration:none;text-align:center;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;background:transparent;color:#8b93a3;">Ranking</a>' +
+          '<a href="profile-new.html" style="flex:1;padding:8px 4px;border-radius:8px;text-decoration:none;text-align:center;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;background:transparent;color:#8b93a3;">Perfil</a>' +
         '</div>';
       }
 
@@ -101,21 +140,24 @@
           ? '<div style="height:180px;overflow:hidden;border-radius:16px 16px 0 0;"><img src="' + U.esc(ev.photo) + '" style="width:100%;height:100%;object-fit:cover;"></div>'
           : '<div style="height:180px;border-radius:16px 16px 0 0;background:linear-gradient(120deg,#d897e7 0%,#e68a8d 60%,#ffcb8a 100%);display:flex;align-items:center;justify-content:center;"><img src="assets/icons/ui/icono-evento.png" style="width:60px;height:60px;object-fit:contain;filter:brightness(0) invert(1);opacity:0.7;"></div>';
         console.log('badges data:', detail.badges);
-        var badgesHtml = (detail.badges || []).slice(0, 8).map(function(b) {
+        var allBadges = detail.badges || [];
+        var badgesHtml = allBadges.map(function(b) {
           var iconHtml = b.icon_url
-            ? '<img src="' + U.esc(b.icon_url) + '" style="width:32px;height:32px;object-fit:contain;">'
-            : '<img src="assets/icons/ui/icono-badges-creados.png" style="width:32px;height:32px;object-fit:contain;filter:brightness(0) invert(1);opacity:0.6;">';
-          var isRare = b.rarity === 'rare' || b.is_rare;
-          var inner = '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;opacity:' + (b.obtained ? '1' : '0.3') + ';">' +
+            ? (U.isBootstrapIcon(b.icon_url)
+                ? U.badgeIcon(b.icon_url, 32, 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;')
+                : '<img src="' + U.esc(b.icon_url) + '" style="width:100%;height:100%;object-fit:contain;">')
+            : '<img src="assets/icons/ui/icono-badges-creados.png" style="width:100%;height:100%;object-fit:contain;filter:brightness(0) invert(1);opacity:0.6;">';
+          var rarityBorder = { 'rare': '2px solid #ffc850', 'ultra_rare': '2px solid #ffc850', 'normal': '2px solid #70cfff' };
+          var border = rarityBorder[b.rarity] || rarityBorder['normal'];
+          // Wrapper de tamaño fijo 52x52 — el ícono se adapta dentro, sin importar qué traiga la API.
+          var box = '<div style="width:52px;height:52px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:10px;background:#2e323d;overflow:hidden;opacity:' + (b.obtained ? '1' : '0.3') + ';border:' + border + ';">' +
             iconHtml +
-            (b.obtained ? '<span style="font-size:9px;color:#16a34a;font-weight:700;">✓</span>' : '<span style="font-size:9px;color:#8b93a3;">—</span>') +
           '</div>';
-          var wrapperStyle = isRare
-            ? (b.obtained
-                ? 'box-shadow:0 0 10px rgba(255,200,80,0.6);border:1px solid rgba(255,200,80,0.8);border-radius:8px;padding:3px;'
-                : 'box-shadow:0 0 6px rgba(255,200,80,0.2);border:1px solid rgba(255,200,80,0.3);border-radius:8px;padding:3px;')
-            : 'border:1px solid transparent;border-radius:8px;padding:3px;';
-          return '<div style="' + wrapperStyle + '">' + inner + '</div>';
+          // Check/dash fuera del wrapper de tamaño fijo, en un div aparte debajo.
+          var mark = b.obtained
+            ? '<div style="text-align:center;font-size:9px;color:#16a34a;font-weight:700;margin-top:2px;">✓</div>'
+            : '<div style="text-align:center;font-size:9px;color:#8b93a3;margin-top:2px;">—</div>';
+          return '<div style="width:52px;flex-shrink:0;">' + box + mark + '</div>';
         }).join('');
         return '<div style="background:#1c1f27;border:2px solid rgba(216,151,231,0.4);border-radius:16px;overflow:hidden;margin-bottom:24px;box-shadow:0 0 24px rgba(216,151,231,0.12);">' +
           photoHtml +
@@ -135,8 +177,9 @@
               '<div style="height:8px;border-radius:999px;background:linear-gradient(90deg,#d897e7,#e68a8d);width:' + pct + '%;transition:width .7s;"></div>' +
             '</div>' +
             '<p style="font-family:Manrope,sans-serif;font-size:12px;color:#8b93a3;margin:0 0 14px;">' + done + ' de ' + total + ' badges obtenidos</p>' +
-            (badgesHtml ? '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">' + badgesHtml + '</div>' : '') +
+            (badgesHtml ? '<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-start;margin-top:12px;">' + badgesHtml + '</div>' : '') +
             '<a href="scan.html" style="display:block;text-align:center;padding:14px;border-radius:12px;background:linear-gradient(135deg,#d897e7,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;text-decoration:none;">Escanear badge</a>' +
+            '<a href="reviews.html?event=' + ev.id + '&name=' + encodeURIComponent(ev.name||ev.nombre||'') + '" style="display:block;width:100%;margin-top:8px;padding:10px;border-radius:10px;border:1px solid rgba(112,207,255,0.3);background:rgba(112,207,255,0.08);color:#70cfff;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;text-align:center;text-decoration:none;">Ver reseñas</a>' +
           '</div>' +
         '</div>';
       }
@@ -153,6 +196,15 @@
         var photoTop = ev.photo
           ? '<div style="height:80px;overflow:hidden;border-radius:12px 12px 0 0;"><img src="' + U.esc(ev.photo) + '" style="width:100%;height:100%;object-fit:cover;"></div>'
           : '';
+        var isFinished = ev.status === 'finished';
+        var alreadyReviewed = localStorage.getItem('reviewed_' + ev.id);
+        var reviewBtn = isFinished && !alreadyReviewed
+          ? '<button onclick="openReviewModal(\'' + ev.id + '\',\'' + U.esc(ev.name||'') + '\')" style="width:100%;margin-top:12px;padding:10px;border-radius:10px;border:1px solid rgba(216,151,231,0.3);background:rgba(216,151,231,0.15);color:#d897e7;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⭐ Calificar evento</button>' +
+            '<a href="reviews.html?event=' + ev.id + '&name=' + encodeURIComponent(ev.name||ev.nombre||'') + '" style="display:block;width:100%;margin-top:8px;padding:10px;border-radius:10px;border:1px solid rgba(112,207,255,0.3);background:rgba(112,207,255,0.08);color:#70cfff;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;">Ver reseñas</a>'
+          : isFinished && alreadyReviewed
+            ? '<p style="text-align:center;font-size:12px;color:#4ade80;margin-top:8px;">✓ Ya calificaste este evento</p>' +
+              '<a href="reviews.html?event=' + ev.id + '&name=' + encodeURIComponent(ev.name||ev.nombre||'') + '" style="display:block;width:100%;margin-top:8px;padding:10px;border-radius:10px;border:1px solid rgba(112,207,255,0.3);background:rgba(112,207,255,0.08);color:#70cfff;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;">Ver reseñas</a>'
+            : '<a href="reviews.html?event=' + ev.id + '&name=' + encodeURIComponent(ev.name||ev.nombre||'') + '" style="display:block;width:100%;margin-top:8px;padding:10px;border-radius:10px;border:1px solid rgba(112,207,255,0.3);background:rgba(112,207,255,0.08);color:#70cfff;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;text-align:center;text-decoration:none;">Ver reseñas</a>';
         return '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:12px;overflow:hidden;margin-bottom:12px;">' +
           photoTop +
           '<div style="padding:12px;">' +
@@ -168,9 +220,146 @@
             '<div style="width:100%;height:5px;background:#2e323d;border-radius:999px;overflow:hidden;">' +
               '<div style="height:5px;border-radius:999px;background:linear-gradient(90deg,#d897e7,#e68a8d);width:' + pct + '%;"></div>' +
             '</div>' +
+            reviewBtn +
           '</div>' +
         '</div>';
       }
+
+      window.openReviewModal = function(eventId, eventName) {
+        var modal = document.getElementById('modal-root');
+        window._reviewData = { eventId: eventId, rating: 0, recommend: null, best_part: null, return_again: null };
+
+        function starsHtml(selected) {
+          return [1,2,3,4,5].map(function(i) {
+            return '<span id="star-' + i + '" onclick="selectStar(' + i + ')" ' +
+              'onmouseover="hoverStar(' + i + ')" onmouseout="resetStars()" ' +
+              'style="font-size:36px;cursor:pointer;transition:transform 0.1s;display:inline-block;color:' + (i <= selected ? '#ffc850' : '#2e323d') + ';">★</span>';
+          }).join('');
+        }
+
+        modal.innerHTML =
+          '<div style="position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;" onclick="if(event.target===this)closeReview()">' +
+            '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:20px;padding:28px 24px;max-width:380px;width:100%;" onclick="event.stopPropagation()">' +
+              '<h3 style="font-family:Poppins,sans-serif;font-size:18px;font-weight:700;color:#f4f6f9;margin:0 0 4px;">Calificá el evento</h3>' +
+              '<p style="font-family:Manrope,sans-serif;font-size:13px;color:#8b93a3;margin:0 0 20px;">' + U.esc(eventName) + '</p>' +
+
+              '<div style="text-align:center;margin-bottom:20px;">' +
+                '<p style="font-size:12px;font-weight:700;color:#8b93a3;margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em;">¿Cómo calificarías el evento?</p>' +
+                '<div id="stars-container">' + starsHtml(0) + '</div>' +
+                '<p id="rating-label" style="font-size:12px;color:#8b93a3;margin-top:8px;height:16px;"></p>' +
+              '</div>' +
+
+              '<div style="margin-bottom:16px;">' +
+                '<p style="font-size:12px;font-weight:700;color:#8b93a3;margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">¿Lo recomendarías?</p>' +
+                '<div style="display:flex;gap:8px;">' +
+                  ['Sí|si', 'No|no', 'Tal vez|talvez'].map(function(opt) {
+                    var parts = opt.split('|');
+                    return '<button onclick="selectOption(this,\'recommend\')" data-val="' + parts[1] + '" ' +
+                      'style="flex:1;padding:10px;border-radius:10px;border:1px solid #2f343f;background:transparent;color:#8b93a3;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;">' +
+                      parts[0] + '</button>';
+                  }).join('') +
+                '</div>' +
+              '</div>' +
+
+              '<div style="margin-bottom:16px;">' +
+                '<p style="font-size:12px;font-weight:700;color:#8b93a3;margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">¿Qué fue lo mejor?</p>' +
+                '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
+                  ['Organización|organizacion', 'Contenido|contenido', 'Networking|networking', 'Badges|badges', 'Otro|otro'].map(function(opt) {
+                    var parts = opt.split('|');
+                    return '<button onclick="selectOption(this,\'best_part\')" data-val="' + parts[1] + '" ' +
+                      'style="padding:10px;border-radius:10px;border:1px solid #2f343f;background:transparent;color:#8b93a3;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;">' +
+                      parts[0] + '</button>';
+                  }).join('') +
+                '</div>' +
+              '</div>' +
+
+              '<div style="margin-bottom:24px;">' +
+                '<p style="font-size:12px;font-weight:700;color:#8b93a3;margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">¿Volverías a participar?</p>' +
+                '<div style="display:flex;gap:8px;">' +
+                  ['Sí|si', 'No|no', 'Depende|depende'].map(function(opt) {
+                    var parts = opt.split('|');
+                    return '<button onclick="selectOption(this,\'return_again\')" data-val="' + parts[1] + '" ' +
+                      'style="flex:1;padding:10px;border-radius:10px;border:1px solid #2f343f;background:transparent;color:#8b93a3;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;">' +
+                      parts[0] + '</button>';
+                  }).join('') +
+                '</div>' +
+              '</div>' +
+
+              '<div style="display:flex;gap:10px;">' +
+                '<button onclick="closeReview()" style="flex:1;padding:12px;border-radius:12px;border:1px solid #2f343f;background:transparent;color:#8b93a3;font-family:Poppins,sans-serif;font-size:14px;cursor:pointer;">Cancelar</button>' +
+                '<button onclick="submitReview(\'' + eventId + '\')" style="flex:2;padding:12px;border-radius:12px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Enviar reseña</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+
+        window.hoverStar = function(n) {
+          [1,2,3,4,5].forEach(function(i) {
+            var s = document.getElementById('star-' + i);
+            if (s) { s.style.color = i <= n ? '#ffc850' : '#2e323d'; s.style.transform = i === n ? 'scale(1.2)' : 'scale(1)'; }
+          });
+          var labels = ['', 'Muy malo', 'Malo', 'Regular', 'Bueno', 'Excelente'];
+          var lbl = document.getElementById('rating-label');
+          if (lbl) lbl.textContent = labels[n];
+        };
+
+        window.resetStars = function() {
+          var sel = window._reviewData.rating;
+          [1,2,3,4,5].forEach(function(i) {
+            var s = document.getElementById('star-' + i);
+            if (s) { s.style.color = i <= sel ? '#ffc850' : '#2e323d'; s.style.transform = 'scale(1)'; }
+          });
+          var labels = ['', 'Muy malo', 'Malo', 'Regular', 'Bueno', 'Excelente'];
+          var lbl = document.getElementById('rating-label');
+          if (lbl) lbl.textContent = sel ? labels[sel] : '';
+        };
+
+        window.selectStar = function(n) {
+          window._reviewData.rating = n;
+          resetStars();
+        };
+
+        window.selectOption = function(btn, field) {
+          var siblings = btn.parentElement.querySelectorAll('button');
+          siblings.forEach(function(b) {
+            b.style.background = 'transparent';
+            b.style.color = '#8b93a3';
+            b.style.borderColor = '#2f343f';
+          });
+          btn.style.background = 'rgba(216,151,231,0.15)';
+          btn.style.color = '#d897e7';
+          btn.style.borderColor = '#d897e7';
+          window._reviewData[field] = btn.getAttribute('data-val');
+        };
+      };
+
+      window.closeReview = function() {
+        var modal = document.getElementById('modal-root');
+        if (modal) modal.innerHTML = '';
+      };
+
+      window.submitReview = async function(eventId) {
+        var d = window._reviewData;
+        if (!d.rating) { U.toast('Seleccioná una calificación con estrellas', 'error'); return; }
+        if (!d.recommend) { U.toast('Respondé todas las preguntas', 'error'); return; }
+        if (!d.best_part) { U.toast('Respondé todas las preguntas', 'error'); return; }
+        if (!d.return_again) { U.toast('Respondé todas las preguntas', 'error'); return; }
+
+        try {
+          var res = await fetch(API.base + '/events/' + eventId + '/review', {
+            method: 'POST',
+            headers: Object.assign({}, API.authHeaders(), {'Content-Type': 'application/json'}),
+            body: JSON.stringify({ rating: d.rating, recommend: d.recommend, best_part: d.best_part, return_again: d.return_again })
+          });
+          var data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Error');
+          closeReview();
+          U.toast('¡Gracias por tu reseña!', 'success');
+          localStorage.setItem('reviewed_' + eventId, '1');
+          setTimeout(function() { location.reload(); }, 800);
+        } catch(e) {
+          U.toast(e.message, 'error');
+        }
+      };
 
       async function init() {
         try {
@@ -229,13 +418,13 @@
                 renderActiveCard(activeEv, allDetails[activeIdx]);
             }
             var pastEvents = myEvents.filter(function(ev) { return ev !== activeEv; });
+            _pastPairs = pastEvents.map(function(ev) {
+              return { ev: ev, detail: allDetails[myEvents.indexOf(ev)] };
+            });
             if (pastEvents.length) {
-              var pastCards = pastEvents.map(function(ev) {
-                return renderPastCard(ev, allDetails[myEvents.indexOf(ev)]);
-              }).join('');
               pastSectionHtml =
                 '<p style="font-family:Poppins,sans-serif;font-size:12px;font-weight:700;color:#8b93a3;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 12px;">Mis eventos</p>' +
-                pastCards;
+                '<div id="past-list"></div>';
             }
           }
 
@@ -249,6 +438,8 @@
               activeSectionHtml +
               pastSectionHtml +
             '</div>';
+
+          if (_pastPairs.length) renderPastList(0);
 
           document.getElementById('profile-menu-btn').addEventListener('click', async function() {
             try {

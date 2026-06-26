@@ -16,8 +16,8 @@ from flask_jwt_extended import (
 from google.oauth2 import id_token
 from google.auth.transport import requests as grequests
 
-from db import users, scans, workspace_members, invitations as invitations_col, achievements
-from utils import sanitize, fmt_user
+from db import users, scans, workspace_members, invitations as invitations_col, achievements, reviews, events, ip_bans
+from utils import sanitize, fmt_user, compute_event_status
 from security.limiter import (
     register_limit, login_participant_limit, login_admin_limit, avatar_limit,
     forgot_password_limit
@@ -90,7 +90,9 @@ def switch_workspace():
     if ban_resp:
         return ban_resp
 
-    role = get_jwt().get("role", "participant")
+    # Leemos el rol global desde la DB (no del JWT viejo) para reflejar cambios
+    # recientes — p. ej. un rol recién asignado al canjear un código de invitación.
+    role = user_doc.get("role", "participant")
     member = workspace_members().find_one({"user_id": ObjectId(user_id), "workspace_id": ws_oid})
 
     if role != "god_admin" and not member:
@@ -202,14 +204,43 @@ def get_profile():
     ban_resp = _ban_block(u)
     if ban_resp:
         return ban_resp
+
+    user_oid = ObjectId(uid)
+
+    from db import event_joins, badges, workspaces
+    joins = list(event_joins().find({"user_id": user_oid}))
+    events_data = []
+    for j in joins:
+        ev = events().find_one({"_id": j["event_id"]})
+        if not ev:
+            continue
+        badge_list = list(badges().find({"event_id": j["event_id"]}, {"_id": 1}))
+        badge_ids = [b["_id"] for b in badge_list]
+        obtained = scans().count_documents({"user_id": user_oid, "badge_id": {"$in": badge_ids}})
+        ws = workspaces().find_one({"_id": ev.get("workspace_id")}, {"name": 1}) if ev.get("workspace_id") else None
+        ws_name = ws.get("name", "") if ws else ""
+        events_data.append({
+            "id": str(ev["_id"]),
+            "name": ev.get("name", ev.get("title", "")),
+            "nombre": ev.get("name", ev.get("title", "")),
+            "workspace_name": ws_name,
+            "status": compute_event_status(ev),
+            "tags": ev.get("tags", []),
+            "obtained": obtained,
+            "total": len(badge_list),
+        })
+
     return jsonify({
-        "id":      str(u["_id"]),
-        "nombre":  u.get("name", ""),
-        "email":   u.get("email", ""),
-        "rol":     u.get("role", "participant"),
-        "avatar":  u.get("avatar", None),
+        "id":       str(u["_id"]),
+        "nombre":   u.get("name", ""),
+        "email":    u.get("email", ""),
+        "rol":      u.get("role", "participant"),
+        "avatar":   u.get("avatar", None),
         "interests": u.get("interests", []),
-        "privacy": u.get("privacy", {"show_in_leaderboard": True, "show_badges": True})
+        "privacy":  u.get("privacy", {"show_in_leaderboard": True, "show_badges": True}),
+        "xp_total": u.get("xp_total", 0),
+        "level":    u.get("level", 1),
+        "events":   events_data,
     }), 200
 
 
@@ -313,6 +344,15 @@ def update_interests():
 @login_admin_limit
 @ip_guard_login
 def login():
+    now_dt    = datetime.utcnow()
+    client_ip = (request.headers.get("X-Forwarded-For") or request.remote_addr or "").split(",")[0].strip()
+
+    # Verificar IP ban ANTES de validar credenciales
+    if client_ip:
+        ip_ban_doc = ip_bans().find_one({"ip": client_ip, "expires_at": {"$gt": now_dt}})
+        if ip_ban_doc:
+            return jsonify(error="Tu acceso ha sido bloqueado desde esta red.", error_code="IP_BANNED"), 403
+
     data     = request.get_json() or {}
     email    = sanitize(data.get("email") or "", max_len=254).lower()
     password = (data.get("password") or "").encode()
@@ -332,14 +372,7 @@ def login():
     if ban_resp:
         return ban_resp
 
-    now_dt = datetime.utcnow()
-
-    # Check IP ban
-    client_ip = (request.headers.get("X-Forwarded-For") or request.remote_addr or "").split(",")[0].strip()
     if client_ip:
-        ip_ban = users().find_one({"ban_ip": client_ip, "banned_until": {"$gt": now_dt}})
-        if ip_ban:
-            return jsonify(error="Acceso denegado desde esta red."), 403
         users().update_one({"_id": user["_id"]}, {"$set": {"last_login_ip": client_ip}})
 
     token = create_access_token(
@@ -501,3 +534,21 @@ def reset_password():
     )
 
     return jsonify(ok=True, message="Contraseña actualizada correctamente"), 200
+
+
+@auth_bp.route("/my-reviews", methods=["GET"])
+@jwt_required()
+def my_reviews():
+    user_oid = ObjectId(get_jwt_identity())
+    user_reviews = list(reviews().find({"user_id": user_oid}).sort("created_at", -1))
+    result = []
+    for r in user_reviews:
+        ev = events().find_one({"_id": r["event_id"]}, {"title": 1, "name": 1})
+        result.append({
+            "event_name": ev.get("title", ev.get("name", "Evento")) if ev else "Evento",
+            "rating": r.get("rating", 0),
+            "recommend": r.get("recommend"),
+            "best_part": r.get("best_part"),
+            "return_again": r.get("return_again"),
+        })
+    return jsonify(reviews=result), 200

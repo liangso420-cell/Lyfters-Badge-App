@@ -5,10 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Evento — Lyfter</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
   <link rel="stylesheet" href="css/styles.css" />
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
     body{background:#13151b;font-family:Manrope,system-ui,sans-serif;min-height:100vh;color:#f4f6f9;}
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
   </style>
 </head>
 <body>
@@ -64,6 +69,44 @@
       }
     }
 
+    window.toggleSaveDetail = async function(evId) {
+      try {
+        var res = await fetch(API.base + '/events/' + evId + '/save', {
+          method: 'POST',
+          headers: API.authHeaders()
+        });
+        var data = await res.json();
+        var btn = document.getElementById('save-btn-' + evId);
+        if (btn) {
+          btn.textContent = data.saved ? 'Guardado' : 'Guardar evento';
+          btn.style.color = data.saved ? '#d897e7' : '#8b93a3';
+          btn.style.borderColor = data.saved ? 'rgba(216,151,231,0.4)' : '#2f343f';
+          btn.style.background = data.saved ? 'rgba(216,151,231,0.1)' : 'transparent';
+        }
+        if (data.saved) {
+          U.toast('Evento guardado en tu lista', 'success');
+          var notif = document.createElement('div');
+          notif.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1c1f27;border:1px solid rgba(216,151,231,0.4);border-radius:14px;padding:12px 20px;display:flex;align-items:center;gap:10px;z-index:9999;animation:slideUp .3s ease;box-shadow:0 8px 32px rgba(0,0,0,0.4);';
+          notif.innerHTML =
+            '<img src="assets/icons/ui/icono-reclamado.png" style="width:20px;height:20px;object-fit:contain;" />' +
+            '<div>' +
+              '<div style="font-family:Poppins,sans-serif;font-size:13px;font-weight:700;color:#d897e7;">¡Evento guardado!</div>' +
+              '<div style="font-family:Manrope,sans-serif;font-size:11px;color:#8b93a3;">Lo encontrarás en Mi actividad → Guardados</div>' +
+            '</div>';
+          document.body.appendChild(notif);
+          setTimeout(function() {
+            notif.style.opacity = '0';
+            notif.style.transition = 'opacity .3s';
+            setTimeout(function() { notif.remove(); }, 300);
+          }, 2500);
+        } else {
+          U.toast('Evento eliminado de guardados', 'info');
+        }
+      } catch(e) {
+        U.toast('Error al guardar', 'error');
+      }
+    };
+
     function render(detail, meta) {
       var statusColors = { upcoming:'#3b82f6', open:'#16a34a', ongoing:'#6C63FF', closed:'#d97706', postponed:'#9333ea', draft:'#8b93a3' };
       var statusLabels = { upcoming:'Próximo', open:'Abierto', ongoing:'En curso', closed:'Cerrado', postponed:'Pospuesto', draft:'Borrador' };
@@ -106,7 +149,24 @@
           '<p style="font-family:Manrope,sans-serif;font-size:13px;color:#d897e7;line-height:1.5;margin:0;">Para acceder a este evento tenés que escanear su respectivo QR.</p>' +
         '</div>' +
 
-        '';
+        '<button id="save-btn-' + (meta.id || eventId) + '" onclick="toggleSaveDetail(\'' + (meta.id || eventId) + '\')" ' +
+          'style="width:100%;margin-top:10px;padding:12px;border-radius:12px;' +
+          'border:1px solid #2f343f;background:transparent;color:#8b93a3;' +
+          'font-family:Poppins,sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Guardar evento</button>';
+
+      // Verificar si está guardado en el backend
+      var eid = meta.id || eventId;
+      fetch(API.base + '/events/' + eid + '/save/status', { headers: API.authHeaders() })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var btn = document.getElementById('save-btn-' + eid);
+          if (btn && d.saved) {
+            btn.textContent = 'Guardado';
+            btn.style.color = '#d897e7';
+            btn.style.borderColor = 'rgba(216,151,231,0.4)';
+            btn.style.background = 'rgba(216,151,231,0.1)';
+          }
+        }).catch(function(){});
     }
 
     setTimeout(function() { U.hideLoading(); }, 6000);

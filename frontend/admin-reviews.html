@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reseñas (Admin) — Lyfter</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div id="loading-screen">
+    <img src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" />
+    <div class="loader"></div>
+    <span>Cargando reseñas...</span>
+  </div>
+  <div id="app" style="position:relative;z-index:1;width:100%;max-width:100%;margin:0 auto;padding:24px clamp(16px,4vw,44px) 70px;"></div>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/stars.js"></script>
+  <script>
+  (function() {
+    var API = window.LyfterAPI;
+    var U = window.LyfterUtils;
+    var user = API.currentUser();
+    if (!user) { window.location.replace('login.html'); return; }
+    if (['admin','superadmin','god_admin'].indexOf(user.role) === -1) {
+      window.location.replace('profile.html'); return;
+    }
+
+    var qs = new URLSearchParams(window.location.search);
+    var eventId = qs.get('event');
+    var eventName = qs.get('name') || 'Evento';
+    var app = document.getElementById('app');
+
+    if (!eventId) { window.location.replace('admin-event.html'); return; }
+
+    var backUrl = 'admin-event-detail.html?id=' + encodeURIComponent(eventId);
+
+    async function init() {
+      app.innerHTML =
+        '<div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">' +
+          '<a href="' + backUrl + '" style="width:36px;height:36px;border-radius:10px;border:none;background:rgba(255,255,255,0.06);color:#f4f6f9;font-size:18px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;">←</a>' +
+          '<h1 style="font-family:Poppins,sans-serif;font-size:20px;font-weight:700;color:#f4f6f9;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">Reseñas</h1>' +
+        '</div>' +
+        '<div id="reviews-container"><p style="color:#8b93a3;text-align:center;padding:32px;">Cargando...</p></div>';
+
+      U.hideLoading();
+
+      try {
+        var data = await fetch(API.base + '/events/' + eventId + '/reviews', {
+          headers: API.authHeaders()
+        }).then(r => r.json());
+
+        var reviewsList = data.reviews || [];
+        var container = document.getElementById('reviews-container');
+
+        if (!reviewsList.length) {
+          container.innerHTML =
+            '<div style="text-align:center;padding:48px 24px;">' +
+              '<div style="font-size:48px;margin-bottom:12px;">⭐</div>' +
+              '<p style="font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#f4f6f9;margin:0 0 8px;">Sin reseñas aún</p>' +
+              '<p style="font-family:Manrope,sans-serif;font-size:13px;color:#8b93a3;">Todavía no hay reseñas para este evento.</p>' +
+            '</div>';
+          return;
+        }
+
+        var labels = {
+          recommend: { si: 'Sí', no: 'No', talvez: 'Tal vez' },
+          best_part: { organizacion: 'Organización', contenido: 'Contenido', networking: 'Networking', badges: 'Badges', otro: 'Otro' },
+          return_again: { si: 'Sí', no: 'No', depende: 'Depende' }
+        };
+
+        var totalReviews = data.total;
+        var dist = {5:0, 4:0, 3:0, 2:0, 1:0};
+        reviewsList.forEach(function(r) { dist[r.rating] = (dist[r.rating]||0) + 1; });
+
+        var summaryHtml =
+          '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:16px;padding:20px;margin-bottom:20px;">' +
+            '<div style="display:flex;align-items:center;gap:20px;margin-bottom:16px;">' +
+              '<div style="text-align:center;">' +
+                '<div style="font-size:56px;font-weight:800;color:#ffc850;font-family:Poppins,sans-serif;line-height:1;">' + data.avg_rating + '</div>' +
+                '<div style="font-size:20px;color:#ffc850;margin-top:4px;">' + '★'.repeat(Math.round(data.avg_rating)) + '<span style="color:#2e323d;">' + '★'.repeat(5-Math.round(data.avg_rating)) + '</span></div>' +
+                '<div style="font-size:11px;color:#8b93a3;margin-top:4px;">' + totalReviews + ' reseña' + (totalReviews!==1?'s':'') + '</div>' +
+              '</div>' +
+              '<div style="flex:1;">' +
+                [5,4,3,2,1].map(function(star) {
+                  var count = dist[star] || 0;
+                  var pct = totalReviews ? Math.round((count/totalReviews)*100) : 0;
+                  return '<div onclick="filterByStar(' + star + ')" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;cursor:pointer;" id="bar-row-' + star + '">' +
+                    '<span style="font-size:11px;color:#8b93a3;font-family:Manrope,sans-serif;width:10px;text-align:right;">' + star + '</span>' +
+                    '<span style="font-size:12px;color:#ffc850;">★</span>' +
+                    '<div style="flex:1;height:6px;background:#2e323d;border-radius:999px;overflow:hidden;">' +
+                      '<div style="width:' + pct + '%;height:100%;background:#ffc850;border-radius:999px;transition:width .4s;"></div>' +
+                    '</div>' +
+                    '<span style="font-size:11px;color:#8b93a3;font-family:Manrope,sans-serif;width:28px;text-align:right;">' + pct + '%</span>' +
+                  '</div>';
+                }).join('') +
+              '</div>' +
+            '</div>' +
+            '<button id="clear-filter-btn" onclick="filterByStar(0)" style="display:none;width:100%;padding:8px;border-radius:8px;border:1px solid #2f343f;background:transparent;color:#8b93a3;font-family:Poppins,sans-serif;font-size:12px;cursor:pointer;">Ver todas las reseñas</button>' +
+          '</div>';
+
+        window._allReviews = reviewsList;
+        window._currentFilter = 0;
+
+        window.filterByStar = function(star) {
+          window._currentFilter = star;
+          var filtered = star === 0 ? window._allReviews : window._allReviews.filter(function(r){ return r.rating === star; });
+
+          [1,2,3,4,5].forEach(function(s) {
+            var row = document.getElementById('bar-row-' + s);
+            if (row) row.style.opacity = (star === 0 || s === star) ? '1' : '0.4';
+          });
+
+          var clearBtn = document.getElementById('clear-filter-btn');
+          if (clearBtn) clearBtn.style.display = star === 0 ? 'none' : 'block';
+
+          var listContainer = document.getElementById('reviews-list');
+          if (!listContainer) return;
+
+          if (!filtered.length) {
+            listContainer.innerHTML = '<p style="text-align:center;color:#8b93a3;padding:24px;font-size:13px;">Sin reseñas con ' + star + ' estrella' + (star!==1?'s':'') + '.</p>';
+            return;
+          }
+
+          listContainer.innerHTML = filtered.map(function(r) {
+            var initials = (r.user_name||'?').split(' ').map(function(w){return w[0]||'';}).join('').slice(0,2).toUpperCase();
+            var stars = '★'.repeat(r.rating) + '<span style="color:#2e323d;">' + '★'.repeat(5-r.rating) + '</span>';
+            return '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:14px;padding:18px;margin-bottom:12px;">' +
+              '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">' +
+                '<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#d897e7,#e68a8d);display:flex;align-items:center;justify-content:center;font-family:Poppins,sans-serif;font-size:12px;font-weight:700;color:#1c1f27;flex-shrink:0;">' + initials + '</div>' +
+                '<div>' +
+                  '<div style="font-family:Poppins,sans-serif;font-size:13px;font-weight:700;color:#f4f6f9;">' + U.esc(r.user_name) + '</div>' +
+                  '<div style="font-size:16px;color:#ffc850;">' + stars + '</div>' +
+                '</div>' +
+              '</div>' +
+              '<div style="display:flex;flex-wrap:wrap;gap:8px;">' +
+                (r.recommend ? pill('¿Recomendaría?', labels.recommend[r.recommend]||r.recommend, '#70cfff') : '') +
+                (r.best_part ? pill('Lo mejor', labels.best_part[r.best_part]||r.best_part, '#d897e7') : '') +
+                (r.return_again ? pill('¿Volvería?', labels.return_again[r.return_again]||r.return_again, '#4ade80') : '') +
+              '</div>' +
+              '<div style="display:flex;justify-content:flex-end;margin-top:10px;">' +
+                '<button onclick="deleteReview(\'' + r.id + '\')" style="height:28px;padding:0 12px;border-radius:8px;border:1px solid rgba(230,138,141,0.3);background:rgba(230,138,141,0.08);color:#e68a8d;font-family:Poppins,sans-serif;font-size:11px;font-weight:700;cursor:pointer;">Eliminar reseña</button>' +
+              '</div>' +
+            '</div>';
+          }).join('');
+        };
+
+        container.innerHTML = summaryHtml + '<div id="reviews-list"></div>';
+        filterByStar(0);
+
+      } catch(e) {
+        document.getElementById('reviews-container').innerHTML =
+          '<p style="color:#e68a8d;text-align:center;padding:32px;">Error al cargar reseñas.</p>';
+      }
+    }
+
+    window.deleteReview = async function(reviewId) {
+      if (!confirm('¿Eliminar esta reseña?')) return;
+      try {
+        var res = await fetch(API.base + '/events/reviews/' + reviewId, {
+          method: 'DELETE',
+          headers: API.authHeaders()
+        });
+        if (!res.ok) throw new Error('Error al eliminar');
+        U.toast('Reseña eliminada', 'success');
+        setTimeout(function() { init(); }, 600);
+      } catch(e) {
+        U.toast(e.message, 'error');
+      }
+    };
+
+    function pill(label, value, color) {
+      return '<div style="background:rgba(255,255,255,0.04);border:1px solid #2f343f;border-radius:8px;padding:6px 10px;">' +
+        '<div style="font-size:10px;color:#8b93a3;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">' + label + '</div>' +
+        '<div style="font-size:12px;color:' + color + ';font-weight:700;margin-top:2px;">' + value + '</div>' +
+      '</div>';
+    }
+
+    setTimeout(function() { U.hideLoading(); }, 6000);
+    init();
+  })();
+  </script>
+</body>
+</html>

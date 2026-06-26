@@ -350,10 +350,19 @@ def update_member_role(ws_id, uid):
     if _ROLE_RANK.get(new_role, 0) >= caller_rank:
         return jsonify(error="No podés asignar un rol mayor o igual al tuyo"), 403
 
+    print(f"[setMemberRole] ws={ws_id} user={uid} new_role={new_role} caller={caller_ws_role}", flush=True)
+
     workspace_members().update_one(
         {"workspace_id": oid, "user_id": target_uid},
         {"$set": {"role": new_role}}
     )
+
+    if new_role in ("admin", "superadmin"):
+        users().update_one({"_id": target_uid}, {"$set": {"role": new_role}})
+    elif new_role == "participant":
+        users().update_one({"_id": target_uid}, {"$set": {"role": "participant"}})
+        workspace_members().delete_many({"user_id": target_uid})
+
     return jsonify(mensaje="Rol actualizado")
 
 
@@ -428,6 +437,10 @@ def invite_member(ws_id):
                     {"workspace_id": oid, "user_id": existing_user["_id"]},
                     {"$set": {"role": role}}
                 )
+                if role in ("admin", "superadmin", "god_admin"):
+                    users().update_one({"_id": existing_user["_id"]}, {"$set": {"role": role}})
+                elif role == "participant":
+                    users().update_one({"_id": existing_user["_id"]}, {"$set": {"role": "participant"}})
                 return jsonify(
                     message=f"{email} ya era miembro. Rol actualizado a {role}.",
                     direct=True,
@@ -442,6 +455,10 @@ def invite_member(ws_id):
                     "joined_at":    datetime.now(timezone.utc),
                     "invited_by":   caller
                 })
+                if role in ("admin", "superadmin", "god_admin"):
+                    users().update_one({"_id": existing_user["_id"]}, {"$set": {"role": role}})
+                elif role == "participant":
+                    users().update_one({"_id": existing_user["_id"]}, {"$set": {"role": "participant"}})
                 return jsonify(
                     message=f"{email} agregado como {role} directamente.",
                     direct=True,
@@ -555,12 +572,23 @@ def join_workspace():
     if existing:
         return jsonify(error="Ya sos miembro de este workspace"), 409
 
+    invite_code_role = inv.get("role") or "participant"
+    print('invite code role:', invite_code_role, 'assigned to:', str(uid), flush=True)
+
     workspace_members().insert_one({
         "workspace_id": ws_id,
         "user_id":      uid,
-        "role":         inv["role"],
+        "role":         invite_code_role,
         "joined_at":    datetime.now(timezone.utc),
     })
+
+    # Reflejar el rol de la invitación en el rol global del usuario: el JWT y el
+    # frontend leen users.role para decidir acceso de admin/superadmin, así que
+    # el rol del código debe respetarse sin importar cuál sea. Nunca degradamos
+    # a un god_admin (dueño de la plataforma).
+    user_doc = users().find_one({"_id": uid})
+    if (user_doc or {}).get("role") != "god_admin":
+        users().update_one({"_id": uid}, {"$set": {"role": invite_code_role}})
 
     invitations().update_one({"_id": inv["_id"]}, {"$set": {"status": "accepted"}})
 
@@ -569,7 +597,7 @@ def join_workspace():
         "mensaje":      "Te uniste al workspace",
         "workspace_id": str(ws_id),
         "workspace":    ws["name"] if ws else "",
-        "role":         inv["role"],
+        "role":         invite_code_role,
     })
 
 
@@ -590,7 +618,8 @@ def grant_god_admin():
     if not target:
         return jsonify(error="Usuario no encontrado"), 404
 
-    users().update_one({"_id": target["_id"]}, {"$set": {"role": "god_admin"}})
+    caller_oid = ObjectId(get_jwt_identity())
+    users().update_one({"_id": target["_id"]}, {"$set": {"role": "god_admin", "granted_by": caller_oid}})
     return jsonify(ok=True, name=target.get("name", ""), email=email)
 
 
@@ -634,6 +663,10 @@ def set_participant():
     user = users().find_one({"email": {"$regex": f"^{re.escape(email)}$", "$options": "i"}})
     if not user:
         return jsonify(error="Usuario no encontrado"), 404
+    caller_oid = ObjectId(get_jwt_identity())
+    caller_doc = users().find_one({"_id": caller_oid})
+    if caller_doc and caller_doc.get("granted_by") == user["_id"]:
+        return jsonify(error="No podés modificar al God Admin que te otorgó el permiso"), 403
 
     users().update_one({"_id": user["_id"]}, {"$set": {"role": "participant"}})
     workspace_members().delete_many({"user_id": user["_id"]})
@@ -719,6 +752,7 @@ def list_platform_users():
             "ban_ip":        u.get("ban_ip"),
             "ban_reason":    u.get("ban_reason", ""),
             "last_login_ip": u.get("last_login_ip"),
+            "granted_by":    str(u["granted_by"]) if u.get("granted_by") else None,
         })
     return jsonify(result)
 
@@ -822,6 +856,9 @@ def delete_platform_user(user_id):
         return jsonify(error="Usuario no encontrado"), 404
     if target.get("role") == "god_admin":
         return jsonify(error="No podés eliminar a otro god_admin"), 403
+    caller_doc = users().find_one({"_id": caller_id})
+    if caller_doc and caller_doc.get("granted_by") == target_uid:
+        return jsonify(error="No podés eliminar al God Admin que te otorgó el permiso"), 403
 
     users().delete_one({"_id": target_uid})
     workspace_members().delete_many({"user_id": target_uid})
