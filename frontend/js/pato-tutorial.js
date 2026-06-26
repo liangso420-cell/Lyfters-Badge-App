@@ -264,6 +264,11 @@
     'filter:drop-shadow(0 8px 28px rgba(0,0,0,.65)) drop-shadow(0 0 18px rgba(216,151,231,.6));',
     '}',
 
+    /* Wrapper que controla el flip sin interferir con las animaciones del img */
+    '#pato-img-wrap{display:block;transition:transform .22s ease;transform-origin:bottom center;}',
+    /* Cuando Pato está a la derecha, lo giramos para que mire hacia el contenido */
+    '#pato-wrap.pos-br #pato-img-wrap,#pato-wrap.pos-tr #pato-img-wrap{transform:scaleX(-1);}',
+
     /* ── Keyframe animations ────────────────────────────────── */
     '@keyframes pato-bubble-in{',
     'from{opacity:0;transform:scale(.68) translateY(10px)}',
@@ -354,7 +359,9 @@
   bubble.appendChild(dotsEl);
   bubble.appendChild(ctrls);
   wrap.appendChild(bubble);
-  wrap.appendChild(imgEl);
+  var imgWrap = document.createElement('div'); imgWrap.id = 'pato-img-wrap';
+  imgWrap.appendChild(imgEl);
+  wrap.appendChild(imgWrap);
 
   /* ── Duck quack sound ────────────────────────────────────── */
   function playQuack() {
@@ -370,6 +377,7 @@
   function clearSpot() {
     if (spotRetryTimer) { clearTimeout(spotRetryTimer); spotRetryTimer = null; }
     spotEl.classList.remove('visible');
+    overlayEl.style.opacity = '1';
   }
 
   function positionSpot(el) {
@@ -383,6 +391,7 @@
     spotEl.style.width  = (rect.width  + pad * 2) + 'px';
     spotEl.style.height = (rect.height + pad * 2) + 'px';
     spotEl.classList.add('visible');
+    overlayEl.style.opacity = '0';
   }
 
   function showSpot(selector, retries) {
