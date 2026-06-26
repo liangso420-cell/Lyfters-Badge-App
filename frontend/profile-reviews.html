@@ -40,10 +40,18 @@
           return_again: { si:'Sí', no:'No', depende:'Depende' }
         };
 
+        var initials = (user.name||'?').split(' ').map(function(w){return w[0]||'';}).join('').slice(0,2).toUpperCase();
+        var avatarEl = user.avatar
+          ? '<img src="' + U.esc(user.avatar) + '" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid rgba(216,151,231,0.4);" />'
+          : '<div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#d897e7,#e68a8d);display:flex;align-items:center;justify-content:center;font-family:Poppins,sans-serif;font-size:13px;font-weight:800;color:#1c1f27;">' + initials + '</div>';
+
         app.innerHTML =
-          '<div style="display:flex;align-items:center;gap:12px;margin:24px 0 20px;">' +
-            '<button onclick="history.back()" style="width:36px;height:36px;border-radius:10px;border:none;background:rgba(255,255,255,0.06);color:#f4f6f9;font-size:18px;cursor:pointer;">←</button>' +
-            '<h1 style="font-family:Poppins,sans-serif;font-size:20px;font-weight:700;color:#f4f6f9;margin:0;">Mis reseñas</h1>' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin:24px 0 20px;">' +
+            '<div style="display:flex;align-items:center;gap:12px;">' +
+              '<button onclick="history.back()" style="width:36px;height:36px;border-radius:10px;border:none;background:rgba(255,255,255,0.06);color:#f4f6f9;font-size:18px;cursor:pointer;">←</button>' +
+              '<h1 style="font-family:Poppins,sans-serif;font-size:20px;font-weight:700;color:#f4f6f9;margin:0;">Mis reseñas</h1>' +
+            '</div>' +
+            '<button id="home-avatar-btn" style="background:none;border:none;cursor:pointer;padding:0;">' + avatarEl + '</button>' +
           '</div>' +
           (reviews.length
             ? reviews.map(function(r) {
@@ -63,6 +71,14 @@
                 '<p style="font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#f4f6f9;margin:0 0 8px;">Sin reseñas aún</p>' +
                 '<p style="font-family:Manrope,sans-serif;font-size:13px;color:#8b93a3;">Tus reseñas aparecerán aquí.</p>' +
               '</div>');
+
+        var avatarBtn = document.getElementById('home-avatar-btn');
+        if (avatarBtn) {
+          avatarBtn.addEventListener('click', async function() {
+            try { var p = await API.getProfile(); U.showDrawer(p.avatar, p.nombre, null, false); }
+            catch(e) { U.showDrawer(null, null, null, false); }
+          });
+        }
       } catch(e) {
         app.innerHTML = '<p style="color:#e68a8d;text-align:center;padding:32px;">Error al cargar reseñas.</p>';
       }
