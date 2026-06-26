@@ -127,12 +127,13 @@
         }
 
         renderPage(wsData, members, [], allWorkspaces, isGod);
-        if (isGod) loadUsersForGrant();
+        if (isGod) { loadUsersForGrant(); appendReportsSection(); }
       } catch(err) {
         // Si falla la carga pero es god_admin, igual mostrar el panel de herramientas
         if (user.role === 'god_admin') {
           renderPage({ id: null, name: '', slug: '', plan: '' }, [], [], [], true);
           loadUsersForGrant();
+          appendReportsSection();
         } else {
           app.innerHTML = styles + U.errorHtml('Error cargando el workspace: ' + err.message);
         }
@@ -329,25 +330,6 @@
             '</div>' +
             '<div id="platform-users-list">' +
               '<p style="font-size:13px;color:#6f7686;text-align:center;padding:24px 0;">Hacé clic en "Cargar usuarios" para ver la lista.</p>' +
-            '</div>' +
-          '</div>' : '') +
-
-          (isGod ? '<div class="ws-card" style="margin-top:4px;border-color:rgba(251,191,36,0.2);">' +
-            '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px;">' +
-              '<div class="ws-card-title" style="margin-bottom:0;color:#fbbf24;">🚩 Reportes de usuarios</div>' +
-              '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' +
-                '<select id="reports-status-filter" onchange="loadReports()" ' +
-                  'style="height:36px;padding:0 10px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:13px;outline:none;">' +
-                  '<option value="">Todos</option>' +
-                  '<option value="pending" selected>Pendientes</option>' +
-                  '<option value="confirmed">Confirmados</option>' +
-                  '<option value="dismissed">Descartados</option>' +
-                '</select>' +
-                '<button class="ws-btn outline" onclick="loadReports()" style="height:36px;font-size:13px;border-color:rgba(251,191,36,0.3);color:#fbbf24;">Cargar reportes</button>' +
-              '</div>' +
-            '</div>' +
-            '<div id="reports-list">' +
-              '<p style="font-size:13px;color:#6f7686;text-align:center;padding:24px 0;">Hacé clic en "Cargar reportes" para ver la lista.</p>' +
             '</div>' +
           '</div>' : '') +
 
@@ -799,6 +781,33 @@
 
     // ── Reports (god_admin) ───────────────────────────────────
     var _reportsCache = [], _repPage = 0, REP_PAGE = 15;
+
+    function appendReportsSection() {
+      var wsMain = document.querySelector('.ws-main');
+      if (!wsMain || document.getElementById('reports-section-card')) return;
+      var card = document.createElement('div');
+      card.id = 'reports-section-card';
+      card.className = 'ws-card';
+      card.style.cssText = 'margin-top:4px;border-color:rgba(251,191,36,0.25);';
+      card.innerHTML =
+        '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px;">' +
+          '<div class="ws-card-title" style="margin-bottom:0;color:#fbbf24;display:flex;align-items:center;gap:8px;">' +
+            '<span style="font-size:20px;">🚩</span> Reportes de usuarios' +
+          '</div>' +
+          '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' +
+            '<select id="reports-status-filter" style="height:36px;padding:0 10px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:13px;outline:none;">' +
+              '<option value="">Todos</option>' +
+              '<option value="pending" selected>Pendientes</option>' +
+              '<option value="confirmed">Confirmados</option>' +
+              '<option value="dismissed">Descartados</option>' +
+            '</select>' +
+            '<button onclick="loadReports()" style="height:36px;padding:0 16px;border-radius:8px;border:1px solid rgba(251,191,36,0.35);background:rgba(251,191,36,0.1);color:#fbbf24;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Cargar reportes</button>' +
+          '</div>' +
+        '</div>' +
+        '<div id="reports-list"><p style="font-size:13px;color:#6f7686;text-align:center;padding:24px 0;">Hacé clic en "Cargar reportes" para ver la lista.</p></div>';
+      wsMain.appendChild(card);
+      document.getElementById('reports-status-filter').addEventListener('change', function() { loadReports(); });
+    }
 
     window.loadReports = async function() {
       var container = document.getElementById('reports-list');
