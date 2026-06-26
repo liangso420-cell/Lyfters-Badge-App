@@ -65,6 +65,22 @@
       }
     }
 
+    window.toggleSaveDetail = function(evId) {
+      var saved = JSON.parse(localStorage.getItem('saved_events') || '[]');
+      var idx = saved.indexOf(evId);
+      var btn = document.getElementById('save-btn-' + evId);
+      if (idx > -1) {
+        saved.splice(idx, 1);
+        if (btn) { btn.textContent = '🔖 Guardar evento'; btn.style.color = '#8b93a3'; btn.style.borderColor = '#2f343f'; btn.style.background = 'transparent'; }
+        U.toast('Evento eliminado de guardados', 'info');
+      } else {
+        saved.push(evId);
+        if (btn) { btn.textContent = '🔖 Guardado'; btn.style.color = '#d897e7'; btn.style.borderColor = 'rgba(216,151,231,0.4)'; btn.style.background = 'rgba(216,151,231,0.1)'; }
+        U.toast('Evento guardado', 'success');
+      }
+      localStorage.setItem('saved_events', JSON.stringify(saved));
+    };
+
     function render(detail, meta) {
       var statusColors = { upcoming:'#3b82f6', open:'#16a34a', ongoing:'#6C63FF', closed:'#d97706', postponed:'#9333ea', draft:'#8b93a3' };
       var statusLabels = { upcoming:'Próximo', open:'Abierto', ongoing:'En curso', closed:'Cerrado', postponed:'Pospuesto', draft:'Borrador' };
@@ -107,7 +123,19 @@
           '<p style="font-family:Manrope,sans-serif;font-size:13px;color:#d897e7;line-height:1.5;margin:0;">Para acceder a este evento tenés que escanear su respectivo QR.</p>' +
         '</div>' +
 
-        '';
+        (function() {
+          var savedIds = JSON.parse(localStorage.getItem('saved_events') || '[]');
+          var evId = meta.id || eventId;
+          var isSaved = savedIds.indexOf(evId) > -1;
+          return '<button id="save-btn-' + evId + '" onclick="toggleSaveDetail(\'' + evId + '\')" ' +
+            'style="width:100%;margin-top:10px;padding:12px;border-radius:12px;' +
+            'border:1px solid ' + (isSaved ? 'rgba(216,151,231,0.4)' : '#2f343f') + ';' +
+            'background:' + (isSaved ? 'rgba(216,151,231,0.1)' : 'transparent') + ';' +
+            'color:' + (isSaved ? '#d897e7' : '#8b93a3') + ';' +
+            'font-family:Poppins,sans-serif;font-size:14px;font-weight:700;cursor:pointer;">' +
+            (isSaved ? '🔖 Guardado' : '🔖 Guardar evento') +
+          '</button>';
+        })();
     }
 
     setTimeout(function() { U.hideLoading(); }, 6000);
