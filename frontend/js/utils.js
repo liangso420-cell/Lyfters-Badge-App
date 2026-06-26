@@ -612,6 +612,8 @@
   }
 
   function showDrawer(avatarUrl, userName, onAvatarSave, isAdmin, userRole) {
+    var existing = document.getElementById('drawer-overlay');
+    if (existing) { existing.remove(); return; }
     try {
       var savedTheme = localStorage.getItem('lyfter_theme');
       if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
@@ -625,7 +627,7 @@
     var dBtnHover = 'onmouseover="this.style.background=\'rgba(255,255,255,0.04)\'" onmouseout="this.style.background=\'transparent\'"';
     root.innerHTML =
       '<div id="drawer-overlay" class="fixed inset-0 z-50 flex justify-end" style="background:rgba(0,0,0,0.55);">' +
-        '<div id="drawer-panel" class="h-full w-72 flex flex-col" style="background:#1c1f27;border-left:1px solid rgba(255,255,255,0.07);box-shadow:-8px 0 32px rgba(0,0,0,0.4);transform:translateX(100%);transition:transform 0.25s ease;">' +
+        '<div id="drawer-panel" class="h-full w-72 flex flex-col" style="background:#1c1f27;border-left:1px solid rgba(255,255,255,0.07);box-shadow:-8px 0 32px rgba(0,0,0,0.4);transform:translateX(100%);transition:transform 0.25s ease;padding-bottom:80px;">' +
           '<div class="p-5 flex items-center gap-3" style="border-bottom:1px solid rgba(255,255,255,0.07);">' +
             avatarHtml +
             '<div>' +
@@ -762,8 +764,12 @@
         var ub2 = document.getElementById('drawer-users-btn-2');
         if (ub2) ub2.addEventListener('click', function() { usersBtn && usersBtn.click(); });
         var lb2b = document.getElementById('drawer-logout-btn-2');
-        if (lb2b) lb2b.addEventListener('click', function() {
-          showConfirm('¿Cerrar sesión?', function() { logout(); }, null, { confirmLabel: 'Cerrar sesión', danger: false });
+        if (lb2b) lb2b.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var overlay = document.getElementById('drawer-overlay');
+          if (overlay) overlay.remove();
+          window.LyfterAPI.logout();
+          window.location.replace('login.html');
         });
       }).catch(function() {
         closeModal();
@@ -1116,11 +1122,13 @@
     }
 
     var logoutBtn = document.getElementById('drawer-logout-btn');
-    if (logoutBtn) {
-      logoutBtn.addEventListener('click', function() {
-        showConfirm('¿Cerrar sesión?', function() { logout(); }, null, { confirmLabel: 'Cerrar sesión', danger: false });
-      });
-    }
+    if (logoutBtn) logoutBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var overlay = document.getElementById('drawer-overlay');
+      if (overlay) overlay.remove();
+      window.LyfterAPI.logout();
+      window.location.replace('login.html');
+    });
 
     var usersBtn = document.getElementById('drawer-users-btn');
     if (usersBtn) {
