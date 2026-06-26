@@ -33,11 +33,10 @@ def _is_dev():
 
 
 def get_client_ip():
-    """
-    IP real del cliente. ProxyFix (x_for=1) ya reescribió remote_addr con la
-    IP del usuario cuando la app corre detrás de un proxy de confianza.
-    """
-    return request.remote_addr or "0.0.0.0"
+    """IP real del cliente, leyendo X-Forwarded-For igual que _get_client_ip() en auth.py."""
+    xff = request.headers.get("X-Forwarded-For") or ""
+    real = xff.split(",")[0].strip()
+    return real or request.remote_addr or "0.0.0.0"
 
 
 def _request_email():
@@ -86,25 +85,19 @@ def ip_guard_register(view):
 
 
 def ip_guard_login(view):
-    """
-    Antes de autenticar: si la cuenta del email tiene `ip_address` guardada y
-    NO coincide con la IP del request, rechaza con 403. Si la cuenta aún no
-    tiene IP anclada, la deja pasar (el guard de registro la fijará).
-    """
+    """Actualiza la IP del usuario en cada login exitoso. No bloquea por IP diferente."""
     @wraps(view)
     def wrapper(*args, **kwargs):
-        if _is_dev():
-            return view(*args, **kwargs)
-
-        email = _request_email()
-        if email:
-            user = users().find_one({"email": email})
-            stored_ip = user.get("ip_address") if user else None
-            if stored_ip and stored_ip != get_client_ip():
-                return jsonify(error="Acceso no permitido desde esta red"), 403
-
-        return view(*args, **kwargs)
-
+        resp = view(*args, **kwargs)
+        if _response_status(resp) in (200, 201):
+            ip = get_client_ip()
+            email = _request_email()
+            if email and ip:
+                users().update_one(
+                    {"email": email},
+                    {"$set": {"ip_address": ip, "last_ip": ip, "last_login_ip": ip}}
+                )
+        return resp
     return wrapper
 
 
