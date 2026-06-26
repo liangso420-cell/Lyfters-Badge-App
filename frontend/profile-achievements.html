@@ -55,9 +55,207 @@
           '<p style="font-family:Manrope,sans-serif;font-size:11px;color:' + (unlocked ? '#8b93a3' : '#3a3f4a') + ';margin:0 0 8px;">' + U.esc(a.description || a.hint || '') + '</p>' +
           (unlocked
             ? '<span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:999px;color:white;background:' + rc.border + ';">' + (rarityLabels[a.rarity] || 'Común') + ' · +' + (a.xp_reward || 0) + ' XP</span>'
+              + '<button onclick="shareAchievement(' + JSON.stringify({name: a.name, description: a.description || a.hint || '', img: a.img || '', icon: a.icon || '🏆'}).replace(/"/g, '&quot;') + ')" style="margin-top:10px;width:100%;padding:8px;border-radius:10px;border:1px solid rgba(249,168,212,0.3);background:rgba(249,168,212,0.08);color:#F9A8D4;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;cursor:pointer;">Compartir logro ↗</button>'
             : '<div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-top:8px;"><img src="assets/icons/ui/icono-candado.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;"><span style="font-size:11px;color:#3a3f4a;font-family:Manrope,sans-serif;">Bloqueado</span></div>') +
         '</div>';
       }
+
+      // Share card del logro (1080×1920). Mismo estilo que la del badge en scan.html,
+      // pero ícono cuadrado redondeado, tag celeste y sin workspace pill.
+      // Expuesta en window porque el onclick de la card corre en scope global.
+      window.shareAchievement = async function(a) {
+        U.toast('Generando imagen...', 'info');
+
+        // roundRect local (este archivo no tiene el helper de scan.html).
+        function rr(c, x, y, w, h, r) {
+          c.beginPath();
+          c.moveTo(x + r, y);
+          c.arcTo(x + w, y, x + w, y + h, r);
+          c.arcTo(x + w, y + h, x, y + h, r);
+          c.arcTo(x, y + h, x, y, r);
+          c.arcTo(x, y, x + w, y, r);
+          c.closePath();
+        }
+
+        async function buildCanvas() {
+          var canvas = document.createElement('canvas');
+          canvas.width = 1080; canvas.height = 1920;
+          var ctx = canvas.getContext('2d');
+
+          // FONDO: oscuro + ~60 estrellas
+          ctx.fillStyle = '#09090f';
+          ctx.fillRect(0, 0, 1080, 1920);
+          var starCols = ['#F9A8D4', '#C084FC', '#67E8F9'];
+          for (var st = 0; st < 60; st++) {
+            ctx.globalAlpha = 0.1 + Math.random() * 0.4;
+            ctx.fillStyle = (Math.random() < 0.2) ? starCols[Math.floor(Math.random() * 3)] : '#ffffff';
+            ctx.beginPath();
+            ctx.arc(Math.random() * 1080, Math.random() * 1920, 1 + Math.random() * 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+
+          // CARD CENTRAL
+          var cardX = 90, cardY = 435, cardW = 900, cardH = 1050;
+          ctx.fillStyle = 'rgba(255,255,255,0.06)';
+          rr(ctx, cardX, cardY, cardW, cardH, 80); ctx.fill();
+          ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 3;
+          rr(ctx, cardX, cardY, cardW, cardH, 80); ctx.stroke();
+
+          // 1. RIBBON
+          var ribW = 18, ribH = 70, ribY = 490;
+          var ribCenters = [540 - 32, 540, 540 + 32];
+          var ribCols = ['#F9A8D4', '#C084FC', '#67E8F9'];
+          for (var rb = 0; rb < 3; rb++) {
+            ctx.fillStyle = ribCols[rb];
+            rr(ctx, ribCenters[rb] - ribW / 2, ribY, ribW, ribH, 6); ctx.fill();
+          }
+
+          // 2. ÍCONO: cuadrado redondeado 230×230 (cx=540, cy=720), borde degradado de 6px
+          var sqSize = 230, sqX = 540 - sqSize / 2, sqTop = 720 - sqSize / 2;
+          var bGrad = ctx.createLinearGradient(sqX, sqTop, sqX + sqSize, sqTop + sqSize);
+          bGrad.addColorStop(0, '#F9A8D4');
+          bGrad.addColorStop(0.5, '#C084FC');
+          bGrad.addColorStop(1, '#67E8F9');
+          ctx.fillStyle = bGrad;
+          rr(ctx, sqX, sqTop, sqSize, sqSize, 60); ctx.fill();
+          ctx.fillStyle = '#09090f';
+          rr(ctx, sqX + 6, sqTop + 6, sqSize - 12, sqSize - 12, 54); ctx.fill();
+
+          // 3. TAG "✦ LOGRO COMPLETADO" (celeste)
+          var tagText = '✦ LOGRO COMPLETADO';
+          ctx.font = '600 36px Manrope, sans-serif';
+          var tagH = 72, tagW = ctx.measureText(tagText).width + 80, tagY = 875 - tagH / 2;
+          ctx.fillStyle = 'rgba(103,232,249,0.15)';
+          rr(ctx, 540 - tagW / 2, tagY, tagW, tagH, 36); ctx.fill();
+          ctx.strokeStyle = 'rgba(103,232,249,0.3)'; ctx.lineWidth = 2;
+          rr(ctx, 540 - tagW / 2, tagY, tagW, tagH, 36); ctx.stroke();
+          ctx.fillStyle = '#67E8F9';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(tagText, 540, 875);
+          ctx.textBaseline = 'alphabetic';
+
+          // 4. NOMBRE DEL LOGRO (degradado rosa→lila→celeste, y=990)
+          var nameGrad = ctx.createLinearGradient(140, 0, 940, 0);
+          nameGrad.addColorStop(0, '#F9A8D4');
+          nameGrad.addColorStop(0.5, '#C084FC');
+          nameGrad.addColorStop(1, '#67E8F9');
+          ctx.fillStyle = nameGrad;
+          ctx.font = 'bold 88px Poppins, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(a.name || '', 540, 990);
+
+          // 5. DESCRIPCIÓN (1–2 líneas, partir en el espacio más cercano al medio)
+          ctx.font = '42px Manrope, sans-serif';
+          ctx.fillStyle = 'rgba(255,255,255,0.45)';
+          ctx.textAlign = 'center';
+          var descText = a.description || '';
+          if (descText) {
+            if (ctx.measureText(descText).width <= 700) {
+              ctx.fillText(descText, 540, 1075);
+            } else {
+              var mid = Math.floor(descText.length / 2);
+              var left = descText.lastIndexOf(' ', mid);
+              var right = descText.indexOf(' ', mid);
+              var splitIdx;
+              if (left === -1) splitIdx = right;
+              else if (right === -1) splitIdx = left;
+              else splitIdx = (mid - left <= right - mid) ? left : right;
+              if (splitIdx === -1) {
+                ctx.fillText(descText, 540, 1075);
+              } else {
+                ctx.fillText(descText.slice(0, splitIdx).trim(), 540, 1075);
+                ctx.fillText(descText.slice(splitIdx + 1).trim(), 540, 1130);
+              }
+            }
+          }
+
+          // (sin workspace pill — los logros son cross-evento)
+
+          // 7. DIVISOR (700px centrado, y=1295)
+          ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(190, 1295); ctx.lineTo(890, 1295); ctx.stroke();
+
+          // 8. BRANDING (y=1360)
+          ctx.font = '38px Manrope, sans-serif';
+          var brandText = 'Lyfter Badge App';
+          var brandTextW = ctx.measureText(brandText).width;
+          var sq = 44, sqGap = 16;
+          var groupX = 540 - (sq + sqGap + brandTextW) / 2;
+          var brandY = 1360;
+          var sqGrad = ctx.createLinearGradient(groupX, brandY - sq / 2, groupX + sq, brandY + sq / 2);
+          sqGrad.addColorStop(0, '#F9A8D4');
+          sqGrad.addColorStop(1, '#C084FC');
+          ctx.fillStyle = sqGrad;
+          rr(ctx, groupX, brandY - sq / 2, sq, sq, 8); ctx.fill();
+          ctx.fillStyle = '#ffffff';
+          ctx.font = '22px serif';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText('✦', groupX + sq / 2, brandY);
+          ctx.textAlign = 'left';
+          ctx.fillStyle = 'rgba(255,255,255,0.35)';
+          ctx.font = '38px Manrope, sans-serif';
+          ctx.fillText(brandText, groupX + sq + sqGap, brandY);
+          ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+
+          // ÍCONO (async): imagen recortada en el cuadrado redondeado interior, o emoji fallback
+          if (a.img) {
+            await new Promise(function(resolve) {
+              var img = new Image();
+              img.crossOrigin = 'anonymous';
+              img.onload = function() {
+                ctx.save();
+                rr(ctx, sqX + 6, sqTop + 6, sqSize - 12, sqSize - 12, 54);
+                ctx.clip();
+                ctx.drawImage(img, sqX + 6, sqTop + 6, sqSize - 12, sqSize - 12);
+                ctx.restore();
+                resolve();
+              };
+              img.onerror = function() {
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '130px serif';
+                ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+                ctx.fillText(a.icon || '🏆', 540, 760);
+                resolve();
+              };
+              img.src = a.img;
+            });
+          } else {
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '130px serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+            ctx.fillText(a.icon || '🏆', 540, 760);
+          }
+
+          return canvas;
+        }
+
+        buildCanvas().then(function(canvas) {
+          canvas.toBlob(async function(blob) {
+            var fname = 'logro-' + (a.name || 'lyfter') + '.png';
+            var file = new File([blob], fname, { type: 'image/png' });
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+              try {
+                await navigator.share({
+                  title: '¡Desbloqueé el logro ' + (a.name || '') + '!',
+                  text: 'Desbloqueé el logro "' + (a.name || '') + '" en Lyfter Badge App',
+                  files: [file]
+                });
+                U.toast('¡Compartido!', 'success');
+              } catch (e) { /* cancelado por el usuario */ }
+            } else {
+              var url = URL.createObjectURL(blob);
+              var dl = document.createElement('a');
+              dl.href = url; dl.download = fname;
+              dl.click();
+              URL.revokeObjectURL(url);
+              U.toast('Imagen guardada — compartila en tu story', 'success');
+            }
+          }, 'image/png');
+        }).catch(function() {
+          U.toast('No se pudo compartir', 'error');
+        });
+      };
 
       async function init() {
         try {
