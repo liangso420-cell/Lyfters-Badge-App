@@ -397,6 +397,10 @@
         window._scanDone = true;
         console.log('scan response:', r);
         launchConfetti();
+        // El botón "← Salir" global (fixed, z-100) flotaría sobre el card;
+        // lo ocultamos porque ahora vive dentro del propio redeem-card.
+        var _exitBtn = document.getElementById('btn-exit-scan');
+        if (_exitBtn) _exitBtn.style.display = 'none';
         var modalRoot = document.getElementById('modal-root');
         var isLast = r.complete;
 
@@ -462,7 +466,8 @@
 
         modalRoot.innerHTML =
           '<div class="fixed inset-0 z-50 flex items-center justify-center p-6 anim-fade" style="background:rgba(17,24,39,0.75);">' +
-            '<div class="redeem-card anim-pop" style="background:#1c1f27;border:2px solid ' + (isRare ? '#ffc850' : '#38bdf8') + ';' + (isRare ? 'box-shadow:0 0 20px rgba(255,200,80,0.25);' : '') + 'border-radius:20px;padding:32px 24px;max-width:320px;width:100%;text-align:center;">' +
+            '<div class="redeem-card anim-pop" style="position:relative;background:#1c1f27;border:2px solid ' + (isRare ? '#ffc850' : '#38bdf8') + ';' + (isRare ? 'box-shadow:0 0 20px rgba(255,200,80,0.25);' : '') + 'border-radius:20px;padding:32px 24px;max-width:320px;width:100%;text-align:center;">' +
+              '<button onclick="history.back()" style="position:absolute;top:14px;right:14px;font-size:13px;padding:5px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#8b93a3;cursor:pointer;">← Salir</button>' +
               '<div style="margin:0 auto 12px;text-align:center;animation:bounceIn 0.6s ease;"><img src="assets/icons/ui/icono-celebracion.png" style="width:24px;height:24px;object-fit:contain;"></div>' +
               '<div style="display:flex;justify-content:center;margin-bottom:8px;">' + badgeIconHtml + '</div>' +
               '<h3 class="text-xl font-bold" style="color:' + (isRare ? '#ffc850' : '#d897e7') + ';">' + (isLast ? U.t('completed_event') : (isRare ? '¡Badge raro obtenido!' : '¡Badge obtenido!')) + '</h3>' +
@@ -476,7 +481,7 @@
                   '<svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>' +
                   'Compartir en LinkedIn' +
                 '</a>' +
-                '<button id="celebrate-share" class="w-full py-3 rounded-btn font-semibold text-white" style="background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);display:flex;align-items:center;justify-content:center;gap:10px;"><img src="assets/icons/ui/Instagram-Logo.png" style="width:20px;height:20px;flex-shrink:0;object-fit:contain;" />Compartir en Instagram</button>' +
+                '<button id="celebrate-share" class="w-full py-3 rounded-btn font-semibold text-white" style="background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);display:flex;align-items:center;justify-content:center;gap:10px;"><img src="assets/icons/ui/Instagram-Logo.png" style="width:28px;height:28px;flex-shrink:0;object-fit:contain;" />Compartir en Instagram</button>' +
                 '<button id="celebrate-ok" style="width:100%;padding:12px;border-radius:12px;border:1px solid #2f343f;background:transparent;color:#8b93a3;font-family:Poppins,sans-serif;font-size:14px;font-weight:600;cursor:pointer;">¡Genial!</button>' +
               '</div>' +
             '</div>' +
@@ -570,7 +575,7 @@
           } catch(err) {
             U.toast('No se pudo compartir', 'error');
             btn.disabled = false;
-            btn.innerHTML = '<img src="assets/icons/ui/Instagram-Logo.png" style="width:20px;height:20px;flex-shrink:0;object-fit:contain;" />Compartir en Instagram';
+            btn.innerHTML = '<img src="assets/icons/ui/Instagram-Logo.png" style="width:28px;height:28px;flex-shrink:0;object-fit:contain;" />Compartir en Instagram';
           }
         });
       }
