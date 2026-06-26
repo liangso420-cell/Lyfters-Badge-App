@@ -533,13 +533,13 @@ td, th { vertical-align: middle; }
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
+  padding: 6px 12px;
   border-radius: 999px;
   border: none;
   background: rgba(21, 23, 29, 0.75);
   color: #f4f6f9;
   font-family: 'Poppins', sans-serif;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   backdrop-filter: blur(6px);
