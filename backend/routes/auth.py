@@ -207,7 +207,7 @@ def get_profile():
 
     user_oid = ObjectId(uid)
 
-    from db import event_joins, badges
+    from db import event_joins, badges, workspaces
     joins = list(event_joins().find({"user_id": user_oid}))
     events_data = []
     for j in joins:
@@ -217,11 +217,13 @@ def get_profile():
         badge_list = list(badges().find({"event_id": j["event_id"]}, {"_id": 1}))
         badge_ids = [b["_id"] for b in badge_list]
         obtained = scans().count_documents({"user_id": user_oid, "badge_id": {"$in": badge_ids}})
+        ws = workspaces().find_one({"_id": ev.get("workspace_id")}, {"name": 1}) if ev.get("workspace_id") else None
+        ws_name = ws.get("name", "") if ws else ""
         events_data.append({
             "id": str(ev["_id"]),
             "name": ev.get("name", ev.get("title", "")),
             "nombre": ev.get("name", ev.get("title", "")),
-            "workspace_name": ev.get("workspace_name", ""),
+            "workspace_name": ws_name,
             "status": compute_event_status(ev),
             "tags": ev.get("tags", []),
             "obtained": obtained,
