@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Reseñas — Lyfter</title>
+  <title>Reseñas (Admin) — Lyfter</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
@@ -13,30 +13,35 @@
     <div class="loader"></div>
     <span>Cargando reseñas...</span>
   </div>
-  <div id="app" style="position:relative;z-index:1;width:100%;max-width:100%;margin:0 auto;padding:24px clamp(16px,4vw,44px) 70px;"></div>
+  <div id="app" style="position:relative;z-index:1;max-width:600px;margin:0 auto;padding:24px 16px;"></div>
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/utils.js"></script>
-  <script src="js/stars.js"></script>
+  <script src="js/particles.js"></script>
   <script>
   (function() {
     var API = window.LyfterAPI;
     var U = window.LyfterUtils;
     var user = API.currentUser();
     if (!user) { window.location.replace('login.html'); return; }
+    if (['admin','superadmin','god_admin'].indexOf(user.role) === -1) {
+      window.location.replace('profile.html'); return;
+    }
 
     var qs = new URLSearchParams(window.location.search);
     var eventId = qs.get('event');
     var eventName = qs.get('name') || 'Evento';
     var app = document.getElementById('app');
 
-    if (!eventId) { window.location.replace('user-events.html'); return; }
+    if (!eventId) { window.location.replace('admin-event.html'); return; }
+
+    var backUrl = 'admin-event-detail.html?id=' + encodeURIComponent(eventId);
 
     async function init() {
       app.innerHTML =
         '<div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">' +
-          '<button onclick="history.back()" style="width:36px;height:36px;border-radius:10px;border:none;background:rgba(255,255,255,0.06);color:#f4f6f9;font-size:18px;cursor:pointer;">←</button>' +
-          '<h1 style="font-family:Poppins,sans-serif;font-size:20px;font-weight:700;color:#f4f6f9;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Reseñas</h1>' +
+          '<a href="' + backUrl + '" style="width:36px;height:36px;border-radius:10px;border:none;background:rgba(255,255,255,0.06);color:#f4f6f9;font-size:18px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;">←</a>' +
+          '<h1 style="font-family:Poppins,sans-serif;font-size:20px;font-weight:700;color:#f4f6f9;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">Reseñas</h1>' +
         '</div>' +
         '<div id="reviews-container"><p style="color:#8b93a3;text-align:center;padding:32px;">Cargando...</p></div>';
 
@@ -55,7 +60,7 @@
             '<div style="text-align:center;padding:48px 24px;">' +
               '<div style="font-size:48px;margin-bottom:12px;">⭐</div>' +
               '<p style="font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#f4f6f9;margin:0 0 8px;">Sin reseñas aún</p>' +
-              '<p style="font-family:Manrope,sans-serif;font-size:13px;color:#8b93a3;">Sé el primero en dejar una reseña.</p>' +
+              '<p style="font-family:Manrope,sans-serif;font-size:13px;color:#8b93a3;">Todavía no hay reseñas para este evento.</p>' +
             '</div>';
           return;
         }
@@ -135,6 +140,9 @@
                 (r.best_part ? pill('Lo mejor', labels.best_part[r.best_part]||r.best_part, '#d897e7') : '') +
                 (r.return_again ? pill('¿Volvería?', labels.return_again[r.return_again]||r.return_again, '#4ade80') : '') +
               '</div>' +
+              '<div style="display:flex;justify-content:flex-end;margin-top:10px;">' +
+                '<button onclick="deleteReview(\'' + r.id + '\')" style="height:28px;padding:0 12px;border-radius:8px;border:1px solid rgba(230,138,141,0.3);background:rgba(230,138,141,0.08);color:#e68a8d;font-family:Poppins,sans-serif;font-size:11px;font-weight:700;cursor:pointer;">Eliminar reseña</button>' +
+              '</div>' +
             '</div>';
           }).join('');
         };
@@ -147,6 +155,21 @@
           '<p style="color:#e68a8d;text-align:center;padding:32px;">Error al cargar reseñas.</p>';
       }
     }
+
+    window.deleteReview = async function(reviewId) {
+      if (!confirm('¿Eliminar esta reseña?')) return;
+      try {
+        var res = await fetch(API.base + '/events/reviews/' + reviewId, {
+          method: 'DELETE',
+          headers: API.authHeaders()
+        });
+        if (!res.ok) throw new Error('Error al eliminar');
+        U.toast('Reseña eliminada', 'success');
+        setTimeout(function() { init(); }, 600);
+      } catch(e) {
+        U.toast(e.message, 'error');
+      }
+    };
 
     function pill(label, value, color) {
       return '<div style="background:rgba(255,255,255,0.04);border:1px solid #2f343f;border-radius:8px;padding:6px 10px;">' +

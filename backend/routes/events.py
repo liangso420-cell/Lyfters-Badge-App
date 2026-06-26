@@ -362,3 +362,51 @@ def submit_review(event_id):
     })
 
     return jsonify(message="Reseña enviada correctamente"), 201
+
+
+@events_bp.route("/<event_id>/reviews", methods=["GET"])
+@jwt_required()
+def get_reviews(event_id):
+    try:
+        oid = ObjectId(event_id)
+    except Exception:
+        return jsonify(error="ID inválido"), 400
+
+    event_reviews = list(reviews().find(
+        {"event_id": oid},
+        {"user_id": 1, "rating": 1, "recommend": 1, "best_part": 1, "return_again": 1, "created_at": 1}
+    ).sort("created_at", -1).limit(50))
+
+    result = []
+    for r in event_reviews:
+        user_doc = users().find_one({"_id": r["user_id"]}, {"name": 1})
+        result.append({
+            "id": str(r["_id"]),
+            "user_name": user_doc.get("name", "Usuario") if user_doc else "Usuario",
+            "rating": r.get("rating", 0),
+            "recommend": r.get("recommend"),
+            "best_part": r.get("best_part"),
+            "return_again": r.get("return_again"),
+            "created_at": r.get("created_at", "").isoformat() if hasattr(r.get("created_at"), "isoformat") else ""
+        })
+
+    avg_rating = round(sum(r["rating"] for r in result) / len(result), 1) if result else 0
+
+    return jsonify(reviews=result, total=len(result), avg_rating=avg_rating), 200
+
+
+@events_bp.route("/reviews/<review_id>", methods=["DELETE"])
+@jwt_required()
+def delete_review(review_id):
+    claims = get_jwt()
+    if claims.get("role") not in ("admin", "superadmin", "god_admin"):
+        return jsonify(error="Sin permisos"), 403
+    try:
+        oid = ObjectId(review_id)
+    except Exception:
+        return jsonify(error="ID inválido"), 400
+
+    result = reviews().delete_one({"_id": oid})
+    if result.deleted_count == 0:
+        return jsonify(error="Reseña no encontrada"), 404
+    return jsonify(message="Reseña eliminada"), 200
