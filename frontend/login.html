@@ -143,6 +143,25 @@
         var d = document.getElementById('login-deco');
         if (d && window.innerWidth >= 900) { d.style.display = 'block'; }
       })();
+      function loginSuccessAnimation(cb) {
+        var overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(21,23,29,0.75);backdrop-filter:blur(4px);';
+        var circle = document.createElement('div');
+        circle.style.cssText = 'width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#16a34a);display:flex;align-items:center;justify-content:center;transform:scale(0);transition:transform 0.3s cubic-bezier(0.175,0.885,0.32,1.275);box-shadow:0 0 40px rgba(34,197,94,0.5);';
+        circle.innerHTML = '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+        overlay.appendChild(circle);
+        document.body.appendChild(overlay);
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() {
+            circle.style.transform = 'scale(1)';
+            setTimeout(function() {
+              document.body.removeChild(overlay);
+              cb();
+            }, 700);
+          });
+        });
+      }
+
       var form = document.getElementById('login-form');
       (function() {
         var inp = form.elements['password'];
@@ -175,8 +194,14 @@
           var loggedUser = await API.login(email.value.trim(), pass.value);
           U.toastNextPage(U.t('welcome'), 'success');
           var _ar = ['admin','superadmin','god_admin'];
-          window.location.href = nextUrl || (_ar.indexOf(loggedUser.role) !== -1 ? 'workspace-select.html' : 'profile.html');
+          var destino = nextUrl || (_ar.indexOf(loggedUser.role) !== -1 ? 'workspace-select.html' : 'profile.html');
+          loginSuccessAnimation(function() { window.location.href = destino; });
         } catch (err) {
+          // IP baneada
+          if (err && err.code === 'IP_BANNED') {
+            U.toast('Tu acceso ha sido bloqueado desde esta red. Contactá al soporte.', 'error');
+            return;
+          }
           // Cuenta baneada → pantalla de cuenta suspendida.
           if (err && err.code === 'cuenta_baneada') { showBanScreen(err.ban || {}); return; }
           // Si la cuenta no existe, mensaje específico; si no, credenciales incorrectas.
@@ -306,12 +331,12 @@
           // Mismo comportamiento que en la pantalla de registro:
           // admin → workspace; usuario nuevo → onboarding; existente → directo a la app.
           if (_ar2.indexOf(loggedUser.role) !== -1) {
-            window.location.href = nextUrl || 'workspace-select.html';
+            loginSuccessAnimation(function() { window.location.href = nextUrl || 'workspace-select.html'; });
           } else if (gres.isNew) {
-            showInterestsStep();
+            loginSuccessAnimation(function() { showInterestsStep(); });
           } else {
             U.toastNextPage(U.t('welcome_google'), 'success');
-            window.location.href = nextUrl || 'profile.html';
+            loginSuccessAnimation(function() { window.location.href = nextUrl || 'profile.html'; });
           }
         } catch (err) {
           // Cuenta baneada → pantalla de cuenta suspendida.

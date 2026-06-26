@@ -150,6 +150,46 @@
           inp.parentElement.appendChild(btn);
         });
       })();
+      function launchFireworks(cb) {
+        var canvas = document.createElement('canvas');
+        canvas.style.cssText = 'position:fixed;inset:0;z-index:9999;pointer-events:none;';
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        document.body.appendChild(canvas);
+        var ctx = canvas.getContext('2d');
+        var particles = [];
+        var colors = ['#d897e7','#e68a8d','#ffc850','#6C63FF','#22c55e','#70cfff'];
+        for (var i = 0; i < 80; i++) {
+          particles.push({
+            x: canvas.width / 2 + (Math.random() - 0.5) * 200,
+            y: canvas.height * 0.4,
+            vx: (Math.random() - 0.5) * 12,
+            vy: -(Math.random() * 10 + 4),
+            color: colors[Math.floor(Math.random() * colors.length)],
+            life: 1, size: Math.random() * 5 + 3
+          });
+        }
+        var start = null;
+        function tick(ts) {
+          if (!start) start = ts;
+          var elapsed = ts - start;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          particles.forEach(function(p) {
+            p.x += p.vx; p.y += p.vy; p.vy += 0.25; p.life -= 0.018;
+            ctx.globalAlpha = Math.max(0, p.life);
+            ctx.fillStyle = p.color;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+          });
+          ctx.globalAlpha = 1;
+          if (elapsed < 1800) {
+            requestAnimationFrame(tick);
+          } else {
+            document.body.removeChild(canvas);
+            cb();
+          }
+        }
+        requestAnimationFrame(tick);
+      }
+
       form.addEventListener('submit', async function (e) {
         e.preventDefault();
         var name = form.elements['name'], email = form.email, pass = form.password, confirm = form.confirm, ok = true;
@@ -164,9 +204,9 @@
         try {
           var newUser = await API.register({ name: name.value.trim(), email: email.value.trim(), password: pass.value });
           if (['admin','superadmin','god_admin'].indexOf(newUser.role) !== -1) {
-            window.location.href = 'workspace-select.html';
+            launchFireworks(function() { window.location.href = 'workspace-select.html'; });
           } else {
-            showInterestsStep();
+            launchFireworks(function() { showInterestsStep(); });
           }
         } catch (err) {
           // Si ya existe una cuenta con ese email, mensaje específico que invita a iniciar sesión.
@@ -206,12 +246,12 @@
           // Mismo comportamiento que en la pantalla de login:
           // admin → workspace; usuario nuevo → onboarding; existente → directo a la app.
           if (['admin','superadmin','god_admin'].indexOf(loggedUser.role) !== -1) {
-            window.location.href = 'workspace-select.html';
+            launchFireworks(function() { window.location.href = 'workspace-select.html'; });
           } else if (gres.isNew) {
-            showInterestsStep();
+            launchFireworks(function() { showInterestsStep(); });
           } else {
             U.toastNextPage(U.t('welcome_google'), 'success');
-            window.location.href = 'profile.html';
+            launchFireworks(function() { window.location.href = 'profile.html'; });
           }
         } catch (err) {
           var mensajes = {

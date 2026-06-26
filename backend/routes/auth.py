@@ -16,7 +16,7 @@ from flask_jwt_extended import (
 from google.oauth2 import id_token
 from google.auth.transport import requests as grequests
 
-from db import users, scans, workspace_members, invitations as invitations_col, achievements, reviews, events
+from db import users, scans, workspace_members, invitations as invitations_col, achievements, reviews, events, ip_bans
 from utils import sanitize, fmt_user, compute_event_status
 from security.limiter import (
     register_limit, login_participant_limit, login_admin_limit, avatar_limit,
@@ -344,6 +344,15 @@ def update_interests():
 @login_admin_limit
 @ip_guard_login
 def login():
+    now_dt    = datetime.utcnow()
+    client_ip = (request.headers.get("X-Forwarded-For") or request.remote_addr or "").split(",")[0].strip()
+
+    # Verificar IP ban ANTES de validar credenciales
+    if client_ip:
+        ip_ban_doc = ip_bans().find_one({"ip": client_ip, "expires_at": {"$gt": now_dt}})
+        if ip_ban_doc:
+            return jsonify(error="Tu acceso ha sido bloqueado desde esta red.", error_code="IP_BANNED"), 403
+
     data     = request.get_json() or {}
     email    = sanitize(data.get("email") or "", max_len=254).lower()
     password = (data.get("password") or "").encode()
@@ -363,14 +372,7 @@ def login():
     if ban_resp:
         return ban_resp
 
-    now_dt = datetime.utcnow()
-
-    # Check IP ban
-    client_ip = (request.headers.get("X-Forwarded-For") or request.remote_addr or "").split(",")[0].strip()
     if client_ip:
-        ip_ban = users().find_one({"ban_ip": client_ip, "banned_until": {"$gt": now_dt}})
-        if ip_ban:
-            return jsonify(error="Acceso denegado desde esta red."), 403
         users().update_one({"_id": user["_id"]}, {"$set": {"last_login_ip": client_ip}})
 
     token = create_access_token(

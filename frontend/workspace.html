@@ -332,6 +332,25 @@
             '</div>' +
           '</div>' : '') +
 
+          (isGod ? '<div class="ws-card" style="margin-top:4px;border-color:rgba(251,191,36,0.2);">' +
+            '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px;">' +
+              '<div class="ws-card-title" style="margin-bottom:0;color:#fbbf24;">🚩 Reportes de usuarios</div>' +
+              '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' +
+                '<select id="reports-status-filter" onchange="loadReports()" ' +
+                  'style="height:36px;padding:0 10px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:13px;outline:none;">' +
+                  '<option value="">Todos</option>' +
+                  '<option value="pending" selected>Pendientes</option>' +
+                  '<option value="confirmed">Confirmados</option>' +
+                  '<option value="dismissed">Descartados</option>' +
+                '</select>' +
+                '<button class="ws-btn outline" onclick="loadReports()" style="height:36px;font-size:13px;border-color:rgba(251,191,36,0.3);color:#fbbf24;">Cargar reportes</button>' +
+              '</div>' +
+            '</div>' +
+            '<div id="reports-list">' +
+              '<p style="font-size:13px;color:#6f7686;text-align:center;padding:24px 0;">Hacé clic en "Cargar reportes" para ver la lista.</p>' +
+            '</div>' +
+          '</div>' : '') +
+
         '</div>';
 
       if (ws.id && callerRank >= 3) {
@@ -776,6 +795,168 @@
         U.toast('Cuenta eliminada', 'success');
         loadPlatformUsers();
       } catch(e) { U.toast(e.message, 'error'); }
+    };
+
+    // ── Reports (god_admin) ───────────────────────────────────
+    var _reportsCache = [], _repPage = 0, REP_PAGE = 15;
+
+    window.loadReports = async function() {
+      var container = document.getElementById('reports-list');
+      if (!container) return;
+      container.innerHTML = '<p style="font-size:13px;color:#8b93a3;text-align:center;padding:20px;">Cargando...</p>';
+      var statusSel = document.getElementById('reports-status-filter');
+      var status = statusSel ? statusSel.value : '';
+      try {
+        var url = API.base + '/reports/' + (status ? '?status=' + status : '');
+        var res = await fetch(url, { headers: API.authHeaders() });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error');
+        _reportsCache = data;
+        _repPage = 0;
+        renderReportsPage(data, 0);
+        if (!data.length) container.innerHTML = '<p style="font-size:13px;color:#6f7686;text-align:center;padding:24px 0;">No hay reportes con ese filtro.</p>';
+      } catch(e) {
+        container.innerHTML = '<p style="color:#e68a8d;font-size:13px;text-align:center;padding:20px;">Error: ' + U.esc(e.message) + '</p>';
+      }
+    };
+
+    function renderReportsPage(list, page) {
+      var container = document.getElementById('reports-list');
+      if (!container) return;
+      if (!list.length) return;
+      var slice = list.slice(page * REP_PAGE, (page + 1) * REP_PAGE);
+      var STATUS_LABELS = { pending: 'Pendiente', confirmed: 'Confirmado', dismissed: 'Descartado' };
+      var STATUS_COLORS = { pending: '#fbbf24', confirmed: '#e68a8d', dismissed: '#6f7686' };
+      var rows = slice.map(function(r) {
+        var statusColor = STATUS_COLORS[r.status] || '#8b93a3';
+        var statusLabel = STATUS_LABELS[r.status] || r.status;
+        var safeId = U.esc(r.id);
+        var safeName = U.esc(r.reported_name || '?');
+        var actions = '';
+        if (r.status === 'pending') {
+          actions =
+            '<button onclick="dismissReport(\'' + safeId + '\')" ' +
+              'style="height:28px;font-size:11px;padding:0 10px;border-radius:6px;border:1px solid #353a46;background:transparent;color:#8b93a3;cursor:pointer;margin-right:6px;">Descartar</button>' +
+            '<button onclick="openConfirmReportModal(\'' + safeId + '\',\'' + safeName + '\')" ' +
+              'style="height:28px;font-size:11px;padding:0 10px;border-radius:6px;border:1px solid rgba(230,138,141,0.35);background:rgba(230,138,141,0.12);color:#e68a8d;cursor:pointer;">Confirmar</button>';
+        }
+        return '<tr>' +
+          '<td style="font-size:12px;color:#8b93a3;">' + (r.reported_name ? U.esc(r.reported_name) : '—') + '<br/><span style="font-size:10px;opacity:.7;">' + U.esc(r.reported_email || '') + '</span></td>' +
+          '<td style="font-size:12px;">' + U.esc(r.reason || '') + '</td>' +
+          '<td style="font-size:12px;color:#8b93a3;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="' + U.esc(r.description || '') + '">' + U.esc((r.description || '').slice(0, 60)) + (r.description && r.description.length > 60 ? '…' : '') + '</td>' +
+          '<td><span style="font-size:11px;font-weight:700;color:' + statusColor + ';">' + statusLabel + '</span></td>' +
+          '<td style="font-size:11px;color:#6f7686;">' + (r.created_at ? r.created_at.slice(0, 10) : '') + '</td>' +
+          '<td style="white-space:nowrap;">' + actions + '</td>' +
+        '</tr>';
+      }).join('');
+      container.innerHTML =
+        '<div style="overflow-x:auto;">' +
+          '<table class="ws-table"><thead><tr>' +
+            '<th>Reportado</th><th>Razón</th><th>Descripción</th><th>Estado</th><th>Fecha</th><th>Acciones</th>' +
+          '</tr></thead><tbody>' + rows + '</tbody></table>' +
+        '</div>' +
+        pagerHtml(list.length, page, REP_PAGE, '_goRepPage');
+    }
+
+    window._goRepPage = function(p) { _repPage = p; renderReportsPage(_reportsCache, p); window.scrollTo(0, 0); };
+
+    window.dismissReport = async function(reportId) {
+      if (!confirm('¿Descartar este reporte?')) return;
+      try {
+        var res = await fetch(API.base + '/reports/' + reportId + '/dismiss', {
+          method: 'POST',
+          headers: Object.assign({}, API.authHeaders(), {'Content-Type': 'application/json'}),
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error');
+        U.toast('Reporte descartado', 'success');
+        loadReports();
+      } catch(e) { U.toast(e.message, 'error'); }
+    };
+
+    var _reportModalTarget = null;
+
+    window.openConfirmReportModal = function(reportId, reportedName) {
+      _reportModalTarget = reportId;
+      var old = document.getElementById('confirm-report-modal');
+      if (old) old.remove();
+      var overlay = document.createElement('div');
+      overlay.id = 'confirm-report-modal';
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;';
+      overlay.innerHTML =
+        '<div style="background:#1c1f27;border:1px solid rgba(230,138,141,0.3);border-radius:20px;padding:28px 30px;max-width:440px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,0.5);">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">' +
+            '<div style="font-family:Poppins,sans-serif;font-size:17px;font-weight:700;color:#e68a8d;">Confirmar reporte · ' + U.esc(reportedName) + '</div>' +
+            '<button onclick="document.getElementById(\'confirm-report-modal\').remove();_reportModalTarget=null;" style="background:none;border:none;color:#6f7686;font-size:22px;cursor:pointer;line-height:1;padding:0 4px;">×</button>' +
+          '</div>' +
+          '<div style="margin-bottom:16px;">' +
+            '<div style="font-size:11px;font-weight:700;color:#8b93a3;margin-bottom:8px;letter-spacing:.06em;text-transform:uppercase;">Acción</div>' +
+            '<div style="display:flex;flex-direction:column;gap:8px;">' +
+              '<label style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:1px solid #353a46;cursor:pointer;font-size:13px;color:#cdd2db;"><input type="radio" name="rep-action" value="warn" checked style="accent-color:#e68a8d;"/> Solo registrar (sin ban)</label>' +
+              '<label style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:1px solid #353a46;cursor:pointer;font-size:13px;color:#cdd2db;"><input type="radio" name="rep-action" value="ban" style="accent-color:#e68a8d;"/> Banear usuario</label>' +
+            '</div>' +
+          '</div>' +
+          '<div id="rep-ban-opts" style="display:none;margin-bottom:16px;">' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;">' +
+              ['1 día|1','3 días|3','7 días|7','30 días|30','Permanente|perm'].map(function(d) {
+                var parts = d.split('|');
+                return '<label style="display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:10px;border:1px solid #353a46;cursor:pointer;font-size:12px;color:#cdd2db;"><input type="radio" name="rep-ban-dur" value="' + parts[1] + '"' + (parts[1]==='7'?' checked':'') + ' style="accent-color:#e68a8d;flex-shrink:0;"/> ' + parts[0] + '</label>';
+              }).join('') +
+            '</div>' +
+          '</div>' +
+          '<div style="margin-bottom:18px;">' +
+            '<div style="font-size:11px;font-weight:700;color:#8b93a3;margin-bottom:8px;letter-spacing:.06em;text-transform:uppercase;">Razón del ban (opcional)</div>' +
+            '<input id="rep-ban-reason" type="text" placeholder="Motivo..." style="width:100%;height:40px;border-radius:10px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:14px;padding:0 14px;outline:none;box-sizing:border-box;" />' +
+          '</div>' +
+          '<div style="display:flex;gap:10px;">' +
+            '<button onclick="document.getElementById(\'confirm-report-modal\').remove();_reportModalTarget=null;" style="flex:1;height:44px;border-radius:10px;border:1px solid #353a46;background:transparent;color:#aab1bf;font-family:Poppins,sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Cancelar</button>' +
+            '<button id="rep-confirm-btn" onclick="submitConfirmReport()" style="flex:2;height:44px;border-radius:10px;border:1px solid rgba(230,138,141,0.4);background:rgba(230,138,141,0.15);color:#e68a8d;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Confirmar reporte</button>' +
+          '</div>' +
+        '</div>';
+      document.body.appendChild(overlay);
+      overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) { overlay.remove(); _reportModalTarget = null; }
+      });
+      Array.prototype.forEach.call(overlay.querySelectorAll('input[name="rep-action"]'), function(radio) {
+        radio.addEventListener('change', function() {
+          var opts = document.getElementById('rep-ban-opts');
+          if (opts) opts.style.display = radio.value === 'ban' ? '' : 'none';
+        });
+      });
+    };
+
+    window.submitConfirmReport = async function() {
+      if (!_reportModalTarget) return;
+      var actionEl = document.querySelector('input[name="rep-action"]:checked');
+      var action   = actionEl ? actionEl.value : 'warn';
+      var payload  = { action: action };
+      if (action === 'ban') {
+        var durEl   = document.querySelector('input[name="rep-ban-dur"]:checked');
+        var dur     = durEl ? durEl.value : '7';
+        var reason  = (document.getElementById('rep-ban-reason').value || '').trim();
+        if (dur === 'perm') { payload.permanent = true; }
+        else { payload.ban_days = parseInt(dur, 10); }
+        payload.ban_reason = reason || 'Reporte confirmado por administrador';
+      }
+      var btn = document.getElementById('rep-confirm-btn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Procesando...'; }
+      try {
+        var res = await fetch(API.base + '/reports/' + _reportModalTarget + '/confirm', {
+          method: 'POST',
+          headers: Object.assign({}, API.authHeaders(), {'Content-Type': 'application/json'}),
+          body: JSON.stringify(payload),
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error');
+        var modal = document.getElementById('confirm-report-modal');
+        if (modal) modal.remove();
+        _reportModalTarget = null;
+        U.toast('Reporte confirmado' + (action === 'ban' ? ' · Usuario baneado' : ''), 'success');
+        loadReports();
+      } catch(e) {
+        U.toast(e.message, 'error');
+        if (btn) { btn.disabled = false; btn.textContent = 'Confirmar reporte'; }
+      }
     };
 
     init();

@@ -9,7 +9,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt, get_jwt_identity
 from bson import ObjectId
 
-from db import users, events, badges, scans, workspace_members, workspaces, event_joins, reviews
+from db import users, events, badges, scans, workspace_members, workspaces, event_joins, reviews, ip_bans
 from utils import (
     require_admin, valid_oid, sanitize,
     generate_qr_base64, fmt_event, fmt_admin_badge, fmt_user, compute_event_status
@@ -759,3 +759,67 @@ def event_stats_detail(event_id):
             "distribution": rating_distribution
         }
     ), 200
+
+
+# ──────────────────────────────────────────────
+# GESTIÓN DE IP BANS (god_admin / superadmin)
+# ──────────────────────────────────────────────
+
+@admin_bp.route("/ip-bans", methods=["GET"])
+@jwt_required()
+def list_ip_bans():
+    if not is_superadmin_or_above():
+        return jsonify(error="Acceso denegado"), 403
+    now_dt = datetime.utcnow()
+    bans = list(ip_bans().find({}, {"_id": 0}).sort("created_at", -1).limit(200))
+    result = []
+    for b in bans:
+        exp = b.get("expires_at")
+        result.append({
+            "ip":         b.get("ip"),
+            "reason":     b.get("reason", ""),
+            "permanent":  exp is not None and exp.year >= 9999,
+            "expires_at": exp.isoformat() if exp else None,
+            "created_at": b.get("created_at", datetime.utcnow()).isoformat(),
+            "active":     exp is not None and exp > now_dt,
+        })
+    return jsonify(result), 200
+
+
+@admin_bp.route("/ip-ban", methods=["POST"])
+@jwt_required()
+def create_ip_ban():
+    if not is_superadmin_or_above():
+        return jsonify(error="Acceso denegado"), 403
+    data      = request.get_json() or {}
+    ip        = (data.get("ip") or "").strip()
+    reason    = sanitize(data.get("reason") or "", max_len=200)
+    days      = int(data.get("days") or 0)
+    permanent = bool(data.get("permanent", False))
+    if not ip:
+        return jsonify(error="IP requerida"), 400
+    now_dt = datetime.utcnow()
+    if permanent:
+        expires_at = datetime(9999, 12, 31, 23, 59, 59)
+    elif days > 0:
+        from datetime import timedelta
+        expires_at = now_dt + timedelta(days=days)
+    else:
+        return jsonify(error="Especificá duración en días o permanent=true"), 400
+    ip_bans().update_one(
+        {"ip": ip},
+        {"$set": {"ip": ip, "reason": reason, "expires_at": expires_at, "created_at": now_dt}},
+        upsert=True
+    )
+    return jsonify(ok=True, ip=ip, permanent=permanent, expires_at=expires_at.isoformat()), 200
+
+
+@admin_bp.route("/ip-ban/<path:ip>", methods=["DELETE"])
+@jwt_required()
+def delete_ip_ban(ip):
+    if not is_superadmin_or_above():
+        return jsonify(error="Acceso denegado"), 403
+    result = ip_bans().delete_one({"ip": ip})
+    if result.deleted_count == 0:
+        return jsonify(error="IP no encontrada en la lista de bans"), 404
+    return jsonify(ok=True), 200

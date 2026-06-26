@@ -59,6 +59,8 @@ def workspaces():        return get_db()["workspaces"]
 def workspace_members(): return get_db()["workspace_members"]
 def invitations():       return get_db()["invitations"]
 def reviews():           return get_db()["reviews"]
+def ip_bans():           return get_db()["ip_bans"]
+def reports():           return get_db()["reports"]
 
 
 def init_indexes():
@@ -97,3 +99,12 @@ def init_indexes():
     invitations().create_index("token", unique=True)
     invitations().create_index("code", unique=True)
     invitations().create_index("expires_at", expireAfterSeconds=0)
+
+    # ── Baneo de IPs ────────────────────────────────
+    ip_bans().create_index("ip", unique=True)
+    ip_bans().create_index("expires_at", expireAfterSeconds=0)
+
+    # ── Reports de usuarios ─────────────────────────
+    reports().create_index([("reporter_id", ASCENDING), ("event_id", ASCENDING)])
+    reports().create_index("status")
+    reports().create_index("created_at")

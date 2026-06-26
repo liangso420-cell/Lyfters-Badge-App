@@ -79,6 +79,84 @@
         ls.style.pointerEvents = '';
       }
 
+      /* ── Helpers de animación ── */
+      var LEVEL_NAMES = ['', 'Explorador', 'Coleccionista', 'Maestro Badge', 'Leyenda Lyfter'];
+      var LEVEL_THRESHOLDS = [0, 0, 100, 300, 600];
+      var LEVEL_COLORS = ['', '#70cfff', '#d897e7', '#ffc850', '#e68a8d'];
+
+      function addLevelBadge(level) {
+        var existing = document.getElementById('level-badge-float');
+        if (existing) existing.remove();
+        if (!level || level < 1) return;
+        var badge = document.createElement('div');
+        badge.id = 'level-badge-float';
+        badge.title = 'Nivel ' + level + ': ' + (LEVEL_NAMES[level] || '');
+        badge.style.cssText = 'position:fixed;bottom:24px;left:24px;z-index:500;display:flex;align-items:center;gap:8px;background:#1c1f27;border:1px solid ' + (LEVEL_COLORS[level] || '#353a46') + ';border-radius:999px;padding:8px 14px 8px 10px;box-shadow:0 4px 20px rgba(0,0,0,0.5);cursor:default;transition:transform .2s;';
+        badge.innerHTML =
+          '<div style="width:32px;height:32px;border-radius:50%;background:' + (LEVEL_COLORS[level] || '#353a46') + ';display:flex;align-items:center;justify-content:center;font-size:16px;">🛡️</div>' +
+          '<div><div style="font-family:Poppins,sans-serif;font-size:11px;font-weight:700;color:' + (LEVEL_COLORS[level] || '#f4f6f9') + ';">Nivel ' + level + '</div>' +
+          '<div style="font-family:Manrope,sans-serif;font-size:10px;color:#8b93a3;">' + (LEVEL_NAMES[level] || '') + '</div></div>';
+        badge.onmouseover = function() { badge.style.transform = 'scale(1.05)'; };
+        badge.onmouseout  = function() { badge.style.transform = 'scale(1)'; };
+        document.body.appendChild(badge);
+      }
+
+      function animateXPBar(r) {
+        var xpTotal = r.xp_total || 0;
+        var level   = r.level || 1;
+        var levelStart = LEVEL_THRESHOLDS[level] || 0;
+        var levelEnd   = LEVEL_THRESHOLDS[level + 1] || (levelStart + 300);
+        var pct = levelEnd > levelStart
+          ? Math.min(100, Math.round(((xpTotal - levelStart) / (levelEnd - levelStart)) * 100))
+          : 100;
+        var color = LEVEL_COLORS[level] || '#d897e7';
+
+        var container = document.createElement('div');
+        container.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:500;background:#1c1f27;border:1px solid #2f343f;border-radius:14px;padding:12px 18px;min-width:220px;max-width:320px;box-shadow:0 8px 30px rgba(0,0,0,0.5);';
+        container.innerHTML =
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">' +
+            '<span style="font-family:Manrope,sans-serif;font-size:11px;font-weight:700;color:' + color + ';">Nv.' + level + ' · ' + (LEVEL_NAMES[level] || '') + '</span>' +
+            '<span style="font-family:Manrope,sans-serif;font-size:11px;color:#8b93a3;">' + xpTotal + ' XP</span>' +
+          '</div>' +
+          '<div style="height:8px;background:#2f343f;border-radius:999px;overflow:hidden;">' +
+            '<div id="xp-bar-inner" style="height:100%;width:0%;background:' + color + ';border-radius:999px;transition:width 1s ease;"></div>' +
+          '</div>';
+        document.body.appendChild(container);
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() {
+            var bar = container.querySelector('#xp-bar-inner');
+            if (bar) bar.style.width = pct + '%';
+          });
+        });
+        setTimeout(function() {
+          container.style.transition = 'opacity 0.5s';
+          container.style.opacity = '0';
+          setTimeout(function() { if (container.parentNode) container.parentNode.removeChild(container); }, 500);
+        }, 3500);
+      }
+
+      function levelUpAnimation(level) {
+        var color = LEVEL_COLORS[level] || '#d897e7';
+        var name  = LEVEL_NAMES[level] || ('Nivel ' + level);
+        var overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:600;display:flex;align-items:center;justify-content:center;background:rgba(21,23,29,0.8);backdrop-filter:blur(6px);';
+        overlay.innerHTML =
+          '<div style="background:#1c1f27;border:2px solid ' + color + ';border-radius:24px;padding:40px 32px;text-align:center;max-width:300px;box-shadow:0 0 60px ' + color + '40;animation:lvlPop .4s cubic-bezier(0.175,0.885,0.32,1.275);">' +
+            '<div style="font-size:48px;margin-bottom:12px;">⬆️</div>' +
+            '<div style="font-family:Poppins,sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:' + color + ';margin-bottom:6px;">¡Subiste de nivel!</div>' +
+            '<div style="font-family:Poppins,sans-serif;font-size:26px;font-weight:700;color:#f4f6f9;margin-bottom:4px;">' + name + '</div>' +
+            '<div style="font-family:Manrope,sans-serif;font-size:13px;color:#8b93a3;margin-bottom:24px;">Nivel ' + level + ' desbloqueado</div>' +
+            '<button id="lvlup-ok" style="padding:10px 28px;border-radius:12px;border:none;background:' + color + ';color:#1c1f27;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;cursor:pointer;">¡Genial!</button>' +
+          '</div>';
+        var style = document.createElement('style');
+        style.textContent = '@keyframes lvlPop{0%{transform:scale(0.5);opacity:0;}100%{transform:scale(1);opacity:1;}}';
+        document.head.appendChild(style);
+        document.body.appendChild(overlay);
+        overlay.querySelector('#lvlup-ok').addEventListener('click', function() {
+          document.body.removeChild(overlay);
+        });
+      }
+
       /* ── 5. Estado éxito ── */
       function showSuccess(r) {
         var isDup  = r.status === 'already_redeemed' || r.status === 'duplicate';
@@ -294,6 +372,12 @@
           setTimeout(function () {
             U.showAchievementUnlocks(r.achievements, function () {});
           }, 900);
+        }
+
+        if (!isDup) {
+          addLevelBadge(r.level);
+          setTimeout(function() { animateXPBar(r); }, 500);
+          if (r.level_up) setTimeout(function() { levelUpAnimation(r.level); }, 1500);
         }
       }
 
