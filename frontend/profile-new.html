@@ -48,7 +48,7 @@
           '<div style="display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:999px;background:rgba(216,151,231,0.12);border:1px solid rgba(216,151,231,0.25);">' +
             '<img src="assets/icons/ui/icono-evento.png" style="width:20px;height:20px;object-fit:contain;">' +
             '<span style="font-family:Poppins,sans-serif;font-size:14px;font-weight:700;color:#d897e7;">' + (profile.xp_total||0) + ' XP</span>' +
-            '<span style="font-size:12px;color:#8b93a3;">· Nv. ' + (profile.level||1) + '</span>' +
+            '<span id="profile-level-display" style="font-size:12px;color:#8b93a3;">· Nv. ' + (profile.level||1) + '</span>' +
           '</div>' +
         '</div>' +
 
@@ -58,6 +58,16 @@
           btn('profile-reviews.html', '<img src="assets/icons/ui/icono-evento.png" style="width:28px;height:28px;object-fit:contain;">', 'Reseñas', 'Tus reseñas enviadas', '#ffc850') +
           btn('profile-achievements.html', '<img src="assets/icons/ui/icono-badges-creados.png" style="width:28px;height:28px;object-fit:contain;">', 'Logros', 'Badges y logros', '#4ade80') +
         '</div>';
+
+      fetch(API.base + '/profile/xp', { headers: API.authHeaders() })
+        .then(function(res) { return res.ok ? res.json() : null; })
+        .then(function(xp) {
+          if (xp && xp.level) {
+            var el = document.getElementById('profile-level-display');
+            if (el) el.textContent = '· Nv. ' + xp.level;
+          }
+        })
+        .catch(function() {});
     }
 
     function btn(href, icon, title, subtitle, color) {

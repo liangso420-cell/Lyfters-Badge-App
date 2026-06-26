@@ -218,6 +218,30 @@
           }).join('') + '</tbody></table>' + pagerHtml(data.length, page, RANK_PAGE, '_goXpPage');
       }
 
+      var _LEVEL_NAMES = ['', 'Explorador', 'Coleccionista', 'Maestro Badge', 'Leyenda Lyfter'];
+      var _LEVEL_COLORS = ['', '#70cfff', '#d897e7', '#ffc850', '#e68a8d'];
+
+      function addLevelBadge(level, levelName) {
+        var existing = document.getElementById('level-badge-float');
+        if (existing) existing.remove();
+        if (!level || level < 1) return;
+        var name  = levelName || _LEVEL_NAMES[level] || '';
+        var color = _LEVEL_COLORS[level] || '#353a46';
+        var badge = document.createElement('div');
+        badge.id = 'level-badge-float';
+        badge.title = 'Nivel ' + level + ': ' + name;
+        badge.style.cssText = 'position:fixed;bottom:24px;left:24px;z-index:500;display:flex;align-items:center;gap:8px;background:#1c1f27;border:1px solid ' + color + ';border-radius:999px;padding:8px 14px 8px 10px;box-shadow:0 4px 20px rgba(0,0,0,0.5);cursor:default;transition:transform .2s;';
+        badge.innerHTML =
+          '<div style="width:32px;height:32px;border-radius:50%;background:' + color + ';display:flex;align-items:center;justify-content:center;">' +
+            '<img src="assets/icons/ui/icono-reclamado.png" style="width:18px;height:18px;object-fit:contain;filter:brightness(0) invert(1);" />' +
+          '</div>' +
+          '<div><div style="font-family:Poppins,sans-serif;font-size:11px;font-weight:700;color:' + color + ';">Nivel ' + level + '</div>' +
+          '<div style="font-family:Manrope,sans-serif;font-size:10px;color:#8b93a3;">' + name + '</div></div>';
+        badge.onmouseover = function() { badge.style.transform = 'scale(1.05)'; };
+        badge.onmouseout  = function() { badge.style.transform = 'scale(1)'; };
+        document.body.appendChild(badge);
+      }
+
       async function init() {
         var firstName = user.name ? user.name.split(' ')[0] : '';
         var avatarHtml = user.avatar
@@ -286,6 +310,11 @@
           document.getElementById('tab-leaderboard').style.color = '#8b93a3';
           document.getElementById('tab-leaderboard').style.borderBottom = '2px solid transparent';
         });
+
+        fetch(API.base + '/profile/xp', { headers: API.authHeaders() })
+          .then(function(res) { return res.ok ? res.json() : null; })
+          .then(function(xp) { if (xp && xp.level) addLevelBadge(xp.level, xp.level_name); })
+          .catch(function() {});
 
         U.hideLoading();
         await load();
