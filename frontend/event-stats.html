@@ -49,9 +49,13 @@
 
       try {
         var stats = await fetch(API.base + '/admin/events/' + eventId + '/stats', { headers: API.authHeaders() }).then(r => r.json());
-        var participants = stats.participants || [];
-        var badgeStats = stats.badge_stats || [];
-        var hourlyStats = stats.hourly_scans || [];
+        var participants = stats.participants || stats.participantes || [];
+        var badgeStats = (stats.badge_stats || stats.badge_ranking || []).map(function(b) {
+          return { name: b.name || b.nombre, count: b.count };
+        });
+        var hourlyStats = (stats.hourly_scans || stats.actividad_por_hora || []).map(function(h) {
+          return { hour: h.hour != null ? h.hour : h.hora, count: h.count };
+        });
         var reviews = stats.reviews || {};
 
         var container = document.getElementById('stats-container');
