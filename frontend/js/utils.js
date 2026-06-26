@@ -1355,23 +1355,22 @@
   function mountAdminShell() {
     var profileBtn = document.getElementById('admin-profile-menu');
     if (profileBtn) {
-      profileBtn.addEventListener('click', async function() {
-        try {
-          var _cu = window.LyfterAPI.currentUser();
-          var _cuRole = _cu && _cu.role;
-          var _isAdmin = _cuRole === 'admin' || _cuRole === 'superadmin';
-          var p = await window.LyfterAPI.getProfile();
-          showDrawer(p.avatar, p.nombre, function(newAvatar) {
+      profileBtn.addEventListener('click', function() {
+        var _cu = window.LyfterAPI.currentUser();
+        var _cuRole = _cu && _cu.role;
+        var _isAdmin = _cuRole === 'admin' || _cuRole === 'superadmin';
+        showDrawer(
+          _cu ? (_cu.avatar || null) : null,
+          _cu ? (_cu.name || null) : null,
+          function(newAvatar) {
             if (newAvatar) {
               profileBtn.style.backgroundImage = 'url(' + newAvatar + ')';
               profileBtn.style.backgroundSize = 'cover';
             }
-          }, _isAdmin, _cuRole);
-        } catch(e) {
-          var _cu2 = window.LyfterAPI.currentUser();
-          var _cu2Role = _cu2 && _cu2.role;
-          showDrawer(null, null, null, _cu2Role === 'admin' || _cu2Role === 'superadmin', _cu2Role);
-        }
+          },
+          _isAdmin,
+          _cuRole
+        );
       });
     }
 
