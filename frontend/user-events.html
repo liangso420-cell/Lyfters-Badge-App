@@ -23,7 +23,7 @@
     El servidor está despertando...<br>Esto puede tardar hasta 1 minuto.
   </div>
   </div>
-  <main id="app" style="padding-bottom:80px;"></main>
+  <main id="app"></main>
   <div id="modal-root"></div>
   <div id="toast-root" class="fixed top-4 left-1/2 -translate-x-1/2 z-[60] flex flex-col gap-2 items-center pointer-events-none"></div>
 
@@ -122,7 +122,15 @@
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
       }
 
-      function navHtml() { return ''; }
+      function navHtml() {
+        return '<div style="display:flex;gap:4px;margin-bottom:24px;background:#1c1f27;border:1px solid #2f343f;border-radius:12px;padding:4px;">' +
+          '<a href="profile.html" style="flex:1;padding:8px 4px;border-radius:8px;text-decoration:none;text-align:center;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;background:transparent;color:#8b93a3;">Explorar</a>' +
+          '<a href="user-events.html" style="flex:1;padding:8px 4px;border-radius:8px;text-decoration:none;text-align:center;font-family:Manrope,sans-serif;font-size:12px;font-weight:700;background:linear-gradient(135deg,rgba(216,151,231,0.3),rgba(230,138,141,0.2));color:#f4f6f9;">Eventos</a>' +
+          '<a href="scan.html" style="flex:1;padding:8px 4px;border-radius:8px;text-decoration:none;text-align:center;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;background:transparent;color:#8b93a3;">Escanear</a>' +
+          '<a href="user-ranking.html" style="flex:1;padding:8px 4px;border-radius:8px;text-decoration:none;text-align:center;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;background:transparent;color:#8b93a3;">Ranking</a>' +
+          '<a href="profile-new.html" style="flex:1;padding:8px 4px;border-radius:8px;text-decoration:none;text-align:center;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;background:transparent;color:#8b93a3;">Perfil</a>' +
+        '</div>';
+      }
 
       function renderActiveCard(ev, detail) {
         var total = detail.total || 0;
@@ -131,7 +139,6 @@
         var photoHtml = ev.photo
           ? '<div style="height:180px;overflow:hidden;border-radius:16px 16px 0 0;"><img src="' + U.esc(ev.photo) + '" style="width:100%;height:100%;object-fit:cover;"></div>'
           : '<div style="height:180px;border-radius:16px 16px 0 0;background:linear-gradient(120deg,#d897e7 0%,#e68a8d 60%,#ffcb8a 100%);display:flex;align-items:center;justify-content:center;"><img src="assets/icons/ui/icono-evento.png" style="width:60px;height:60px;object-fit:contain;filter:brightness(0) invert(1);opacity:0.7;"></div>';
-        console.log('badges data:', detail.badges);
         var allBadges = detail.badges || [];
         var badgesHtml = allBadges.map(function(b) {
           var iconHtml = b.icon_url
@@ -197,6 +204,23 @@
             ? '<p style="text-align:center;font-size:12px;color:#4ade80;margin-top:8px;">✓ Ya calificaste este evento</p>' +
               '<a href="reviews.html?event=' + ev.id + '&name=' + encodeURIComponent(ev.name||ev.nombre||'') + '" style="display:block;width:100%;margin-top:8px;padding:10px;border-radius:10px;border:1px solid rgba(112,207,255,0.3);background:rgba(112,207,255,0.08);color:#70cfff;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;">Ver reseñas</a>'
             : '<a href="reviews.html?event=' + ev.id + '&name=' + encodeURIComponent(ev.name||ev.nombre||'') + '" style="display:block;width:100%;margin-top:8px;padding:10px;border-radius:10px;border:1px solid rgba(112,207,255,0.3);background:rgba(112,207,255,0.08);color:#70cfff;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;text-align:center;text-decoration:none;">Ver reseñas</a>';
+        var allBadges = detail.badges || [];
+        var badgesHtml = allBadges.map(function(b) {
+          var iconHtml = b.icon_url
+            ? (U.isBootstrapIcon(b.icon_url)
+                ? U.badgeIcon(b.icon_url, 28, 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;')
+                : '<img src="' + U.esc(b.icon_url) + '" style="width:100%;height:100%;object-fit:contain;">')
+            : '<img src="assets/icons/ui/icono-badges-creados.png" style="width:100%;height:100%;object-fit:contain;filter:brightness(0) invert(1);opacity:0.6;">';
+          var rarityBorder = { 'rare': '2px solid #ffc850', 'ultra_rare': '2px solid #ffc850', 'normal': '2px solid #70cfff' };
+          var border = rarityBorder[b.rarity] || rarityBorder['normal'];
+          var box = '<div style="width:44px;height:44px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:10px;background:#2e323d;overflow:hidden;opacity:' + (b.obtained ? '1' : '0.3') + ';border:' + border + ';">' +
+            iconHtml +
+          '</div>';
+          var mark = b.obtained
+            ? '<div style="text-align:center;font-size:9px;color:#16a34a;font-weight:700;margin-top:2px;">✓</div>'
+            : '<div style="text-align:center;font-size:9px;color:#8b93a3;margin-top:2px;">—</div>';
+          return '<div style="width:44px;flex-shrink:0;">' + box + mark + '</div>';
+        }).join('');
         return '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:12px;overflow:hidden;margin-bottom:12px;">' +
           photoTop +
           '<div style="padding:12px;">' +
@@ -212,6 +236,7 @@
             '<div style="width:100%;height:5px;background:#2e323d;border-radius:999px;overflow:hidden;">' +
               '<div style="height:5px;border-radius:999px;background:linear-gradient(90deg,#d897e7,#e68a8d);width:' + pct + '%;"></div>' +
             '</div>' +
+            (badgesHtml ? '<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-start;margin-top:10px;">' + badgesHtml + '</div>' : '') +
             reviewBtn +
           '</div>' +
         '</div>';
@@ -353,21 +378,29 @@
         }
       };
 
-      var _LEVEL_NAMES = ['', 'Explorador', 'Coleccionista', 'Maestro Badge', 'Leyenda Lyfter'];
-      var _LEVEL_COLORS = ['', '#70cfff', '#d897e7', '#ffc850', '#e68a8d'];
-
       async function init() {
         try {
           var profile    = await API.getProfile();
           var myEvents   = await API.getJoinedEvents();
+
+          // Respaldo: si el backend no ordenó por último scan (sin last_scan_at),
+          // usar el último evento escaneado guardado en localStorage para moverlo al inicio.
+          var backendOrdered = myEvents.some(function(ev) { return ev.last_scan_at; });
+          if (!backendOrdered) {
+            var lastScannedId = localStorage.getItem('last_scanned_event_id');
+            if (lastScannedId) {
+              var idx = myEvents.findIndex(function(ev) { return ev.id === lastScannedId; });
+              if (idx > 0) { myEvents.unshift(myEvents.splice(idx, 1)[0]); }
+            }
+          }
+
           var allDetails = await Promise.all(myEvents.map(function(ev) {
             return API.getEventDetail(ev.id).catch(function() { return { total: 0, obtained: 0, badges: [], complete: false }; });
           }));
 
-          var _ini = (user.name||'?').split(' ').map(function(w){return w[0]||'';}).join('').slice(0,2).toUpperCase();
           var avatarHtml = profile.avatar
-            ? '<img src="' + U.esc(profile.avatar) + '" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid rgba(216,151,231,0.4);" />'
-            : '<div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#d897e7,#e68a8d);display:flex;align-items:center;justify-content:center;font-family:Poppins,sans-serif;font-size:14px;font-weight:800;color:#1c1f27;">' + _ini + '</div>';
+            ? '<img src="' + U.esc(profile.avatar) + '" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid rgba(216,151,231,0.5);">'
+            : '<img src="assets/icons/ui/icono-perfil.png" style="width:40px;height:40px;border-radius:50%;object-fit:contain;background:#2e323d;padding:6px;">';
 
           // Geolocalización para detectar evento cercano
           var userLat = null, userLng = null;
@@ -427,11 +460,8 @@
           app.innerHTML =
             '<div style="min-height:100vh;padding:20px 16px 40px;">' +
               '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">' +
-                '<div>' +
                 '<h2 style="font-family:Poppins,sans-serif;font-size:22px;font-weight:700;color:#f4f6f9;margin:0;">Eventos</h2>' +
-                '<div id="level-pill" style="display:none;padding:4px 12px;border-radius:999px;background:rgba(216,151,231,0.1);border:1px solid rgba(216,151,231,0.2);margin-top:6px;"></div>' +
-              '</div>' +
-              '<button id="profile-menu-btn" style="background:transparent;border:none;cursor:pointer;padding:0;">' + avatarHtml + '</button>' +
+                '<button id="profile-menu-btn" style="background:transparent;border:none;cursor:pointer;padding:0;">' + avatarHtml + '</button>' +
               '</div>' +
               navHtml() +
               activeSectionHtml +
@@ -446,21 +476,6 @@
               U.showDrawer(p.avatar, p.nombre, null, false);
             } catch(e) { U.showDrawer(null, null, null, false); }
           });
-
-          fetch(API.base + '/profile/xp', { headers: API.authHeaders() })
-            .then(function(res) { return res.ok ? res.json() : null; })
-            .then(function(xp) {
-              if (!xp) return;
-              var lColors = ['','#70cfff','#d897e7','#ffc850','#e68a8d'];
-              var lNames  = ['','Explorador','Coleccionista','Maestro Badge','Leyenda Lyfter'];
-              var color = lColors[xp.level] || '#d897e7';
-              var name  = xp.level_name || lNames[xp.level] || '';
-              var pill = document.getElementById('level-pill');
-              if (pill) {
-                pill.innerHTML = '<span style="font-family:Poppins,sans-serif;font-size:11px;font-weight:700;color:' + color + ';">Nivel ' + xp.level + ' · ' + name + '</span>';
-                pill.style.display = 'inline-flex';
-              }
-            }).catch(function() {});
 
         } catch(err) {
           app.innerHTML = U.errorHtml(err && err.message ? err.message : 'Error inesperado');
@@ -481,29 +496,5 @@
     });
   </script>
   <script src="js/pato-tutorial.js"></script>
-  <nav class="lyfter-bottom-nav">
-    <a href="inicio.html" class="lyfter-nav-item"><i class="bi bi-house-fill"></i><span>Inicio</span></a>
-    <a href="profile.html" class="lyfter-nav-item"><i class="bi bi-compass"></i><span>Explorar</span></a>
-    <a href="scan.html" class="lyfter-nav-item"><i class="bi bi-qr-code-scan"></i><span>Escanear</span></a>
-    <a href="user-events.html" class="lyfter-nav-item active"><img src="assets/icons/ui/icono-evento.png" style="width:22px;height:22px;object-fit:contain;opacity:0.5;" class="nav-evento-icon" /><div class="lyfter-nav-dot"></div></a>
-    <a href="profile-new.html" class="lyfter-nav-item" id="nav-perfil-btn"><span>Perfil</span></a>
-  </nav>
-  <script>
-  (function() {
-    var API = window.LyfterAPI;
-    var U = window.LyfterUtils;
-    var user = API && API.currentUser();
-    if (!API || !user) return;
-    API.getProfile().then(function(profile) {
-      var profileAvatar = profile.avatar || (user && user.avatar) || null;
-      var initials = (user && user.name ? user.name.split(' ').map(function(w){return w[0]||'';}).join('').slice(0,2).toUpperCase() : '?');
-      var navAvatar = profileAvatar
-        ? '<img src="' + U.esc(profileAvatar) + '" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(216,151,231,0.5);" />'
-        : '<div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#d897e7,#e68a8d);display:flex;align-items:center;justify-content:center;font-family:Poppins,sans-serif;font-size:9px;font-weight:800;color:#1c1f27;">' + initials + '</div>';
-      var navPerfilBtn = document.getElementById('nav-perfil-btn');
-      if (navPerfilBtn) navPerfilBtn.insertAdjacentHTML('afterbegin', navAvatar);
-    }).catch(function() {});
-  })();
-  </script>
 </body>
 </html>

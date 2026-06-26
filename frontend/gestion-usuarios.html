@@ -81,7 +81,8 @@
           '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px;">' +
             '<div class="gu-card-title" style="margin-bottom:0;display:flex;align-items:center;gap:6px;"><img src="assets/icons/ui/icono-usuarios.png" style="width:18px;height:18px;object-fit:contain;"> Usuarios de la plataforma</div>' +
             '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' +
-              '<input id="users-search" type="text" placeholder="Buscar..." oninput="filterPlatformUsers(this.value)" class="gu-input" style="width:220px;" />' +
+              '<input id="users-search" type="text" placeholder="Buscar por nombre o email..." oninput="filterPlatformUsers(this.value)" class="gu-input" style="width:220px;" />' +
+              '<button id="toggle-select-mode" onclick="toggleSelectMode()" style="height:36px;padding:0 16px;border-radius:10px;border:1px solid #353a46;background:transparent;color:#aab1bf;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;" onmouseover="this.style.borderColor=\'#d897e7\';this.style.color=\'#d897e7\'" onmouseout="if(!_selectMode){this.style.borderColor=\'#353a46\';this.style.color=\'#aab1bf\'}">☑ Seleccionar</button>' +
               '<button onclick="loadPlatformUsers()" style="height:36px;padding:0 16px;border-radius:8px;border:1px solid #353a46;background:transparent;color:#aab1bf;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Cargar usuarios</button>' +
             '</div>' +
           '</div>' +
@@ -122,6 +123,9 @@
     var _platformUsersCache = [];
     var _allWsCache = [];
     var _guPage = 0, GU_PAGE = 15;
+    var _selectMode = false;
+    var _selectedUsers = new Set();
+    var MAX_SELECTION = 25;
 
     function pagerHtml(total, page, size, gotoFn) {
       if (total <= size) return '';
@@ -150,6 +154,8 @@
     window._goGuPage = function(p) { _guPage = p; renderGuPage(window._guList, p); };
 
     window.loadPlatformUsers = async function() {
+      if (_selectMode) toggleSelectMode();
+      _selectedUsers.clear();
       var container = document.getElementById('platform-users-list');
       if (!container) return;
       container.innerHTML = '<p style="font-size:13px;color:#8b93a3;text-align:center;padding:20px;">Cargando...</p>';
@@ -169,9 +175,10 @@
 
     window.filterPlatformUsers = function(q) {
       if (!_platformUsersCache.length) return;
-      var lq = q.toLowerCase();
-      var filtered = q.length < 2 ? _platformUsersCache : _platformUsersCache.filter(function(u) {
-        return (u.name + ' ' + u.email).toLowerCase().indexOf(lq) !== -1;
+      var term = q.toLowerCase().trim();
+      var filtered = term.length < 2 ? _platformUsersCache : _platformUsersCache.filter(function(u) {
+        return (u.name  || '').toLowerCase().includes(term) ||
+               (u.email || '').toLowerCase().includes(term);
       });
       _guPage = 0;
       renderPlatformUsers(filtered);
@@ -224,8 +231,11 @@
           actions = banBtn + roleBtn + deleteBtn;
         }
 
-        return '<div class="we-member-row">' +
-          '<div class="we-member-info">' +
+        return '<div class="we-member-row" style="display:flex;align-items:center;">' +
+          '<div class="user-select-col" style="display:' + (_selectMode ? 'flex' : 'none') + ';align-items:center;padding-right:12px;flex-shrink:0;">' +
+            '<input type="checkbox" class="user-checkbox" data-uid="' + u.id + '"' + (_selectedUsers.has(u.id) ? ' checked' : '') + ' style="width:18px;height:18px;accent-color:#d897e7;cursor:pointer;" onchange="onUserCheckboxChange(this)">' +
+          '</div>' +
+          '<div class="we-member-info" style="flex:1;min-width:0;">' +
             '<div class="we-member-avatar">' + initials + '</div>' +
             '<div style="min-width:0;">' +
               '<div class="we-member-name">' + U.esc(u.name || '—') + '</div>' +
@@ -511,6 +521,125 @@
         loadPlatformUsers();
       } catch(e) { toast(e.message, 'error'); }
     };
+
+    // ── Selección múltiple ────────────────────────────────────
+
+    window.toggleSelectMode = function() {
+      _selectMode = !_selectMode;
+      _selectedUsers.clear();
+      var btn = document.getElementById('toggle-select-mode');
+      var checkboxCols = document.querySelectorAll('.user-select-col');
+      var checkboxes   = document.querySelectorAll('.user-checkbox');
+      if (_selectMode) {
+        if (btn) { btn.style.background = 'rgba(216,151,231,0.15)'; btn.style.borderColor = '#d897e7'; btn.style.color = '#d897e7'; btn.textContent = '✕ Cancelar selección'; }
+        checkboxCols.forEach(function(el) { el.style.display = 'flex'; });
+      } else {
+        if (btn) { btn.style.background = 'transparent'; btn.style.borderColor = '#353a46'; btn.style.color = '#aab1bf'; btn.textContent = '☑ Seleccionar'; }
+        checkboxCols.forEach(function(el) { el.style.display = 'none'; });
+        checkboxes.forEach(function(cb) { cb.checked = false; });
+      }
+      updateBulkBar();
+    };
+
+    window.onUserCheckboxChange = function(checkbox) {
+      var uid = checkbox.dataset.uid;
+      if (checkbox.checked) {
+        if (_selectedUsers.size >= MAX_SELECTION) {
+          checkbox.checked = false;
+          toast('Máximo ' + MAX_SELECTION + ' usuarios por acción', 'warning');
+          return;
+        }
+        _selectedUsers.add(uid);
+      } else {
+        _selectedUsers.delete(uid);
+      }
+      updateBulkBar();
+    };
+
+    function updateBulkBar() {
+      var bar = document.getElementById('bulk-action-bar');
+      if (!bar) return;
+      var count = _selectedUsers.size;
+      if (_selectMode && count > 0) {
+        bar.style.transform = 'translateY(0)';
+        bar.style.opacity = '1';
+        bar.style.pointerEvents = 'auto';
+        var counter = document.getElementById('bulk-counter');
+        if (counter) counter.textContent = count + ' / ' + MAX_SELECTION + ' seleccionados';
+      } else {
+        bar.style.transform = 'translateY(100%)';
+        bar.style.opacity = '0';
+        bar.style.pointerEvents = 'none';
+      }
+    }
+
+    window.bulkDeselect = function() {
+      _selectedUsers.clear();
+      document.querySelectorAll('.user-checkbox').forEach(function(cb) { cb.checked = false; });
+      updateBulkBar();
+    };
+
+    window.bulkBan = async function() {
+      if (_selectedUsers.size === 0) return;
+      var uids = Array.from(_selectedUsers);
+      if (!confirm('¿Banear ' + uids.length + ' cuenta(s) seleccionadas por 24 horas?')) return;
+      var errors = 0;
+      for (var uid of uids) {
+        try {
+          var res = await fetch(API.base + '/workspaces/platform/users/' + uid + '/ban', {
+            method: 'POST',
+            headers: Object.assign({}, API.authHeaders(), {'Content-Type': 'application/json'}),
+            body: JSON.stringify({ duration_hours: 24, ban_scope: 'account', reason: 'Baneo en lote' })
+          });
+          if (!res.ok) errors++;
+        } catch(e) { errors++; }
+      }
+      var ok = uids.length - errors;
+      toast(ok + ' cuenta(s) baneadas' + (errors > 0 ? ' · ' + errors + ' errores' : ''), errors > 0 ? 'warning' : 'success');
+      toggleSelectMode();
+      loadPlatformUsers();
+    };
+
+    window.bulkDelete = async function() {
+      if (_selectedUsers.size === 0) return;
+      var uids = Array.from(_selectedUsers);
+      if (!confirm('¿Eliminar ' + uids.length + ' cuenta(s) de forma permanente? Esta acción no se puede deshacer.')) return;
+      var errors = 0;
+      for (var uid of uids) {
+        try {
+          var res = await fetch(API.base + '/workspaces/platform/users/' + uid, {
+            method: 'DELETE',
+            headers: API.authHeaders()
+          });
+          if (!res.ok) errors++;
+        } catch(e) { errors++; }
+      }
+      var ok = uids.length - errors;
+      toast(ok + ' cuenta(s) eliminadas' + (errors > 0 ? ' · ' + errors + ' errores' : ''), errors > 0 ? 'warning' : 'success');
+      toggleSelectMode();
+      loadPlatformUsers();
+    };
+
+    // ── Barra flotante de acciones en lote ───────────────────
+    if (!document.getElementById('bulk-action-bar')) {
+      var bar = document.createElement('div');
+      bar.id = 'bulk-action-bar';
+      bar.style.cssText =
+        'position:fixed;bottom:0;left:0;right:0;z-index:300;' +
+        'background:rgba(26,29,36,0.97);' +
+        'backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);' +
+        'border-top:1px solid rgba(216,151,231,0.25);' +
+        'padding:14px 24px;' +
+        'display:flex;align-items:center;gap:12px;flex-wrap:wrap;' +
+        'transform:translateY(100%);opacity:0;pointer-events:none;' +
+        'transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1),opacity 0.2s ease;';
+      bar.innerHTML =
+        '<span id="bulk-counter" style="font-family:Poppins,sans-serif;font-size:14px;font-weight:700;color:#d897e7;flex:1;">0 / 25 seleccionados</span>' +
+        '<button onclick="bulkDeselect()" style="height:40px;padding:0 16px;border-radius:10px;border:1px solid #353a46;background:transparent;color:#aab1bf;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Deseleccionar todo</button>' +
+        '<button onclick="bulkBan()" style="height:40px;padding:0 18px;border-radius:10px;border:1px solid rgba(255,203,138,0.35);background:rgba(255,203,138,0.10);color:#ffcb8a;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⏸ Banear seleccionados (24h)</button>' +
+        '<button onclick="bulkDelete()" style="height:40px;padding:0 18px;border-radius:10px;border:1px solid rgba(230,138,141,0.35);background:rgba(230,138,141,0.10);color:#e68a8d;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🗑 Eliminar seleccionados</button>';
+      document.body.appendChild(bar);
+    }
 
   })();
   </script>

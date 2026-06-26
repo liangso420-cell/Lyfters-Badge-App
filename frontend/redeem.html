@@ -426,6 +426,7 @@
       async function doRedeem() {
         try {
           var result = await API.redeem(params.eventId, params.token);
+          try { localStorage.setItem('last_scanned_event_id', params.eventId); } catch (e) {}
           U.hideLoading();
           showSuccess(result);
         } catch (err) {

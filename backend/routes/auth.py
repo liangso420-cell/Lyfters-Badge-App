@@ -3,7 +3,7 @@
 import os
 import re
 import secrets
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 import requests as req
 
@@ -36,23 +36,6 @@ def _workspace_claims(user_doc):
         "workspace_id":   str(member["workspace_id"]) if member else None,
         "workspace_role": member["role"] if member else None,
     }
-
-
-def _get_client_ip():
-    xff = request.headers.get("X-Forwarded-For") or ""
-    return (xff.split(",")[0].strip() or request.remote_addr or "").strip()
-
-
-def _ip_ban_response(ip):
-    """Returns (json, 403) if the request IP is explicitly banned, else None."""
-    if not ip:
-        return None
-    now = datetime.now(timezone.utc)
-    ban = ip_bans().find_one({"ip": ip, "expires_at": {"$gt": now}})
-    if ban:
-        reason = ban.get("reason", "Tu IP ha sido bloqueada.")
-        return jsonify(error="IP_BANNED", message=f"Acceso denegado: {reason}"), 403
-    return None
 
 
 def _ban_block(user_doc):
@@ -158,11 +141,6 @@ def refresh_token():
 @register_limit
 @ip_guard_register
 def register():
-    client_ip = _get_client_ip()
-    ip_block = _ip_ban_response(client_ip)
-    if ip_block:
-        return ip_block
-
     data     = request.get_json() or {}
     name     = sanitize(data.get("nombre") or data.get("name") or "", max_len=100)
     email    = sanitize(data.get("email") or "", max_len=254).lower()
@@ -186,7 +164,6 @@ def register():
         "password_hash": pw_hash,
         "role":          "participant",
         "created_at":    datetime.utcnow(),
-        "last_ip":       client_ip,
     })
 
     new_user_id = result.inserted_id
@@ -253,30 +230,17 @@ def get_profile():
             "total": len(badge_list),
         })
 
-    total_badges = scans().count_documents({"user_id": user_oid})
-
-    users_above = users().count_documents({
-        "xp_total": {"$gt": u.get("xp_total", 0)},
-        "$or": [
-            {"privacy.show_in_leaderboard": {"$ne": False}},
-            {"privacy": {"$exists": False}},
-        ],
-    })
-    rank = users_above + 1
-
     return jsonify({
-        "id":           str(u["_id"]),
-        "nombre":       u.get("name", ""),
-        "email":        u.get("email", ""),
-        "rol":          u.get("role", "participant"),
-        "avatar":       u.get("avatar", None),
-        "interests":    u.get("interests", []),
-        "privacy":      u.get("privacy", {"show_in_leaderboard": True, "show_badges": True}),
-        "xp_total":     u.get("xp_total", 0),
-        "level":        u.get("level", 1),
-        "total_badges": total_badges,
-        "rank":         rank,
-        "events":       events_data,
+        "id":       str(u["_id"]),
+        "nombre":   u.get("name", ""),
+        "email":    u.get("email", ""),
+        "rol":      u.get("role", "participant"),
+        "avatar":   u.get("avatar", None),
+        "interests": u.get("interests", []),
+        "privacy":  u.get("privacy", {"show_in_leaderboard": True, "show_badges": True}),
+        "xp_total": u.get("xp_total", 0),
+        "level":    u.get("level", 1),
+        "events":   events_data,
     }), 200
 
 
@@ -380,12 +344,16 @@ def update_interests():
 @login_admin_limit
 @ip_guard_login
 def login():
-    client_ip = _get_client_ip()
-    ip_block = _ip_ban_response(client_ip)
-    if ip_block:
-        return ip_block
+    now_dt    = datetime.utcnow()
+    client_ip = (request.headers.get("X-Forwarded-For") or request.remote_addr or "").split(",")[0].strip()
 
-    data   = request.get_json() or {}
+    # Verificar IP ban ANTES de validar credenciales
+    if client_ip:
+        ip_ban_doc = ip_bans().find_one({"ip": client_ip, "expires_at": {"$gt": now_dt}})
+        if ip_ban_doc:
+            return jsonify(error="Tu acceso ha sido bloqueado desde esta red.", error_code="IP_BANNED"), 403
+
+    data     = request.get_json() or {}
     email    = sanitize(data.get("email") or "", max_len=254).lower()
     password = (data.get("password") or "").encode()
 
@@ -405,7 +373,7 @@ def login():
         return ban_resp
 
     if client_ip:
-        users().update_one({"_id": user["_id"]}, {"$set": {"last_login_ip": client_ip, "last_ip": client_ip}})
+        users().update_one({"_id": user["_id"]}, {"$set": {"last_login_ip": client_ip}})
 
     token = create_access_token(
         identity=str(user["_id"]),
@@ -421,11 +389,6 @@ def google_login():
     Verifica el token con Google, busca o crea el usuario en MongoDB,
     y devuelve un JWT propio igual que /auth/login.
     """
-    client_ip = _get_client_ip()
-    ip_block = _ip_ban_response(client_ip)
-    if ip_block:
-        return ip_block
-
     data = request.get_json() or {}
     firebase_token = (data.get("idToken") or "").strip()
 
@@ -571,22 +534,6 @@ def reset_password():
     )
 
     return jsonify(ok=True, message="Contraseña actualizada correctamente"), 200
-
-
-@auth_bp.route("/profile/xp", methods=["GET"])
-@jwt_required()
-def profile_xp():
-    uid = get_jwt_identity()
-    u = users().find_one({"_id": ObjectId(uid)}, {"xp_total": 1, "level": 1})
-    if not u:
-        return jsonify(error="No encontrado"), 404
-    level = u.get("level", 1)
-    level_names = ["", "Explorador", "Coleccionista", "Maestro Badge", "Leyenda Lyfter"]
-    return jsonify(
-        xp_total=u.get("xp_total", 0),
-        level=level,
-        level_name=level_names[level] if level < len(level_names) else "Explorador"
-    ), 200
 
 
 @auth_bp.route("/my-reviews", methods=["GET"])

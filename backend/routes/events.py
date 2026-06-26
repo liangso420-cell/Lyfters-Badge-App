@@ -57,13 +57,30 @@ def list_events():
 def joined_events():
     uid = get_jwt_identity()
     user_oid = ObjectId(uid)
-    joined = event_joins().find({"user_id": user_oid})
-    event_ids = [j["event_id"] for j in joined]
+
+    joined_docs = list(event_joins().find({"user_id": user_oid}))
+    event_ids = [j["event_id"] for j in joined_docs]
+
+    # Último scan por evento para este usuario, para ordenar por actividad reciente.
+    last_scan_by_event = {}
+    for eid in event_ids:
+        last_scan = scans().find_one(
+            {"user_id": user_oid, "event_id": eid},
+            sort=[("scanned_at", -1)]
+        )
+        last_scan_by_event[str(eid)] = last_scan["scanned_at"] if last_scan else None
+
     result = []
     for eid in event_ids:
         e = events().find_one({"_id": eid, "active": True})
         if e:
-            result.append(fmt_event(e))
+            ev_dto = fmt_event(e)
+            ts = last_scan_by_event.get(str(eid))
+            ev_dto["last_scan_at"] = ts.isoformat() if ts else None
+            result.append(ev_dto)
+
+    # El más recientemente escaneado primero.
+    result.sort(key=lambda x: x.get("last_scan_at") or "", reverse=True)
     return jsonify(result), 200
 
 
@@ -444,34 +461,6 @@ def save_status(event_id):
         return jsonify(saved=False), 200
     existing = saved_events().find_one({"user_id": user_oid, "event_id": oid})
     return jsonify(saved=bool(existing)), 200
-
-
-@events_bp.route("/<event_id>/participants", methods=["GET"])
-@jwt_required()
-def event_participants(event_id):
-    """Return participants of an event for reporting purposes.
-    Accessible to any user who has joined the event."""
-    uid = get_jwt_identity()
-    oid = valid_oid(event_id)
-    if not oid:
-        return jsonify(error="ID inválido"), 400
-
-    caller_join = event_joins().find_one({"event_id": oid, "user_id": ObjectId(uid)})
-    if not caller_join:
-        return jsonify(error="No estás en este evento"), 403
-
-    joins = list(event_joins().find({"event_id": oid}))
-    result = []
-    for j in joins:
-        if j["user_id"] == ObjectId(uid):
-            continue
-        user_doc = users().find_one({"_id": j["user_id"]}, {"name": 1})
-        if user_doc:
-            result.append({
-                "user_id": str(j["user_id"]),
-                "name":    user_doc.get("name", ""),
-            })
-    return jsonify(result), 200
 
 
 @events_bp.route("/saved", methods=["GET"])

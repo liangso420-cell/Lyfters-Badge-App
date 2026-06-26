@@ -258,6 +258,7 @@
           var activeId = eventId || U.ensureActive(events);
           var coords = await getLocation();
           var r = await API.redeem(activeId, token, coords);
+          try { if (activeId) localStorage.setItem('last_scanned_event_id', activeId); } catch (e) {}
 
           if (r.status === 'none') {
             vibrate(200);

@@ -309,33 +309,6 @@ def list_members(ws_id):
     return jsonify(result)
 
 
-@ws_bp.route("/<ws_id>/reportable", methods=["GET"])
-@jwt_required()
-def list_reportable_members(ws_id):
-    """Return basic member info (id, name, role) for reporting purposes.
-    Accessible to any member of the workspace."""
-    uid    = ObjectId(get_jwt_identity())
-    oid    = ObjectId(ws_id)
-    claims = get_jwt()
-    if claims.get("role") != "god_admin":
-        membership = workspace_members().find_one({"workspace_id": oid, "user_id": uid})
-        if not membership:
-            return jsonify(error="No sos miembro de este workspace"), 403
-    members = list(workspace_members().find({"workspace_id": oid}))
-    result = []
-    for m in members:
-        if m["user_id"] == uid:
-            continue
-        user_doc = users().find_one({"_id": m["user_id"]}, {"name": 1})
-        if user_doc:
-            result.append({
-                "user_id": str(m["user_id"]),
-                "name":    user_doc.get("name", ""),
-                "role":    m.get("role", "participant"),
-            })
-    return jsonify(result), 200
-
-
 _ROLE_RANK = {"participant": 1, "admin": 2, "superadmin": 3, "god_admin": 4}
 
 
