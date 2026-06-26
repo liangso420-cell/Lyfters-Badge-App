@@ -95,6 +95,18 @@ def list_reports():
         query["status"] = status
 
     docs = list(reports().find(query).sort("created_at", -1).limit(200))
+
+    # Estado de ban actual de los usuarios reportados → botón Banear/Desbanear
+    reported_oids = list({d["reported_id"] for d in docs if d.get("reported_id")})
+    ban_map = {}
+    if reported_oids:
+        now = datetime.utcnow()
+        for u in users().find({"_id": {"$in": reported_oids}}, {"banned_until": 1}):
+            bu = u.get("banned_until")
+            if bu and getattr(bu, "tzinfo", None) is not None:
+                bu = bu.replace(tzinfo=None)
+            ban_map[str(u["_id"])] = bool(bu and bu > now)
+
     result = []
     for d in docs:
         result.append({
@@ -109,6 +121,7 @@ def list_reports():
             "status":         d.get("status", "pending"),
             "created_at":     d["created_at"].isoformat() if d.get("created_at") else None,
             "action_taken":   d.get("action_taken", ""),
+            "banned":         ban_map.get(str(d.get("reported_id", "")), False),
         })
     return jsonify(result), 200
 

@@ -668,6 +668,7 @@
     window._goPuPage = function(p) { _puPage = p; renderPuPage(_puList, p); window.scrollTo(0, 0); };
 
     var _banModalTarget = null;
+    var _banSuccessCb = null;
 
     window.openBanModal = function(userId, userName) {
       _banModalTarget = userId;
@@ -737,6 +738,7 @@
       var el = document.getElementById('ban-modal-overlay');
       if (el) el.remove();
       _banModalTarget = null;
+      _banSuccessCb = null;
     };
 
     window.confirmBanUser = async function() {
@@ -758,9 +760,10 @@
         });
         var data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Error');
+        var cb = _banSuccessCb;
         closeBanModal();
         U.toast('Usuario baneado', 'success');
-        loadPlatformUsers();
+        if (cb) cb(); else loadPlatformUsers();
       } catch(e) {
         U.toast(e.message, 'error');
         if (btn) { btn.disabled = false; btn.textContent = 'Confirmar ban'; }
@@ -830,14 +833,9 @@
         var statusColor = STATUS_COLORS[r.status] || '#8b93a3';
         var statusLabel = STATUS_LABELS[r.status] || r.status;
         var safeId = U.esc(r.id);
-        var safeName = U.esc(r.reported_name || '?');
         var actions = '';
         if (r.status === 'pending') {
-          actions =
-            '<button onclick="dismissReport(\'' + safeId + '\')" ' +
-              'style="height:28px;font-size:11px;padding:0 10px;border-radius:6px;border:1px solid #353a46;background:transparent;color:#8b93a3;cursor:pointer;margin-right:6px;">Descartar</button>' +
-            '<button onclick="openConfirmReportModal(\'' + safeId + '\',\'' + safeName + '\')" ' +
-              'style="height:28px;font-size:11px;padding:0 10px;border-radius:6px;border:1px solid rgba(230,138,141,0.35);background:rgba(230,138,141,0.12);color:#e68a8d;cursor:pointer;">Confirmar</button>';
+          actions = reportActionsHtml(r);
         }
         return '<tr>' +
           '<td style="font-size:12px;color:#8b93a3;">' + (r.reported_name ? U.esc(r.reported_name) : '—') + '<br/><span style="font-size:10px;opacity:.7;">' + U.esc(r.reported_email || '') + '</span></td>' +
@@ -845,7 +843,7 @@
           '<td style="font-size:12px;color:#8b93a3;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="' + U.esc(r.description || '') + '">' + U.esc((r.description || '').slice(0, 60)) + (r.description && r.description.length > 60 ? '…' : '') + '</td>' +
           '<td><span style="font-size:11px;font-weight:700;color:' + statusColor + ';">' + statusLabel + '</span></td>' +
           '<td style="font-size:11px;color:#6f7686;">' + (r.created_at ? r.created_at.slice(0, 10) : '') + '</td>' +
-          '<td style="white-space:nowrap;">' + actions + '</td>' +
+          '<td id="rep-actions-' + safeId + '" style="white-space:nowrap;">' + actions + '</td>' +
         '</tr>';
       }).join('');
       container.innerHTML =
@@ -871,6 +869,58 @@
         U.toast('Reporte descartado', 'success');
         loadReports();
       } catch(e) { U.toast(e.message, 'error'); }
+    };
+
+    // Acciones de la fila de reporte: Descartar + Banear/Desbanear + badge de estado
+    // (botones, popups y estilos reciclados de gestion-usuarios.html)
+    function reportActionsHtml(r) {
+      var safeId     = U.esc(r.id);
+      var reportedId = U.esc(r.reported_id || '');
+      var jsName     = String(r.reported_name || '?').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      var dismissBtn = '<button onclick="dismissReport(\'' + safeId + '\')" ' +
+        'style="height:28px;font-size:11px;padding:0 10px;border-radius:6px;border:1px solid #353a46;background:transparent;color:#8b93a3;cursor:pointer;margin-right:6px;">Descartar</button>';
+      var banBtn = r.banned
+        ? '<button onclick="unbanReportUser(\'' + reportedId + '\',\'' + safeId + '\')" ' +
+            'style="width:120px;height:30px;box-sizing:border-box;text-align:center;font-size:12px;padding:0 12px;border-radius:8px;border:1px solid #353a46;background:transparent;color:#aab1bf;cursor:pointer;margin-right:8px;">Desbanear</button>'
+        : '<button onclick="openReportBanModal(\'' + reportedId + '\',\'' + jsName + '\',\'' + safeId + '\')" ' +
+            'style="width:120px;height:30px;box-sizing:border-box;text-align:center;font-size:12px;padding:0 12px;border-radius:8px;border:1px solid rgba(255,200,80,0.3);background:rgba(255,200,80,0.1);color:#ffc850;cursor:pointer;margin-right:8px;">Banear</button>';
+      var statusBadge = r.banned
+        ? '<span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;background:rgba(230,138,141,0.15);color:#e68a8d;border:1px solid rgba(230,138,141,0.2);">Baneado</span>'
+        : '<span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;background:rgba(171,209,148,0.15);color:#abd194;">Activo</span>';
+      return dismissBtn + banBtn + statusBadge;
+    }
+
+    // Reutiliza el modal de ban de gestion-usuarios (openBanModal/confirmBanUser);
+    // al confirmar, intercambia los botones de la fila en sitio en vez de recargar.
+    window.openReportBanModal = function(userId, userName, reportId) {
+      _banSuccessCb = function() { updateReportRowBan(reportId, true); };
+      openBanModal(userId, userName);
+    };
+
+    // Copia exacta de unbanPlatformUser (mismo popup y endpoint), con swap en sitio.
+    window.unbanReportUser = async function(userId, reportId) {
+      if (!confirm('¿Desbanear a este usuario?')) return;
+      try {
+        var res = await fetch(API.base + '/workspaces/platform/users/' + userId + '/unban', {
+          method: 'POST',
+          headers: Object.assign({}, API.authHeaders(), {'Content-Type': 'application/json'}),
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error');
+        U.toast('Usuario desbaneado', 'success');
+        updateReportRowBan(reportId, false);
+      } catch(e) { U.toast(e.message, 'error'); }
+    };
+
+    window.updateReportRowBan = function(reportId, banned) {
+      for (var i = 0; i < _reportsCache.length; i++) {
+        if (_reportsCache[i].id === reportId) {
+          _reportsCache[i].banned = banned;
+          var cell = document.getElementById('rep-actions-' + reportId);
+          if (cell) cell.innerHTML = reportActionsHtml(_reportsCache[i]);
+          break;
+        }
+      }
     };
 
     var _reportModalTarget = null;
