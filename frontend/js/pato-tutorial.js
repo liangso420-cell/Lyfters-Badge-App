@@ -266,8 +266,6 @@
 
     /* Wrapper que controla el flip sin interferir con las animaciones del img */
     '#pato-img-wrap{display:block;transition:transform .22s ease;transform-origin:bottom center;}',
-    /* Cuando Pato está a la derecha, lo giramos para que mire hacia el contenido */
-    '#pato-wrap.pos-br #pato-img-wrap,#pato-wrap.pos-tr #pato-img-wrap{transform:scaleX(-1);}',
 
     /* ── Keyframe animations ────────────────────────────────── */
     '@keyframes pato-bubble-in{',
@@ -417,6 +415,11 @@
     }
   }
 
+  /* pato1 mira derecha, pato2/pato3 miran izquierda */
+  var DUCK_FACES_RIGHT = { pato1: true, pato2: false, pato3: false };
+  /* posiciones del lado derecho de pantalla */
+  var POS_ON_RIGHT = { br: true, tr: true, bl: false, bc: false };
+
   /* ── Apply a step ────────────────────────────────────────── */
   function applyStep(idx) {
     var s      = steps[idx];
@@ -424,6 +427,11 @@
 
     /* Position class */
     wrap.className = 'pos-' + s.pos;
+
+    /* Flip el wrapper según dirección natural del pato vs lado de pantalla */
+    var facesRight = DUCK_FACES_RIGHT[s.duck];
+    var onRight    = POS_ON_RIGHT[s.pos] || false;
+    imgWrap.style.transform = (facesRight ? onRight : !onRight) ? 'scaleX(-1)' : '';
 
     /* Duck image — crossfade via opacity */
     imgEl.style.opacity = '0';
