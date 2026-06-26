@@ -775,6 +775,8 @@
       var d = await apiRequest('POST', '/redeem/' + eventId + '/' + token, body);
       return {
         status: (d.status === 'duplicado' || d.status === 'already_redeemed' || d.status === 'duplicate') ? 'duplicate' : (d.status === 'none' ? 'none' : 'ok'),
+        event_name: d.event_name || '',
+        workspace_name: d.workspace_name || '',
         badge: d.badge ? { emoji: d.badge.icon || '', icon_url: d.badge.icon_url || null, name: d.badge.name || d.badge.nombre || '', desc: d.badge.descripcion || '',
           is_rare: !!d.badge.is_rare, rarity: d.badge.rarity || (d.badge.is_rare ? 'rare' : 'normal'), xp_value: d.badge.xp_value != null ? d.badge.xp_value : null } : null,
         complete: !!d.completado, prize: d.premio || null,
