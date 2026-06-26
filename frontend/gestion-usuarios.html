@@ -91,6 +91,47 @@
           '</div>' +
         '</div>' +
 
+        '<div class="gu-card" style="border-color:rgba(112,207,255,0.25);">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px;">' +
+            '<div class="gu-card-title" style="margin-bottom:0;color:#70cfff;display:flex;align-items:center;gap:8px;">' +
+              '<img src="assets/icons/ui/icono-candado.png" style="width:18px;height:18px;object-fit:contain;opacity:.85;" /> IPs Baneadas' +
+            '</div>' +
+            '<button onclick="loadIpBans()" style="height:36px;padding:0 14px;border-radius:8px;border:1px solid rgba(112,207,255,0.3);background:rgba(112,207,255,0.08);color:#70cfff;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">' +
+              '<img src="assets/icons/ui/icono-reclamado.png" style="width:14px;height:14px;object-fit:contain;opacity:.8;" /> Actualizar' +
+            '</button>' +
+          '</div>' +
+
+          '<div style="background:#20242d;border:1px solid #2a2e38;border-radius:14px;padding:20px;margin-bottom:16px;">' +
+            '<div style="font-size:13px;font-weight:700;color:#f4f6f9;margin-bottom:14px;">Banear IP manualmente</div>' +
+            '<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;">' +
+              '<div style="flex:1;min-width:130px;">' +
+                '<div style="font-size:11px;font-weight:700;color:#6f7686;margin-bottom:6px;letter-spacing:.06em;text-transform:uppercase;">Dirección IP</div>' +
+                '<input id="manual-ban-ip" type="text" placeholder="Ej: 190.1.2.3" class="gu-input" style="width:100%;" />' +
+              '</div>' +
+              '<div style="flex:2;min-width:160px;">' +
+                '<div style="font-size:11px;font-weight:700;color:#6f7686;margin-bottom:6px;letter-spacing:.06em;text-transform:uppercase;">Razón</div>' +
+                '<input id="manual-ban-reason" type="text" placeholder="Motivo del baneo..." class="gu-input" style="width:100%;" />' +
+              '</div>' +
+              '<div style="min-width:120px;">' +
+                '<div style="font-size:11px;font-weight:700;color:#6f7686;margin-bottom:6px;letter-spacing:.06em;text-transform:uppercase;">Duración</div>' +
+                '<select id="manual-ban-days" class="gu-select">' +
+                  '<option value="1">1 día</option>' +
+                  '<option value="7">7 días</option>' +
+                  '<option value="30">30 días</option>' +
+                  '<option value="perm">Permanente</option>' +
+                '</select>' +
+              '</div>' +
+              '<button onclick="banIpManual()" style="height:40px;padding:0 18px;border-radius:10px;border:1px solid rgba(112,207,255,0.35);background:rgba(112,207,255,0.1);color:#70cfff;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;flex-shrink:0;">' +
+                '<img src="assets/icons/ui/icono-candado.png" style="width:14px;height:14px;object-fit:contain;opacity:.85;" /> Banear IP' +
+              '</button>' +
+            '</div>' +
+          '</div>' +
+
+          '<div id="ip-bans-list">' +
+            '<p style="font-size:13px;color:#6f7686;text-align:center;padding:24px 0;">Hacé clic en "Actualizar" para ver las IPs baneadas.</p>' +
+          '</div>' +
+        '</div>' +
+
       '</div>';
 
     window.genCreationCode = async function() {
@@ -619,6 +660,94 @@
       toggleSelectMode();
       loadPlatformUsers();
     };
+
+    // ── IPs Baneadas ──────────────────────────────────────────
+
+    window.loadIpBans = async function() {
+      var container = document.getElementById('ip-bans-list');
+      if (!container) return;
+      container.innerHTML = '<p style="color:#8b93a3;font-size:13px;text-align:center;padding:20px;">Cargando...</p>';
+      try {
+        var res = await fetch(API.base + '/admin/ip-bans', { headers: API.authHeaders() });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error');
+        if (!data.length) {
+          container.innerHTML = '<p style="color:#8b93a3;font-size:13px;text-align:center;padding:24px;">No hay IPs baneadas actualmente.</p>';
+          return;
+        }
+        container.innerHTML =
+          '<div style="overflow-x:auto;">' +
+            '<div style="min-width:480px;">' +
+              '<div style="display:flex;gap:12px;padding:10px 16px;border-bottom:1px solid #262a33;">' +
+                '<span style="font-size:11px;font-weight:700;color:#6f7686;text-transform:uppercase;letter-spacing:.08em;flex:0 0 140px;">IP</span>' +
+                '<span style="font-size:11px;font-weight:700;color:#6f7686;text-transform:uppercase;letter-spacing:.08em;flex:1;">Razón</span>' +
+                '<span style="font-size:11px;font-weight:700;color:#6f7686;text-transform:uppercase;letter-spacing:.08em;flex:0 0 100px;">Expira</span>' +
+                '<span style="font-size:11px;font-weight:700;color:#6f7686;text-transform:uppercase;letter-spacing:.08em;flex:0 0 90px;">Fecha</span>' +
+                '<span style="font-size:11px;font-weight:700;color:#6f7686;text-transform:uppercase;letter-spacing:.08em;flex:0 0 110px;">Acción</span>' +
+              '</div>' +
+              data.map(function(b) {
+                var isPerm = b.permanent;
+                var expStr = isPerm ? 'Permanente' : (b.expires_at ? new Date(b.expires_at).toLocaleDateString('es-AR') : '—');
+                var createdStr = b.created_at ? new Date(b.created_at).toLocaleDateString('es-AR') : '—';
+                var safeIp = b.ip.replace(/'/g, "\\'");
+                return '<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid #20242d;flex-wrap:wrap;">' +
+                  '<code style="font-family:JetBrains Mono,monospace;font-size:13px;color:#70cfff;background:#20242d;padding:3px 10px;border-radius:6px;flex:0 0 140px;word-break:break-all;">' + U.esc(b.ip) + '</code>' +
+                  '<span style="flex:1;font-size:13px;color:#cdd2db;min-width:100px;word-break:break-word;">' + U.esc(b.reason || '—') + '</span>' +
+                  '<span style="font-size:12px;padding:3px 10px;border-radius:999px;background:' + (isPerm ? 'rgba(230,138,141,0.15)' : 'rgba(255,203,138,0.12)') + ';color:' + (isPerm ? '#e68a8d' : '#ffcb8a') + ';flex:0 0 100px;text-align:center;">' + expStr + '</span>' +
+                  '<span style="font-size:12px;color:#6f7686;flex:0 0 90px;">' + createdStr + '</span>' +
+                  '<button onclick="unbanIp(\'' + safeIp + '\')" style="height:34px;padding:0 14px;border-radius:8px;border:1px solid rgba(230,138,141,0.35);background:rgba(230,138,141,0.08);color:#e68a8d;font-family:Poppins,sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;flex:0 0 110px;justify-content:center;">' +
+                    '<img src="assets/icons/ui/icono-basura-blanco.png" style="width:14px;height:14px;object-fit:contain;opacity:.85;" /> Desbanear' +
+                  '</button>' +
+                '</div>';
+              }).join('') +
+            '</div>' +
+          '</div>';
+      } catch(e) {
+        container.innerHTML = '<p style="color:#e68a8d;font-size:13px;padding:16px;">Error: ' + U.esc(e.message) + '</p>';
+      }
+    };
+
+    window.unbanIp = async function(ip) {
+      if (!confirm('¿Desbanear la IP ' + ip + '?')) return;
+      try {
+        var res = await fetch(API.base + '/admin/ip-ban/' + encodeURIComponent(ip), {
+          method: 'DELETE',
+          headers: API.authHeaders()
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error');
+        toast('IP ' + ip + ' desbaneada', 'success');
+        loadIpBans();
+      } catch(e) {
+        toast(e.message, 'error');
+      }
+    };
+
+    window.banIpManual = async function() {
+      var ip     = ((document.getElementById('manual-ban-ip')     || {}).value || '').trim();
+      var reason = ((document.getElementById('manual-ban-reason') || {}).value || '').trim();
+      var days   = (document.getElementById('manual-ban-days')    || {}).value || '1';
+      if (!ip) { toast('Ingresá una IP válida', 'error'); return; }
+      var body = { ip: ip, reason: reason || 'Baneo manual', permanent: days === 'perm' };
+      if (days !== 'perm') body.days = parseInt(days, 10);
+      try {
+        var res = await fetch(API.base + '/admin/ip-ban', {
+          method: 'POST',
+          headers: Object.assign({}, API.authHeaders(), { 'Content-Type': 'application/json' }),
+          body: JSON.stringify(body)
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error');
+        toast('IP ' + ip + ' baneada correctamente', 'success');
+        document.getElementById('manual-ban-ip').value = '';
+        document.getElementById('manual-ban-reason').value = '';
+        loadIpBans();
+      } catch(e) {
+        toast(e.message, 'error');
+      }
+    };
+
+    loadIpBans();
 
     // ── Barra flotante de acciones en lote ───────────────────
     if (!document.getElementById('bulk-action-bar')) {
