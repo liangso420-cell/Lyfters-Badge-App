@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inicio — Lyfter Badge App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    @keyframes pop-in { from{opacity:0;transform:scale(0.94);} to{opacity:1;transform:scale(1);} }
+    @keyframes pulse-dot { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+
+    .home-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 999px;
+      font-family: 'Manrope', sans-serif; font-size: 10px; font-weight: 700;
+    }
+    .home-pill-purple { background:rgba(216,151,231,0.12); color:#d897e7; border:1px solid rgba(216,151,231,0.25); }
+    .home-pill-gold   { background:rgba(255,200,80,0.1); color:#ffc850; border:1px solid rgba(255,200,80,0.2); }
+    .home-pill-green  { background:rgba(67,217,173,0.1); color:#43d9ad; border:1px solid rgba(67,217,173,0.2); }
+    .home-pill-orange { background:rgba(251,146,60,0.1); color:#fb923c; border:1px solid rgba(251,146,60,0.2); }
+
+    .dot-live { width:6px; height:6px; border-radius:50%; background:#43d9ad; display:inline-block; animation:pulse-dot 1.4s infinite; }
+  </style>
+</head>
+<body>
+  <div id="loading-screen">
+    <img src="assets/icons/ui/logo-lyfter.jpeg" alt="Lyfter" />
+    <div class="loader"></div>
+    <span>Cargando...</span>
+    <div id="server-wakeup-notice" style="display:none;margin-top:16px;font-family:Manrope,sans-serif;font-size:12px;color:#8b93a3;text-align:center;max-width:240px;">
+      <img src="assets/icons/ui/reloj-de-arena.png" style="width:32px;height:32px;object-fit:contain;display:block;margin:0 auto 6px;opacity:0.7;" />
+      El servidor está despertando...<br>Esto puede tardar hasta 1 minuto.
+    </div>
+  </div>
+
+  <main id="app"></main>
+  <div id="modal-root"></div>
+  <div id="toast-root" class="fixed top-4 left-1/2 -translate-x-1/2 z-[60] flex flex-col gap-2 items-center pointer-events-none"></div>
+
+  <!-- Bottom Nav -->
+  <nav class="lyfter-bottom-nav">
+    <a href="inicio.html" class="lyfter-nav-item active">
+      <i class="bi bi-house-fill"></i>
+      <div class="lyfter-nav-dot"></div>
+    </a>
+    <a href="profile.html" class="lyfter-nav-item">
+      <i class="bi bi-compass"></i>
+      <span>Explorar</span>
+    </a>
+    <a href="scan.html" class="lyfter-nav-item">
+      <i class="bi bi-qr-code-scan"></i>
+      <span>Escanear</span>
+    </a>
+    <a href="user-events.html" class="lyfter-nav-item">
+      <img src="assets/icons/ui/icono-evento.png" style="width:22px;height:22px;object-fit:contain;opacity:0.5;" class="nav-evento-icon" />
+      <span>Eventos</span>
+    </a>
+    <a href="profile-new.html" class="lyfter-nav-item" id="nav-perfil-btn">
+      <span>Perfil</span>
+    </a>
+  </nav>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/stars.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    var API = window.LyfterAPI;
+    var U   = window.LyfterUtils;
+
+    var user = API.currentUser();
+    if (!user) { window.location.replace('login.html?next=inicio.html'); return; }
+    if (user.role === 'god_admin') { window.location.replace('workspace-select.html'); return; }
+
+    var app = document.getElementById('app');
+
+    var LEVEL_NAMES  = ['','Explorador','Coleccionista','Maestro Badge','Leyenda Lyfter'];
+    var LEVEL_COLORS = ['','#70cfff','#d897e7','#ffc850','#e68a8d'];
+    var LEVELS_XP    = [0, 0, 500, 1500, 3000];
+    var LEVELS_XP_MAX= [500, 500, 1500, 3000, 9999];
+
+    function fmtDate(iso) {
+      if (!iso) return '';
+      try { return new Date(iso).toLocaleDateString('es-ES', { day:'numeric', month:'short' }); }
+      catch(e) { return ''; }
+    }
+
+    function pillHtml(cls, dot, label) {
+      return '<span class="home-pill home-pill-' + cls + '">' + (dot ? '<span class="dot-live"></span>' : '') + label + '</span>';
+    }
+
+    function eventMiniCard(ev) {
+      var isOngoing = ev.status === 'ongoing' || ev.status === 'open';
+      var isUpcoming = ev.status === 'upcoming';
+      var obtained = ev.obtained || 0;
+      var total = ev.total || ev.badge_count || 0;
+      var pct = total ? Math.round(obtained / total * 100) : 0;
+      var pill = isOngoing
+        ? pillHtml('green', true, 'EN CURSO')
+        : pillHtml('orange', false, '◷ PRÓXIMO');
+
+      return '<div class="ev-mini-card" style="cursor:pointer;" onclick="window.location.href=\'event-detail.html?id=' + ev.id + '\'">' +
+        '<div style="margin-bottom:8px;">' + pill + '</div>' +
+        '<div style="font-family:Poppins,sans-serif;font-size:13px;font-weight:700;color:#f0eaf2;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + U.esc(ev.name || ev.nombre || '') + '</div>' +
+        '<div style="font-family:Manrope,sans-serif;font-size:10px;color:#8b93a3;margin-bottom:8px;">' + fmtDate(ev.start) + (ev.end ? ' – ' + fmtDate(ev.end) : '') + '</div>' +
+        '<div class="xp-prog-bar"><div class="xp-prog-fill" style="width:' + pct + '%;' + (isOngoing && pct===100 ? 'background:linear-gradient(90deg,#22c55e,#43d9ad);' : '') + '"></div></div>' +
+        '<div style="font-family:Manrope,sans-serif;font-size:10px;color:' + (pct===100 ? '#43d9ad' : '#8b93a3') + ';margin-top:4px;">' + obtained + '/' + total + ' badges</div>' +
+      '</div>';
+    }
+
+    async function init() {
+      try {
+        var [profile, events, xpData] = await Promise.all([
+          API.getProfile(),
+          API.listEvents().catch(function() { return []; }),
+          fetch(API.base + '/profile/xp', { headers: API.authHeaders() }).then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; })
+        ]);
+        U.hideLoading && U.hideLoading();
+
+        var xp      = (xpData && xpData.xp_total) || profile.xp_total || 0;
+        var level   = (xpData && xpData.level) || profile.level || 1;
+        var lName   = (xpData && xpData.level_name) || LEVEL_NAMES[level] || 'Explorador';
+        var lColor  = LEVEL_COLORS[level] || '#d897e7';
+        var xpCur   = LEVELS_XP[level] || 0;
+        var xpNext  = LEVELS_XP_MAX[level] || 100;
+        var xpLeft  = Math.max(0, xpNext - xp);
+        var progPct = level >= 4 ? 100 : Math.min(100, Math.round((xp - xpCur) / (xpNext - xpCur) * 100));
+
+        // User rank
+        var userRank = profile.rank || '—';
+        var totalBadges = profile.total_badges || 0;
+
+        // Active events (user joined)
+        var userEvents = (profile.events || []).filter(function(e) {
+          return e.status === 'ongoing' || e.status === 'open' || e.status === 'upcoming';
+        }).slice(0, 2);
+
+        // Avatar
+        var profileAvatar = profile.avatar || (user && user.avatar) || null;
+        var initials = (user.name||'?').split(' ').map(function(w){return w[0]||'';}).join('').slice(0,2).toUpperCase();
+        var avatarEl = profileAvatar
+          ? '<img src="' + U.esc(profileAvatar) + '" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid rgba(216,151,231,0.4);" />'
+          : '<div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#d897e7,#e68a8d);display:flex;align-items:center;justify-content:center;font-family:Poppins,sans-serif;font-size:14px;font-weight:800;color:#1c1f27;">' + initials + '</div>';
+        var navAvatar = profileAvatar
+          ? '<img src="' + U.esc(profileAvatar) + '" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(216,151,231,0.5);" />'
+          : '<div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#d897e7,#e68a8d);display:flex;align-items:center;justify-content:center;font-family:Poppins,sans-serif;font-size:9px;font-weight:800;color:#1c1f27;">' + initials + '</div>';
+
+        app.innerHTML =
+          '<div style="padding:16px 16px 100px;min-height:100vh;">' +
+
+            // Header
+            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">' +
+              '<div>' +
+                '<p style="font-family:Manrope,sans-serif;font-size:12px;color:#8b93a3;margin:0;">Bienvenido de nuevo,</p>' +
+                '<h1 style="font-family:Poppins,sans-serif;font-size:22px;font-weight:800;color:#f0eaf2;margin:2px 0 0;">' + U.esc((user.name||'').split(' ')[0]) + ' ✦</h1>' +
+              '</div>' +
+              '<button id="home-avatar-btn" style="background:none;border:none;cursor:pointer;padding:0;">' + avatarEl + '</button>' +
+            '</div>' +
+
+            // XP Hero Card
+            '<div class="xp-hero-card">' +
+              '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">' +
+                '<span class="home-pill home-pill-purple">● Nivel ' + level + '</span>' +
+                (userRank !== '—' ? '<span class="home-pill home-pill-gold">🏆 #' + userRank + ' Ranking</span>' : '') +
+              '</div>' +
+              '<div style="margin-bottom:2px;">' +
+                '<span class="xp-hero-num">' + xp.toLocaleString() + '</span>' +
+                '<span class="xp-hero-unit">XP</span>' +
+              '</div>' +
+              '<p style="font-family:Manrope,sans-serif;font-size:12px;font-weight:700;color:' + lColor + ';margin:0 0 8px;">' + lName + '</p>' +
+              '<div class="xp-prog-bar"><div class="xp-prog-fill" style="width:' + progPct + '%;"></div></div>' +
+              '<div style="display:flex;justify-content:space-between;font-family:Manrope,sans-serif;font-size:10px;color:#8b93a3;margin-bottom:6px;">' +
+                '<span>Nv.' + level + ' — ' + xpCur.toLocaleString() + ' XP</span>' +
+                '<span>Nv.' + (level+1) + ' — ' + xpNext.toLocaleString() + ' XP</span>' +
+              '</div>' +
+              (level < 4 ? '<p style="font-family:Manrope,sans-serif;font-size:10px;color:#8b93a3;text-align:center;margin:0;">' + xpLeft.toLocaleString() + ' XP para el siguiente nivel</p>' : '<p style="font-family:Manrope,sans-serif;font-size:10px;color:#d897e7;text-align:center;margin:0;">¡Nivel máximo alcanzado!</p>') +
+            '</div>' +
+
+            // Stats row
+            '<div class="xp-stat-row">' +
+              '<div class="xp-stat-box"><div class="xp-stat-num">' + totalBadges + '</div><div class="xp-stat-lbl">Badges</div></div>' +
+              '<div class="xp-stat-box"><div class="xp-stat-num accent">' + (userRank !== '—' ? '#' + userRank : '—') + '</div><div class="xp-stat-lbl">Posición</div></div>' +
+              '<div class="xp-stat-box"><div class="xp-stat-num">' + (profile.events ? profile.events.length : 0) + '</div><div class="xp-stat-lbl">Eventos</div></div>' +
+            '</div>' +
+
+            // Scan CTA
+            '<a href="scan.html" class="scan-action-btn">' +
+              '<div class="scan-icon-circle"><i class="bi bi-qr-code-scan"></i></div>' +
+              '<div style="flex:1;">' +
+                '<div style="font-family:Poppins,sans-serif;font-size:14px;font-weight:700;color:#f0eaf2;">Escanear badge</div>' +
+                '<div style="font-family:Manrope,sans-serif;font-size:12px;color:#8b93a3;">Gana XP en tu evento activo</div>' +
+              '</div>' +
+              '<i class="bi bi-chevron-right" style="color:#4a3e6a;font-size:16px;"></i>' +
+            '</a>' +
+
+            // Active events
+            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+              '<h3 style="font-family:Poppins,sans-serif;font-size:14px;font-weight:700;color:#f0eaf2;margin:0;">Eventos activos</h3>' +
+              '<a href="user-events.html" style="font-family:Manrope,sans-serif;font-size:12px;color:#d897e7;text-decoration:none;font-weight:600;">Ver todos</a>' +
+            '</div>' +
+            (userEvents.length
+              ? '<div style="display:flex;gap:10px;">' + userEvents.map(eventMiniCard).join('') + '</div>'
+              : '<div style="background:var(--card);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:20px;text-align:center;">' +
+                  '<p style="font-family:Manrope,sans-serif;font-size:13px;color:#8b93a3;margin:0;">No tienes eventos activos.<br><a href=\"profile.html\" style=\"color:#d897e7;\">Explora eventos disponibles</a></p>' +
+                '</div>'
+            ) +
+
+          '</div>';
+
+        // Insertar avatares desde profile
+        var headerAvatarBtn = document.getElementById('home-avatar-btn');
+        if (headerAvatarBtn) headerAvatarBtn.innerHTML = avatarEl;
+        var navPerfilBtn = document.getElementById('nav-perfil-btn');
+        if (navPerfilBtn) {
+          var existingImg = navPerfilBtn.querySelector('img, div');
+          if (existingImg) existingImg.remove();
+          navPerfilBtn.insertAdjacentHTML('afterbegin', navAvatar);
+        }
+
+        // Avatar button
+        document.getElementById('home-avatar-btn').addEventListener('click', async function() {
+          try { var p = await API.getProfile(); U.showDrawer(p.avatar, p.nombre, null, false); }
+          catch(e) { U.showDrawer(null, null, null, false); }
+        });
+
+      } catch(err) {
+        U.hideLoading && U.hideLoading();
+        app.innerHTML = '<div style="padding:40px 16px;text-align:center;">' +
+          '<p style="font-family:Manrope,sans-serif;color:#e68a8d;margin-bottom:16px;">Error al cargar. ' + (err.message || '') + '</p>' +
+          '<button id="err-retry" style="padding:10px 24px;border-radius:10px;border:1px solid #d897e7;background:transparent;color:#d897e7;font-family:Poppins,sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Reintentar</button>' +
+        '</div>';
+        var btn = document.getElementById('err-retry');
+        if (btn) btn.addEventListener('click', function() { window.location.reload(); });
+      }
+    }
+
+    // Server wakeup notice
+    var wakeupTimer = setTimeout(function() {
+      var el = document.getElementById('server-wakeup-notice');
+      if (el) el.style.display = 'block';
+    }, 5000);
+
+    window.addEventListener('load', function() { clearTimeout(wakeupTimer); });
+    init();
+  })();
+  </script>
+  <script>
+    window.addEventListener('load', function() {
+      var ls = document.getElementById('loading-screen');
+      if (ls) { ls.style.opacity = '0'; ls.style.pointerEvents = 'none'; }
+    });
+  </script>
+</body>
+</html>

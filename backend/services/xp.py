@@ -19,9 +19,9 @@ logger = logging.getLogger(__name__)
 # Umbrales de nivel: (nivel, nombre, xp_requerido). Ordenados ascendente.
 LEVELS = [
     (1, "Explorador",     0),
-    (2, "Coleccionista",  100),
-    (3, "Maestro badge",  300),
-    (4, "Leyenda Lyfter", 600),
+    (2, "Coleccionista",  500),
+    (3, "Maestro badge",  1500),
+    (4, "Leyenda Lyfter", 3000),
 ]
 
 # Defaults de configuración de XP (si faltan en los documentos)

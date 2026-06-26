@@ -20,7 +20,7 @@
     El servidor está despertando...<br>Esto puede tardar hasta 1 minuto.
   </div>
   </div>
-  <main id="app"></main>
+  <main id="app" style="padding-bottom:80px;"></main>
   <div id="modal-root"></div>
   <div id="toast-root" class="fixed top-4 left-1/2 -translate-x-1/2 z-[60] flex flex-col gap-2 items-center pointer-events-none"></div>
 
@@ -71,40 +71,10 @@
         catch(e) { return ''; }
       }
 
-      function navHtml() {
-        return '<a href="landing.html" style="display:inline-flex;align-items:center;gap:6px;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;color:#8b93a3;text-decoration:none;margin-bottom:10px;padding:4px 8px;border-radius:8px;transition:color .15s;" onmouseover="this.style.color=\'#d897e7\'" onmouseout="this.style.color=\'#8b93a3\'">← Inicio</a>' +
-        '<div style="display:flex;gap:4px;margin-bottom:24px;background:#1c1f27;border:1px solid #2f343f;border-radius:12px;padding:4px;">' +
-          '<a href="profile.html" style="flex:1;padding:8px 4px;border-radius:8px;text-decoration:none;text-align:center;font-family:Manrope,sans-serif;font-size:12px;font-weight:700;background:linear-gradient(135deg,rgba(216,151,231,0.3),rgba(230,138,141,0.2));color:#f4f6f9;">Explorar</a>' +
-          '<a href="user-events.html" style="flex:1;padding:8px 4px;border-radius:8px;text-decoration:none;text-align:center;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;background:transparent;color:#8b93a3;">Eventos</a>' +
-          '<a href="scan.html" style="flex:1;padding:8px 4px;border-radius:8px;text-decoration:none;text-align:center;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;background:transparent;color:#8b93a3;">Escanear</a>' +
-          '<a href="user-ranking.html" style="flex:1;padding:8px 4px;border-radius:8px;text-decoration:none;text-align:center;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;background:transparent;color:#8b93a3;">Ranking</a>' +
-          '<a href="profile-new.html" style="flex:1;padding:8px 4px;border-radius:8px;text-decoration:none;text-align:center;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;background:transparent;color:#8b93a3;">Perfil</a>' +
-        '</div>';
-      }
+      function navHtml() { return ''; }
 
       var _LEVEL_NAMES = ['', 'Explorador', 'Coleccionista', 'Maestro Badge', 'Leyenda Lyfter'];
       var _LEVEL_COLORS = ['', '#70cfff', '#d897e7', '#ffc850', '#e68a8d'];
-
-      function addLevelBadge(level, levelName) {
-        var existing = document.getElementById('level-badge-float');
-        if (existing) existing.remove();
-        if (!level || level < 1) return;
-        var name  = levelName || _LEVEL_NAMES[level] || '';
-        var color = _LEVEL_COLORS[level] || '#353a46';
-        var badge = document.createElement('div');
-        badge.id = 'level-badge-float';
-        badge.title = 'Nivel ' + level + ': ' + name;
-        badge.style.cssText = 'position:fixed;bottom:24px;left:24px;z-index:500;display:flex;align-items:center;gap:8px;background:#1c1f27;border:1px solid ' + color + ';border-radius:999px;padding:8px 14px 8px 10px;box-shadow:0 4px 20px rgba(0,0,0,0.5);cursor:default;transition:transform .2s;';
-        badge.innerHTML =
-          '<div style="width:32px;height:32px;border-radius:50%;background:' + color + ';display:flex;align-items:center;justify-content:center;">' +
-            '<img src="assets/icons/ui/icono-reclamado.png" style="width:18px;height:18px;object-fit:contain;filter:brightness(0) invert(1);" />' +
-          '</div>' +
-          '<div><div style="font-family:Poppins,sans-serif;font-size:11px;font-weight:700;color:' + color + ';">Nivel ' + level + '</div>' +
-          '<div style="font-family:Manrope,sans-serif;font-size:10px;color:#8b93a3;">' + name + '</div></div>';
-        badge.onmouseover = function() { badge.style.transform = 'scale(1.05)'; };
-        badge.onmouseout  = function() { badge.style.transform = 'scale(1)'; };
-        document.body.appendChild(badge);
-      }
 
       async function init() {
         try {
@@ -112,9 +82,10 @@
           var events = await API.listEvents();
           var recommended = await API.getRecommended().catch(function() { return []; });
 
+          var _ini = (user.name||'?').split(' ').map(function(w){return w[0]||'';}).join('').slice(0,2).toUpperCase();
           var avatarHtml = profile.avatar
-            ? '<img src="' + U.esc(profile.avatar) + '" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid rgba(216,151,231,0.5);">'
-            : '<img src="assets/icons/ui/icono-perfil.png" style="width:40px;height:40px;border-radius:50%;object-fit:contain;background:#2e323d;padding:6px;">';
+            ? '<img src="' + U.esc(profile.avatar) + '" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid rgba(216,151,231,0.4);" />'
+            : '<div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#d897e7,#e68a8d);display:flex;align-items:center;justify-content:center;font-family:Poppins,sans-serif;font-size:14px;font-weight:800;color:#1c1f27;">' + _ini + '</div>';
 
           var recommendedIds = recommended.map(function(e) { return e.id; });
           var otherEvents = events.filter(function(e) { return recommendedIds.indexOf(e.id) === -1; });
@@ -178,6 +149,7 @@
                 '<div>' +
                   '<p style="font-family:Manrope,sans-serif;font-size:13px;color:#8b93a3;margin:0;">Bienvenido,</p>' +
                   '<h2 style="font-family:Poppins,sans-serif;font-size:22px;font-weight:700;color:#f4f6f9;margin:0;">' + U.esc(profile.nombre || user.name) + '</h2>' +
+                  '<div id="level-pill" style="display:none;padding:4px 12px;border-radius:999px;background:rgba(216,151,231,0.1);border:1px solid rgba(216,151,231,0.2);margin-top:6px;"></div>' +
                 '</div>' +
                 '<button id="profile-menu-btn" style="background:transparent;border:none;cursor:pointer;padding:0;">' + avatarHtml + '</button>' +
               '</div>' +
@@ -198,11 +170,20 @@
 
           app.innerHTML = inner;
           renderEventsGrid(0);
-          // Nivel real desde /profile/xp (usa compute_level sobre xp_total real)
           fetch(API.base + '/profile/xp', { headers: API.authHeaders() })
             .then(function(res) { return res.ok ? res.json() : null; })
-            .then(function(xp) { if (xp && xp.level) addLevelBadge(xp.level, xp.level_name); })
-            .catch(function() {});
+            .then(function(xp) {
+              if (!xp) return;
+              var lColors = ['','#70cfff','#d897e7','#ffc850','#e68a8d'];
+              var lNames  = ['','Explorador','Coleccionista','Maestro Badge','Leyenda Lyfter'];
+              var color = lColors[xp.level] || '#d897e7';
+              var name  = xp.level_name || lNames[xp.level] || '';
+              var pill = document.getElementById('level-pill');
+              if (pill) {
+                pill.innerHTML = '<span style="font-family:Poppins,sans-serif;font-size:11px;font-weight:700;color:' + color + ';">Nivel ' + xp.level + ' · ' + name + '</span>';
+                pill.style.display = 'inline-flex';
+              }
+            }).catch(function() {});
 
           document.getElementById('profile-menu-btn').addEventListener('click', async function() {
             try {
@@ -256,5 +237,29 @@
     });
   </script>
   <script src="js/pato-tutorial.js"></script>
+  <nav class="lyfter-bottom-nav">
+    <a href="inicio.html" class="lyfter-nav-item"><i class="bi bi-house-fill"></i><span>Inicio</span></a>
+    <a href="profile.html" class="lyfter-nav-item active"><i class="bi bi-compass"></i><div class="lyfter-nav-dot"></div></a>
+    <a href="scan.html" class="lyfter-nav-item"><i class="bi bi-qr-code-scan"></i><span>Escanear</span></a>
+    <a href="user-events.html" class="lyfter-nav-item"><img src="assets/icons/ui/icono-evento.png" style="width:22px;height:22px;object-fit:contain;opacity:0.5;" class="nav-evento-icon" /><span>Eventos</span></a>
+    <a href="profile-new.html" class="lyfter-nav-item" id="nav-perfil-btn"><span>Perfil</span></a>
+  </nav>
+  <script>
+  (function() {
+    var API = window.LyfterAPI;
+    var U = window.LyfterUtils;
+    var user = API && API.currentUser();
+    if (!API || !user) return;
+    API.getProfile().then(function(profile) {
+      var profileAvatar = profile.avatar || (user && user.avatar) || null;
+      var initials = (user && user.name ? user.name.split(' ').map(function(w){return w[0]||'';}).join('').slice(0,2).toUpperCase() : '?');
+      var navAvatar = profileAvatar
+        ? '<img src="' + U.esc(profileAvatar) + '" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(216,151,231,0.5);" />'
+        : '<div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#d897e7,#e68a8d);display:flex;align-items:center;justify-content:center;font-family:Poppins,sans-serif;font-size:9px;font-weight:800;color:#1c1f27;">' + initials + '</div>';
+      var navPerfilBtn = document.getElementById('nav-perfil-btn');
+      if (navPerfilBtn) navPerfilBtn.insertAdjacentHTML('afterbegin', navAvatar);
+    }).catch(function() {});
+  })();
+  </script>
 </body>
 </html>

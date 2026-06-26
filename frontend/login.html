@@ -66,7 +66,7 @@
 
       var user = API.currentUser();
       var _adminRoles = ['admin','superadmin','god_admin'];
-      if (user) { window.location.replace(nextUrl || (_adminRoles.indexOf(user.role) !== -1 ? 'workspace-select.html' : 'profile.html')); return; }
+      if (user) { window.location.replace(nextUrl || (_adminRoles.indexOf(user.role) !== -1 ? 'workspace-select.html' : 'inicio.html')); return; }
 
       var app = document.getElementById('app');
 
@@ -194,7 +194,7 @@
           var loggedUser = await API.login(email.value.trim(), pass.value);
           U.toastNextPage(U.t('welcome'), 'success');
           var _ar = ['admin','superadmin','god_admin'];
-          var destino = nextUrl || (_ar.indexOf(loggedUser.role) !== -1 ? 'workspace-select.html' : 'profile.html');
+          var destino = nextUrl || (_ar.indexOf(loggedUser.role) !== -1 ? 'workspace-select.html' : 'inicio.html');
           loginSuccessAnimation(function() { window.location.href = destino; });
         } catch (err) {
           // IP baneada
@@ -298,7 +298,7 @@
             if (selected.length) await API.updateInterests(selected);
           } catch(e) {}
           U.toastNextPage(U.t('account_created'), 'success');
-          window.location.href = 'profile.html';
+          window.location.href = 'inicio.html';
         }
 
         document.getElementById('save-interests').addEventListener('click', saveAndContinue);
@@ -336,7 +336,7 @@
             loginSuccessAnimation(function() { showInterestsStep(); });
           } else {
             U.toastNextPage(U.t('welcome_google'), 'success');
-            loginSuccessAnimation(function() { window.location.href = nextUrl || 'profile.html'; });
+            loginSuccessAnimation(function() { window.location.href = nextUrl || 'inicio.html'; });
           }
         } catch (err) {
           // Cuenta baneada → pantalla de cuenta suspendida.

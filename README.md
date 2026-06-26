@@ -1,35 +1,88 @@
 # Lyfter Badge App
 
-App de gamificación con badges para eventos. Los participantes escanean QRs para coleccionar badges y desbloquear premios sorpresa.
+App de gamificación con badges para eventos. Los participantes escanean QRs para coleccionar badges, ganar XP, desbloquear logros y competir en el ranking.
 
-- **Backend**: Python (Flask) + MongoDB — deployado en [Render](https://render.com)
-- **Frontend**: HTML + CSS + JS puro — deployado en [Vercel](https://vercel.com)
+- **Backend**: Python (Flask 3) + MongoDB — deployado en [Render](https://render.com)
+- **Frontend**: HTML + CSS + JS vanilla (Tailwind, DaisyUI) — deployado en [GitHub Pages](https://pages.github.com)
+- **Auth**: JWT (sesión) + Firebase/Google OAuth (login social)
+- **Email**: Resend (reset de contraseña), SendGrid (invitaciones de workspace)
+
+## URLs de producción
+
+| Servicio | URL |
+|----------|-----|
+| Frontend (GitHub Pages) | `https://liangso420-cell.github.io/Lyfters-Badge-App` |
+| Backend (Render) | `https://lyfters-badge-app.onrender.com` |
+| DB (MongoDB Atlas) | cluster `lyfter_db` |
 
 ## Estructura del repositorio
 
 ```
 lyfters-badge-app/
 ├── backend/
-│   ├── app.py              API Flask (auth, eventos, badges, redención)
-│   ├── db.py               Conexión MongoDB (patrón singleton)
-│   ├── requirements.txt    Dependencias Python
-│   ├── Procfile            Comando de arranque para Render (gunicorn)
-│   └── .env.example        Plantilla de variables de entorno
+│   ├── app.py                  Entrada Flask: blueprints, CORS, JWTManager
+│   ├── db.py                   Conexión PyMongo + init_indexes()
+│   ├── utils.py                Helpers compartidos (serialize, QR, decoradores)
+│   ├── routes/
+│   │   ├── auth.py             /auth/* — registro, login, perfil, Google OAuth
+│   │   ├── events.py           /events/* y /leaderboard
+│   │   ├── admin.py            /admin/* — gestión de eventos, badges, usuarios
+│   │   ├── redeem.py           /redeem/<event_id>/<token>
+│   │   ├── xp.py               /profile/xp y /profile/achievements
+│   │   └── workspaces.py       /workspaces/* — sistema multi-tenant
+│   ├── services/
+│   │   ├── achievements.py     Evaluación y grant de logros
+│   │   └── xp.py               Cálculo de nivel y progreso
+│   ├── security/
+│   │   ├── limiter.py          Rate limiting (flask-limiter + Redis)
+│   │   ├── ip_guard.py         Validación de IP por cuenta
+│   │   └── middleware.py       init_security()
+│   ├── requirements.txt
+│   ├── Procfile                gunicorn app:app
+│   └── .env.example
+├── frontend/
+│   ├── index.html              Hub del participante
+│   ├── landing.html            Página de inicio pública
+│   ├── login.html / register.html / reset-password.html
+│   ├── profile.html            Perfil del participante (explorar)
+│   ├── profile-new.html        Mi perfil (detalle)
+│   ├── profile-achievements.html / profile-activity.html
+│   ├── profile-reviews.html / profile-stats.html
+│   ├── events.html             Lista de eventos
+│   ├── event-detail.html       Detalle de evento + badges
+│   ├── event-stats.html        Estadísticas del evento
+│   ├── scan.html               Escáner QR (cámara)
+│   ├── redeem.html             Canjeo de badge por URL
+│   ├── join.html               Unirse a evento por QR de acceso
+│   ├── leaderboard.html        Ranking global
+│   ├── reviews.html / stats.html
+│   ├── workspace.html / workspace-create.html
+│   ├── workspace-edit.html / workspace-select.html
+│   ├── admin-event.html        Lista de eventos (admin)
+│   ├── admin-event-create.html / admin-event-detail.html
+│   ├── admin-participation.html  Dashboard admin
+│   ├── admin-leaderboard.html / admin-reviews.html
+│   ├── gestion-usuarios.html   Gestión de usuarios (superadmin)
+│   ├── user-achievements.html / user-events.html / user-ranking.html
+│   ├── privacy.html / terms.html
+│   ├── js/
+│   │   ├── config.js           mode ('mock'|'backend') + URLs
+│   │   ├── api.js              window.LyfterAPI — cliente HTTP + mock
+│   │   ├── utils.js            window.LyfterUtils — UI helpers, i18n, toasts
+│   │   ├── pato-celebrate.js   Animación Lottie de celebración
+│   │   └── stars.js / particles.js
+│   ├── locales/                Traducciones: es, en, de, fr, pt
+│   └── assets/
+│       └── icons/              Iconos UI y badges de logros
 ├── db/
-│   └── seed.js             Script MongoDB Shell para inicializar la BD
+│   └── seed.js                 Script MongoDB Shell (datos de prueba)
 ├── docs/
 │   ├── 01-prd.md
 │   ├── 02-diseno-tecnico.md
-│   └── 03-tareas.md
-├── css/styles.css          Estilos propios del frontend
-├── js/
-│   ├── config.js           Modo de datos y URL del backend
-│   ├── api.js              Capa de datos (mock localStorage + cliente Flask)
-│   └── app.js              Router + vistas + interactividad
-├── assets/                 Recursos estáticos
-├── index.html              SPA principal + CDNs (Tailwind, DaisyUI, Poppins)
-├── vercel.json             Rewrite para SPA en Vercel
-├── render.yaml             Configuración de deploy del backend en Render
+│   ├── 03-tareas.md
+│   └── 04-resumen-implementacion.md
+├── .github/
+│   └── workflows/deploy.yml    CI/CD → GitHub Pages
 └── .gitignore
 ```
 
@@ -48,17 +101,18 @@ python app.py                  # API en http://localhost:5000
 
 ### Frontend
 
-Sirve la raíz del repositorio por HTTP (no `file://` para que CORS funcione):
+Sirve la carpeta `frontend/` por HTTP (no `file://` para que CORS funcione):
 
 ```bash
-python -m http.server 5500     # abre http://localhost:5500
+python -m http.server 5500 --directory frontend
+# abre http://localhost:5500
 ```
 
-O con Live Server de VS Code apuntando a la raíz del repo.
+O con Live Server de VS Code apuntando a `frontend/`.
 
 ### Modo mock (sin backend)
 
-Cambia `mode` en `js/config.js` a `'mock'`. La app funciona en el navegador con datos simulados en `localStorage`, sin necesidad de servidor.
+Cambia `mode` en `frontend/js/config.js` a `'mock'`. La app funciona en el navegador con datos simulados en `localStorage`, sin necesidad de servidor.
 
 Cuentas de demo en modo mock:
 
@@ -71,23 +125,22 @@ Cuentas de demo en modo mock:
 
 Copia `backend/.env.example` a `backend/.env` y completa los valores:
 
-| Variable | Descripción | Ejemplo local |
-|----------|-------------|---------------|
-| `MONGO_URI` | URI de conexión a MongoDB | `mongodb://localhost:27017` |
-| `JWT_SECRET` | Clave secreta para firmar tokens JWT | cadena aleatoria larga |
-| `PORT` | Puerto del servidor (Render lo inyecta automáticamente) | `5000` |
-| `FLASK_ENV` | `development` activa debug; `production` lo desactiva | `development` |
-| `CORS_ORIGINS` | Orígenes permitidos separados por coma | `http://localhost:5500` |
-| `APP_BASE_URL` | URL base del backend (se usa para generar los QR) | `http://localhost:5000` |
+| Variable | Descripción |
+|----------|-------------|
+| `MONGO_URI` | URI de conexión a MongoDB Atlas |
+| `JWT_SECRET` | Clave secreta para firmar tokens JWT (mín. 32 chars) |
+| `PORT` | Puerto del servidor (Render lo inyecta automáticamente) |
+| `FLASK_ENV` | `development` desactiva rate limiting e IP guard; `production` los activa |
+| `CORS_ORIGINS` | Orígenes permitidos separados por coma |
+| `REDIS_URL` | URL Redis para rate limiting en producción (Upstash recomendado) |
+| `APP_BASE_URL` | URL base del **frontend** (los QR apuntan aquí) |
+| `FRONTEND_URL` | URL del frontend para links en emails |
+| `RESEND_API_KEY` | Key de Resend para reset de contraseña |
+| `SENDGRID_API_KEY` | Key de SendGrid para invitaciones de workspace |
+| `FROM_EMAIL` | Remitente de emails (`noreply@lyfter.app`) |
+| `FIREBASE_CLIENT_ID` | Web Client ID de Google OAuth para verificar idTokens de Firebase |
 
 **Nunca comitas el archivo `.env` — solo `.env.example`.**
-
-## URLs de producción
-
-| Servicio | URL |
-|----------|-----|
-| Backend (Render) | `https://lyfters-badge-app.onrender.com` |
-| Frontend (Vercel) | raíz del repositorio (sin subdirectorio) |
 
 ## Deployment
 
@@ -96,78 +149,56 @@ Copia `backend/.env.example` a `backend/.env` y completa los valores:
 1. Crear cluster gratuito en [cloud.mongodb.com](https://cloud.mongodb.com).
 2. En **Database Access** crear un usuario con contraseña.
 3. En **Network Access** agregar `0.0.0.0/0` (o el IP de Render).
-4. Copiar el **Connection String** (formato `mongodb+srv://user:pass@cluster.mongodb.net/lyfter_db`).
+4. Copiar el **Connection String** (`mongodb+srv://user:pass@cluster.mongodb.net/lyfter_db`).
 
-### 2 — Backend en Render
+### 2 — Redis (rate limiting en producción)
+
+Crear una instancia gratuita en [Upstash](https://upstash.com) y copiar la URL Redis. Sin Redis, el rate limiting usa memoria local (no persiste entre workers).
+
+### 3 — Backend en Render
 
 1. Crear un nuevo **Web Service** apuntando a este repositorio.
 2. Configurar:
    - **Root Directory**: `backend`
    - **Build Command**: `pip install -r requirements.txt`
    - **Start Command**: `gunicorn app:app`
-3. En **Environment Variables** agregar:
+3. En **Environment Variables** agregar todas las variables del `.env.example`.
+4. Deployar. La URL queda como `https://tu-backend.onrender.com`.
 
-   | Variable | Valor |
-   |----------|-------|
-   | `MONGO_URI` | Connection string de Atlas |
-   | `MONGO_DB_NAME` | `lyfter_db` |
-   | `JWT_SECRET` | Cadena aleatoria larga (ej: `openssl rand -hex 32`) |
-   | `CORS_ORIGINS` | URL de Vercel (ej: `https://tu-app.vercel.app`) |
-   | `APP_BASE_URL` | URL de Vercel (misma que CORS_ORIGINS) |
+### 4 — Frontend en GitHub Pages
 
-4. Deployar. La URL del servicio queda como `https://tu-backend.onrender.com`.
+El workflow `.github/workflows/deploy.yml` despliega automáticamente la carpeta `frontend/` a GitHub Pages en cada push a `main`.
 
-### 3 — Frontend en Vercel
+Para configurar manualmente:
+1. Ir a **Settings → Pages** del repositorio.
+2. Source: **GitHub Actions**.
+3. Verificar que `frontend/js/config.js` tenga `apiBaseUrl` apuntando al backend de Render.
 
-1. Importar el repositorio en [vercel.com](https://vercel.com).
-2. Dejar la configuración por defecto (directorio raíz `/`).
-3. Vercel detecta automáticamente el `vercel.json`.
-4. En `js/config.js` verificar que `apiBaseUrl` apunte al backend de Render.
-5. Deployar.
-
-### 4 — Verificar en producción
+### 5 — Verificar en producción
 
 ```bash
 # Health check del backend
-curl https://tu-backend.onrender.com/health
-
+curl https://lyfters-badge-app.onrender.com/health
 # Debería retornar: {"service":"lyfter-badge-api","status":"ok"}
 ```
 
-Luego ejecutar el flujo completo: registro → login → escanear QR → ver perfil.
+Luego ejecutar el flujo completo: registro → login → unirse a evento → escanear QR → ver perfil.
 
----
+## Inicializar la base de datos (opcional)
 
-### Deploy — Render (archivo render.yaml)
+El script `db/seed.js` es para MongoDB Shell (`mongosh`) y crea datos de prueba:
 
-El archivo `render.yaml` configura el servicio con `rootDir: backend`. Variables como `MONGO_URI` y `CORS_ORIGINS` se ingresan manualmente en el dashboard de Render.
-
-### Deploy — Vercel
-
-Vercel despliega desde la raíz del repositorio. El archivo `vercel.json` incluye el rewrite necesario para la SPA (`/* → /index.html`).
+```bash
+mongosh "tu-mongo-uri" db/seed.js
+```
 
 ## Seguridad — Firebase API Key
 
-Las Firebase Web API Keys para apps web son **públicas por diseño** — Google las expone en el cliente para identificar el proyecto, no como secreto de autenticación. La seguridad real se implementa en dos capas:
+Las Firebase Web API Keys son **públicas por diseño** — la seguridad real opera en dos capas:
 
-**1. Firebase Security Rules (Firestore)**
+**1. Firebase Security Rules** — acceso a Firestore bloqueado completamente (la app usa MongoDB, no Firestore).
 
-Configurado en Firebase Console → Firestore Database → Rules:
-
-```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if false; // Nadie puede acceder sin autenticación
-    }
-  }
-}
-```
-
-**2. Restricción de API Key por HTTP referrer** ✅ Completado
-
-Configurado en Google Cloud Console → APIs & Services → Credentials → la API Key de Firebase:
+**2. Restricción de API Key por HTTP referrer** (Google Cloud Console → APIs & Services → Credentials):
 
 | Configuración | Valor |
 |---------------|-------|
@@ -177,28 +208,26 @@ Configurado en Google Cloud Console → APIs & Services → Credentials → la A
 | | `http://localhost:*` |
 | API restrictions | Identity Toolkit API |
 
-La key solo funciona desde los dominios listados — si alguien la copia, no puede usarla desde otro origen.
+## Roles de usuario
 
-Ver documentación oficial: [Firebase API Keys](https://firebase.google.com/docs/projects/api-keys)
+| Rol | Descripción |
+|-----|-------------|
+| `participant` | Participante de eventos — escanea QRs, gana XP, ve ranking |
+| `admin` | Gestiona eventos y badges de su workspace |
+| `superadmin` | Admin con acceso a gestión de usuarios del workspace |
+| `god_admin` | Acceso total a todos los workspaces y la plataforma |
 
----
+## Sistema de XP y logros
 
-## Inicializar la base de datos (opcional)
+Los participantes ganan XP al canjear badges. Cada evento puede configurar:
+- `xp_first_scan` — XP por el primer badge del evento
+- `xp_rare_bonus` — XP extra por badges raros (`is_rare: true`)
+- `xp_completion_bonus` — XP por completar todos los badges del evento
 
-El script `db/seed.js` es para MongoDB Shell (`mongosh`) y crea colecciones con validación de esquema, índices y datos de prueba:
+**Niveles:** Explorador (0 XP) → Coleccionista (100) → Maestro badge (300) → Leyenda Lyfter (600)
 
-```bash
-mongosh "tu-mongo-uri" db/seed.js
-```
+**Logros:** 10 logros implementados (Primer paso, Coleccionista, Gran Coleccionista, Vértigo, Completista, Perfeccionista, Viajero, Veterano, Ojo de halcón, Leyenda).
 
-## Vistas de la app
+## Internacionalización
 
-| Hash | Vista |
-|------|-------|
-| `#/login` | Login |
-| `#/register` | Registro |
-| `#/profile` | Perfil del participante (progreso + badges) |
-| `#/scan` | Escáner QR |
-| `#/admin/event` | Crear evento (admin) |
-| `#/admin/badges` | Gestión de badges + QR (admin) |
-| `#/admin/participation` | Seguimiento de participación (admin) |
+La UI soporta 5 idiomas: español (default), inglés, alemán, francés, portugués. Los archivos de traducción están en `frontend/locales/`.

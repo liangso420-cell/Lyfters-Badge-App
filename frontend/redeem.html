@@ -84,27 +84,6 @@
       var LEVEL_THRESHOLDS = [0, 0, 100, 300, 600];
       var LEVEL_COLORS = ['', '#70cfff', '#d897e7', '#ffc850', '#e68a8d'];
 
-      function addLevelBadge(level, levelName) {
-        var existing = document.getElementById('level-badge-float');
-        if (existing) existing.remove();
-        if (!level || level < 1) return;
-        var name  = levelName || LEVEL_NAMES[level] || '';
-        var color = LEVEL_COLORS[level] || '#353a46';
-        var badge = document.createElement('div');
-        badge.id = 'level-badge-float';
-        badge.title = 'Nivel ' + level + ': ' + name;
-        badge.style.cssText = 'position:fixed;bottom:24px;left:24px;z-index:500;display:flex;align-items:center;gap:8px;background:#1c1f27;border:1px solid ' + color + ';border-radius:999px;padding:8px 14px 8px 10px;box-shadow:0 4px 20px rgba(0,0,0,0.5);cursor:default;transition:transform .2s;';
-        badge.innerHTML =
-          '<div style="width:32px;height:32px;border-radius:50%;background:' + color + ';display:flex;align-items:center;justify-content:center;">' +
-            '<img src="assets/icons/ui/icono-reclamado.png" style="width:18px;height:18px;object-fit:contain;filter:brightness(0) invert(1);" />' +
-          '</div>' +
-          '<div><div style="font-family:Poppins,sans-serif;font-size:11px;font-weight:700;color:' + color + ';">Nivel ' + level + '</div>' +
-          '<div style="font-family:Manrope,sans-serif;font-size:10px;color:#8b93a3;">' + name + '</div></div>';
-        badge.onmouseover = function() { badge.style.transform = 'scale(1.05)'; };
-        badge.onmouseout  = function() { badge.style.transform = 'scale(1)'; };
-        document.body.appendChild(badge);
-      }
-
       function animateXPBar(r) {
         var xpTotal = r.xp_total || 0;
         var level   = r.level || 1;
@@ -381,7 +360,6 @@
         }
 
         if (!isDup) {
-          addLevelBadge(r.level);
           setTimeout(function() { animateXPBar(r); }, 500);
           if (r.level_up) setTimeout(function() { levelUpAnimation(r.level); }, 1500);
         }
@@ -477,5 +455,29 @@
     });
   </script>
   <script src="js/stars.js"></script>
+  <nav class="lyfter-bottom-nav">
+    <a href="inicio.html" class="lyfter-nav-item"><i class="bi bi-house-fill"></i><span>Inicio</span></a>
+    <a href="profile.html" class="lyfter-nav-item"><i class="bi bi-compass"></i><span>Explorar</span></a>
+    <a href="scan.html" class="lyfter-nav-item active"><i class="bi bi-qr-code-scan"></i><div class="lyfter-nav-dot"></div></a>
+    <a href="user-events.html" class="lyfter-nav-item"><img src="assets/icons/ui/icono-evento.png" style="width:22px;height:22px;object-fit:contain;opacity:0.5;" class="nav-evento-icon" /><span>Eventos</span></a>
+    <a href="profile-new.html" class="lyfter-nav-item" id="nav-perfil-btn"><span>Perfil</span></a>
+  </nav>
+  <script>
+  (function() {
+    var API = window.LyfterAPI;
+    var U = window.LyfterUtils;
+    var user = API && API.currentUser();
+    if (!API || !user) return;
+    API.getProfile().then(function(profile) {
+      var profileAvatar = profile.avatar || (user && user.avatar) || null;
+      var initials = (user && user.name ? user.name.split(' ').map(function(w){return w[0]||'';}).join('').slice(0,2).toUpperCase() : '?');
+      var navAvatar = profileAvatar
+        ? '<img src="' + U.esc(profileAvatar) + '" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(216,151,231,0.5);" />'
+        : '<div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#d897e7,#e68a8d);display:flex;align-items:center;justify-content:center;font-family:Poppins,sans-serif;font-size:9px;font-weight:800;color:#1c1f27;">' + initials + '</div>';
+      var navPerfilBtn = document.getElementById('nav-perfil-btn');
+      if (navPerfilBtn) navPerfilBtn.insertAdjacentHTML('afterbegin', navAvatar);
+    }).catch(function() {});
+  })();
+  </script>
 </body>
 </html>

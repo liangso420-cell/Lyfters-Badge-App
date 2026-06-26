@@ -525,6 +525,56 @@ td, th { vertical-align: middle; }
   50%,100% { background-position: 0 50%,0 50%,50% 0,50% 100%,100% 50%,100% 50% }
 }
 
+/* ── Loading tips ── */
+#loading-tip {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0 24px 40px;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  animation: tip-enter .5s ease both;
+}
+@keyframes tip-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+#loading-tip-card {
+  max-width: 320px;
+  width: 100%;
+  padding: 14px 22px;
+  border-radius: 16px;
+  background: rgba(216, 151, 231, 0.05);
+  border: 1px solid rgba(216, 151, 231, 0.13);
+  text-align: center;
+  transition: opacity 0.35s ease;
+}
+#loading-tip-label {
+  display: block;
+  font-family: 'Poppins', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(216, 151, 231, 0.45);
+  margin-bottom: 7px;
+}
+#loading-tip-text {
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(240, 234, 242, 0.55);
+  line-height: 1.65;
+  margin: 0;
+}
+@media (max-width: 480px) {
+  #loading-tip { padding: 0 16px 28px; }
+  #loading-tip-card { padding: 12px 16px; }
+  #loading-tip-text { font-size: 12px; }
+}
+
 #btn-exit-scan {
   position: fixed;
   top: 20px;
@@ -856,4 +906,180 @@ body {
   textarea {
     font-size: 16px !important;
   }
+}
+
+/* ── Drawer fix: don't hide behind bottom nav ── */
+#drawer-panel { padding-bottom: 80px !important; }
+
+/* ── Lyfter bottom nav ── */
+.lyfter-bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 64px;
+  z-index: 50;
+  background: rgba(26, 29, 36, 0.97);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  border-top: 1px solid rgba(216, 151, 231, 0.12);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0 4px;
+}
+.lyfter-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: #8b93a3;
+  font-family: Manrope, sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  transition: color 0.15s;
+  flex: 1;
+  text-align: center;
+  min-height: unset;
+}
+.lyfter-nav-item i {
+  font-size: 20px;
+  line-height: 1;
+}
+.lyfter-nav-item.active {
+  color: #d897e7;
+  background: rgba(216, 151, 231, 0.10);
+}
+
+/* ── XP Hero card ── */
+.xp-hero-card {
+  background: linear-gradient(135deg, rgba(216,151,231,0.18), rgba(230,138,141,0.12));
+  border: 1px solid rgba(216,151,231,0.28);
+  border-radius: 20px;
+  padding: 20px 20px 16px;
+  margin-bottom: 16px;
+}
+.xp-hero-num {
+  font-family: Poppins, sans-serif;
+  font-size: 40px;
+  font-weight: 800;
+  color: #f4f6f9;
+  line-height: 1;
+}
+.xp-hero-unit {
+  font-family: Poppins, sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #d897e7;
+}
+.xp-prog-bar {
+  height: 8px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 12px;
+}
+.xp-prog-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #d897e7, #e68a8d);
+  border-radius: 999px;
+  transition: width 0.6s ease;
+}
+.xp-stat-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+.xp-stat-box {
+  flex: 1;
+  background: rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 10px 12px;
+  text-align: center;
+}
+.xp-stat-num {
+  font-family: Poppins, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #f4f6f9;
+}
+.xp-stat-lbl {
+  font-family: Manrope, sans-serif;
+  font-size: 11px;
+  color: #8b93a3;
+  margin-top: 2px;
+}
+
+/* ── Scan action button ── */
+.scan-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 16px;
+  background: linear-gradient(135deg, rgba(112,207,255,0.15), rgba(216,151,231,0.10));
+  border: 1px solid rgba(112,207,255,0.25);
+  border-radius: 18px;
+  text-decoration: none;
+  cursor: pointer;
+  margin-top: 8px;
+  margin-bottom: 24px;
+  transition: border-color 0.15s;
+}
+.scan-action-btn:hover { border-color: rgba(112,207,255,0.5); }
+.scan-icon-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(112,207,255,0.18);
+  border: 1px solid rgba(112,207,255,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: #70cfff;
+  flex-shrink: 0;
+}
+
+/* ── Event mini cards ── */
+.ev-mini-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #1c1f27;
+  border: 1px solid #2f343f;
+  border-radius: 14px;
+  text-decoration: none;
+  margin-bottom: 8px;
+  transition: border-color 0.15s;
+}
+.ev-mini-card:hover { border-color: rgba(216,151,231,0.35); }
+
+/* ── Pills ── */
+.home-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 999px;
+  font-family: 'Manrope', sans-serif; font-size: 10px; font-weight: 700;
+}
+.home-pill-purple { background: rgba(216,151,231,0.12); color: #d897e7; border: 1px solid rgba(216,151,231,0.25); }
+.home-pill-gold   { background: rgba(255,200,80,0.1);   color: #ffc850; border: 1px solid rgba(255,200,80,0.2); }
+.home-pill-green  { background: rgba(67,217,173,0.1);   color: #43d9ad; border: 1px solid rgba(67,217,173,0.2); }
+.home-pill-orange { background: rgba(251,146,60,0.1);   color: #fb923c; border: 1px solid rgba(251,146,60,0.2); }
+.dot-live {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #43d9ad; display: inline-block;
+  animation: pulse-dot 1.4s infinite;
+}
+@keyframes pulse-dot { 0%,100%{ opacity:1; } 50%{ opacity:0.4; } }
+@keyframes pop-in { from{ opacity:0; transform:scale(0.94); } to{ opacity:1; transform:scale(1); } }
+
+/* ── Nav dot (active indicator) ── */
+.lyfter-nav-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: #d897e7; margin-top: 2px;
+}
+.lyfter-nav-item.active .nav-evento-icon {
+  opacity: 1 !important;
+  filter: brightness(0) saturate(100%) invert(70%) sepia(50%) saturate(500%) hue-rotate(220deg);
 }

@@ -5,34 +5,63 @@
 
 ---
 
-## ✅ Implementado — Semanas 2 y 3 (actualización 2026-06-15)
+## ✅ Implementado — estado al 25/06/2026
 
-Las siguientes funcionalidades fueron implementadas sobre la base vanilla JS + Flask existente:
+Todas las fases P0 (T01–T57) y las features P2 están completas. Adicionalmente se implementaron features fuera del scope original del programa.
 
-**Backend (`backend/app.py`):**
-- `GET /admin/dashboard` — métricas globales (participantes, eventos, badges, canjes, progreso por evento)
-- `GET /admin/users` — listado de usuarios con `created_at`
-- `PATCH /admin/users/<id>/role` — cambiar rol; no permite auto-modificación
-- `DELETE /admin/events/<id>` — elimina evento + badges + scans en cascada
-- `DELETE /admin/events/<id>/badges/<id>` — elimina badge + scans
-- `POST /admin/badges/<id>/regenerate-qr` — nuevo token UUID + nuevo QR
-- Rate limiting en `/auth/login` (5 intentos por 5 minutos, retorna 429)
-- Validaciones: `strip()`, longitudes máximas, regex de email, `fecha_fin >= fecha_inicio`
-- `scanned_at` incluido en la respuesta de `GET /events/<id>` por badge obtenido
+**P0 completo (core):** registro, login, roles, eventos, badges, QR, redención, perfil con progreso, panel admin, deploy en producción.
 
-**Frontend:**
-- `admin-participation.html` → dashboard completo: cards de métricas, barras de progreso por evento, tabla de usuarios con cambio de rol
-- `admin-event.html` → edición inline de eventos, toggle activo/inactivo, confirmación modal (sin `confirm()` nativo)
-- `admin-badges.html` → filtro de búsqueda en tiempo real, QR preview mejorado, Regenerar QR, Descargar todos los QRs
-- `scan.html` → línea de escaneo animada, vibración (éxito y duplicado), fallback manual con mensaje claro al denegar cámara
-- `profile.html` → animación de unlock de badge, barra de progreso con %, confetti en canvas al completar evento, historial ordenado por fecha
+**P2 completados:**
+- P2-A (dashboard stats): `GET /admin/dashboard` + `GET /admin/events/<id>/stats` + página `admin-participation.html`
+- P2-B (tiempo real): leaderboard y contadores se actualizan con polling
+- P2-C (historial): eventos pasados en perfil + `GET /events/joined`
 
-**JS compartido:**
-- `js/api.js` → timeout de 15s (AbortController), detección offline, nuevos métodos `getDashboard`, `getUsers`, `changeUserRole`, `regenerateBadgeQr`, `updateEvent`
-- `js/utils.js` → `showConfirm()` modal nativo, tipo `warning` en toasts, `window.toast` global, `skeletonCard()`
+**Features adicionales implementados (fuera de scope original):**
+
+**Backend — arquitectura:**
+- Refactorizado a blueprints modulares: `routes/auth.py`, `events.py`, `admin.py`, `redeem.py`, `xp.py`, `workspaces.py`
+- `services/achievements.py` y `services/xp.py` como capa de negocio separada
+- `security/limiter.py` (flask-limiter + Redis), `security/ip_guard.py`, `security/middleware.py`
+- `flask-jwt-extended` con claims extendidos (rol, workspace, nombre)
+- ProxyFix para leer IP real detrás de Render
+
+**Backend — nuevas rutas:**
+- Google OAuth: `POST /auth/google` (Firebase idToken → JWT propio)
+- Reset de contraseña: `POST /auth/forgot-password` + `POST /auth/reset-password` (Resend)
+- Intereses: `POST /auth/interests` (hasta 20 tags para recomendaciones)
+- Privacidad: `POST /auth/profile/privacy` (show_in_leaderboard, show_badges)
+- Eliminar cuenta: `DELETE /auth/profile`
+- Eventos recomendados: `GET /events/recommended`
+- Join de evento: `POST /events/<id>/join` con validación de geofencing (Haversine, radio 1 km)
+- Reviews: `POST /events/<id>/review`, `GET /events/<id>/reviews`
+- Leaderboard global y por evento: `/leaderboard`, `/leaderboard/global`, `/leaderboard/<event_id>`
+- XP: `GET /profile/xp`, `GET /profile/achievements`
+- Definiciones de logros: `GET /auth/achievements/definitions`
+- Ban system: `POST /workspaces/platform/users/<id>/ban`, `unban`, `DELETE`
+- Workspaces completo: CRUD, miembros, invitaciones por email o código, god_admin, creation-code
+
+**Backend — nuevas colecciones MongoDB:** event_joins, achievements, user_achievements, xp_log, workspaces, workspace_members, invitations, reviews (total: 12 colecciones)
+
+**Frontend — nuevas páginas (38 total):**
+- Auth: `reset-password.html`, login con Google (Firebase SDK)
+- Perfil extendido: `profile-new.html`, `profile-achievements.html`, `profile-activity.html`, `profile-reviews.html`, `profile-stats.html`
+- Eventos: `events.html`, `event-detail.html`, `event-stats.html`, `join.html`
+- Workspaces: `workspace.html`, `workspace-create.html`, `workspace-edit.html`, `workspace-select.html`
+- Admin extendido: `admin-event-create.html`, `admin-event-detail.html`, `admin-leaderboard.html`, `admin-reviews.html`
+- Gestión: `gestion-usuarios.html`
+- Perfiles públicos: `user-achievements.html`, `user-events.html`, `user-ranking.html`
+- Social: `leaderboard.html`, `reviews.html`, `stats.html`
+- Legales: `privacy.html`, `terms.html`
+- Pública: `landing.html`
+
+**Frontend — JS compartido:**
+- `js/api.js` → `window.LyfterAPI` con ~50 métodos, timeout 15s, detección offline, mock completo
+- `js/utils.js` → `window.LyfterUtils` con i18n, XP bar, achievements grid, drawer, skeletons
+- `js/pato-celebrate.js` → animación Lottie del pato
+- `frontend/locales/` → traducciones en es, en, de, fr, pt
 - `db/seed.js` → 1 admin + 3 participantes + 2 eventos + 5 badges c/u + scans distribuidos
 
-**Tareas correspondientes (del plan original):** T26–T52 en su mayoría completadas. T63–T64 (dashboard stats) completadas como P2-A.
+**Deploy:** migrado de Vercel a GitHub Pages; CI/CD via `.github/workflows/deploy.yml`.
 
 ---
  

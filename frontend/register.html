@@ -50,7 +50,7 @@
       });
 
       var user = API.currentUser();
-      if (user) { window.location.replace(['admin','superadmin','god_admin'].indexOf(user.role) !== -1 ? 'workspace-select.html' : 'profile.html'); return; }
+      if (user) { window.location.replace(['admin','superadmin','god_admin'].indexOf(user.role) !== -1 ? 'workspace-select.html' : 'inicio.html'); return; }
 
       var app = document.getElementById('app');
 
@@ -125,7 +125,7 @@
             if (selected.length) await API.updateInterests(selected);
           } catch(e) {}
           U.toastNextPage(U.t('account_created'), 'success');
-          window.location.href = 'profile.html';
+          window.location.href = 'inicio.html';
         }
 
         document.getElementById('save-interests').addEventListener('click', saveAndContinue);
@@ -251,7 +251,7 @@
             launchFireworks(function() { showInterestsStep(); });
           } else {
             U.toastNextPage(U.t('welcome_google'), 'success');
-            launchFireworks(function() { window.location.href = 'profile.html'; });
+            launchFireworks(function() { window.location.href = 'inicio.html'; });
           }
         } catch (err) {
           var mensajes = {
