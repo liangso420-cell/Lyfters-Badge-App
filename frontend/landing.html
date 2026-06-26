@@ -86,6 +86,21 @@
       border-bottom: 1px solid rgba(216,151,231,0.10);
       transition: background .3s;
     }
+    /* ── Barra de progreso de scroll ── */
+    .scroll-progress {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: 3px; z-index: 101;          /* sobre la navbar (z 100) */
+      background: rgba(255,255,255,0.05);
+      pointer-events: none;
+    }
+    .scroll-progress span {
+      display: block; height: 100%; width: 0;
+      background: linear-gradient(90deg, var(--lila), var(--azul), var(--verde), var(--amber));
+      background-size: 100vw 100%;        /* gradiente fijo: se revela al avanzar */
+      box-shadow: 0 0 12px rgba(216,151,231,0.65);
+      border-radius: 0 3px 3px 0;
+      transition: width .12s ease-out;
+    }
     .nav-logo {
       display: flex;
       align-items: center;
@@ -531,6 +546,173 @@
       .features-grid { grid-template-columns: 1fr !important; }
       .cta-card { padding: 32px 20px !important; }
     }
+
+    /* ── PATO XP STAGE (¿Para quién?) ── */
+    .pato-stage {
+      position: relative;
+      width: 100%;
+      max-width: 560px;
+      margin: 4px auto 64px;
+      aspect-ratio: 1 / 0.78;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    /* halo de luz pulsante detrás del pato */
+    .pato-glow {
+      position: absolute; top: 50%; left: 50%;
+      width: 300px; height: 300px; margin: -150px 0 0 -150px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(216,151,231,0.30), rgba(112,207,255,0.12) 45%, transparent 70%);
+      filter: blur(4px);
+      z-index: 1;
+      animation: patoGlowPulse 5s ease-in-out infinite;
+    }
+    @keyframes patoGlowPulse {
+      0%, 100% { transform: scale(.9);  opacity: .6; }
+      50%      { transform: scale(1.1); opacity: 1; }
+    }
+    /* ondas concéntricas que se expanden al revelar la sección */
+    .pato-ring {
+      position: absolute; top: 50%; left: 50%;
+      width: 250px; height: 250px; margin: -125px 0 0 -125px;
+      border-radius: 50%;
+      border: 1px solid rgba(216,151,231,0.40);
+      opacity: 0;
+      z-index: 1;
+    }
+    .pato-stage.visible .pato-ring   { animation: patoRipple 2.8s ease-out infinite; }
+    .pato-stage.visible .pato-ring--2 { animation-delay: .95s; }
+    .pato-stage.visible .pato-ring--3 { animation-delay: 1.9s; }
+    @keyframes patoRipple {
+      0%   { transform: scale(.5);  opacity: .7; }
+      100% { transform: scale(1.4); opacity: 0; }
+    }
+    /* destellos / sparkles */
+    .pato-spark {
+      position: absolute; width: 6px; height: 6px; border-radius: 50%;
+      top: var(--sy); left: var(--sx);
+      background: #fff; opacity: 0; z-index: 2;
+      box-shadow: 0 0 10px rgba(255,255,255,0.95);
+    }
+    .pato-stage.visible .pato-spark {
+      animation: patoSpark 2.8s ease-in-out var(--sd, 0s) infinite;
+    }
+    @keyframes patoSpark {
+      0%, 100% { opacity: 0; transform: scale(0); }
+      50%      { opacity: .9; transform: scale(1); }
+    }
+    /* el pato: entrada con pop + flotación continua */
+    .pato-duck {
+      position: relative; z-index: 3;
+      opacity: 0; transform: scale(.55);
+    }
+    .pato-stage.visible .pato-duck {
+      animation: patoPopIn .9s cubic-bezier(.18,.89,.32,1.28) .1s forwards;
+    }
+    @keyframes patoPopIn {
+      0%   { opacity: 0; transform: scale(.55) translateY(22px); }
+      60%  { opacity: 1; }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .pato-duck-float { position: relative; animation: patoFloat 4.5s ease-in-out infinite; }
+    @keyframes patoFloat {
+      0%, 100% { transform: translateY(0)    rotate(-1.6deg); }
+      50%      { transform: translateY(-14px) rotate(1.6deg); }
+    }
+    .pato-duck-img {
+      width: 320px; height: auto; display: block;
+      filter: drop-shadow(0 18px 30px rgba(0,0,0,0.45));
+      cursor: pointer;
+      transition: transform .2s ease, filter .2s ease;
+    }
+    .pato-duck-img:hover {
+      transform: scale(1.06);
+      filter: drop-shadow(0 22px 36px rgba(216,151,231,0.4));
+    }
+    /* rebote al hacer click (¡cuac!) */
+    .pato-duck-img.quack { animation: patoQuack .45s ease; }
+    @keyframes patoQuack {
+      0%   { transform: scale(1); }
+      30%  { transform: scale(.86); }   /* aplasta */
+      60%  { transform: scale(1.14); }  /* rebota */
+      100% { transform: scale(1); }
+    }
+    /* pastilla XP a la derecha del pato — entra en el ciclo de notificaciones */
+    .pato-xp-wrap {
+      position: absolute; left: 84%; top: 50%;
+      transform: translateY(-50%);
+      z-index: 4;
+      pointer-events: none;   /* decorativo */
+    }
+    .pato-xp {
+      display: inline-block;
+      opacity: 0; transform: scale(.4); transform-origin: center;
+      font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 14px;
+      letter-spacing: .05em; color: #fff;
+      padding: 6px 19px; border-radius: 999px;
+      background: linear-gradient(135deg, #8b5cf6, #d897e7);
+      box-shadow: 0 6px 16px rgba(139,92,246,0.55);
+    }
+    .pato-stage.visible .pato-xp {
+      animation: patoBadgeCycle 10s ease-in-out var(--d, 0s) infinite;
+    }
+    /* notificaciones flotantes */
+    .pato-badge {
+      position: absolute; z-index: 4;
+      opacity: 0; transform: scale(.4); transform-origin: center;
+      pointer-events: none;   /* decorativo: no intercepta clicks del pato */
+    }
+    /* ciclo rotativo: cada notificación aparece, se mantiene y desaparece;
+       --d desfasa cada una un cuarto del ciclo (8s) → solo una visible a la vez */
+    .pato-stage.visible .pato-badge {
+      animation: patoBadgeCycle 10s ease-in-out var(--d, 0s) infinite;
+    }
+    @keyframes patoBadgeCycle {
+      0%   { opacity: 0; transform: scale(.4); }   /* oculta */
+      4%   { opacity: 1; transform: scale(1.12); } /* pop in (con overshoot) */
+      7%   { opacity: 1; transform: scale(1); }
+      17%  { opacity: 1; transform: scale(1); }    /* se mantiene */
+      20%  { opacity: 0; transform: scale(.5); }   /* pop out */
+      100% { opacity: 0; transform: scale(.4); }   /* espera su turno */
+    }
+    .pato-badge-i {
+      display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
+      font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 13px; color: #fff;
+      padding: 9px 15px; border-radius: 14px;
+      background: rgba(28,31,39,0.85);
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.38);
+      -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    }
+    .pato-badge svg { width: 13px; height: 13px; display: block; }
+    .pato-dot { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 8px currentColor; }
+    .dot-lila  { background: var(--lila);  color: var(--lila); }
+    .dot-white { background: #fff; color: #fff; }
+    /* tintes por notificación */
+    .pato-badge--cloud .pato-badge-i { border-color: rgba(216,151,231,0.55); }
+    .pato-badge--xp    .pato-badge-i { background: linear-gradient(135deg, rgba(70,150,84,0.95), rgba(120,196,128,0.92)); border-color: rgba(171,209,148,0.6); }
+    .pato-badge--lvl   .pato-badge-i { color: var(--azul); border-color: rgba(112,207,255,0.55); }
+    .pato-badge--rank  .pato-badge-i { background: linear-gradient(135deg, rgba(150,95,28,0.95), rgba(206,144,60,0.92)); border-color: rgba(255,203,138,0.6); }
+    /* posiciones alrededor del pato */
+    .pato-badge--cloud { top: 5%;  left: 55%; }
+    .pato-badge--xp    { top: 33%; left: 0%; }
+    .pato-badge--lvl   { top: 70%; left: 8%; }
+    .pato-badge--rank  { top: 83%; left: 56%; }
+
+    @media (max-width: 600px) {
+      .pato-stage { max-width: 360px; aspect-ratio: 1 / 0.92; margin-bottom: 48px; }
+      .pato-duck-img { width: 220px; }
+      .pato-glow { width: 220px; height: 220px; margin: -110px 0 0 -110px; }
+      .pato-badge-i { font-size: 11px; padding: 7px 11px; gap: 6px; }
+      .pato-badge--xp  { left: -4%; }
+      .pato-badge--rank { left: 52%; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .pato-duck, .pato-badge, .pato-xp { opacity: 1 !important; transform: none !important; animation: none !important; }
+      .pato-duck-float, .pato-badge-i, .pato-glow, .pato-spark { animation: none !important; }
+      .pato-ring { display: none; }
+    }
   </style>
 </head>
 <body>
@@ -543,6 +725,9 @@
   <canvas id="particleCanvas"></canvas>
 
   <!-- NAVBAR -->
+  <!-- Barra de progreso de scroll (sobre la navbar) -->
+  <div class="scroll-progress" aria-hidden="true"><span id="scroll-progress-fill"></span></div>
+
   <nav id="main-nav">
     <a href="landing.html" class="nav-logo">
       <div class="nav-logo-icon"><img src="assets/icons/ui/logo-lyfter.jpeg" style="width:28px;height:28px;object-fit:contain;border-radius:6px;"></div>
@@ -683,6 +868,47 @@
       <div class="section-label reveal">¿Para quién?</div>
       <h2 class="section-title reveal">Ideal para cualquier evento presencial</h2>
       <p class="section-sub reveal">Desde bootcamps hasta conferencias corporativas.</p>
+
+      <!-- Escena animada del pato + notificaciones de XP -->
+      <div class="pato-stage reveal" id="pato-stage" aria-hidden="true">
+        <div class="pato-glow"></div>
+        <div class="pato-ring"></div>
+        <div class="pato-ring pato-ring--2"></div>
+        <div class="pato-ring pato-ring--3"></div>
+
+        <i class="pato-spark" style="--sx:16%;--sy:24%;--sd:0s"></i>
+        <i class="pato-spark" style="--sx:82%;--sy:30%;--sd:.6s"></i>
+        <i class="pato-spark" style="--sx:24%;--sy:78%;--sd:1.1s"></i>
+        <i class="pato-spark" style="--sx:74%;--sy:70%;--sd:1.6s"></i>
+        <i class="pato-spark" style="--sx:50%;--sy:8%;--sd:.9s"></i>
+
+        <div class="pato-duck">
+          <div class="pato-duck-float">
+            <img class="pato-duck-img" src="pato/pato1.webp" alt="Pato, la mascota de Lyfter que sube de nivel con tu XP" />
+            <div class="pato-xp-wrap" style="--d:8s"><span class="pato-xp">XP</span></div>
+          </div>
+        </div>
+
+        <div class="pato-badge pato-badge--cloud" style="--d:0s">
+          <div class="pato-badge-i"><span class="pato-dot dot-lila"></span>Cloud +10 XP</div>
+        </div>
+        <div class="pato-badge pato-badge--xp" style="--d:2s">
+          <div class="pato-badge-i"><span class="pato-dot dot-white"></span>+50 XP ganados</div>
+        </div>
+        <div class="pato-badge pato-badge--lvl" style="--d:4s">
+          <div class="pato-badge-i">
+            <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M13 2 4.5 13.5H11l-1 8.5L19.5 10H13l0-8z"/></svg>
+            Nv.4
+          </div>
+        </div>
+        <div class="pato-badge pato-badge--rank" style="--d:6s">
+          <div class="pato-badge-i">
+            <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M6 3h12v2h3v3a4 4 0 0 1-4 4 6 6 0 0 1-4 3.9V19h3v2H8v-2h3v-3.1A6 6 0 0 1 7 12a4 4 0 0 1-4-4V5h3V3zm0 4H5v1a2 2 0 0 0 1 1.7V7zm12 0v2.7A2 2 0 0 0 19 8V7h-1z"/></svg>
+            Rank #1
+          </div>
+        </div>
+      </div>
+
       <div class="steps-grid">
         <div class="step-card reveal" style="border-color:rgba(112,207,255,0.20);">
           <div class="step-icon azul"><img src="assets/icons/ui/icono-perfil.png" style="width:28px;height:28px;object-fit:contain;filter:brightness(0) invert(1);"></div>
@@ -933,10 +1159,12 @@
       'rgba(171,209,148,0.07)',
       'rgba(230,138,141,0.07)'
     ];
+    var progressFill = document.getElementById('scroll-progress-fill');
     function onScroll() {
       var d = document.documentElement;
       var max = d.scrollHeight - d.clientHeight || 1;
       var p = Math.min(1, d.scrollTop / max);
+      if (progressFill) progressFill.style.width = (p * 100) + '%';
       var i = Math.min(Math.floor(p * (tints.length-1)), tints.length-2);
       var a = 0.04 + p * 0.09;
       var c = tints[i].replace('0.07', a.toFixed(3));
@@ -954,6 +1182,22 @@
           : 'rgba(21,23,29,0.72)';
       }
     }, { passive: true });
+
+    // ── 7. Pato interactivo: click → ¡cuac! + rebote ──
+    var duckImg = document.querySelector('.pato-duck-img');
+    if (duckImg) {
+      var quack = new Audio('pato/freesound_community-075176_duck-quack-40345.mp3');
+      quack.preload = 'auto';
+      duckImg.addEventListener('click', function() {
+        try { quack.currentTime = 0; quack.play(); } catch (e) {}
+        duckImg.classList.remove('quack');
+        void duckImg.offsetWidth;        // reinicia la animación en clicks rápidos
+        duckImg.classList.add('quack');
+      });
+      duckImg.addEventListener('animationend', function(e) {
+        if (e.animationName === 'patoQuack') duckImg.classList.remove('quack');
+      });
+    }
 
   })();
   </script>
