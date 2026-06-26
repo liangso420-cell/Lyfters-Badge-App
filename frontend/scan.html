@@ -391,6 +391,9 @@
       }
 
       function showCelebration(r) {
+        scanning = false;
+        stopCamera();
+        window._scanDone = true;
         console.log('scan response:', r);
         launchConfetti();
         var modalRoot = document.getElementById('modal-root');
