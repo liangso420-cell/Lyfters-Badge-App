@@ -46,17 +46,17 @@
           '<h2 style="font-family:Poppins,sans-serif;font-size:22px;font-weight:700;color:#f4f6f9;margin:14px 0 4px;">' + U.esc(user.name||'') + '</h2>' +
           '<p style="font-family:Manrope,sans-serif;font-size:13px;color:#8b93a3;margin:0 0 12px;">' + U.esc(user.email||'') + '</p>' +
           '<div style="display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:999px;background:rgba(216,151,231,0.12);border:1px solid rgba(216,151,231,0.25);">' +
-            '<span style="font-size:15px;">⭐</span>' +
+            '<img src="assets/icons/ui/icono-evento.png" style="width:20px;height:20px;object-fit:contain;">' +
             '<span style="font-family:Poppins,sans-serif;font-size:14px;font-weight:700;color:#d897e7;">' + (profile.xp_total||0) + ' XP</span>' +
             '<span style="font-size:12px;color:#8b93a3;">· Nv. ' + (profile.level||1) + '</span>' +
           '</div>' +
         '</div>' +
 
         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px;">' +
-          btn('profile-stats.html', '📊', 'Stats', 'Tus estadísticas', '#70cfff') +
-          btn('profile-activity.html', '🗓', 'Mi actividad', 'Guardados y eventos', '#d897e7') +
-          btn('profile-reviews.html', '⭐', 'Reseñas', 'Tus reseñas enviadas', '#ffc850') +
-          btn('profile-achievements.html', '🏆', 'Logros', 'Badges y logros', '#4ade80') +
+          btn('profile-stats.html', '<img src="assets/icons/ui/icono-participantes.png" style="width:28px;height:28px;object-fit:contain;">', 'Stats', 'Tus estadísticas', '#70cfff') +
+          btn('profile-activity.html', '<img src="assets/icons/ui/icono-calendario-blanco.png" style="width:28px;height:28px;object-fit:contain;">', 'Mi actividad', 'Guardados y eventos', '#d897e7') +
+          btn('profile-reviews.html', '<img src="assets/icons/ui/icono-evento.png" style="width:28px;height:28px;object-fit:contain;">', 'Reseñas', 'Tus reseñas enviadas', '#ffc850') +
+          btn('profile-achievements.html', '<img src="assets/icons/ui/icono-badges-creados.png" style="width:28px;height:28px;object-fit:contain;">', 'Logros', 'Badges y logros', '#4ade80') +
         '</div>';
     }
 
