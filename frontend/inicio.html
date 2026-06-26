@@ -205,7 +205,7 @@
               '<a href="user-events.html" style="font-family:Manrope,sans-serif;font-size:12px;color:#d897e7;text-decoration:none;font-weight:600;">Ver todos</a>' +
             '</div>' +
             (userEvents.length
-              ? '<div style="display:flex;gap:10px;">' + userEvents.map(eventMiniCard).join('') + '</div>'
+              ? '<div style="display:flex;flex-direction:column;gap:8px;">' + userEvents.map(eventMiniCard).join('') + '</div>'
               : '<div style="background:var(--card);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:20px;text-align:center;">' +
                   '<p style="font-family:Manrope,sans-serif;font-size:13px;color:#8b93a3;margin:0;">No tienes eventos activos.<br><a href=\"profile.html\" style=\"color:#d897e7;\">Explora eventos disponibles</a></p>' +
                 '</div>'
