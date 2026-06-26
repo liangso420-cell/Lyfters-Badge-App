@@ -205,10 +205,16 @@
         var isMyGrantor = u.granted_by && u.granted_by === user.id;
         var actions;
         if (u.role === 'god_admin') {
-          actions = isMyGrantor
-            ? '<span style="font-size:11px;color:#ffc850;padding:4px 10px;background:rgba(255,200,80,0.1);border:1px solid rgba(255,200,80,0.2);border-radius:6px;">Protegido — te otorgó el permiso</span>'
-            : '<span style="font-size:11px;color:#ffc850;padding:4px 10px;background:rgba(255,200,80,0.1);border:1px solid rgba(255,200,80,0.2);border-radius:6px;">Protegido</span>' +
-              '<span style="font-size:11px;color:#ffc850;background:rgba(255,200,80,0.1);border:1px solid rgba(255,200,80,0.2);border-radius:6px;padding:4px 10px;">God Admin global</span>';
+          var isMyGrantee = user.granted_by && user.granted_by === u.id;
+          var isMyGrantor = u.granted_by && u.granted_by === user.id;
+          if (isMyGrantee) {
+            actions = '<span style="font-size:11px;color:#ffc850;padding:4px 10px;background:rgba(255,200,80,0.1);border:1px solid rgba(255,200,80,0.2);border-radius:6px;">Protegido — te otorgó el permiso</span>';
+          } else if (isMyGrantor) {
+            actions = '<span style="font-size:11px;color:#ffc850;padding:4px 10px;background:rgba(255,200,80,0.1);border:1px solid rgba(255,200,80,0.2);border-radius:6px;">Le otorgaste el permiso</span>' +
+              '<button onclick="openRoleModal(\'' + u.id + '\',\'' + safeName + '\',\'' + safeEmail + '\')" style="height:30px;padding:0 12px;border-radius:8px;border:1px solid rgba(216,151,231,0.3);background:rgba(216,151,231,0.12);color:#d897e7;cursor:pointer;font-size:12px;">Modificar rol</button>';
+          } else {
+            actions = '<span style="font-size:11px;color:#ffc850;padding:4px 10px;background:rgba(255,200,80,0.1);border:1px solid rgba(255,200,80,0.2);border-radius:6px;">God Admin global</span>';
+          }
         } else {
           var banBtn = u.banned
             ? '<button onclick="unbanPlatformUser(\'' + u.id + '\')" style="width:120px;height:30px;box-sizing:border-box;text-align:center;font-size:12px;padding:0 12px;border-radius:8px;border:1px solid #353a46;background:transparent;color:#aab1bf;cursor:pointer;">Desbanear</button>'
