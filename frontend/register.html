@@ -150,6 +150,70 @@
           inp.parentElement.appendChild(btn);
         });
       })();
+
+      // FIX 1 + FIX 2 — password-error div + strength bar
+      (function() {
+        var passInput = form.elements['password'];
+        if (!passInput) return;
+        passInput.id = 'password';
+        var pwParent = passInput.parentElement;
+
+        var pwErrDiv = document.createElement('div');
+        pwErrDiv.id = 'password-error';
+        pwErrDiv.style.cssText = 'font-size:12px;color:#e68a8d;margin-top:6px;min-height:16px;padding-left:2px;';
+        pwParent.appendChild(pwErrDiv);
+
+        var pwBar = document.createElement('div');
+        pwBar.id = 'pw-strength-bar';
+        pwBar.style.cssText = 'margin-top:8px;display:flex;align-items:center;gap:8px;min-height:22px;opacity:0;transition:opacity 0.2s ease;';
+        pwBar.innerHTML =
+          '<div style="display:flex;gap:4px;">' +
+            '<div id="pw-dot-1" style="width:28px;height:4px;border-radius:999px;background:#2e323d;transition:background 0.3s ease;"></div>' +
+            '<div id="pw-dot-2" style="width:28px;height:4px;border-radius:999px;background:#2e323d;transition:background 0.3s ease;"></div>' +
+            '<div id="pw-dot-3" style="width:28px;height:4px;border-radius:999px;background:#2e323d;transition:background 0.3s ease;"></div>' +
+          '</div>' +
+          '<span id="pw-strength-icon" style="font-size:14px;transition:all 0.25s ease;"></span>' +
+          '<span id="pw-strength-text" style="font-size:12px;font-family:Manrope,sans-serif;transition:color 0.25s ease;color:#8b93a3;"></span>';
+        pwParent.appendChild(pwBar);
+
+        passInput.addEventListener('input', function() {
+          updatePwStrength(this.value);
+          var pwErr = document.getElementById('password-error');
+          if (pwErr && this.value.length >= 8) pwErr.textContent = '';
+        });
+      }());
+
+      function updatePwStrength(val) {
+        var bar  = document.getElementById('pw-strength-bar');
+        var dot1 = document.getElementById('pw-dot-1');
+        var dot2 = document.getElementById('pw-dot-2');
+        var dot3 = document.getElementById('pw-dot-3');
+        var icon = document.getElementById('pw-strength-icon');
+        var text = document.getElementById('pw-strength-text');
+        if (!bar) return;
+        if (val.length === 0) { bar.style.opacity = '0'; return; }
+        bar.style.opacity = '1';
+        var hasMin   = val.length >= 8;
+        var hasUpper = /[A-Z]/.test(val);
+        var hasNum   = /[0-9]/.test(val);
+        if (!hasMin) {
+          dot1.style.background = '#e68a8d'; dot2.style.background = '#2e323d'; dot3.style.background = '#2e323d';
+          icon.textContent = '✕'; icon.style.color = '#e68a8d';
+          text.textContent = 'Mínimo 8 caracteres'; text.style.color = '#e68a8d';
+        } else if (!hasUpper || !hasNum) {
+          dot1.style.background = '#ffcb8a'; dot2.style.background = '#ffcb8a'; dot3.style.background = '#2e323d';
+          icon.textContent = '⚠'; icon.style.color = '#ffcb8a';
+          text.textContent = 'Añadí mayúsculas o números'; text.style.color = '#ffcb8a';
+        } else {
+          dot1.style.background = '#abd194'; dot2.style.background = '#abd194'; dot3.style.background = '#abd194';
+          icon.style.transition = 'transform 0.2s cubic-bezier(0.34,1.56,0.64,1), color 0.25s';
+          icon.style.transform = 'scale(1.3)';
+          setTimeout(function() { icon.style.transform = 'scale(1)'; }, 200);
+          icon.textContent = '✓'; icon.style.color = '#abd194';
+          text.textContent = 'Contraseña segura'; text.style.color = '#abd194';
+        }
+      }
+
       function launchFireworks(cb) {
         var canvas = document.createElement('canvas');
         canvas.style.cssText = 'position:fixed;inset:0;z-index:9999;pointer-events:none;';
@@ -195,7 +259,7 @@
         var name = form.elements['name'], email = form.email, pass = form.password, confirm = form.confirm, ok = true;
         ok = U.setFieldError(name,    name.value.trim() ? '' : 'Ingresa tu nombre') && ok;
         ok = U.setFieldError(email,   U.EMAIL_RE.test(email.value.trim()) ? '' : 'Email no válido') && ok;
-        ok = U.setFieldError(pass,    pass.value.length >= 6 ? '' : 'Mínimo 6 caracteres') && ok;
+        (function(){ var pwOk = pass.value.length >= 8; var pwErr = document.getElementById('password-error'); if (pwErr) pwErr.textContent = pwOk ? '' : 'La contraseña debe tener al menos 8 caracteres'; if (!pwOk) { pass.classList.add('input-invalid'); ok = false; } else { pass.classList.remove('input-invalid'); } }());
         ok = U.setFieldError(confirm, (confirm.value === pass.value && confirm.value) ? '' : 'Las contraseñas no coinciden') && ok;
         if (!ok) return;
         var btn = form.querySelector('[type="submit"]');
