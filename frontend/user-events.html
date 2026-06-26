@@ -122,15 +122,7 @@
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
       }
 
-      function navHtml() {
-        return '<div style="display:flex;gap:4px;margin-bottom:24px;background:#1c1f27;border:1px solid #2f343f;border-radius:12px;padding:4px;">' +
-          '<a href="profile.html" style="flex:1;padding:8px 4px;border-radius:8px;text-decoration:none;text-align:center;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;background:transparent;color:#8b93a3;">Explorar</a>' +
-          '<a href="user-events.html" style="flex:1;padding:8px 4px;border-radius:8px;text-decoration:none;text-align:center;font-family:Manrope,sans-serif;font-size:12px;font-weight:700;background:linear-gradient(135deg,rgba(216,151,231,0.3),rgba(230,138,141,0.2));color:#f4f6f9;">Eventos</a>' +
-          '<a href="scan.html" style="flex:1;padding:8px 4px;border-radius:8px;text-decoration:none;text-align:center;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;background:transparent;color:#8b93a3;">Escanear</a>' +
-          '<a href="user-ranking.html" style="flex:1;padding:8px 4px;border-radius:8px;text-decoration:none;text-align:center;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;background:transparent;color:#8b93a3;">Ranking</a>' +
-          '<a href="profile-new.html" style="flex:1;padding:8px 4px;border-radius:8px;text-decoration:none;text-align:center;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;background:transparent;color:#8b93a3;">Perfil</a>' +
-        '</div>';
-      }
+      function navHtml() { return ''; }
 
       function renderActiveCard(ev, detail) {
         var total = detail.total || 0;
@@ -506,5 +498,29 @@
     });
   </script>
   <script src="js/pato-tutorial.js"></script>
+  <nav class="lyfter-bottom-nav">
+    <a href="inicio.html" class="lyfter-nav-item"><i class="bi bi-house-fill"></i><span>Inicio</span></a>
+    <a href="profile.html" class="lyfter-nav-item"><i class="bi bi-compass"></i></a>
+    <a href="scan.html" class="lyfter-nav-item"><i class="bi bi-qr-code-scan"></i><span>Escanear</span></a>
+    <a href="user-events.html" class="lyfter-nav-item active"><img src="assets/icons/ui/icono-evento.png" style="width:22px;height:22px;object-fit:contain;" class="nav-evento-icon" /><div class="lyfter-nav-dot"></div></a>
+    <a href="profile-new.html" class="lyfter-nav-item" id="nav-perfil-btn"><span>Perfil</span></a>
+  </nav>
+  <script>
+  (function() {
+    var API = window.LyfterAPI;
+    var U = window.LyfterUtils;
+    var user = API && API.currentUser();
+    if (!API || !user) return;
+    API.getProfile().then(function(profile) {
+      var profileAvatar = profile.avatar || (user && user.avatar) || null;
+      var initials = (user && user.name ? user.name.split(' ').map(function(w){return w[0]||'';}).join('').slice(0,2).toUpperCase() : '?');
+      var navAvatar = profileAvatar
+        ? '<img src="' + U.esc(profileAvatar) + '" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(216,151,231,0.5);" />'
+        : '<div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#d897e7,#e68a8d);display:flex;align-items:center;justify-content:center;font-family:Poppins,sans-serif;font-size:9px;font-weight:800;color:#1c1f27;">' + initials + '</div>';
+      var navPerfilBtn = document.getElementById('nav-perfil-btn');
+      if (navPerfilBtn) navPerfilBtn.insertAdjacentHTML('afterbegin', navAvatar);
+    }).catch(function() {});
+  })();
+  </script>
 </body>
 </html>
