@@ -168,8 +168,9 @@
         var passInput = form.elements['password'];
         if (!passInput) return;
         passInput.id = 'password';
-        var pwParent = passInput.parentElement;
-        pwParent.style.cssText = 'position:relative;display:flex;flex-direction:column;align-items:stretch;gap:8px;width:100%;';
+        var pwWrapper = passInput.parentElement;          // div position:relative del botón ojo — no tocar
+        var pwParent  = pwWrapper.parentElement;          // inputField outer div → columna
+        pwParent.style.cssText = 'display:flex;flex-direction:column;gap:8px;width:100%;';
 
         var pwErrDiv = document.createElement('div');
         pwErrDiv.id = 'password-error';

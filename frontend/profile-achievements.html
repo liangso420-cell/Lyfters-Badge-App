@@ -315,8 +315,11 @@
           var avatarBtn = document.getElementById('home-avatar-btn');
           if (avatarBtn) {
             avatarBtn.addEventListener('click', async function() {
-              try { var p = await API.getProfile(); U.showDrawer(p.avatar, p.nombre, null, false); }
-              catch(e) { U.showDrawer(null, null, null, false); }
+              var _u = API.currentUser();
+              U.showDrawer(_u ? _u.avatar : null, _u ? _u.name : null, null, false);
+              API.getProfile().then(function(p) {
+                if (p.avatar) { var img = document.querySelector('#drawer-panel img'); if (img) img.src = p.avatar; }
+              }).catch(function(){});
             });
           }
 
