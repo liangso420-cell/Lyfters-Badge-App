@@ -38,6 +38,22 @@ def _workspace_claims(user_doc):
     }
 
 
+def _get_client_ip():
+    xff = request.headers.get("X-Forwarded-For") or ""
+    return (xff.split(",")[0].strip() or request.remote_addr or "").strip()
+
+
+def _ip_ban_response():
+    """Returns (json, 403) if the request IP is explicitly banned, else None."""
+    ip = _get_client_ip()
+    if not ip:
+        return None
+    doc = ip_bans().find_one({"ip": ip, "expires_at": {"$gt": datetime.utcnow()}})
+    if doc:
+        return jsonify(error="Tu acceso ha sido bloqueado desde esta red.", error_code="IP_BANNED"), 403
+    return None
+
+
 def _ban_block(user_doc):
     """Si la cuenta está baneada (ban de cuenta activo), devuelve la respuesta
     403 estándar (jsonify, status). Devuelve None si no está baneada.
@@ -141,6 +157,10 @@ def refresh_token():
 @register_limit
 @ip_guard_register
 def register():
+    ip_block = _ip_ban_response()
+    if ip_block:
+        return ip_block
+
     data     = request.get_json() or {}
     name     = sanitize(data.get("nombre") or data.get("name") or "", max_len=100)
     email    = sanitize(data.get("email") or "", max_len=254).lower()
@@ -344,16 +364,12 @@ def update_interests():
 @login_admin_limit
 @ip_guard_login
 def login():
-    now_dt    = datetime.utcnow()
-    client_ip = (request.headers.get("X-Forwarded-For") or request.remote_addr or "").split(",")[0].strip()
+    ip_block = _ip_ban_response()
+    if ip_block:
+        return ip_block
 
-    # Verificar IP ban ANTES de validar credenciales
-    if client_ip:
-        ip_ban_doc = ip_bans().find_one({"ip": client_ip, "expires_at": {"$gt": now_dt}})
-        if ip_ban_doc:
-            return jsonify(error="Tu acceso ha sido bloqueado desde esta red.", error_code="IP_BANNED"), 403
-
-    data     = request.get_json() or {}
+    now_dt = datetime.utcnow()
+    data   = request.get_json() or {}
     email    = sanitize(data.get("email") or "", max_len=254).lower()
     password = (data.get("password") or "").encode()
 
@@ -372,6 +388,7 @@ def login():
     if ban_resp:
         return ban_resp
 
+    client_ip = _get_client_ip()
     if client_ip:
         users().update_one({"_id": user["_id"]}, {"$set": {"last_login_ip": client_ip}})
 
@@ -389,6 +406,10 @@ def google_login():
     Verifica el token con Google, busca o crea el usuario en MongoDB,
     y devuelve un JWT propio igual que /auth/login.
     """
+    ip_block = _ip_ban_response()
+    if ip_block:
+        return ip_block
+
     data = request.get_json() or {}
     firebase_token = (data.get("idToken") or "").strip()
 
