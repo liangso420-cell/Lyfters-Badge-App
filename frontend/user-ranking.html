@@ -214,10 +214,12 @@
       var _LEVEL_COLORS = ['', '#70cfff', '#d897e7', '#ffc850', '#e68a8d'];
 
       async function init() {
+        var profile = await API.getProfile().catch(function() { return {}; });
+        var profileAvatar = profile.avatar || (user && user.avatar) || null;
         var firstName = user.name ? user.name.split(' ')[0] : '';
         var _ini = (user.name||'?').split(' ').map(function(w){return w[0]||'';}).join('').slice(0,2).toUpperCase();
-        var avatarHtml = user.avatar
-          ? '<img src="' + U.esc(user.avatar) + '" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid rgba(216,151,231,0.4);" />'
+        var avatarHtml = profileAvatar
+          ? '<img src="' + U.esc(profileAvatar) + '" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid rgba(216,151,231,0.4);" />'
           : '<div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#d897e7,#e68a8d);display:flex;align-items:center;justify-content:center;font-family:Poppins,sans-serif;font-size:14px;font-weight:800;color:#1c1f27;">' + _ini + '</div>';
 
         var header =
