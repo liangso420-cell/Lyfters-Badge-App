@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mi Perfil — Lyfter</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
@@ -14,6 +15,13 @@
     <span>Cargando perfil...</span>
   </div>
   <div id="app" style="position:relative;z-index:1;width:100%;max-width:100%;margin:0 auto;padding:24px clamp(16px,4vw,44px) 70px;"></div>
+  <nav class="lyfter-bottom-nav">
+    <a href="inicio.html" class="lyfter-nav-item"><i class="bi bi-house-fill"></i><span>Inicio</span></a>
+    <a href="profile.html" class="lyfter-nav-item"><i class="bi bi-compass"></i><span>Explorar</span></a>
+    <a href="scan.html" class="lyfter-nav-item"><i class="bi bi-qr-code-scan"></i><span>Escanear</span></a>
+    <a href="user-ranking.html" class="lyfter-nav-item"><i class="bi bi-trophy"></i><span>Ranking</span></a>
+    <a href="profile-new.html" class="lyfter-nav-item active"><i class="bi bi-person-circle"></i><span>Perfil</span></a>
+  </nav>
   <div id="toast-root" class="fixed top-4 left-1/2 -translate-x-1/2 z-[60] flex flex-col gap-2 items-center pointer-events-none"></div>
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>

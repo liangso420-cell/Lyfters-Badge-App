@@ -557,6 +557,22 @@ def reset_password():
     return jsonify(ok=True, message="Contraseña actualizada correctamente"), 200
 
 
+@auth_bp.route("/profile/xp", methods=["GET"])
+@jwt_required()
+def profile_xp():
+    uid = get_jwt_identity()
+    u = users().find_one({"_id": ObjectId(uid)}, {"xp_total": 1, "level": 1})
+    if not u:
+        return jsonify(error="No encontrado"), 404
+    level = u.get("level", 1)
+    level_names = ["", "Explorador", "Coleccionista", "Maestro Badge", "Leyenda Lyfter"]
+    return jsonify(
+        xp_total=u.get("xp_total", 0),
+        level=level,
+        level_name=level_names[level] if level < len(level_names) else "Explorador"
+    ), 200
+
+
 @auth_bp.route("/my-reviews", methods=["GET"])
 @jwt_required()
 def my_reviews():
