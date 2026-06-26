@@ -246,12 +246,9 @@
             '</div>' +
           '</div>';
 
-        document.getElementById('ranking-avatar-btn').addEventListener('click', async function() {
+        document.getElementById('ranking-avatar-btn').addEventListener('click', function() {
           var _u = API.currentUser();
-          U.showDrawer(_u ? _u.avatar : null, _u ? _u.name : null, null, false);
-          API.getProfile().then(function(p) {
-            if (p.avatar) { var img = document.querySelector('#drawer-panel img'); if (img) img.src = p.avatar; }
-          }).catch(function(){});
+          U.showDrawer(_u ? (_u.avatar||null) : null, _u ? (_u.name||null) : null, null, false);
         });
 
         document.getElementById('tab-leaderboard').addEventListener('click', function() {
