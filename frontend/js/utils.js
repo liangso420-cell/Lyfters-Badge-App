@@ -685,10 +685,10 @@
                 '<p style="font-size:11px;color:#6f7686;line-height:1.5;margin-bottom:10px;">Si tu organización te envió un código de invitación, ingrésalo aquí.</p>' +
                 '<div style="display:flex;gap:6px;">' +
                   '<input id="drawer-ws-code" type="text" maxlength="8" placeholder="ABC12345" ' +
-                    'style="flex:1;height:34px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-size:12px;padding:0 10px;outline:none;letter-spacing:.1em;text-transform:uppercase;" ' +
+                    'style="flex:1;min-width:0;height:34px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-size:12px;padding:0 10px;outline:none;letter-spacing:.1em;text-transform:uppercase;" ' +
                     'oninput="this.value=this.value.replace(/[^a-zA-Z0-9]/g,\'\').toUpperCase().slice(0,8)" />' +
                   '<button onclick="window.joinWorkspaceFromDrawer(\'drawer-ws-code\',\'drawer-ws-result\')" ' +
-                    'style="height:34px;padding:0 12px;border-radius:8px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Unirse</button>' +
+                    'style="height:34px;padding:0 12px;border-radius:8px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap;">Unirse</button>' +
                 '</div>' +
                 '<div id="drawer-ws-result" style="margin-top:6px;font-size:11px;display:none;"></div>' +
               '</div>' +
@@ -754,10 +754,10 @@
               '<p style="font-size:11px;color:#6f7686;line-height:1.5;margin-bottom:10px;">Si tu organización te envió un código de invitación, ingrésalo aquí.</p>' +
               '<div style="display:flex;gap:6px;">' +
                 '<input id="drawer-ws-code-2" type="text" maxlength="8" placeholder="ABC12345" ' +
-                  'style="flex:1;height:34px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-size:12px;padding:0 10px;outline:none;letter-spacing:.1em;text-transform:uppercase;" ' +
+                  'style="flex:1;min-width:0;height:34px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-size:12px;padding:0 10px;outline:none;letter-spacing:.1em;text-transform:uppercase;" ' +
                   'oninput="this.value=this.value.replace(/[^a-zA-Z0-9]/g,\'\').toUpperCase().slice(0,8)" />' +
                 '<button onclick="window.joinWorkspaceFromDrawer(\'drawer-ws-code-2\',\'drawer-ws-result-2\')" ' +
-                  'style="height:34px;padding:0 12px;border-radius:8px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Unirse</button>' +
+                  'style="height:34px;padding:0 12px;border-radius:8px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap;">Unirse</button>' +
               '</div>' +
               '<div id="drawer-ws-result-2" style="margin-top:6px;font-size:11px;display:none;"></div>' +
             '</div>' +
