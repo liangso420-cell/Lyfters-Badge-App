@@ -10,6 +10,10 @@
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
     body{background:#13151b;font-family:Manrope,system-ui,sans-serif;min-height:100vh;color:#f4f6f9;}
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
   </style>
 </head>
 <body>
@@ -79,7 +83,25 @@
           btn.style.borderColor = data.saved ? 'rgba(216,151,231,0.4)' : '#2f343f';
           btn.style.background = data.saved ? 'rgba(216,151,231,0.1)' : 'transparent';
         }
-        U.toast(data.message, 'success');
+        if (data.saved) {
+          U.toast('Evento guardado en tu lista', 'success');
+          var notif = document.createElement('div');
+          notif.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1c1f27;border:1px solid rgba(216,151,231,0.4);border-radius:14px;padding:12px 20px;display:flex;align-items:center;gap:10px;z-index:9999;animation:slideUp .3s ease;box-shadow:0 8px 32px rgba(0,0,0,0.4);';
+          notif.innerHTML =
+            '<img src="assets/icons/ui/icono-reclamado.png" style="width:20px;height:20px;object-fit:contain;" />' +
+            '<div>' +
+              '<div style="font-family:Poppins,sans-serif;font-size:13px;font-weight:700;color:#d897e7;">¡Evento guardado!</div>' +
+              '<div style="font-family:Manrope,sans-serif;font-size:11px;color:#8b93a3;">Lo encontrarás en Mi actividad → Guardados</div>' +
+            '</div>';
+          document.body.appendChild(notif);
+          setTimeout(function() {
+            notif.style.opacity = '0';
+            notif.style.transition = 'opacity .3s';
+            setTimeout(function() { notif.remove(); }, 300);
+          }, 2500);
+        } else {
+          U.toast('Evento eliminado de guardados', 'info');
+        }
       } catch(e) {
         U.toast('Error al guardar', 'error');
       }
