@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<<<<<<< HEAD
   <title>Reportes de usuarios — Lyfter Badge App</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
@@ -12,90 +11,6 @@
 <body style="margin:0;background:#15171d;font-family:Manrope,system-ui,sans-serif;">
   <div id="app"></div>
   <div id="toast-root" style="position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;"></div>
-=======
-  <title>Reportes — Lyfter Badge App</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css" />
-  <style>
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-    body{background:#0f1117;font-family:Manrope,system-ui,sans-serif;min-height:100vh;color:#f4f6f9;overflow-x:hidden;}
-    .bg-glow{position:fixed;inset:0;pointer-events:none;z-index:0;
-      background:
-        radial-gradient(ellipse 70% 50% at 20% 10%,rgba(251,191,36,0.07),transparent 60%),
-        radial-gradient(ellipse 60% 40% at 80% 80%,rgba(230,138,141,0.06),transparent 60%);}
-    .page-header{position:sticky;top:0;z-index:10;padding:16px 28px;display:flex;align-items:center;gap:14px;border-bottom:1px solid rgba(251,191,36,0.12);background:rgba(26,29,36,0.92);backdrop-filter:blur(20px) saturate(1.5);-webkit-backdrop-filter:blur(20px) saturate(1.5);}
-    .back-btn{display:inline-flex;align-items:center;gap:6px;font-family:Manrope,sans-serif;font-size:13px;font-weight:600;color:#8b93a3;text-decoration:none;padding:6px 12px;border-radius:8px;border:1px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap;}
-    .back-btn:hover{color:#fbbf24;border-color:rgba(251,191,36,0.25);}
-    .page-title{font-family:Poppins,sans-serif;font-size:18px;font-weight:700;color:#fbbf24;display:flex;align-items:center;gap:8px;}
-    .main{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:36px 24px 80px;}
-    .card{background:#1c1f27;border:1px solid #2f343f;border-radius:20px;padding:28px 30px;margin-bottom:20px;}
-    .filter-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:24px;}
-    .filter-bar select{height:40px;padding:0 12px;border-radius:10px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:13px;outline:none;cursor:pointer;}
-    .filter-bar select:focus{border-color:#fbbf24;}
-    .btn-load{height:40px;padding:0 20px;border-radius:10px;border:1px solid rgba(251,191,36,0.4);background:rgba(251,191,36,0.1);color:#fbbf24;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s;}
-    .btn-load:hover{background:rgba(251,191,36,0.18);}
-    .report-table{width:100%;border-collapse:collapse;}
-    .report-table th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6f7686;font-weight:700;padding:10px 14px;border-bottom:1px solid #262a33;text-align:left;white-space:nowrap;}
-    .report-table td{padding:13px 14px;border-bottom:1px solid #20242d;font-size:13px;color:#cdd2db;vertical-align:top;}
-    .report-table tr:last-child td{border-bottom:none;}
-    .report-table tr:hover td{background:rgba(255,255,255,0.02);}
-    .status-pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;}
-    .status-pill.pending{background:rgba(251,191,36,0.15);color:#fbbf24;}
-    .status-pill.confirmed{background:rgba(230,138,141,0.15);color:#e68a8d;}
-    .status-pill.dismissed{background:rgba(111,118,134,0.15);color:#6f7686;}
-    .btn-action{height:30px;font-size:11px;padding:0 12px;border-radius:7px;cursor:pointer;font-family:Poppins,sans-serif;font-weight:600;}
-    .btn-action.dismiss{border:1px solid #353a46;background:transparent;color:#8b93a3;}
-    .btn-action.dismiss:hover{background:rgba(255,255,255,0.05);}
-    .btn-action.confirm{border:1px solid rgba(230,138,141,0.35);background:rgba(230,138,141,0.12);color:#e68a8d;}
-    .btn-action.confirm:hover{background:rgba(230,138,141,0.2);}
-    .empty-state{text-align:center;padding:48px 24px;color:#6f7686;font-size:14px;}
-    .pager{display:flex;gap:6px;justify-content:center;margin-top:20px;flex-wrap:wrap;}
-    .pager-btn{height:34px;min-width:34px;padding:0 10px;border-radius:8px;border:1px solid #353a46;background:transparent;color:#8b93a3;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
-    .pager-btn.active{border-color:#fbbf24;background:rgba(251,191,36,0.15);color:#fbbf24;}
-    .spinner{display:flex;flex-direction:column;align-items:center;padding:48px;gap:12px;}
-    .spinner-ring{width:36px;height:36px;border-radius:50%;border:3px solid #262a33;border-top-color:#fbbf24;animation:spin .7s linear infinite;}
-    @keyframes spin{to{transform:rotate(360deg);}}
-    @media(max-width:700px){
-      .page-header{padding:12px 16px;}
-      .main{padding:20px 14px 60px;}
-      .card{padding:18px 16px;}
-      .report-table th:nth-child(3),.report-table td:nth-child(3){display:none;}
-    }
-  </style>
-</head>
-<body>
-  <div class="bg-glow"></div>
-
-  <header class="page-header">
-    <a href="workspace-select.html" class="back-btn">← Volver</a>
-    <div class="page-title">
-      <img src="assets/icons/ui/icono-alerta.png" style="width:22px;height:22px;object-fit:contain;" />
-      Reportes de usuarios
-    </div>
-  </header>
-
-  <main class="main">
-    <div class="card">
-      <div class="filter-bar">
-        <label style="font-size:12px;font-weight:700;color:#8b93a3;letter-spacing:.06em;text-transform:uppercase;">Filtrar por estado</label>
-        <select id="status-filter">
-          <option value="">Todos</option>
-          <option value="pending" selected>Pendientes</option>
-          <option value="confirmed">Confirmados</option>
-          <option value="dismissed">Descartados</option>
-        </select>
-        <button class="btn-load" id="btn-load">Cargar reportes</button>
-      </div>
-      <div id="reports-container">
-        <div class="empty-state">Hacé clic en "Cargar reportes" para ver la lista.</div>
-      </div>
-    </div>
-  </main>
-
-  <div id="toast-root" style="position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;"></div>
-  <div id="modal-root"></div>
-
->>>>>>> origin/main
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/utils.js"></script>
@@ -108,7 +23,6 @@
     if (!user) { window.location.replace('login.html'); return; }
     if (user.role !== 'god_admin') { window.location.replace('workspace-select.html'); return; }
 
-<<<<<<< HEAD
     var app = document.getElementById('app');
 
     var styles = '<style>' +
@@ -498,168 +412,10 @@
         radio.addEventListener('change', function() {
           var opts = document.getElementById('rep-ban-opts');
           if (opts) opts.style.display = radio.value === 'ban' ? '' : 'none';
-=======
-    var PAGE_SIZE = 20;
-    var _cache = [], _page = 0;
-
-    var container = document.getElementById('reports-container');
-
-    // ── Paginación ────────────────────────────────────────────
-    function renderPager(total, page) {
-      var pages = Math.ceil(total / PAGE_SIZE);
-      if (pages <= 1) return '';
-      var html = '<div class="pager">';
-      for (var i = 0; i < pages; i++) {
-        html += '<button class="pager-btn' + (i === page ? ' active' : '') + '" onclick="goPage(' + i + ')">' + (i+1) + '</button>';
-      }
-      html += '</div>';
-      return html;
-    }
-
-    // ── Renderizar tabla ──────────────────────────────────────
-    function renderTable(list, page) {
-      if (!list.length) {
-        container.innerHTML = '<div class="empty-state">No hay reportes con ese filtro.</div>';
-        return;
-      }
-      var slice = list.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-      var STATUS_LABELS = { pending: 'Pendiente', confirmed: 'Confirmado', dismissed: 'Descartado' };
-      var rows = slice.map(function(r) {
-        var statusClass = r.status || 'pending';
-        var statusLabel = STATUS_LABELS[r.status] || r.status;
-        var safeId = U.esc(r.id);
-        var safeName = U.esc(r.reported_name || '?');
-        var actions = '';
-        if (r.status === 'pending') {
-          actions =
-            '<button class="btn-action dismiss" onclick="dismissReport(\'' + safeId + '\')">Descartar</button> ' +
-            '<button class="btn-action confirm" onclick="openModal(\'' + safeId + '\',\'' + safeName + '\')">Confirmar</button>';
-        } else if (r.action_taken) {
-          actions = '<span style="font-size:11px;color:#6f7686;">' + U.esc(r.action_taken) + '</span>';
-        }
-        return '<tr>' +
-          '<td>' +
-            '<div style="font-weight:600;color:#f4f6f9;">' + U.esc(r.reported_name || '—') + '</div>' +
-            '<div style="font-size:11px;color:#6f7686;margin-top:2px;">' + U.esc(r.reported_email || '') + '</div>' +
-          '</td>' +
-          '<td><span style="font-family:JetBrains Mono,monospace;font-size:11px;color:#8b93a3;">' + U.esc(r.reason || '') + '</span></td>' +
-          '<td style="max-width:220px;"><span style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;color:#8b93a3;" title="' + U.esc(r.description || '') + '">' + U.esc((r.description || '').slice(0, 80)) + (r.description && r.description.length > 80 ? '…' : '') + '</span></td>' +
-          '<td><span class="status-pill ' + statusClass + '">' + statusLabel + '</span></td>' +
-          '<td style="font-size:11px;color:#6f7686;white-space:nowrap;">' + (r.created_at ? r.created_at.slice(0, 10) : '') + '</td>' +
-          '<td style="white-space:nowrap;">' + actions + '</td>' +
-        '</tr>';
-      }).join('');
-
-      container.innerHTML =
-        '<div style="overflow-x:auto;">' +
-          '<table class="report-table"><thead><tr>' +
-            '<th>Reportado</th><th>Razón</th><th>Descripción</th><th>Estado</th><th>Fecha</th><th>Acciones</th>' +
-          '</tr></thead><tbody>' + rows + '</tbody></table>' +
-        '</div>' +
-        renderPager(list.length, page);
-    }
-
-    // ── Cargar reportes ───────────────────────────────────────
-    window.loadReports = async function() {
-      container.innerHTML = '<div class="spinner"><div class="spinner-ring"></div><span style="font-size:13px;color:#8b93a3;">Cargando reportes...</span></div>';
-      var status = document.getElementById('status-filter').value;
-      var url = API.base + '/reports/' + (status ? '?status=' + status : '');
-      try {
-        var res = await fetch(url, { headers: API.authHeaders() });
-        var data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Error ' + res.status);
-        _cache = data; _page = 0;
-        renderTable(data, 0);
-      } catch(e) {
-        container.innerHTML = '<div class="empty-state" style="color:#e68a8d;">Error al cargar: ' + U.esc(e.message) + '</div>';
-      }
-    };
-
-    window.goPage = function(p) { _page = p; renderTable(_cache, p); window.scrollTo(0, 0); };
-
-    // ── Descartar ─────────────────────────────────────────────
-    window.dismissReport = async function(id) {
-      if (!confirm('¿Descartar este reporte?')) return;
-      try {
-        var res = await fetch(API.base + '/reports/' + id + '/dismiss', {
-          method: 'POST',
-          headers: Object.assign({}, API.authHeaders(), {'Content-Type': 'application/json'}),
-        });
-        var d = await res.json();
-        if (!res.ok) throw new Error(d.error || 'Error');
-        U.toast('Reporte descartado', 'success');
-        window.loadReports();
-      } catch(e) { U.toast(e.message, 'error'); }
-    };
-
-    // ── Modal confirmar / banear ──────────────────────────────
-    var _modalTarget = null;
-
-    window.openModal = function(reportId, reportedName) {
-      _modalTarget = reportId;
-      var old = document.getElementById('confirm-modal');
-      if (old) old.remove();
-
-      var overlay = document.createElement('div');
-      overlay.id = 'confirm-modal';
-      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;';
-      overlay.innerHTML =
-        '<div style="background:#1c1f27;border:1px solid rgba(230,138,141,0.3);border-radius:20px;padding:28px 30px;max-width:460px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,0.5);">' +
-          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;">' +
-            '<div style="font-family:Poppins,sans-serif;font-size:17px;font-weight:700;color:#e68a8d;">Confirmar reporte</div>' +
-            '<button onclick="document.getElementById(\'confirm-modal\').remove();" style="background:none;border:none;color:#6f7686;font-size:24px;cursor:pointer;line-height:1;">×</button>' +
-          '</div>' +
-          '<div style="font-size:13px;color:#8b93a3;margin-bottom:20px;">Reportado: <strong style="color:#f4f6f9;">' + U.esc(reportedName) + '</strong></div>' +
-
-          '<div style="margin-bottom:18px;">' +
-            '<div style="font-size:11px;font-weight:700;color:#8b93a3;margin-bottom:10px;letter-spacing:.06em;text-transform:uppercase;">Acción</div>' +
-            '<div style="display:flex;flex-direction:column;gap:8px;">' +
-              '<label style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;border:1px solid #353a46;cursor:pointer;font-size:13px;color:#cdd2db;">' +
-                '<input type="radio" name="modal-action" value="warn" checked style="accent-color:#e68a8d;width:16px;height:16px;" />' +
-                '<span>Solo registrar el reporte (sin ban)</span>' +
-              '</label>' +
-              '<label style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;border:1px solid #353a46;cursor:pointer;font-size:13px;color:#cdd2db;">' +
-                '<input type="radio" name="modal-action" value="ban" style="accent-color:#e68a8d;width:16px;height:16px;" />' +
-                '<span>Banear al usuario</span>' +
-              '</label>' +
-            '</div>' +
-          '</div>' +
-
-          '<div id="ban-opts" style="display:none;margin-bottom:18px;">' +
-            '<div style="font-size:11px;font-weight:700;color:#8b93a3;margin-bottom:10px;letter-spacing:.06em;text-transform:uppercase;">Duración del ban</div>' +
-            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
-              ['1 día|1','3 días|3','7 días|7','30 días|30','Permanente|perm'].map(function(d) {
-                var p = d.split('|');
-                return '<label style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:1px solid #353a46;cursor:pointer;font-size:13px;color:#cdd2db;">' +
-                  '<input type="radio" name="ban-dur" value="' + p[1] + '"' + (p[1]==='7'?' checked':'') + ' style="accent-color:#e68a8d;width:15px;height:15px;flex-shrink:0;" />' +
-                  p[0] +
-                '</label>';
-              }).join('') +
-            '</div>' +
-            '<div style="margin-top:12px;">' +
-              '<div style="font-size:11px;font-weight:700;color:#8b93a3;margin-bottom:8px;letter-spacing:.06em;text-transform:uppercase;">Razón (opcional)</div>' +
-              '<input id="ban-reason" type="text" placeholder="Motivo del ban..." style="width:100%;height:42px;border-radius:10px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-family:Manrope,sans-serif;font-size:14px;padding:0 14px;outline:none;box-sizing:border-box;" />' +
-            '</div>' +
-          '</div>' +
-
-          '<div style="display:flex;gap:10px;">' +
-            '<button onclick="document.getElementById(\'confirm-modal\').remove();" style="flex:1;height:46px;border-radius:10px;border:1px solid #353a46;background:transparent;color:#aab1bf;font-family:Poppins,sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Cancelar</button>' +
-            '<button id="modal-submit-btn" onclick="submitModal()" style="flex:2;height:46px;border-radius:10px;border:1px solid rgba(230,138,141,0.4);background:rgba(230,138,141,0.15);color:#e68a8d;font-family:Poppins,sans-serif;font-size:15px;font-weight:700;cursor:pointer;">Confirmar</button>' +
-          '</div>' +
-        '</div>';
-
-      document.body.appendChild(overlay);
-      overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
-      overlay.querySelectorAll('input[name="modal-action"]').forEach(function(r) {
-        r.addEventListener('change', function() {
-          var opts = document.getElementById('ban-opts');
-          if (opts) opts.style.display = r.value === 'ban' ? '' : 'none';
->>>>>>> origin/main
         });
       });
     };
 
-<<<<<<< HEAD
     window.submitConfirmReport = async function() {
       if (!_reportModalTarget) return;
       var actionEl = document.querySelector('input[name="rep-action"]:checked');
@@ -669,39 +425,20 @@
         var durEl   = document.querySelector('input[name="rep-ban-dur"]:checked');
         var dur     = durEl ? durEl.value : '7';
         var reason  = (document.getElementById('rep-ban-reason').value || '').trim();
-=======
-    window.submitModal = async function() {
-      if (!_modalTarget) return;
-      var actionEl = document.querySelector('input[name="modal-action"]:checked');
-      var action = actionEl ? actionEl.value : 'warn';
-      var payload = { action: action };
-      if (action === 'ban') {
-        var durEl = document.querySelector('input[name="ban-dur"]:checked');
-        var dur = durEl ? durEl.value : '7';
-        var reason = (document.getElementById('ban-reason').value || '').trim();
->>>>>>> origin/main
         if (dur === 'perm') { payload.permanent = true; }
         else { payload.ban_days = parseInt(dur, 10); }
         payload.ban_reason = reason || 'Reporte confirmado por administrador';
       }
-<<<<<<< HEAD
       var btn = document.getElementById('rep-confirm-btn');
       if (btn) { btn.disabled = true; btn.textContent = 'Procesando...'; }
       try {
         var res = await fetch(API.base + '/reports/' + _reportModalTarget + '/confirm', {
-=======
-      var btn = document.getElementById('modal-submit-btn');
-      if (btn) { btn.disabled = true; btn.textContent = 'Procesando...'; }
-      try {
-        var res = await fetch(API.base + '/reports/' + _modalTarget + '/confirm', {
->>>>>>> origin/main
           method: 'POST',
           headers: Object.assign({}, API.authHeaders(), {'Content-Type': 'application/json'}),
           body: JSON.stringify(payload),
         });
         var data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Error');
-<<<<<<< HEAD
         var modal = document.getElementById('confirm-report-modal');
         if (modal) modal.remove();
         _reportModalTarget = null;
@@ -714,23 +451,6 @@
     };
 
     loadReports();
-=======
-        var modal = document.getElementById('confirm-modal');
-        if (modal) modal.remove();
-        _modalTarget = null;
-        U.toast('Reporte confirmado' + (action === 'ban' ? ' · Usuario baneado' : ''), 'success');
-        window.loadReports();
-      } catch(e) {
-        U.toast(e.message, 'error');
-        if (btn) { btn.disabled = false; btn.textContent = 'Confirmar'; }
-      }
-    };
-
-    // ── Init ──────────────────────────────────────────────────
-    document.getElementById('btn-load').addEventListener('click', window.loadReports);
-    document.getElementById('status-filter').addEventListener('change', window.loadReports);
-    window.loadReports();
->>>>>>> origin/main
   })();
   </script>
   <script src="js/stars.js"></script>
