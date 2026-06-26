@@ -155,21 +155,42 @@
                     '</div>' +
                     // Inline edit form
                     '<div id="badge-edit-' + b.id + '" style="display:none;border-top:1px solid #2f343f;padding:14px;">' +
-                      '<form class="badge-edit-form" data-bid="' + b.id + '" novalidate style="display:flex;flex-direction:column;gap:10px;">' +
-                        '<div style="display:grid;grid-template-columns:56px 1fr;gap:8px;">' +
-                          '<input name="icon" value="' + U.esc(b.emoji || b.icon || '') + '" maxlength="4" placeholder="(icono)" style="' + INP + 'text-align:center;padding-left:4px;padding-right:4px;" />' +
-                          '<input name="name" value="' + U.esc(bname) + '" placeholder="Nombre" style="' + INP + '" />' +
+                      '<p style="font-size:12px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;margin:0 0 12px;">Editar badge</p>' +
+                      '<div style="background:#20242d;border:1px solid #2f343f;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;">' +
+                        '<div style="display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;">' +
+                          '<div>' +
+                            '<label style="font-size:11px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;display:block;margin-bottom:6px;">ICONO</label>' +
+                            '<button type="button" data-ebicon-btn="' + b.id + '" id="eb-icon-btn-' + b.id + '" style="width:52px;height:52px;border-radius:10px;border:1px solid #353a46;background:#2e323d;cursor:pointer;display:flex;align-items:center;justify-content:center;">' +
+                              '<div id="eb-icon-preview-' + b.id + '" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;">' +
+                                (b.icon_url ? U.badgeIcon(b.icon_url, 36) : '<span style="color:#8b93a3;font-size:22px;">+</span>') +
+                              '</div>' +
+                            '</button>' +
+                          '</div>' +
+                          '<div>' +
+                            '<label style="font-size:11px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;display:block;margin-bottom:6px;">NOMBRE *</label>' +
+                            '<input type="text" id="eb-name-' + b.id + '" value="' + U.esc(bname) + '" placeholder="Nombre del badge" style="width:100%;padding:10px 12px;background:#2e323d;border:1px solid #353a46;border-radius:8px;color:#f4f6f9;font-size:13px;outline:none;box-sizing:border-box;font-family:Manrope,sans-serif;" />' +
+                          '</div>' +
                         '</div>' +
-                        '<input name="description" value="' + U.esc(bdesc) + '" placeholder="Descripción" style="' + INP + '" />' +
-                        '<div style="display:flex;align-items:flex-end;gap:16px;">' +
-                          '<div><label style="' + LBL + '">XP por escanear</label><input type="number" name="xp_value" min="1" max="500" value="' + bxp + '" style="' + INP + 'width:90px;" /></div>' +
-                          '<label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#f4f6f9;font-family:Manrope,sans-serif;padding-bottom:2px;cursor:pointer;"><input type="checkbox" name="is_rare" ' + (b.is_rare ? 'checked' : '') + ' style="width:15px;height:15px;" /> Badge raro</label>' +
+                        '<div>' +
+                          '<label style="font-size:11px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;display:block;margin-bottom:6px;">DESCRIPCIÓN</label>' +
+                          '<input type="text" id="eb-desc-' + b.id + '" value="' + U.esc(bdesc) + '" placeholder="Descripción del badge" style="width:100%;padding:10px 12px;background:#2e323d;border:1px solid #353a46;border-radius:8px;color:#f4f6f9;font-size:13px;outline:none;box-sizing:border-box;font-family:Manrope,sans-serif;" />' +
+                        '</div>' +
+                        '<div>' +
+                          '<label style="font-size:11px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;display:block;margin-bottom:6px;">XP</label>' +
+                          '<input type="number" id="eb-xp-' + b.id + '" min="1" max="500" value="' + bxp + '" style="width:120px;padding:10px 12px;background:#2e323d;border:1px solid #353a46;border-radius:8px;color:#f4f6f9;font-size:13px;outline:none;" />' +
+                        '</div>' +
+                        '<div>' +
+                          '<label style="font-size:11px;font-weight:700;color:#8b93a3;font-family:Manrope,sans-serif;display:block;margin-bottom:6px;">RAREZA</label>' +
+                          '<div style="display:flex;gap:8px;">' +
+                            '<button type="button" data-ebrarity="normal" data-ebid="' + b.id + '" class="eb-rarity-btn" style="flex:1;padding:8px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-size:12px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;">Normal</button>' +
+                            '<button type="button" data-ebrarity="rare" data-ebid="' + b.id + '" class="eb-rarity-btn" style="flex:1;padding:8px;border-radius:8px;border:1px solid #353a46;background:#2e323d;color:#f4f6f9;font-size:12px;font-weight:700;cursor:pointer;font-family:Manrope,sans-serif;">Raro</button>' +
+                          '</div>' +
                         '</div>' +
                         '<div style="display:flex;gap:8px;">' +
-                          '<button type="submit" style="height:34px;padding:0 16px;border-radius:9px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Guardar</button>' +
-                          '<button type="button" class="badge-edit-cancel" style="height:34px;padding:0 14px;border-radius:9px;border:1px solid #353a46;background:transparent;color:#8b93a3;font-family:Manrope,sans-serif;font-size:13px;cursor:pointer;">Cancelar</button>' +
+                          '<button type="button" data-ebsave="' + b.id + '" class="eb-save-btn" style="flex:1;padding:10px;border-radius:10px;border:none;background:linear-gradient(180deg,#ec9799,#e68a8d);color:#3a1f20;font-family:Poppins,sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Guardar cambios</button>' +
+                          '<button type="button" data-ebcancel="' + b.id + '" class="eb-cancel-btn" style="padding:10px 16px;border-radius:10px;border:1px solid #353a46;background:transparent;color:#8b93a3;font-family:Manrope,sans-serif;font-size:13px;cursor:pointer;">Cancelar</button>' +
                         '</div>' +
-                      '</form>' +
+                      '</div>' +
                     '</div>' +
                     // QR preview area
                     '<div id="badge-qr-preview-' + b.id + '" style="display:none;border-top:1px solid #2f343f;padding:14px;text-align:center;"></div>' +
@@ -342,36 +363,112 @@
               if (box) box.style.display = box.style.display === 'none' ? 'block' : 'none';
             });
           });
-          Array.prototype.forEach.call(document.querySelectorAll('.badge-edit-cancel'), function(btn) {
+
+          // ── Badges: editar (nuevo diseño) ──
+          var EB_RARITY_COLORS = {
+            normal: { border: '#38bdf8', bg: 'rgba(56,189,248,0.1)', color: '#38bdf8' },
+            rare:   { border: '#ffc850', bg: 'rgba(255,200,80,0.15)', color: '#ffc850' }
+          };
+          var ebState = {};
+          blist.forEach(function(b) {
+            ebState[b.id] = { icon: b.icon_url || null, rarity: b.rarity || (b.is_rare ? 'rare' : 'normal') };
+          });
+
+          function ebApplyRarityStyle(bid) {
+            Array.prototype.forEach.call(document.querySelectorAll('.eb-rarity-btn[data-ebid="' + bid + '"]'), function(btn) {
+              var r = btn.getAttribute('data-ebrarity');
+              if (r === ebState[bid].rarity) {
+                var rc = EB_RARITY_COLORS[r];
+                btn.style.border = '1px solid ' + rc.border;
+                btn.style.background = rc.bg;
+                btn.style.color = rc.color;
+              } else {
+                btn.style.border = '1px solid #353a46';
+                btn.style.background = '#2e323d';
+                btn.style.color = '#f4f6f9';
+              }
+            });
+          }
+
+          blist.forEach(function(b) { ebApplyRarityStyle(b.id); });
+
+          Array.prototype.forEach.call(document.querySelectorAll('.eb-rarity-btn'), function(btn) {
             btn.addEventListener('click', function() {
-              var box = btn.closest('[id^="badge-edit-"]');
-              if (box) box.style.display = 'none';
+              var bid = btn.getAttribute('data-ebid');
+              ebState[bid].rarity = btn.getAttribute('data-ebrarity');
+              ebApplyRarityStyle(bid);
             });
           });
 
-          // ── Badges: guardar edición ──
-          Array.prototype.forEach.call(document.querySelectorAll('.badge-edit-form'), function(form) {
-            form.addEventListener('submit', async function(e) {
-              e.preventDefault();
-              var bid = form.getAttribute('data-bid');
-              var nameVal = form.elements['name'].value.trim();
-              if (!nameVal) { U.toast('Ingresa un nombre para el badge', 'error'); return; }
-              var saveBtn = form.querySelector('[type="submit"]');
-              saveBtn.disabled = true; saveBtn.textContent = 'Guardando...';
+          Array.prototype.forEach.call(document.querySelectorAll('[data-ebicon-btn]'), function(btn) {
+            btn.addEventListener('click', function() {
+              var bid = btn.getAttribute('data-ebicon-btn');
+              var modalRoot = document.getElementById('modal-root');
+              modalRoot.innerHTML =
+                '<div class="fixed inset-0 z-50 flex items-center justify-center p-6" style="background:rgba(0,0,0,0.75);" id="eb-icon-overlay">' +
+                  '<div style="background:#1c1f27;border:1px solid #2f343f;border-radius:16px;padding:24px;width:100%;max-width:420px;max-height:85vh;overflow-y:auto;">' +
+                    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">' +
+                      '<p style="font-family:Poppins,sans-serif;font-size:16px;font-weight:700;color:#f4f6f9;margin:0;">Selecciona un icono</p>' +
+                      '<button id="close-eb-icon" style="background:transparent;border:none;color:#8b93a3;font-size:20px;cursor:pointer;line-height:1;">✕</button>' +
+                    '</div>' +
+                    '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">' +
+                      U.BOOTSTRAP_BADGE_ICONS.map(function(icon) {
+                        return '<button type="button" data-ebicon-opt="bi:' + icon.cls + '" data-ebid-opt="' + bid + '" class="eb-icon-option" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:10px;border:1px solid #353a46;background:#2e323d;cursor:pointer;">' +
+                          '<i class="bi ' + icon.cls + '" style="font-size:30px;line-height:1;color:#f4f6f9;"></i>' +
+                          '<span style="font-size:10px;color:#8b93a3;font-family:Manrope,sans-serif;text-align:center;">' + icon.label + '</span>' +
+                        '</button>';
+                      }).join('') +
+                    '</div>' +
+                  '</div>' +
+                '</div>';
+              document.getElementById('close-eb-icon').addEventListener('click', function() { modalRoot.innerHTML = ''; });
+              document.getElementById('eb-icon-overlay').addEventListener('click', function(ev2) {
+                if (ev2.target === this) modalRoot.innerHTML = '';
+              });
+              Array.prototype.forEach.call(document.querySelectorAll('.eb-icon-option'), function(optBtn) {
+                optBtn.addEventListener('click', function() {
+                  var iconVal = optBtn.getAttribute('data-ebicon-opt');
+                  var optBid = optBtn.getAttribute('data-ebid-opt');
+                  ebState[optBid].icon = iconVal;
+                  document.getElementById('eb-icon-preview-' + optBid).innerHTML = U.badgeIcon(iconVal, 36);
+                  modalRoot.innerHTML = '';
+                });
+              });
+            });
+          });
+
+          Array.prototype.forEach.call(document.querySelectorAll('.eb-save-btn'), function(btn) {
+            btn.addEventListener('click', async function() {
+              var bid = btn.getAttribute('data-ebsave');
+              var nameInput = document.getElementById('eb-name-' + bid);
+              var name = nameInput ? nameInput.value.trim() : '';
+              if (!name) { U.toast('Ingresa un nombre para el badge', 'error'); return; }
+              btn.disabled = true; btn.textContent = 'Guardando...';
               try {
+                var descInput = document.getElementById('eb-desc-' + bid);
+                var xpInput = document.getElementById('eb-xp-' + bid);
                 await API.updateBadge(eid, bid, {
-                  name: nameVal,
-                  desc: form.elements['description'].value.trim(),
-                  emoji: form.elements['icon'].value.trim() || '',
-                  xp_value: parseInt(form.elements['xp_value'].value, 10) || 10,
-                  is_rare: form.elements['is_rare'].checked
+                  name: name,
+                  desc: descInput ? descInput.value.trim() : '',
+                  icon_url: ebState[bid].icon || null,
+                  rarity: ebState[bid].rarity,
+                  is_rare: ebState[bid].rarity !== 'normal',
+                  xp_value: parseInt(xpInput ? xpInput.value : '10', 10) || 10
                 });
                 U.toast('Badge actualizado correctamente', 'success');
                 init();
               } catch(err) {
                 U.toast(err.message || 'Error', 'error');
-                saveBtn.disabled = false; saveBtn.textContent = 'Guardar';
+                btn.disabled = false; btn.textContent = 'Guardar cambios';
               }
+            });
+          });
+
+          Array.prototype.forEach.call(document.querySelectorAll('.eb-cancel-btn'), function(btn) {
+            btn.addEventListener('click', function() {
+              var bid = btn.getAttribute('data-ebcancel');
+              var box = document.getElementById('badge-edit-' + bid);
+              if (box) box.style.display = 'none';
             });
           });
 
